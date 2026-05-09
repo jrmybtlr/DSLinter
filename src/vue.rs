@@ -4,8 +4,9 @@ use std::path::Path;
 
 use regex::Regex;
 
-use crate::ecma::analyze_ecma_file;
+use crate::ecma::analyze_ecma_for_paths;
 use crate::model::{FileScan, JsxUsage, LintFinding, Severity};
+use crate::smells;
 
 /// Captures `<script ...>...</script>` blocks (non-greedy inner content).
 fn script_block_regex() -> Regex {
@@ -119,6 +120,34 @@ fn vue_template_a11y_findings(
     out
 }
 
+/// Shift 1-based line numbers from combined `<script>` text to full `.vue` file positions.
+fn fixup_vue_script_line_offsets(scan: &mut FileScan, vue_source: &str) {
+    let script_re = script_block_regex();
+    let caps: Vec<_> = script_re.captures_iter(vue_source).collect();
+    if caps.len() != 1 {
+        return;
+    }
+    let Some(inner) = caps[0].get(2) else {
+        return;
+    };
+    let line_offset = vue_source[..inner.start()]
+        .bytes()
+        .filter(|&b| b == b'\n')
+        .count() as u32;
+
+    for d in &mut scan.definitions {
+        d.line += line_offset;
+    }
+    for u in &mut scan.usages {
+        u.line += line_offset;
+    }
+    for f in &mut scan.findings {
+        if let Some(ln) = f.line.as_mut() {
+            *ln += line_offset;
+        }
+    }
+}
+
 /// Merge Vue template component references into an ECMA analysis of the `<script>` blocks.
 pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
     let script_re = script_block_regex();
@@ -152,9 +181,16 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
             findings: Vec::new(),
         }
     } else {
-        analyze_ecma_file(&pseudo_path, &combined_script)
+        analyze_ecma_for_paths(path, &pseudo_path, &combined_script, false)
     };
     scan.path = path.to_path_buf();
+
+    if !combined_script.trim().is_empty() {
+        fixup_vue_script_line_offsets(&mut scan, source);
+    }
+
+    scan.findings
+        .extend(smells::collect_text_smells(path, source));
 
     if let Some(cap) = template_block_regex().captures(source) {
         let inner = cap.get(1).expect("template inner group");

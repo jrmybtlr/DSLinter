@@ -11,12 +11,15 @@ export function TokenWall() {
             <li
               key={`${c.token}-${c.shade}`}
               className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-2"
+              title={c.value}
             >
-              <span
-                className="h-9 w-9 shrink-0 rounded border border-neutral-200 shadow-inner"
-                style={{ backgroundColor: c.value }}
-                title={c.value}
-              />
+              <svg
+                className="h-9 w-9 shrink-0 overflow-hidden rounded border border-neutral-200 shadow-inner"
+                viewBox="0 0 36 36"
+                aria-hidden
+              >
+                <rect width="36" height="36" fill={c.value} />
+              </svg>
               <div className="min-w-0">
                 <p className="truncate font-mono text-xs text-neutral-900">
                   {c.token}/{c.shade}

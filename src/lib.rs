@@ -6,6 +6,7 @@ pub mod model;
 pub mod report;
 pub mod rules;
 pub mod scan;
+pub mod smells;
 pub mod vue;
 
 use std::path::Path;

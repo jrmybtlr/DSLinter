@@ -104,7 +104,7 @@ export function Dashboard() {
               <div>
                 <h2 className="text-sm font-semibold text-neutral-900">Governance signals</h2>
                 <p className="text-xs text-neutral-500">
-                  Includes accessibility rules (images, links, buttons, inputs) from DSLint.
+                  Accessibility (`a11y-*`) and code smell (`smell-*`) rules from the latest DSLint run.
                 </p>
               </div>
               <span className="text-xs text-neutral-400">{report.findings.length} total</span>

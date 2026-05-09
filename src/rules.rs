@@ -1,4 +1,4 @@
-//! Governance rules (MVP): duplicates, deprecation, tokens, and accessibility (JSX AST + Vue template).
+//! Governance rules (MVP): duplicates, deprecation, tokens, accessibility, and code smells.
 
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -206,6 +206,14 @@ fn a11y_penalty(findings: &[LintFinding]) -> i32 {
         .sum()
 }
 
+fn smell_penalty(findings: &[LintFinding]) -> i32 {
+    findings
+        .iter()
+        .filter(|f| f.rule_id.starts_with("smell-"))
+        .count()
+        .min(25) as i32
+}
+
 fn compute_scores(
     findings: &[LintFinding],
     duplicates: &[DuplicateComponent],
@@ -219,7 +227,8 @@ fn compute_scores(
     let dup_penalty = duplicates.len() as i32 * 5;
 
     let token_adoption = token_adoption_pct(files, config);
-    let maintainability = (100_i32 - warn * 3 - dup_penalty).clamp(0, 100) as u8;
+    let maintainability =
+        (100_i32 - warn * 3 - dup_penalty - smell_penalty(findings)).clamp(0, 100) as u8;
     let accessibility = (100_i32 - a11y_penalty(findings)).clamp(0, 100) as u8;
     let ux_consistency = (100_i32 - warn * 2).clamp(0, 100) as u8;
     let design_system_health = ((token_adoption as i32

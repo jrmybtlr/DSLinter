@@ -267,7 +267,15 @@
       ],
       "usages": [],
       "parse_errors": [],
-      "findings": []
+      "findings": [
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+          "line": 8,
+          "severity": "info"
+        }
+      ]
     },
     {
       "path": "/workspace/demo/src/components/bad/InconsistentToggle.tsx",
@@ -293,7 +301,15 @@
       ],
       "usages": [],
       "parse_errors": [],
-      "findings": []
+      "findings": [
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+          "line": 10,
+          "severity": "info"
+        }
+      ]
     },
     {
       "path": "/workspace/demo/src/components/bad/KitchenSinkModal.tsx",
@@ -617,6 +633,20 @@
       "path": "/workspace/demo/src/DemoGallery.tsx",
       "line": 63,
       "severity": "warning"
+    },
+    {
+      "rule_id": "smell-inline-style",
+      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-inline-style",
+      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "line": 10,
+      "severity": "info"
     },
     {
       "rule_id": "a11y-img-alt",
@@ -967,9 +997,9 @@
     }
   ],
   "scores": {
-    "design_system_health": 74,
+    "design_system_health": 73,
     "ux_consistency": 90,
     "accessibility": 92,
-    "maintainability": 80
+    "maintainability": 78
   }
 }

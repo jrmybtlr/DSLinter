@@ -20,9 +20,19 @@ use crate::model::{
 
 const DEFAULT_EXPORT: &str = "default";
 
-pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
+/// Analyze ECMA/JSX with diagnostics attributed to `report_path` (e.g. real `.vue` path).
+///
+/// `parse_as_path` selects [`SourceType`] (often a pseudo `.tsx` path for Vue script).
+/// When `include_text_smells` is false, only AST smells run — caller should run
+/// [`crate::smells::collect_text_smells`] on the full file (e.g. entire `.vue` source).
+pub fn analyze_ecma_for_paths(
+    report_path: &Path,
+    parse_as_path: &Path,
+    source: &str,
+    include_text_smells: bool,
+) -> FileScan {
     let allocator = Allocator::default();
-    let source_type = source_type_for_path(path);
+    let source_type = SourceType::from_path(parse_as_path).unwrap_or_else(|_| SourceType::tsx());
     let ParserReturn {
         program,
         errors,
@@ -33,7 +43,7 @@ pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
     let parse_errors: Vec<String> = errors.iter().map(ToString::to_string).collect();
     if panicked {
         return FileScan {
-            path: path.to_path_buf(),
+            path: report_path.to_path_buf(),
             definitions: Vec::new(),
             usages: Vec::new(),
             parse_errors,
@@ -42,7 +52,7 @@ pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
     }
 
     let mut v = ExtractVisitor {
-        path: path.to_path_buf(),
+        path: report_path.to_path_buf(),
         source,
         definitions: Vec::new(),
         usages: Vec::new(),
@@ -51,17 +61,27 @@ pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
     };
     v.visit_program(&program);
 
+    let mut findings = v.findings;
+    findings.extend(crate::smells::collect_ast_smells(
+        report_path,
+        source,
+        &program,
+    ));
+    if include_text_smells {
+        findings.extend(crate::smells::collect_text_smells(report_path, source));
+    }
+
     FileScan {
-        path: path.to_path_buf(),
+        path: report_path.to_path_buf(),
         definitions: v.definitions,
         usages: v.usages,
         parse_errors,
-        findings: v.findings,
+        findings,
     }
 }
 
-fn source_type_for_path(path: &Path) -> SourceType {
-    SourceType::from_path(path).unwrap_or_else(|_| SourceType::tsx())
+pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
+    analyze_ecma_for_paths(path, path, source, true)
 }
 
 fn offset_line(source: &str, offset: u32) -> u32 {
