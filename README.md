@@ -13,7 +13,9 @@ cargo build --release
 ./target/release/dslint /path/to/repo --max-warnings 10
 ```
 
-Scans honor `.gitignore` and `.dslintignore` at the repo root (best-effort glob semantics), plus `exclude_globs` from config. Suppress a finding on the next line with `// dslint-ignore-next-line rule-id` (comma-separated; use `*` or a `prefix*`).
+Scans honor `.gitignore` and `.dslintignore` at the repo root (glob semantics via `globset`, **last matching rule wins**, including `!` negation and `\!` to match a literal leading `!`), plus `exclude_globs` from config. On the line above a violation, `// dslint-ignore-next-line rule-id` (comma-separated; `*` or `prefix*`) suppresses matching findings on the next line.
+
+Overlapping **`token-hardcoded-color`** and **`token-tailwind-arbitrary`** on the same source line are collapsed to the Tailwind rule only.
 
 Optional config (repository root): `.dslint.json` or `dslint.json`:
 

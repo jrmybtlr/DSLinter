@@ -23,6 +23,7 @@ pub fn evaluate_workspace(
     }
     findings.extend(hardcoded_hex_colors(&files));
     findings.extend(tailwind_arbitrary_tokens(&files));
+    dedupe_token_color_overlap(&mut findings);
     findings.extend(deprecated_usage(&files, config));
 
     let duplicate_components = duplicate_definitions(&files);
@@ -256,6 +257,28 @@ fn tailwind_arbitrary_tokens(files: &[FileScan]) -> Vec<LintFinding> {
     out
 }
 
+/// When Tailwind arbitrary brackets contain a hex (`[#rgb]`), both `token-tailwind-arbitrary` and
+/// `token-hardcoded-color` can fire on the same line — keep the Tailwind rule only.
+fn dedupe_token_color_overlap(findings: &mut Vec<LintFinding>) {
+    let mut tw_lines: HashSet<(PathBuf, u32)> = HashSet::new();
+    for f in findings.iter() {
+        if f.rule_id == "token-tailwind-arbitrary" {
+            if let Some(ln) = f.line {
+                tw_lines.insert((f.path.clone(), ln));
+            }
+        }
+    }
+    findings.retain(|f| {
+        if f.rule_id != "token-hardcoded-color" {
+            return true;
+        }
+        match f.line {
+            Some(ln) => !tw_lines.contains(&(f.path.clone(), ln)),
+            None => true,
+        }
+    });
+}
+
 fn deprecated_usage(files: &[FileScan], config: &DslintConfig) -> Vec<LintFinding> {
     let banned: HashSet<_> = config.deprecated_components.iter().cloned().collect();
     if banned.is_empty() {
@@ -385,4 +408,51 @@ fn token_adoption_pct(files: &[FileScan], config: &DslintConfig) -> Option<u8> {
         return Some(100);
     }
     Some(((hits * 100) / files.len() as u32).min(100) as u8)
+}
+
+#[cfg(test)]
+mod dedupe_tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn dedupe_drops_hex_when_arbitrary_on_same_line() {
+        let p = PathBuf::from("x.tsx");
+        let mut findings = vec![
+            LintFinding {
+                rule_id: "token-hardcoded-color".into(),
+                message: "hex".into(),
+                path: p.clone(),
+                line: Some(10),
+                severity: Severity::Info,
+            },
+            LintFinding {
+                rule_id: "token-tailwind-arbitrary".into(),
+                message: "arb".into(),
+                path: p.clone(),
+                line: Some(10),
+                severity: Severity::Info,
+            },
+            LintFinding {
+                rule_id: "token-hardcoded-color".into(),
+                message: "hex2".into(),
+                path: p.clone(),
+                line: Some(11),
+                severity: Severity::Info,
+            },
+        ];
+        dedupe_token_color_overlap(&mut findings);
+        assert_eq!(findings.len(), 2);
+        assert!(findings
+            .iter()
+            .any(|f| f.rule_id == "token-tailwind-arbitrary"));
+        assert_eq!(
+            findings
+                .iter()
+                .filter(|f| f.rule_id == "token-hardcoded-color")
+                .count(),
+            1
+        );
+        assert!(findings.iter().any(|f| f.line == Some(11)));
+    }
 }

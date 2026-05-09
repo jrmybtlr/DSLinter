@@ -657,20 +657,6 @@
     },
     {
       "rule_id": "token-hardcoded-color",
-      "message": "Hardcoded color `#ffffff` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
-      "line": 8,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-hardcoded-color",
-      "message": "Hardcoded color `#ff0066` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
-      "line": 8,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-hardcoded-color",
       "message": "Hardcoded color `#00ff99` — prefer design tokens or theme variables.",
       "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
       "line": 11,
@@ -688,20 +674,6 @@
       "message": "Hardcoded color `#9933ff` — prefer design tokens or theme variables.",
       "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
       "line": 13,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-hardcoded-color",
-      "message": "Hardcoded color `#7c3aed` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
-      "line": 10,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-hardcoded-color",
-      "message": "Hardcoded color `#c084fc` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
-      "line": 10,
       "severity": "info"
     },
     {

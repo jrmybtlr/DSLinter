@@ -1,4 +1,7 @@
 //! Repository file discovery for JSX / TSX / Vue sources.
+//!
+//! Ignore rules merge `.gitignore`, `.dslintignore`, and config `exclude_globs` using **last-match
+//! wins** semantics (including `!` negation), best-effort vs canonical Git.
 
 use std::path::{Path, PathBuf};
 
