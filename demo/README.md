@@ -16,6 +16,20 @@ Build:
 npm run build
 ```
 
+## Storybook-style dashboard
+
+The dev app has two tabs: **Gallery** (live components) and **Dashboard** (inventory from DSLint).
+
+The dashboard reads `public/dslint-report.json`. Refresh that file whenever sources change:
+
+```bash
+npm run dslint:report
+```
+
+(requires Rust toolchain at repo root — runs `cargo run --release -- demo -p --json`)
+
+Then open **Dashboard** in the browser. You’ll see governance scores, a component catalog (definitions + usage), the token wall (mirrors `tailwind.config.js`), and top findings.
+
 ## Run DSLint against this demo
 
 From the repository root (Rust crate):

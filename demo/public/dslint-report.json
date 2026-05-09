@@ -1,0 +1,924 @@
+{
+  "root": "/workspace/demo",
+  "files": [
+    {
+      "path": "/workspace/demo/src/App.tsx",
+      "definitions": [
+        {
+          "name": "App",
+          "kind": "function",
+          "line": 7
+        }
+      ],
+      "usages": [
+        {
+          "component": "DemoGallery",
+          "line": 40,
+          "props": []
+        },
+        {
+          "component": "Dashboard",
+          "line": 40,
+          "props": []
+        }
+      ],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/DemoGallery.tsx",
+      "definitions": [
+        {
+          "name": "DemoGallery",
+          "kind": "function",
+          "line": 25
+        }
+      ],
+      "usages": [
+        {
+          "component": "PageHero",
+          "line": 28,
+          "props": [
+            "subtitle",
+            "title"
+          ]
+        },
+        {
+          "component": "FlexStack",
+          "line": 34,
+          "props": []
+        },
+        {
+          "component": "ContentCard",
+          "line": 35,
+          "props": [
+            "title"
+          ]
+        },
+        {
+          "component": "InlineCode",
+          "line": 37,
+          "props": []
+        },
+        {
+          "component": "InlineCode",
+          "line": 38,
+          "props": []
+        },
+        {
+          "component": "InlineCode",
+          "line": 38,
+          "props": []
+        },
+        {
+          "component": "PrimaryButton",
+          "line": 41,
+          "props": []
+        },
+        {
+          "component": "UserAvatar",
+          "line": 42,
+          "props": [
+            "name",
+            "src"
+          ]
+        },
+        {
+          "component": "StatusBadge",
+          "line": 43,
+          "props": [
+            "tone"
+          ]
+        },
+        {
+          "component": "FormField",
+          "line": 46,
+          "props": [
+            "id",
+            "label"
+          ]
+        },
+        {
+          "component": "NavLink",
+          "line": 47,
+          "props": [
+            "href"
+          ]
+        },
+        {
+          "component": "LoadingSkeleton",
+          "line": 51,
+          "props": []
+        },
+        {
+          "component": "ContentCard",
+          "line": 53,
+          "props": [
+            "title"
+          ]
+        },
+        {
+          "component": "FlexStack",
+          "line": 58,
+          "props": []
+        },
+        {
+          "component": "ContentCard",
+          "line": 59,
+          "props": [
+            "title"
+          ]
+        },
+        {
+          "component": "FlashBanner",
+          "line": 60,
+          "props": []
+        },
+        {
+          "component": "LegacyButton",
+          "line": 62,
+          "props": []
+        },
+        {
+          "component": "DeprecatedChip",
+          "line": 63,
+          "props": [
+            "label"
+          ]
+        },
+        {
+          "component": "MysteryImage",
+          "line": 64,
+          "props": []
+        },
+        {
+          "component": "InlinePaint",
+          "line": 65,
+          "props": []
+        },
+        {
+          "component": "ChaosGrid",
+          "line": 66,
+          "props": []
+        },
+        {
+          "component": "InconsistentToggle",
+          "line": 69,
+          "props": [
+            "pressedTone"
+          ]
+        },
+        {
+          "component": "ContentCard",
+          "line": 75,
+          "props": [
+            "title"
+          ]
+        },
+        {
+          "component": "InlineCode",
+          "line": 77,
+          "props": []
+        },
+        {
+          "component": "DuplicateTeamCard",
+          "line": 80,
+          "props": []
+        },
+        {
+          "component": "DuplicateProductCard",
+          "line": 81,
+          "props": []
+        },
+        {
+          "component": "ContentCard",
+          "line": 85,
+          "props": [
+            "title"
+          ]
+        },
+        {
+          "component": "KitchenSinkModal",
+          "line": 86,
+          "props": [
+            "analyticsId",
+            "bannerTone",
+            "cancelLabel",
+            "confirmLabel",
+            "dismissible",
+            "footerAlign",
+            "icon",
+            "initialFocus",
+            "overlayBlur",
+            "role",
+            "scrollLock",
+            "subtitle",
+            "testId",
+            "title",
+            "width"
+          ]
+        }
+      ],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "definitions": [
+        {
+          "name": "ChaosGrid",
+          "kind": "function",
+          "line": 6
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/DeprecatedChip.tsx",
+      "definitions": [
+        {
+          "name": "DeprecatedChip",
+          "kind": "function",
+          "line": 6
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "definitions": [
+        {
+          "name": "FlashBanner",
+          "kind": "function",
+          "line": 6
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/InconsistentToggle.tsx",
+      "definitions": [
+        {
+          "name": "InconsistentToggle",
+          "kind": "function",
+          "line": 8
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "definitions": [
+        {
+          "name": "InlinePaint",
+          "kind": "function",
+          "line": 6
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/KitchenSinkModal.tsx",
+      "definitions": [
+        {
+          "name": "KitchenSinkModal",
+          "kind": "function",
+          "line": 21
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
+      "definitions": [
+        {
+          "name": "LegacyButton",
+          "kind": "function",
+          "line": 6
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
+      "definitions": [
+        {
+          "name": "MysteryImage",
+          "kind": "function",
+          "line": 2
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardA.tsx",
+      "definitions": [
+        {
+          "name": "Card",
+          "kind": "function",
+          "line": 2
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardB.tsx",
+      "definitions": [
+        {
+          "name": "Card",
+          "kind": "function",
+          "line": 2
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/ContentCard.tsx",
+      "definitions": [
+        {
+          "name": "ContentCard",
+          "kind": "function",
+          "line": 7
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/FlexStack.tsx",
+      "definitions": [
+        {
+          "name": "FlexStack",
+          "kind": "function",
+          "line": 6
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/FormField.tsx",
+      "definitions": [
+        {
+          "name": "FormField",
+          "kind": "function",
+          "line": 7
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/InlineCode.tsx",
+      "definitions": [
+        {
+          "name": "InlineCode",
+          "kind": "function",
+          "line": 6
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/LoadingSkeleton.tsx",
+      "definitions": [
+        {
+          "name": "LoadingSkeleton",
+          "kind": "function",
+          "line": 2
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/NavLink.tsx",
+      "definitions": [
+        {
+          "name": "NavLink",
+          "kind": "function",
+          "line": 7
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/PageHero.tsx",
+      "definitions": [
+        {
+          "name": "PageHero",
+          "kind": "function",
+          "line": 7
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/PrimaryButton.tsx",
+      "definitions": [
+        {
+          "name": "PrimaryButton",
+          "kind": "function",
+          "line": 7
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/StatusBadge.tsx",
+      "definitions": [
+        {
+          "name": "StatusBadge",
+          "kind": "function",
+          "line": 13
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/components/good/UserAvatar.tsx",
+      "definitions": [
+        {
+          "name": "UserAvatar",
+          "kind": "function",
+          "line": 7
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
+      "definitions": [
+        {
+          "name": "ComponentCatalog",
+          "kind": "function",
+          "line": 9
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/dashboard/Dashboard.tsx",
+      "definitions": [
+        {
+          "name": "Dashboard",
+          "kind": "function",
+          "line": 16
+        }
+      ],
+      "usages": [
+        {
+          "component": "ScoreStrip",
+          "line": 75,
+          "props": [
+            "scores"
+          ]
+        },
+        {
+          "component": "ComponentCatalog",
+          "line": 94,
+          "props": [
+            "report"
+          ]
+        },
+        {
+          "component": "TokenWall",
+          "line": 100,
+          "props": []
+        },
+        {
+          "component": "FindingsList",
+          "line": 110,
+          "props": [
+            "findings",
+            "root"
+          ]
+        }
+      ],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
+      "definitions": [
+        {
+          "name": "FindingsList",
+          "kind": "function",
+          "line": 10
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/dashboard/ScoreStrip.tsx",
+      "definitions": [
+        {
+          "name": "ScoreStrip",
+          "kind": "function",
+          "line": 3
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/dashboard/TokenWall.tsx",
+      "definitions": [
+        {
+          "name": "TokenWall",
+          "kind": "function",
+          "line": 3
+        }
+      ],
+      "usages": [],
+      "parse_errors": []
+    },
+    {
+      "path": "/workspace/demo/src/main.tsx",
+      "definitions": [],
+      "usages": [
+        {
+          "component": "React.StrictMode",
+          "line": 7,
+          "props": []
+        },
+        {
+          "component": "App",
+          "line": 8,
+          "props": []
+        }
+      ],
+      "parse_errors": []
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "a11y-img-alt",
+      "message": "`<img>` without `alt` hurts accessibility and AI caption quality.",
+      "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
+      "line": 4,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#ffffff` — prefer design tokens or theme variables.",
+      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#ff0066` — prefer design tokens or theme variables.",
+      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#00ff99` — prefer design tokens or theme variables.",
+      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "line": 11,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#333333` — prefer design tokens or theme variables.",
+      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "line": 12,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#9933ff` — prefer design tokens or theme variables.",
+      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "line": 13,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#7c3aed` — prefer design tokens or theme variables.",
+      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
+      "line": 10,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#c084fc` — prefer design tokens or theme variables.",
+      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
+      "line": 10,
+      "severity": "info"
+    },
+    {
+      "rule_id": "deprecated-component",
+      "message": "Deprecated component `LegacyButton` is still referenced.",
+      "path": "/workspace/demo/src/DemoGallery.tsx",
+      "line": 62,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "deprecated-component",
+      "message": "Deprecated component `DeprecatedChip` is still referenced.",
+      "path": "/workspace/demo/src/DemoGallery.tsx",
+      "line": 63,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "variant-explosion",
+      "message": "`KitchenSinkModal` reached 15 props on a single tag — consider splitting variants or using composition.",
+      "path": "/workspace/demo/src/DemoGallery.tsx",
+      "line": null,
+      "severity": "info"
+    },
+    {
+      "rule_id": "duplicate-component",
+      "message": "Component `Card` is defined in 2 files — consolidate or alias.",
+      "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardA.tsx",
+      "line": null,
+      "severity": "warning"
+    }
+  ],
+  "duplicate_components": [
+    {
+      "name": "Card",
+      "locations": [
+        "/workspace/demo/src/components/bad/duplicate/DuplicateCardA.tsx",
+        "/workspace/demo/src/components/bad/duplicate/DuplicateCardB.tsx"
+      ]
+    }
+  ],
+  "usage_by_component": [
+    {
+      "component": "ContentCard",
+      "reference_count": 5,
+      "file_count": 1,
+      "max_props_on_single_use": 1,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "InlineCode",
+      "reference_count": 4,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "FlexStack",
+      "reference_count": 2,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "App",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/main.tsx"
+      ]
+    },
+    {
+      "component": "ChaosGrid",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "ComponentCatalog",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 1,
+      "files": [
+        "/workspace/demo/src/dashboard/Dashboard.tsx"
+      ]
+    },
+    {
+      "component": "Dashboard",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/App.tsx"
+      ]
+    },
+    {
+      "component": "DemoGallery",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/App.tsx"
+      ]
+    },
+    {
+      "component": "DeprecatedChip",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 1,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "DuplicateProductCard",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "DuplicateTeamCard",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "FindingsList",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 2,
+      "files": [
+        "/workspace/demo/src/dashboard/Dashboard.tsx"
+      ]
+    },
+    {
+      "component": "FlashBanner",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "FormField",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 2,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "InconsistentToggle",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 1,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "InlinePaint",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "KitchenSinkModal",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 15,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "LegacyButton",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "LoadingSkeleton",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "MysteryImage",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "NavLink",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 1,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "PageHero",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 2,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "PrimaryButton",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "React.StrictMode",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/main.tsx"
+      ]
+    },
+    {
+      "component": "ScoreStrip",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 1,
+      "files": [
+        "/workspace/demo/src/dashboard/Dashboard.tsx"
+      ]
+    },
+    {
+      "component": "StatusBadge",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 1,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    },
+    {
+      "component": "TokenWall",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/workspace/demo/src/dashboard/Dashboard.tsx"
+      ]
+    },
+    {
+      "component": "UserAvatar",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 2,
+      "files": [
+        "/workspace/demo/src/DemoGallery.tsx"
+      ]
+    }
+  ],
+  "scores": {
+    "design_system_health": 76,
+    "ux_consistency": 92,
+    "accessibility": 96,
+    "maintainability": 83
+  }
+}

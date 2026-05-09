@@ -1,0 +1,68 @@
+/** Mirrors `dslint` WorkspaceReport JSON (serde). */
+
+export type DefinitionKind =
+  | "function"
+  | "class"
+  | "const_arrow"
+  | "const_function"
+  | "wrapped_component"
+  | "export_default"
+  | "export_default_anonymous";
+
+export type Severity = "error" | "warning" | "info";
+
+export interface ComponentDefinition {
+  name: string;
+  kind: DefinitionKind;
+  line: number;
+}
+
+export interface JsxUsage {
+  component: string;
+  line: number;
+  props: string[];
+}
+
+export interface LintFinding {
+  rule_id: string;
+  message: string;
+  path: string;
+  line: number | null;
+  severity: Severity;
+}
+
+export interface FileScan {
+  path: string;
+  definitions: ComponentDefinition[];
+  usages: JsxUsage[];
+  parse_errors: string[];
+}
+
+export interface GovernanceScores {
+  design_system_health: number;
+  ux_consistency: number;
+  accessibility: number;
+  maintainability: number;
+}
+
+export interface DuplicateComponent {
+  name: string;
+  locations: string[];
+}
+
+export interface UsageSummary {
+  component: string;
+  reference_count: number;
+  file_count: number;
+  max_props_on_single_use: number;
+  files: string[];
+}
+
+export interface WorkspaceReport {
+  root: string;
+  files: FileScan[];
+  findings: LintFinding[];
+  duplicate_components: DuplicateComponent[];
+  usage_by_component: UsageSummary[];
+  scores: GovernanceScores;
+}
