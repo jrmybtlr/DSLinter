@@ -65,7 +65,7 @@ fn offset_line(source: &str, offset: u32) -> u32 {
     1 + source[..offset].bytes().filter(|&b| b == b'\n').count() as u32
 }
 
-fn binding_name<'a>(id: &oxc_ast::ast::BindingIdentifier<'a>) -> String {
+fn binding_name(id: &oxc_ast::ast::BindingIdentifier<'_>) -> String {
     id.name.as_str().to_string()
 }
 
@@ -105,7 +105,7 @@ fn usage_is_design_component(full_name: &str) -> bool {
     full_name
         .split('.')
         .next()
-        .is_some_and(|seg| is_component_identifier(seg))
+        .is_some_and(is_component_identifier)
 }
 
 fn props_from_attributes(items: &[JSXAttributeItem<'_>]) -> Vec<String> {
@@ -157,7 +157,7 @@ struct ExtractVisitor<'src> {
     fn_depth: u32,
 }
 
-impl<'src, 'a> Visit<'a> for ExtractVisitor<'src> {
+impl<'a> Visit<'a> for ExtractVisitor<'_> {
     fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
         self.fn_depth += 1;
         if self.fn_depth == 1 {
@@ -260,8 +260,8 @@ impl<'src, 'a> Visit<'a> for ExtractVisitor<'src> {
     }
 }
 
-impl<'src> ExtractVisitor<'src> {
-    fn try_record_component_binding<'a>(&mut self, decl: &VariableDeclarator<'a>) {
+impl ExtractVisitor<'_> {
+    fn try_record_component_binding(&mut self, decl: &VariableDeclarator<'_>) {
         let BindingPatternKind::BindingIdentifier(id) = &decl.id.kind else {
             return;
         };
