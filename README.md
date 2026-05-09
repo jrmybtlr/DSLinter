@@ -23,6 +23,15 @@ Optional config (repository root): `.dslint.json` or `dslint.json`:
 }
 ```
 
+## Demo
+
+See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with ten “good” and ten “bad” components plus `demo/.dslint.json`.
+
+```bash
+cd demo && npm install && npm run dev
+cargo run --release -- demo -p
+```
+
 ## MVP scope
 
 - Component definitions (functions, classes, `const` arrows, `forwardRef` / `memo`, exports)

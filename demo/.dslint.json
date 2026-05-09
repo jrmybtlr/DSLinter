@@ -1,0 +1,16 @@
+{
+  "deprecated_components": ["LegacyButton", "DeprecatedChip"],
+  "known_tokens": [
+    "bg-primary",
+    "text-primary",
+    "bg-surface",
+    "border-surface-border",
+    "rounded-ds",
+    "rounded-ds-lg",
+    "p-layout-",
+    "gap-layout-"
+  ],
+  "ownership": {
+    "design-system": ["src/components/good/"]
+  }
+}
