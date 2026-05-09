@@ -44,7 +44,7 @@ export function DemoGallery() {
             </div>
             <div className="mt-layout-md space-y-layout-sm">
               <FormField id="email" label="Email" />
-              <NavLink href="#tokens">Token docs</NavLink>
+              <NavLink href="/tokens">Token docs</NavLink>
             </div>
           </ContentCard>
 
@@ -57,7 +57,12 @@ export function DemoGallery() {
 
         <FlexStack>
           <ContentCard title="Bad — entropy gallery">
-            <FlashBanner>Hardcoded neon banner</FlashBanner>
+            <FlashBanner>
+              <>
+                <p className="font-medium">Hardcoded neon banner</p>
+                <a className="mt-2 block text-sm underline opacity-90">Missing href</a>
+              </>
+            </FlashBanner>
             <div className="mt-layout-md space-y-layout-md">
               <LegacyButton>Legacy glow</LegacyButton>
               <DeprecatedChip label="old-api" />

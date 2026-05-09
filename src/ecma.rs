@@ -1,11 +1,12 @@
 //! ECMAScript / TypeScript / JSX parsing via Oxc.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPatternKind, ExportDefaultDeclarationKind, Expression, Function, JSXAttributeItem,
-    JSXAttributeName, JSXElementName, JSXMemberExpressionObject, VariableDeclarator,
+    BindingPatternKind, ExportDefaultDeclarationKind, Expression, Function, JSXAttribute,
+    JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXElement, JSXElementName,
+    JSXMemberExpressionObject, JSXOpeningElement, VariableDeclarator,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
@@ -13,7 +14,9 @@ use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
 use oxc_syntax::scope::ScopeFlags;
 
-use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage};
+use crate::model::{
+    ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity,
+};
 
 const DEFAULT_EXPORT: &str = "default";
 
@@ -34,13 +37,16 @@ pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
             definitions: Vec::new(),
             usages: Vec::new(),
             parse_errors,
+            findings: Vec::new(),
         };
     }
 
     let mut v = ExtractVisitor {
+        path: path.to_path_buf(),
         source,
         definitions: Vec::new(),
         usages: Vec::new(),
+        findings: Vec::new(),
         fn_depth: 0,
     };
     v.visit_program(&program);
@@ -50,6 +56,7 @@ pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
         definitions: v.definitions,
         usages: v.usages,
         parse_errors,
+        findings: v.findings,
     }
 }
 
@@ -108,6 +115,21 @@ fn usage_is_design_component(full_name: &str) -> bool {
         .is_some_and(is_component_identifier)
 }
 
+/// Lowercase intrinsic JSX tag (`div`, `img`, …), excluding PascalCase components.
+fn jsx_intrinsic_tag<'a>(name: &'a JSXElementName<'a>) -> Option<&'a str> {
+    match name {
+        JSXElementName::Identifier(id) => {
+            let n = id.name.as_str();
+            if n.chars().next().is_some_and(|c| c.is_ascii_lowercase()) {
+                Some(n)
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
 fn props_from_attributes(items: &[JSXAttributeItem<'_>]) -> Vec<String> {
     let mut props = Vec::new();
     for item in items {
@@ -150,11 +172,183 @@ fn expr_is_wrapper_call(expr: &Expression<'_>) -> bool {
     )
 }
 
+fn has_spread_attribute(items: &[JSXAttributeItem<'_>]) -> bool {
+    items
+        .iter()
+        .any(|item| matches!(item, JSXAttributeItem::SpreadAttribute(_)))
+}
+
+fn jsx_attr<'a>(items: &'a [JSXAttributeItem<'a>], want: &str) -> Option<&'a JSXAttribute<'a>> {
+    for item in items {
+        let JSXAttributeItem::Attribute(attr) = item else {
+            continue;
+        };
+        let JSXAttributeName::Identifier(id) = &attr.name else {
+            continue;
+        };
+        if id.name.as_str() == want {
+            return Some(attr);
+        }
+    }
+    None
+}
+
+fn has_named_attribute(items: &[JSXAttributeItem<'_>], name: &str) -> bool {
+    jsx_attr(items, name).is_some()
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum HrefA11y {
+    Ok,
+    Missing,
+    Placeholder,
+    Skip,
+}
+
+fn href_accessibility(attrs: &[JSXAttributeItem<'_>]) -> HrefA11y {
+    let Some(attr) = jsx_attr(attrs, "href") else {
+        return HrefA11y::Missing;
+    };
+    match &attr.value {
+        None => HrefA11y::Placeholder,
+        Some(JSXAttributeValue::StringLiteral(s)) => {
+            let v = s.value.trim();
+            if v.is_empty() || v == "#" {
+                return HrefA11y::Placeholder;
+            }
+            let lower = v.to_ascii_lowercase();
+            if lower.starts_with("javascript:") {
+                return HrefA11y::Placeholder;
+            }
+            HrefA11y::Ok
+        }
+        Some(JSXAttributeValue::ExpressionContainer(_)) => HrefA11y::Skip,
+        Some(JSXAttributeValue::Element(_) | JSXAttributeValue::Fragment(_)) => HrefA11y::Skip,
+    }
+}
+
+fn input_is_hidden(attrs: &[JSXAttributeItem<'_>]) -> bool {
+    let Some(attr) = jsx_attr(attrs, "type") else {
+        return false;
+    };
+    match &attr.value {
+        Some(JSXAttributeValue::StringLiteral(s)) => s.value.trim().eq_ignore_ascii_case("hidden"),
+        _ => false,
+    }
+}
+
+fn non_empty_string_literal_attr(attrs: &[JSXAttributeItem<'_>], name: &str) -> bool {
+    let Some(attr) = jsx_attr(attrs, name) else {
+        return false;
+    };
+    match &attr.value {
+        Some(JSXAttributeValue::StringLiteral(s)) => !s.value.trim().is_empty(),
+        Some(JSXAttributeValue::ExpressionContainer(_)) => true,
+        _ => false,
+    }
+}
+
+fn jsx_children_have_visible_text(children: &[JSXChild<'_>]) -> bool {
+    for child in children {
+        match child {
+            JSXChild::Text(t) => {
+                if !t.value.trim().is_empty() {
+                    return true;
+                }
+            }
+            JSXChild::Element(_) | JSXChild::Fragment(_) => return true,
+            JSXChild::ExpressionContainer(_) => return true,
+            JSXChild::Spread(_) => {}
+        }
+    }
+    false
+}
+
+fn button_has_accessible_name(attrs: &[JSXAttributeItem<'_>], children: &[JSXChild<'_>]) -> bool {
+    if non_empty_string_literal_attr(attrs, "aria-label") {
+        return true;
+    }
+    if has_named_attribute(attrs, "aria-labelledby") {
+        return true;
+    }
+    if non_empty_string_literal_attr(attrs, "title") {
+        return true;
+    }
+    jsx_children_have_visible_text(children)
+}
+
 struct ExtractVisitor<'src> {
+    path: PathBuf,
     source: &'src str,
     definitions: Vec<ComponentDefinition>,
     usages: Vec<JsxUsage>,
+    findings: Vec<LintFinding>,
     fn_depth: u32,
+}
+
+impl ExtractVisitor<'_> {
+    fn push_a11y(&mut self, line: u32, severity: Severity, rule_id: &str, message: &str) {
+        self.findings.push(LintFinding {
+            rule_id: rule_id.to_string(),
+            message: message.to_string(),
+            path: self.path.clone(),
+            line: Some(line),
+            severity,
+        });
+    }
+
+    fn check_intrinsic_a11y_opening(&mut self, el: &JSXOpeningElement<'_>) {
+        if has_spread_attribute(&el.attributes) {
+            return;
+        }
+        let Some(tag) = jsx_intrinsic_tag(&el.name) else {
+            return;
+        };
+        let line = offset_line(self.source, el.span.start);
+        match tag {
+            "img" => {
+                if !has_named_attribute(&el.attributes, "alt") {
+                    self.push_a11y(
+                        line,
+                        Severity::Warning,
+                        "a11y-img-alt",
+                        "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+                    );
+                }
+            }
+            "a" => match href_accessibility(&el.attributes) {
+                HrefA11y::Missing => self.push_a11y(
+                    line,
+                    Severity::Warning,
+                    "a11y-anchor-href",
+                    "`<a>` must have a meaningful `href` for navigation.",
+                ),
+                HrefA11y::Placeholder => self.push_a11y(
+                    line,
+                    Severity::Warning,
+                    "a11y-anchor-placeholder-href",
+                    "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
+                ),
+                HrefA11y::Ok | HrefA11y::Skip => {}
+            },
+            "input" => {
+                if input_is_hidden(&el.attributes) {
+                    return;
+                }
+                if !has_named_attribute(&el.attributes, "aria-label")
+                    && !has_named_attribute(&el.attributes, "aria-labelledby")
+                {
+                    self.push_a11y(
+                        line,
+                        Severity::Info,
+                        "a11y-input-label",
+                        "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 impl<'a> Visit<'a> for ExtractVisitor<'_> {
@@ -243,7 +437,26 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
         walk::walk_export_default_declaration(self, decl);
     }
 
-    fn visit_jsx_opening_element(&mut self, el: &oxc_ast::ast::JSXOpeningElement<'a>) {
+    fn visit_jsx_element(&mut self, el: &JSXElement<'a>) {
+        if let Some("button") = jsx_intrinsic_tag(&el.opening_element.name).as_deref() {
+            if !has_spread_attribute(&el.opening_element.attributes)
+                && !button_has_accessible_name(&el.opening_element.attributes, &el.children)
+            {
+                let line = offset_line(self.source, el.opening_element.span.start);
+                self.push_a11y(
+                    line,
+                    Severity::Warning,
+                    "a11y-button-name",
+                    "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
+                );
+            }
+        }
+        walk::walk_jsx_element(self, el);
+    }
+
+    fn visit_jsx_opening_element(&mut self, el: &JSXOpeningElement<'a>) {
+        self.check_intrinsic_a11y_opening(el);
+
         let Some(component) = jsx_name(&el.name) else {
             walk::walk_jsx_opening_element(self, el);
             return;
@@ -320,5 +533,49 @@ const Panel = () => <aside />;
         let used: Vec<_> = scan.usages.iter().map(|u| u.component.as_str()).collect();
         assert!(used.contains(&"Button"));
         assert!(!used.contains(&"div"));
+    }
+
+    #[test]
+    fn a11y_img_requires_alt() {
+        let src = r#"export function X() { return <img src="a.png" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            scan.findings.iter().any(|f| f.rule_id == "a11y-img-alt"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_img_alt_present_ok() {
+        let src = r#"export function X() { return <img src="a.png" alt="" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-img-alt"));
+    }
+
+    #[test]
+    fn a11y_anchor_requires_href() {
+        let src = r#"export function X() { return <a>click</a>; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-anchor-href"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_button_requires_name() {
+        let src = r#"export function X() { return <button type="button" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-button-name"),
+            "{:?}",
+            scan.findings
+        );
     }
 }

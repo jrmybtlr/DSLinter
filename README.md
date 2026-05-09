@@ -37,7 +37,8 @@ cd demo && npm run dslint:report   # regenerate dashboard JSON
 
 - Component definitions (functions, classes, `const` arrows, `forwardRef` / `memo`, exports)
 - PascalCase JSX / Vue template usage with prop lists (variant-surface hint)
-- Duplicate definition detection, deprecation usage, hardcoded hex colors, `<img>` missing `alt`
+- Accessibility: `<img>` alt, meaningful `<a href>`, `<button>` accessible names, `<input>` accessible names (JSX AST + Vue `<template>`); governance score weights all `a11y-*` rules
+- Duplicate definition detection, deprecation usage, hardcoded hex colors
 - Heuristic governance scores and `--json` output for dashboards / CI
 
 Roadmap aligns with phased governance (tokens, a11y depth, drift, AI compliance) described in project docs.

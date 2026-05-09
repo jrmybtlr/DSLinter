@@ -5,7 +5,7 @@ use std::path::Path;
 use regex::Regex;
 
 use crate::ecma::analyze_ecma_file;
-use crate::model::{FileScan, JsxUsage};
+use crate::model::{FileScan, JsxUsage, LintFinding, Severity};
 
 /// Captures `<script ...>...</script>` blocks (non-greedy inner content).
 fn script_block_regex() -> Regex {
@@ -21,6 +21,102 @@ fn lang_is_ts(attrs: &str) -> bool {
         || attrs.contains("lang='ts'")
         || attrs.contains("lang=\"tsx\"")
         || attrs.contains("lang='tsx'")
+}
+
+fn line_at(full_source: &str, byte_offset: usize) -> u32 {
+    1 + full_source[..byte_offset.min(full_source.len())]
+        .bytes()
+        .filter(|&b| b == b'\n')
+        .count() as u32
+}
+
+/// Template-only accessibility checks (HTML in `<template>`).
+fn vue_template_a11y_findings(
+    path: &Path,
+    full_source: &str,
+    template: &str,
+    template_inner_start: usize,
+) -> Vec<LintFinding> {
+    let mut out = Vec::new();
+
+    let img_re = Regex::new(r#"(?si)<img\s([^>]*?)\s*/?>"#).expect("vue img regex");
+    for cap in img_re.captures_iter(template) {
+        let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        if attrs.to_ascii_lowercase().contains("alt=") {
+            continue;
+        }
+        let pos = template_inner_start + cap.get(0).unwrap().start();
+        out.push(LintFinding {
+            rule_id: "a11y-img-alt".into(),
+            message: "`<img>` must include an `alt` attribute (empty string is OK for decorative images)."
+                .into(),
+            path: path.to_path_buf(),
+            line: Some(line_at(full_source, pos)),
+            severity: Severity::Warning,
+        });
+    }
+
+    let a_open = Regex::new(r#"(?si)<a(\s[^>]*)?>"#).expect("vue anchor regex");
+    for cap in a_open.captures_iter(template) {
+        let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let lower = attrs.to_ascii_lowercase();
+        let pos = template_inner_start + cap.get(0).unwrap().start();
+        let line = line_at(full_source, pos);
+
+        if !lower.contains("href=") {
+            out.push(LintFinding {
+                rule_id: "a11y-anchor-href".into(),
+                message: "`<a>` must have a meaningful `href` for navigation.".into(),
+                path: path.to_path_buf(),
+                line: Some(line),
+                severity: Severity::Warning,
+            });
+            continue;
+        }
+
+        let bad_href = lower.contains("href=\"#\"")
+            || lower.contains("href='#'")
+            || lower.contains("href=\"\"")
+            || lower.contains("href=''")
+            || lower.contains("javascript:");
+        if bad_href {
+            out.push(LintFinding {
+                rule_id: "a11y-anchor-placeholder-href".into(),
+                message: "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior."
+                    .into(),
+                path: path.to_path_buf(),
+                line: Some(line),
+                severity: Severity::Warning,
+            });
+        }
+    }
+
+    let input_re = Regex::new(r#"(?si)<input\s([^>]*?)\s*/?>"#).expect("vue input regex");
+    for cap in input_re.captures_iter(template) {
+        let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let lower = attrs.to_ascii_lowercase();
+        if lower.contains("type=")
+            && (lower.contains("type=\"hidden\"")
+                || lower.contains("type='hidden'")
+                || lower.contains("type=hidden"))
+        {
+            continue;
+        }
+        if lower.contains("aria-label=") || lower.contains("aria-labelledby=") {
+            continue;
+        }
+        let pos = template_inner_start + cap.get(0).unwrap().start();
+        out.push(LintFinding {
+            rule_id: "a11y-input-label".into(),
+            message: "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label>`)."
+                .into(),
+            path: path.to_path_buf(),
+            line: Some(line_at(full_source, pos)),
+            severity: Severity::Info,
+        });
+    }
+
+    out
 }
 
 /// Merge Vue template component references into an ECMA analysis of the `<script>` blocks.
@@ -53,6 +149,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
             definitions: Vec::new(),
             usages: Vec::new(),
             parse_errors: vec!["dslint: Vue SFC has no <script> block".into()],
+            findings: Vec::new(),
         }
     } else {
         analyze_ecma_file(&pseudo_path, &combined_script)
@@ -64,6 +161,8 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         let tpl = inner.as_str();
         let tpl_start = inner.start();
         merge_template_usages(source, tpl, tpl_start, &mut scan.usages);
+        scan.findings
+            .extend(vue_template_a11y_findings(path, source, tpl, tpl_start));
     }
 
     scan
@@ -114,6 +213,17 @@ const x = 1
             scan.usages.iter().any(|u| u.component == "DesignHeader"),
             "{:?}",
             scan.usages
+        );
+    }
+
+    #[test]
+    fn vue_template_img_alt() {
+        let src = r#"<template><img src="x" /></template><script setup>const x=1</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("Bad.vue"), src);
+        assert!(
+            scan.findings.iter().any(|f| f.rule_id == "a11y-img-alt"),
+            "{:?}",
+            scan.findings
         );
     }
 }

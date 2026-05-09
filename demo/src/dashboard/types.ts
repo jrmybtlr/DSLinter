@@ -36,6 +36,7 @@ export interface FileScan {
   definitions: ComponentDefinition[];
   usages: JsxUsage[];
   parse_errors: string[];
+  findings?: LintFinding[];
 }
 
 export interface GovernanceScores {

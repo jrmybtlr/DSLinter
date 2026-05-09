@@ -55,6 +55,9 @@ pub struct FileScan {
     pub definitions: Vec<ComponentDefinition>,
     pub usages: Vec<JsxUsage>,
     pub parse_errors: Vec<String>,
+    /// Rule violations detected in this file (e.g. accessibility).
+    #[serde(default)]
+    pub findings: Vec<LintFinding>,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]

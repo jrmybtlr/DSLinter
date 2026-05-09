@@ -1,4 +1,4 @@
-//! Governance rules (MVP): duplicates, deprecation, tokens, basic a11y signals.
+//! Governance rules (MVP): duplicates, deprecation, tokens, and accessibility (JSX AST + Vue template).
 
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -17,7 +17,9 @@ pub fn evaluate_workspace(
     config: &DslintConfig,
 ) -> WorkspaceReport {
     let mut findings = Vec::new();
-    findings.extend(img_missing_alt(&files));
+    for file in &files {
+        findings.extend(file.findings.iter().cloned());
+    }
     findings.extend(hardcoded_hex_colors(&files));
     findings.extend(deprecated_usage(&files, config));
 
@@ -167,33 +169,6 @@ fn deprecated_usage(files: &[FileScan], config: &DslintConfig) -> Vec<LintFindin
     out
 }
 
-fn img_missing_alt(files: &[FileScan]) -> Vec<LintFinding> {
-    let re = Regex::new(r#"<img\s([^>]*?)\s*/?>"#).expect("img regex");
-    let mut out = Vec::new();
-    for file in files {
-        let Ok(text) = std::fs::read_to_string(&file.path) else {
-            continue;
-        };
-        for cap in re.captures_iter(&text) {
-            let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
-            let lower = attrs.to_ascii_lowercase();
-            if lower.contains("alt=") {
-                continue;
-            }
-            let start = cap.get(0).unwrap().start();
-            let line = 1 + text[..start].bytes().filter(|&b| b == b'\n').count() as u32;
-            out.push(LintFinding {
-                rule_id: "a11y-img-alt".into(),
-                message: "`<img>` without `alt` hurts accessibility and AI caption quality.".into(),
-                path: file.path.clone(),
-                line: Some(line),
-                severity: Severity::Warning,
-            });
-        }
-    }
-    out
-}
-
 fn hardcoded_hex_colors(files: &[FileScan]) -> Vec<LintFinding> {
     let re = Regex::new(r"#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b").expect("hex regex");
     let mut out = Vec::new();
@@ -219,6 +194,18 @@ fn hardcoded_hex_colors(files: &[FileScan]) -> Vec<LintFinding> {
     out
 }
 
+fn a11y_penalty(findings: &[LintFinding]) -> i32 {
+    findings
+        .iter()
+        .filter(|f| f.rule_id.starts_with("a11y-"))
+        .map(|f| match f.severity {
+            Severity::Error => 6_i32,
+            Severity::Warning => 4_i32,
+            Severity::Info => 2_i32,
+        })
+        .sum()
+}
+
 fn compute_scores(
     findings: &[LintFinding],
     duplicates: &[DuplicateComponent],
@@ -233,13 +220,7 @@ fn compute_scores(
 
     let token_adoption = token_adoption_pct(files, config);
     let maintainability = (100_i32 - warn * 3 - dup_penalty).clamp(0, 100) as u8;
-    let accessibility = (100_i32
-        - findings
-            .iter()
-            .filter(|f| f.rule_id == "a11y-img-alt")
-            .count() as i32
-            * 4)
-    .clamp(0, 100) as u8;
+    let accessibility = (100_i32 - a11y_penalty(findings)).clamp(0, 100) as u8;
     let ux_consistency = (100_i32 - warn * 2).clamp(0, 100) as u8;
     let design_system_health = ((token_adoption as i32
         + maintainability as i32

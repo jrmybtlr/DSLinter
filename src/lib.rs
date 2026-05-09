@@ -27,6 +27,7 @@ pub fn scan_file(path: &Path, source: &str) -> FileScan {
             definitions: Vec::new(),
             usages: Vec::new(),
             parse_errors: vec![format!("dslint: unsupported extension `{ext}`")],
+            findings: Vec::new(),
         },
     }
 }

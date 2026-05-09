@@ -22,7 +22,8 @@
           "props": []
         }
       ],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/DemoGallery.tsx",
@@ -135,70 +136,70 @@
         },
         {
           "component": "LegacyButton",
-          "line": 62,
+          "line": 67,
           "props": []
         },
         {
           "component": "DeprecatedChip",
-          "line": 63,
+          "line": 68,
           "props": [
             "label"
           ]
         },
         {
           "component": "MysteryImage",
-          "line": 64,
+          "line": 69,
           "props": []
         },
         {
           "component": "InlinePaint",
-          "line": 65,
+          "line": 70,
           "props": []
         },
         {
           "component": "ChaosGrid",
-          "line": 66,
+          "line": 71,
           "props": []
         },
         {
           "component": "InconsistentToggle",
-          "line": 69,
+          "line": 74,
           "props": [
             "pressedTone"
           ]
         },
         {
           "component": "ContentCard",
-          "line": 75,
+          "line": 80,
           "props": [
             "title"
           ]
         },
         {
           "component": "InlineCode",
-          "line": 77,
+          "line": 82,
           "props": []
         },
         {
           "component": "DuplicateTeamCard",
-          "line": 80,
+          "line": 85,
           "props": []
         },
         {
           "component": "DuplicateProductCard",
-          "line": 81,
+          "line": 86,
           "props": []
         },
         {
           "component": "ContentCard",
-          "line": 85,
+          "line": 90,
           "props": [
             "title"
           ]
         },
         {
           "component": "KitchenSinkModal",
-          "line": 86,
+          "line": 91,
           "props": [
             "analyticsId",
             "bannerTone",
@@ -218,7 +219,16 @@
           ]
         }
       ],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": [
+        {
+          "rule_id": "a11y-anchor-href",
+          "message": "`<a>` must have a meaningful `href` for navigation.",
+          "path": "/workspace/demo/src/DemoGallery.tsx",
+          "line": 63,
+          "severity": "warning"
+        }
+      ]
     },
     {
       "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
@@ -230,7 +240,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/DeprecatedChip.tsx",
@@ -242,7 +253,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
@@ -254,7 +266,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/InconsistentToggle.tsx",
@@ -266,7 +279,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
@@ -278,7 +292,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/KitchenSinkModal.tsx",
@@ -290,7 +305,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
@@ -302,7 +318,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
@@ -314,7 +331,16 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": [
+        {
+          "rule_id": "a11y-img-alt",
+          "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+          "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
+          "line": 4,
+          "severity": "warning"
+        }
+      ]
     },
     {
       "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardA.tsx",
@@ -326,7 +352,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardB.tsx",
@@ -338,7 +365,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/ContentCard.tsx",
@@ -350,7 +378,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/FlexStack.tsx",
@@ -362,7 +391,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/FormField.tsx",
@@ -374,7 +404,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/InlineCode.tsx",
@@ -386,7 +417,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/LoadingSkeleton.tsx",
@@ -398,7 +430,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/NavLink.tsx",
@@ -410,7 +443,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/PageHero.tsx",
@@ -422,7 +456,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/PrimaryButton.tsx",
@@ -434,7 +469,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/StatusBadge.tsx",
@@ -446,7 +482,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/components/good/UserAvatar.tsx",
@@ -458,7 +495,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
@@ -470,7 +508,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/dashboard/Dashboard.tsx",
@@ -503,14 +542,15 @@
         },
         {
           "component": "FindingsList",
-          "line": 110,
+          "line": 112,
           "props": [
             "findings",
             "root"
           ]
         }
       ],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
@@ -522,7 +562,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/dashboard/ScoreStrip.tsx",
@@ -534,7 +575,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/dashboard/TokenWall.tsx",
@@ -546,7 +588,8 @@
         }
       ],
       "usages": [],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     },
     {
       "path": "/workspace/demo/src/main.tsx",
@@ -563,13 +606,21 @@
           "props": []
         }
       ],
-      "parse_errors": []
+      "parse_errors": [],
+      "findings": []
     }
   ],
   "findings": [
     {
+      "rule_id": "a11y-anchor-href",
+      "message": "`<a>` must have a meaningful `href` for navigation.",
+      "path": "/workspace/demo/src/DemoGallery.tsx",
+      "line": 63,
+      "severity": "warning"
+    },
+    {
       "rule_id": "a11y-img-alt",
-      "message": "`<img>` without `alt` hurts accessibility and AI caption quality.",
+      "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
       "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
       "line": 4,
       "severity": "warning"
@@ -627,14 +678,14 @@
       "rule_id": "deprecated-component",
       "message": "Deprecated component `LegacyButton` is still referenced.",
       "path": "/workspace/demo/src/DemoGallery.tsx",
-      "line": 62,
+      "line": 67,
       "severity": "warning"
     },
     {
       "rule_id": "deprecated-component",
       "message": "Deprecated component `DeprecatedChip` is still referenced.",
       "path": "/workspace/demo/src/DemoGallery.tsx",
-      "line": 63,
+      "line": 68,
       "severity": "warning"
     },
     {
@@ -916,9 +967,9 @@
     }
   ],
   "scores": {
-    "design_system_health": 76,
-    "ux_consistency": 92,
-    "accessibility": 96,
-    "maintainability": 83
+    "design_system_health": 74,
+    "ux_consistency": 90,
+    "accessibility": 92,
+    "maintainability": 80
   }
 }

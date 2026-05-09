@@ -103,7 +103,9 @@ export function Dashboard() {
             <div className="flex items-end justify-between gap-4">
               <div>
                 <h2 className="text-sm font-semibold text-neutral-900">Governance signals</h2>
-                <p className="text-xs text-neutral-500">First findings from the report (MVP rules).</p>
+                <p className="text-xs text-neutral-500">
+                  Includes accessibility rules (images, links, buttons, inputs) from DSLint.
+                </p>
               </div>
               <span className="text-xs text-neutral-400">{report.findings.length} total</span>
             </div>

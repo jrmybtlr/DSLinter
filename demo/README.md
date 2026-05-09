@@ -47,7 +47,7 @@ Configuration for this tree lives in `demo/.dslint.json` (deprecated component n
 - **duplicate-component** — two files under `src/components/bad/duplicate/` export `Card`.
 - **deprecated-component** — `LegacyButton`, `DeprecatedChip` referenced while listed as deprecated.
 - **token-hardcoded-color** — hex values in `FlashBanner`, `InlinePaint`, `LegacyButton`, etc.
-- **a11y-img-alt** — `MysteryImage` renders `<img>` without `alt`.
+- **a11y-img-alt**, **a11y-anchor-href**, **a11y-anchor-placeholder-href**, **a11y-button-name**, **a11y-input-label** — JSX via AST; Vue `<template>` scanned for img / anchor / input (e.g. `MysteryImage`, `<a>` without `href` inside `FlashBanner`).
 - **variant-explosion** — `App.tsx` passes many props to `KitchenSinkModal`.
 - **usage rollup** — imports such as `PrimaryButton`, `ContentCard`, `KitchenSinkModal` appear in JSON output.
 
