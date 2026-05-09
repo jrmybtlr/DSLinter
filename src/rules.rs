@@ -1,14 +1,15 @@
 //! Governance rules (MVP): duplicates, deprecation, tokens, accessibility, and code smells.
 
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use regex::Regex;
 
 use crate::config::DslintConfig;
+use crate::directives::{apply_inline_suppressions, collect_workspace_sources};
 use crate::model::{
-    DuplicateComponent, FileScan, GovernanceScores, LintFinding, Severity, UsageSummary,
-    WorkspaceReport,
+    DuplicateComponent, FileScan, GovernanceScores, LintFinding, OwnershipSummary, Severity,
+    UsageSummary, WorkspaceReport,
 };
 
 pub fn evaluate_workspace(
@@ -21,6 +22,7 @@ pub fn evaluate_workspace(
         findings.extend(file.findings.iter().cloned());
     }
     findings.extend(hardcoded_hex_colors(&files));
+    findings.extend(tailwind_arbitrary_tokens(&files));
     findings.extend(deprecated_usage(&files, config));
 
     let duplicate_components = duplicate_definitions(&files);
@@ -44,6 +46,12 @@ pub fn evaluate_workspace(
         });
     }
 
+    let sources = collect_workspace_sources(&root, &files);
+    findings = apply_inline_suppressions(findings, &sources);
+    findings = filter_smell_config(findings, config);
+
+    let ownership = compute_ownership(&root, &files, config);
+
     let scores = compute_scores(&findings, &duplicate_components, &files, config);
 
     WorkspaceReport {
@@ -52,6 +60,7 @@ pub fn evaluate_workspace(
         findings,
         duplicate_components,
         usage_by_component,
+        ownership,
         scores,
     }
 }
@@ -144,6 +153,109 @@ fn duplicate_definitions(files: &[FileScan]) -> Vec<DuplicateComponent> {
     out
 }
 
+fn filter_smell_config(mut findings: Vec<LintFinding>, config: &DslintConfig) -> Vec<LintFinding> {
+    findings.retain(|f| {
+        if f.rule_id == "smell-console-error" && !config.smell.report_console_error {
+            return false;
+        }
+        if f.rule_id.starts_with("smell-") {
+            return !config
+                .smell
+                .disabled_rules
+                .iter()
+                .any(|pat| rule_pattern_matches(pat, &f.rule_id));
+        }
+        true
+    });
+    findings
+}
+
+fn rule_pattern_matches(pat: &str, rule_id: &str) -> bool {
+    if pat == "*" {
+        return true;
+    }
+    if let Some(prefix) = pat.strip_suffix('*') {
+        return rule_id.starts_with(prefix);
+    }
+    pat == rule_id
+}
+
+fn compute_ownership(
+    root: &Path,
+    files: &[FileScan],
+    config: &DslintConfig,
+) -> Vec<OwnershipSummary> {
+    let root_canon = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    let mut buckets: HashMap<String, (usize, usize)> = HashMap::new();
+
+    for file in files {
+        let rel = file
+            .path
+            .strip_prefix(&root_canon)
+            .ok()
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .unwrap_or_default();
+
+        let mut owner_label: Option<String> = None;
+        for (label, prefixes) in &config.ownership {
+            for pre in prefixes {
+                let pre = pre.trim().trim_start_matches('/').trim_end_matches('/');
+                if pre.is_empty() {
+                    continue;
+                }
+                if rel == pre || rel.starts_with(&format!("{pre}/")) {
+                    owner_label = Some(label.clone());
+                    break;
+                }
+            }
+            if owner_label.is_some() {
+                break;
+            }
+        }
+
+        let label = owner_label.unwrap_or_else(|| "unowned".to_string());
+        let e = buckets.entry(label).or_insert((0, 0));
+        e.0 += 1;
+        e.1 += file.definitions.len();
+    }
+
+    let mut out: Vec<OwnershipSummary> = buckets
+        .into_iter()
+        .map(|(owner, (files, definitions))| OwnershipSummary {
+            owner,
+            files,
+            definitions,
+        })
+        .collect();
+    out.sort_by(|a, b| a.owner.cmp(&b.owner));
+    out
+}
+
+fn tailwind_arbitrary_tokens(files: &[FileScan]) -> Vec<LintFinding> {
+    let re = Regex::new(r"\[(?:#[0-9a-fA-F]{3,8}|\d+px)\]").expect("tw arb regex");
+    let mut out = Vec::new();
+    for file in files {
+        let Ok(text) = std::fs::read_to_string(&file.path) else {
+            continue;
+        };
+        for m in re.find_iter(&text) {
+            let start = m.start();
+            let line = 1 + text[..start].bytes().filter(|&b| b == b'\n').count() as u32;
+            out.push(LintFinding {
+                rule_id: "token-tailwind-arbitrary".into(),
+                message: format!(
+                    "Tailwind arbitrary value `{}` — prefer theme tokens or extended config keys.",
+                    m.as_str()
+                ),
+                path: file.path.clone(),
+                line: Some(line),
+                severity: Severity::Info,
+            });
+        }
+    }
+    out
+}
+
 fn deprecated_usage(files: &[FileScan], config: &DslintConfig) -> Vec<LintFinding> {
     let banned: HashSet<_> = config.deprecated_components.iter().cloned().collect();
     if banned.is_empty() {
@@ -231,12 +343,17 @@ fn compute_scores(
         (100_i32 - warn * 3 - dup_penalty - smell_penalty(findings)).clamp(0, 100) as u8;
     let accessibility = (100_i32 - a11y_penalty(findings)).clamp(0, 100) as u8;
     let ux_consistency = (100_i32 - warn * 2).clamp(0, 100) as u8;
-    let design_system_health = ((token_adoption as i32
-        + maintainability as i32
-        + accessibility as i32
-        + ux_consistency as i32)
-        / 4)
-    .clamp(0, 100) as u8;
+
+    let mut pillars = vec![
+        maintainability as i32,
+        accessibility as i32,
+        ux_consistency as i32,
+    ];
+    if let Some(t) = token_adoption {
+        pillars.push(t as i32);
+    }
+    let design_system_health =
+        (pillars.iter().sum::<i32>() / pillars.len() as i32).clamp(0, 100) as u8;
 
     GovernanceScores {
         design_system_health,
@@ -246,10 +363,10 @@ fn compute_scores(
     }
 }
 
-/// Rough token adoption: share of files that reference at least one configured token string.
-fn token_adoption_pct(files: &[FileScan], config: &DslintConfig) -> u8 {
+/// Share of files that reference at least one configured token string (None if unset).
+fn token_adoption_pct(files: &[FileScan], config: &DslintConfig) -> Option<u8> {
     if config.known_tokens.is_empty() {
-        return 75;
+        return None;
     }
     let mut hits = 0_u32;
     for file in files {
@@ -265,7 +382,7 @@ fn token_adoption_pct(files: &[FileScan], config: &DslintConfig) -> u8 {
         }
     }
     if files.is_empty() {
-        return 100;
+        return Some(100);
     }
-    ((hits * 100) / files.len() as u32).min(100) as u8
+    Some(((hits * 100) / files.len() as u32).min(100) as u8)
 }

@@ -1,7 +1,9 @@
 //! DSLint — design-system component inventory and governance signals (MVP).
 
 pub mod config;
+pub mod directives;
 pub mod ecma;
+pub mod gitignore;
 pub mod model;
 pub mod report;
 pub mod rules;
@@ -36,7 +38,7 @@ pub fn scan_file(path: &Path, source: &str) -> FileScan {
 /// Scan `root` sequentially (deterministic ordering).
 pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
     let config = config::DslintConfig::load_from_root(root)?;
-    let paths = scan::collect_component_files(root);
+    let paths = scan::collect_component_files(root, &config)?;
     let mut files: Vec<FileScan> = paths
         .into_iter()
         .filter_map(|p| {
@@ -57,7 +59,7 @@ pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
 pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
     use rayon::prelude::*;
     let config = config::DslintConfig::load_from_root(root)?;
-    let paths = scan::collect_component_files(root);
+    let paths = scan::collect_component_files(root, &config)?;
     let mut files: Vec<FileScan> = paths
         .par_iter()
         .filter_map(|p| {

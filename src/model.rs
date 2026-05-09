@@ -86,11 +86,19 @@ pub struct UsageSummary {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct OwnershipSummary {
+    pub owner: String,
+    pub files: usize,
+    pub definitions: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct WorkspaceReport {
     pub root: PathBuf,
     pub files: Vec<FileScan>,
     pub findings: Vec<LintFinding>,
     pub duplicate_components: Vec<DuplicateComponent>,
     pub usage_by_component: Vec<UsageSummary>,
+    pub ownership: Vec<OwnershipSummary>,
     pub scores: GovernanceScores,
 }

@@ -120,74 +120,82 @@ fn vue_template_a11y_findings(
     out
 }
 
-/// Shift 1-based line numbers from combined `<script>` text to full `.vue` file positions.
-fn fixup_vue_script_line_offsets(scan: &mut FileScan, vue_source: &str) {
-    let script_re = script_block_regex();
-    let caps: Vec<_> = script_re.captures_iter(vue_source).collect();
-    if caps.len() != 1 {
-        return;
-    }
-    let Some(inner) = caps[0].get(2) else {
-        return;
-    };
-    let line_offset = vue_source[..inner.start()]
-        .bytes()
-        .filter(|&b| b == b'\n')
-        .count() as u32;
+fn merge_file_scan(into: &mut FileScan, mut part: FileScan) {
+    into.definitions.append(&mut part.definitions);
+    into.usages.append(&mut part.usages);
+    into.findings.append(&mut part.findings);
+    into.parse_errors.append(&mut part.parse_errors);
+}
 
-    for d in &mut scan.definitions {
-        d.line += line_offset;
-    }
-    for u in &mut scan.usages {
-        u.line += line_offset;
-    }
-    for f in &mut scan.findings {
-        if let Some(ln) = f.line.as_mut() {
-            *ln += line_offset;
-        }
-    }
+fn kebab_to_pascal(raw: &str) -> String {
+    raw.split('-')
+        .filter(|p| !p.is_empty())
+        .map(|seg| {
+            let mut it = seg.chars();
+            match it.next() {
+                None => String::new(),
+                Some(c) => c.to_uppercase().collect::<String>() + it.as_str(),
+            }
+        })
+        .collect()
 }
 
 /// Merge Vue template component references into an ECMA analysis of the `<script>` blocks.
 pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
     let script_re = script_block_regex();
-    let mut combined_script = String::new();
-    for cap in script_re.captures_iter(source) {
-        let inner = cap.get(2).map(|m| m.as_str()).unwrap_or("");
-        combined_script.push_str(inner);
-        combined_script.push('\n');
-    }
+    let caps: Vec<_> = script_re.captures_iter(source).collect();
 
-    let pseudo_path = if lang_is_ts(
-        script_re
-            .captures(source)
-            .and_then(|c| c.get(1))
-            .map(|m| m.as_str())
-            .unwrap_or(""),
-    ) || source.contains("lang=\"ts\"")
-        || source.contains("lang='ts'")
-    {
-        path.with_extension("tsx")
-    } else {
-        path.with_extension("jsx")
+    let pseudo_ts = path.with_extension("tsx");
+    let pseudo_js = path.with_extension("jsx");
+
+    let mut scan = FileScan {
+        path: path.to_path_buf(),
+        definitions: Vec::new(),
+        usages: Vec::new(),
+        parse_errors: Vec::new(),
+        findings: Vec::new(),
     };
 
-    let mut scan = if combined_script.trim().is_empty() {
-        FileScan {
-            path: path.to_path_buf(),
-            definitions: Vec::new(),
-            usages: Vec::new(),
-            parse_errors: vec!["dslint: Vue SFC has no <script> block".into()],
-            findings: Vec::new(),
+    if caps.is_empty() {
+        scan.parse_errors
+            .push("dslint: Vue SFC has no <script> block".into());
+    } else {
+        for cap in &caps {
+            let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+            let inner_m = cap.get(2).expect("script inner group");
+            let inner = inner_m.as_str();
+            let inner_start = inner_m.start();
+            let line_offset = source[..inner_start]
+                .bytes()
+                .filter(|&b| b == b'\n')
+                .count() as u32;
+
+            let parse_as = if lang_is_ts(attrs)
+                || source.contains("lang=\"ts\"")
+                || source.contains("lang='ts'")
+            {
+                &pseudo_ts
+            } else {
+                &pseudo_js
+            };
+
+            let mut part = analyze_ecma_for_paths(path, parse_as, inner, false);
+            for d in &mut part.definitions {
+                d.line += line_offset;
+            }
+            for u in &mut part.usages {
+                u.line += line_offset;
+            }
+            for f in &mut part.findings {
+                if let Some(ln) = f.line.as_mut() {
+                    *ln += line_offset;
+                }
+            }
+            merge_file_scan(&mut scan, part);
         }
-    } else {
-        analyze_ecma_for_paths(path, &pseudo_path, &combined_script, false)
-    };
-    scan.path = path.to_path_buf();
-
-    if !combined_script.trim().is_empty() {
-        fixup_vue_script_line_offsets(&mut scan, source);
     }
+
+    scan.path = path.to_path_buf();
 
     scan.findings
         .extend(smells::collect_text_smells(path, source));
@@ -210,10 +218,28 @@ fn merge_template_usages(
     template_inner_start: usize,
     usages: &mut Vec<JsxUsage>,
 ) {
-    let re = Regex::new(r#"<([A-Z][A-Za-z0-9]*(?:\.[A-Z][A-Za-z0-9]*)*)"#)
+    let re_pascal = Regex::new(r#"<([A-Z][A-Za-z0-9]*(?:\.[A-Z][A-Za-z0-9]*)*)"#)
         .expect("template component regex");
-    for cap in re.captures_iter(template) {
+    let re_kebab = Regex::new(r#"<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)"#).expect("kebab template regex");
+
+    for cap in re_pascal.captures_iter(template) {
         let component = cap.get(1).unwrap().as_str().to_string();
+        let rel_start = cap.get(0).unwrap().start();
+        let line_offset = template_inner_start + rel_start;
+        let line = 1 + full_source[..line_offset.min(full_source.len())]
+            .bytes()
+            .filter(|&b| b == b'\n')
+            .count() as u32;
+        usages.push(JsxUsage {
+            component,
+            line,
+            props: Vec::new(),
+        });
+    }
+
+    for cap in re_kebab.captures_iter(template) {
+        let raw = cap.get(1).unwrap().as_str();
+        let component = kebab_to_pascal(raw);
         let rel_start = cap.get(0).unwrap().start();
         let line_offset = template_inner_start + rel_start;
         let line = 1 + full_source[..line_offset.min(full_source.len())]
@@ -241,6 +267,23 @@ mod tests {
 </template>
 <script setup lang="ts">
 import DesignHeader from './DesignHeader.vue'
+const x = 1
+</script>
+"#;
+        let scan = analyze_vue_file(&PathBuf::from("Page.vue"), src);
+        assert!(
+            scan.usages.iter().any(|u| u.component == "DesignHeader"),
+            "{:?}",
+            scan.usages
+        );
+    }
+
+    #[test]
+    fn vue_template_kebab_case() {
+        let src = r#"<template>
+  <design-header title="x" />
+</template>
+<script setup lang="ts">
 const x = 1
 </script>
 "#;

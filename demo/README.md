@@ -48,7 +48,7 @@ Configuration for this tree lives in `demo/.dslint.json` (deprecated component n
 - **deprecated-component** — `LegacyButton`, `DeprecatedChip` referenced while listed as deprecated.
 - **token-hardcoded-color** — hex values in `FlashBanner`, `InlinePaint`, `LegacyButton`, etc.
 - **a11y-img-alt**, **a11y-anchor-href**, **a11y-anchor-placeholder-href**, **a11y-button-name**, **a11y-input-label** — JSX via AST; Vue `<template>` scanned for img / anchor / input (e.g. `MysteryImage`, `<a>` without `href` inside `FlashBanner`).
-- **`smell-*`** — console/debug noise, lint/ts suppressions, TODO markers, huge files, inline JSX `style={{}}`, empty `catch`, redundant fragments.
+- **`smell-*`** — `console.log` / etc. (`smell-console`), `console.error` (`smell-console-error`), debugger, lint/ts suppressions, TODO markers, huge files, inline JSX `style={{}}`, empty `catch`, redundant fragments.
 - **variant-explosion** — `App.tsx` passes many props to `KitchenSinkModal`.
 - **usage rollup** — imports such as `PrimaryButton`, `ContentCard`, `KitchenSinkModal` appear in JSON output.
 

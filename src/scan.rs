@@ -4,6 +4,9 @@ use std::path::{Path, PathBuf};
 
 use walkdir::{DirEntry, WalkDir};
 
+use crate::config::DslintConfig;
+use crate::gitignore::{load_ignore_file_lines, IgnoreEngine};
+
 const SKIP_DIR_NAMES: &[&str] = &[
     ".git",
     "node_modules",
@@ -24,8 +27,18 @@ fn is_skipped_dir(entry: &DirEntry) -> bool {
         .is_some_and(|name| SKIP_DIR_NAMES.contains(&name))
 }
 
-/// Collect component-related source paths under `root`, breadth-first via walkdir.
-pub fn collect_component_files(root: &Path) -> Vec<PathBuf> {
+fn build_ignore_engine(root: &Path, config: &DslintConfig) -> anyhow::Result<Option<IgnoreEngine>> {
+    let mut lines = Vec::new();
+    lines.extend(load_ignore_file_lines(&root.join(".gitignore"))?);
+    lines.extend(load_ignore_file_lines(&root.join(".dslintignore"))?);
+    lines.extend(config.exclude_globs.iter().cloned());
+    IgnoreEngine::from_patterns(&lines)
+}
+
+/// Collect component-related source paths under `root`, respecting `.gitignore`,
+/// `.dslintignore`, and `exclude_globs` in config.
+pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Result<Vec<PathBuf>> {
+    let engine = build_ignore_engine(root, config)?;
     let mut out = Vec::new();
     for entry in WalkDir::new(root)
         .into_iter()
@@ -38,6 +51,11 @@ pub fn collect_component_files(root: &Path) -> Vec<PathBuf> {
             continue;
         }
         let path = entry.path().to_path_buf();
+        if let Some(ref eng) = engine {
+            if eng.matches(root, &path) {
+                continue;
+            }
+        }
         let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
             continue;
         };
@@ -47,5 +65,5 @@ pub fn collect_component_files(root: &Path) -> Vec<PathBuf> {
         }
     }
     out.sort();
-    out
+    Ok(out)
 }

@@ -77,7 +77,17 @@ struct SmellVisitor<'src> {
 impl<'src, 'a> Visit<'a> for SmellVisitor<'src> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
         if let Some(method) = console_debug_method(&expr.callee) {
-            if matches!(
+            if method == "error" {
+                let line = offset_line(self.source, expr.span.start);
+                push_smell(
+                    &mut self.findings,
+                    &self.report_path,
+                    Some(line),
+                    Severity::Info,
+                    "smell-console-error",
+                    "`console.error(...)` left in source — remove or route through logging.",
+                );
+            } else if matches!(
                 method,
                 "log" | "debug" | "info" | "warn" | "trace" | "dir" | "table" | "assert"
             ) {
@@ -241,6 +251,15 @@ mod tests {
         let program = parse(&alloc, src);
         let smells = collect_ast_smells(&PathBuf::from("x.tsx"), src, &program);
         assert!(smells.iter().any(|s| s.rule_id == "smell-console"));
+    }
+
+    #[test]
+    fn smell_console_error_rule() {
+        let alloc = Allocator::default();
+        let src = "export function X(){ console.error('x'); }";
+        let program = parse(&alloc, src);
+        let smells = collect_ast_smells(&PathBuf::from("x.tsx"), src, &program);
+        assert!(smells.iter().any(|s| s.rule_id == "smell-console-error"));
     }
 
     #[test]

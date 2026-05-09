@@ -59,11 +59,18 @@ export interface UsageSummary {
   files: string[];
 }
 
+export interface OwnershipSummary {
+  owner: string;
+  files: number;
+  definitions: number;
+}
+
 export interface WorkspaceReport {
   root: string;
   files: FileScan[];
   findings: LintFinding[];
   duplicate_components: DuplicateComponent[];
   usage_by_component: UsageSummary[];
+  ownership: OwnershipSummary[];
   scores: GovernanceScores;
 }

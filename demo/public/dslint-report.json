@@ -546,19 +546,19 @@
         },
         {
           "component": "ComponentCatalog",
-          "line": 94,
+          "line": 125,
           "props": [
             "report"
           ]
         },
         {
           "component": "TokenWall",
-          "line": 100,
+          "line": 131,
           "props": []
         },
         {
           "component": "FindingsList",
-          "line": 112,
+          "line": 143,
           "props": [
             "findings",
             "root"
@@ -574,7 +574,7 @@
         {
           "name": "FindingsList",
           "kind": "function",
-          "line": 10
+          "line": 13
         }
       ],
       "usages": [],
@@ -702,6 +702,146 @@
       "message": "Hardcoded color `#c084fc` — prefer design tokens or theme variables.",
       "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
       "line": 10,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[13px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[19px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "line": 9,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[7px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "line": 10,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[#ffffff]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[#7c3aed]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
+      "line": 10,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
+      "line": 29,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
+      "line": 35,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
+      "line": 38,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
+      "line": 51,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
+      "line": 54,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/Dashboard.tsx",
+      "line": 62,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/Dashboard.tsx",
+      "line": 68,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
+      "line": 42,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
+      "line": 69,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
+      "line": 73,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
+      "line": 76,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/ScoreStrip.tsx",
+      "line": 18,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/TokenWall.tsx",
+      "line": 27,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
+      "path": "/workspace/demo/src/dashboard/TokenWall.tsx",
+      "line": 28,
       "severity": "info"
     },
     {
@@ -994,6 +1134,18 @@
       "files": [
         "/workspace/demo/src/DemoGallery.tsx"
       ]
+    }
+  ],
+  "ownership": [
+    {
+      "owner": "design-system",
+      "files": 10,
+      "definitions": 10
+    },
+    {
+      "owner": "unowned",
+      "files": 18,
+      "definitions": 17
     }
   ],
   "scores": {

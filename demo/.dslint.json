@@ -12,5 +12,10 @@
   ],
   "ownership": {
     "design-system": ["src/components/good/"]
+  },
+  "exclude_globs": [],
+  "smell": {
+    "disabled_rules": [],
+    "report_console_error": true
   }
 }

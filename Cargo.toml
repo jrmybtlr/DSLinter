@@ -9,6 +9,7 @@ license = "Apache-2.0"
 [dependencies]
 anyhow = "1.0.102"
 clap = { version = "=4.5.23", features = ["derive"] }
+globset = "=0.4.14"
 oxc_allocator = "0.52.0"
 oxc_ast = "0.52.0"
 oxc_parser = "0.52.0"
