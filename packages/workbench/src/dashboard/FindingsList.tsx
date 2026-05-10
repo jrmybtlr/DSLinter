@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { shortPath } from "./paths";
-import type { LintFinding, Severity } from "./types";
+import type { LintFinding, Severity } from "../types/report";
 
 const severityStyle: Record<string, string> = {
   warning: "text-amber-800 bg-amber-50 border-amber-100",
@@ -23,8 +23,7 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
     return c;
   }, [findings]);
 
-  const filtered =
-    filter === "all" ? findings : findings.filter((f) => f.severity === filter);
+  const filtered = filter === "all" ? findings : findings.filter((f) => f.severity === filter);
 
   if (findings.length === 0) {
     return (

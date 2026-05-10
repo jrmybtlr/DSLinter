@@ -1,6 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "../packages/workbench/src/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -24,10 +28,6 @@ export default {
         "layout-sm": "1rem",
         "layout-md": "1.5rem",
         "layout-lg": "2rem",
-      },
-      borderRadius: {
-        ds: "0.5rem",
-        "ds-lg": "0.75rem",
       },
     },
   },

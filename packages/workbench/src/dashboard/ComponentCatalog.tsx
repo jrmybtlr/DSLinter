@@ -1,6 +1,6 @@
 import { aggregateDefinitions, catalogComponentNames, usageMap } from "./aggregate";
 import { shortPath } from "./paths";
-import type { WorkspaceReport } from "./types";
+import type { WorkspaceReport } from "../types/report";
 
 function kindLabel(kind: string): string {
   return kind.replace(/_/g, " ");

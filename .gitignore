@@ -4,6 +4,7 @@ debug/
 target/
 node_modules/
 demo/node_modules/
+packages/workbench/node_modules/
 demo/dist/
 *.tsbuildinfo
 

@@ -1,4 +1,4 @@
-import type { ComponentDefinition, UsageSummary, WorkspaceReport } from "./types";
+import type { ComponentDefinition, UsageSummary, WorkspaceReport } from "../types/report";
 
 export interface DefinitionSite {
   kind: ComponentDefinition["kind"];

@@ -1,3 +1,5 @@
+import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+
 type Props = {
   id: string;
   label: string;
@@ -18,4 +20,20 @@ export function FormField({ id, label }: Props) {
       />
     </div>
   );
+}
+
+export const playgroundMeta: PlaygroundMeta = {
+  id: "FormField",
+  title: "FormField",
+  section: "good",
+  description: "Label wired to control with explicit accessible name.",
+};
+
+export const playgroundControls: PlaygroundControl[] = [
+  { key: "id", label: "Input id", type: "string", default: "playground-field" },
+  { key: "label", label: "Label", type: "string", default: "Email" },
+];
+
+export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
+  return <FormField id={String(values.id)} label={String(values.label)} />;
 }

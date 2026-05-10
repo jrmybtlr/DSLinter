@@ -36,7 +36,7 @@ Optional config (repository root): `.dslint.json` or `dslint.json`:
 
 ## Demo
 
-See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with ten “good” and ten “bad” components plus `demo/.dslint.json`. The demo UI includes a light **Dashboard** tab (component inventory + tokens) driven by `demo/public/dslint-report.json`.
+See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with ten “good” and ten “bad” components plus `demo/.dslint.json`. The demo UI is a **workbench** from the [`packages/workbench`](packages/workbench/) npm package (`@dslint/workbench`): optional `playgroundMeta` / `PlaygroundPreview` exports on component modules plus `demo/public/dslint-report.json`.
 
 ```bash
 cd demo && npm install && npm run dev

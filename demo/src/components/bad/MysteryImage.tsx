@@ -1,3 +1,5 @@
+import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+
 /** Decorative image with no `alt` — triggers a11y-img-alt. */
 export function MysteryImage() {
   return (
@@ -6,4 +8,17 @@ export function MysteryImage() {
       className="rounded-md border border-slate-300"
     />
   );
+}
+
+export const playgroundMeta: PlaygroundMeta = {
+  id: "MysteryImage",
+  title: "MysteryImage",
+  section: "bad",
+  description: "Decorative image with no `alt` — triggers a11y-img-alt.",
+};
+
+export const playgroundControls: PlaygroundControl[] = [];
+
+export function PlaygroundPreview(_props: PlaygroundPreviewProps) {
+  return <MysteryImage />;
 }

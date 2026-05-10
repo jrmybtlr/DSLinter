@@ -1,3 +1,5 @@
+import type { TokenCatalog } from "@dslint/workbench";
+
 /**
  * Mirrors `tailwind.config.js` theme.extend for the dashboard token wall.
  * Keep in sync when you change design tokens.
@@ -23,4 +25,4 @@ export const tokenCatalog = {
     { token: "ds", value: "0.5rem", tw: "rounded-ds" },
     { token: "ds-lg", value: "0.75rem", tw: "rounded-ds-lg" },
   ],
-} as const;
+} as const satisfies TokenCatalog;

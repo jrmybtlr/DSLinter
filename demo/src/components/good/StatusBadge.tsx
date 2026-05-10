@@ -1,3 +1,5 @@
+import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+
 type Props = {
   children: React.ReactNode;
   tone?: "neutral" | "success" | "danger";
@@ -18,4 +20,31 @@ export function StatusBadge({ children, tone = "neutral" }: Props) {
       {children}
     </span>
   );
+}
+
+export const playgroundMeta: PlaygroundMeta = {
+  id: "StatusBadge",
+  title: "StatusBadge",
+  section: "good",
+  description: "Small status pill with constrained variants.",
+};
+
+export const playgroundControls: PlaygroundControl[] = [
+  {
+    key: "tone",
+    label: "Tone",
+    type: "select",
+    default: "success",
+    options: [
+      { value: "neutral", label: "neutral" },
+      { value: "success", label: "success" },
+      { value: "danger", label: "danger" },
+    ],
+  },
+  { key: "text", label: "Label text", type: "string", default: "Synced" },
+];
+
+export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
+  const tone = values.tone === "neutral" || values.tone === "danger" ? values.tone : "success";
+  return <StatusBadge tone={tone}>{String(values.text)}</StatusBadge>;
 }
