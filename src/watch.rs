@@ -80,9 +80,8 @@ pub fn run_watch(
     if let Some(port) = serve_port {
         let json_clone = Arc::clone(&json_arc);
         let version_clone = Arc::clone(&version);
-        let output_clone = output.clone();
         thread::spawn(move || {
-            if let Err(e) = run_http_server(port, json_clone, version_clone, output_clone) {
+            if let Err(e) = run_http_server(port, json_clone, version_clone) {
                 eprintln!("dslint: serve error: {e}");
             }
         });
@@ -206,7 +205,6 @@ fn run_http_server(
     port: u16,
     json: Arc<RwLock<String>>,
     version: Arc<AtomicU64>,
-    report_path: PathBuf,
 ) -> anyhow::Result<()> {
     let listener = TcpListener::bind(format!("127.0.0.1:{port}"))
         .with_context(|| format!("bind 127.0.0.1:{port}"))?;
@@ -215,8 +213,7 @@ fn run_http_server(
             Ok(s) => {
                 let json = Arc::clone(&json);
                 let version = Arc::clone(&version);
-                let report_path = report_path.clone();
-                thread::spawn(move || handle_connection(s, json, version, &report_path));
+                thread::spawn(move || handle_connection(s, json, version));
             }
             Err(_) => continue,
         }
@@ -228,7 +225,6 @@ fn handle_connection(
     mut stream: TcpStream,
     json: Arc<RwLock<String>>,
     version: Arc<AtomicU64>,
-    _report_path: &Path,
 ) {
     // Read the HTTP request line + headers (we only need the path).
     let mut buf = [0u8; 4096];
@@ -279,18 +275,24 @@ fn handle_connection(
             let _ = stream.write_all(b": connected\n\n");
 
             let mut last = version.load(Ordering::Acquire);
+            let mut idle_ticks: u32 = 0;
             loop {
                 thread::sleep(Duration::from_millis(100));
+                idle_ticks += 1;
                 let current = version.load(Ordering::Acquire);
                 if current != last {
                     if stream.write_all(b"data: updated\n\n").is_err() {
                         break; // client disconnected
                     }
                     last = current;
+                    idle_ticks = 0;
+                } else if idle_ticks >= 150 {
+                    // Send a keep-alive comment every ~15 s to prevent proxy timeouts.
+                    if stream.write_all(b": keep-alive\n\n").is_err() {
+                        break;
+                    }
+                    idle_ticks = 0;
                 }
-                // Send periodic keep-alive comment every ~15 s to prevent proxy timeouts.
-                // We approximate this by counting 100 ms sleeps.
-                // (Precise timing is not critical for a dev-only server.)
             }
         }
         _ => {

@@ -70,7 +70,7 @@ function UsageLocationsList({
         className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400 hover:text-neutral-600"
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="transition-transform" style={{ display: "inline-block", transform: open ? "rotate(90deg)" : undefined }}>
+        <span className={`inline-block transition-transform duration-100 ${open ? "rotate-90" : ""}`}>
           ▶
         </span>
         Usage sites ({locations.length})

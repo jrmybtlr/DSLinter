@@ -471,7 +471,8 @@ fn token_adoption_pct(
     Some(((hits * 100) / files.len() as u32).min(100) as u8)
 }
 
-/// Emit `unused-prop` findings for declared props that never appear at any call site.
+/// Props that are implicit or universal in React; skip them in unused-prop analysis.
+const IMPLICIT_PROPS: &[&str] = &["children", "className", "style", "key", "ref"];
 fn unused_props_findings(
     files: &[FileScan],
     usage_map: &[UsageSummary],
@@ -509,8 +510,8 @@ fn unused_props_findings(
         let (path, declared) = &def_map[component];
         let freq = freq_map.get(component.as_str()).copied().unwrap_or(&empty_freq);
         for prop in declared {
-            // `children` is a React implicit prop — skip it.
-            if prop == "children" || prop == "className" || prop == "style" {
+            // Skip implicit/universal React props.
+            if IMPLICIT_PROPS.contains(&prop.as_str()) {
                 continue;
             }
             let count = freq.get(prop).copied().unwrap_or(0);
