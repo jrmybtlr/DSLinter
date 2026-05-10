@@ -487,6 +487,11 @@ fn unused_props_findings(
     let mut def_map: HashMap<String, (PathBuf, Vec<String>)> = HashMap::new();
     for file in files {
         for def in &file.definitions {
+            // Skip default-export placeholders — they are imported under a different
+            // local name at each call site, so we can never match usages by name.
+            if def.name == "default" || def.name.starts_with("default→") {
+                continue;
+            }
             if def.declared_props.is_empty() {
                 continue;
             }
