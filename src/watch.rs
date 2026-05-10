@@ -163,8 +163,11 @@ pub fn run_watch(
         files.sort_by(|a, b| a.path.cmp(&b.path));
 
         // Rebuild workspace report.
-        let new_report =
-            dslint::rules::evaluate_workspace(root.to_path_buf(), files.clone(), &config);
+        let new_report = dslint::rules::evaluate_workspace(
+            root.to_path_buf(),
+            files.iter().cloned(),
+            &config,
+        );
         let new_json = match serde_json::to_string_pretty(&new_report) {
             Ok(j) => j,
             Err(e) => {
