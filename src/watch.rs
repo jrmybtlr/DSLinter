@@ -165,7 +165,7 @@ pub fn run_watch(
         // Rebuild workspace report.
         let new_report = dslint::rules::evaluate_workspace(
             root.to_path_buf(),
-            files.iter().cloned(),
+            files.clone(),
             &config,
         );
         let new_json = match serde_json::to_string_pretty(&new_report) {
@@ -258,10 +258,10 @@ fn handle_connection(
     if request.starts_with("OPTIONS") {
         let _ = stream.write_all(
             b"HTTP/1.1 204 No Content\r\n\
-              Access-Control-Allow-Origin: *\r\n\
-              Access-Control-Allow-Methods: GET, OPTIONS\r\n\
-              Access-Control-Allow-Headers: *\r\n\
-              Content-Length: 0\r\n\r\n",
+Access-Control-Allow-Origin: *\r\n\
+Access-Control-Allow-Methods: GET, OPTIONS\r\n\
+Access-Control-Allow-Headers: *\r\n\
+Content-Length: 0\r\n\r\n",
         );
         return;
     }
@@ -271,10 +271,10 @@ fn handle_connection(
             let body = json.read().map(|g| g.clone()).unwrap_or_default();
             let response = format!(
                 "HTTP/1.1 200 OK\r\n\
-                 Content-Type: application/json\r\n\
-                 Access-Control-Allow-Origin: *\r\n\
-                 Cache-Control: no-cache\r\n\
-                 Content-Length: {}\r\n\r\n{}",
+Content-Type: application/json\r\n\
+Access-Control-Allow-Origin: *\r\n\
+Cache-Control: no-cache\r\n\
+Content-Length: {}\r\n\r\n{}",
                 body.len(),
                 body
             );
@@ -283,10 +283,10 @@ fn handle_connection(
         "/events" => {
             // Server-Sent Events stream.
             let headers = b"HTTP/1.1 200 OK\r\n\
-                Content-Type: text/event-stream\r\n\
-                Cache-Control: no-cache\r\n\
-                Access-Control-Allow-Origin: *\r\n\
-                Connection: keep-alive\r\n\r\n";
+Content-Type: text/event-stream\r\n\
+Cache-Control: no-cache\r\n\
+Access-Control-Allow-Origin: *\r\n\
+Connection: keep-alive\r\n\r\n";
             if stream.write_all(headers).is_err() {
                 return;
             }
