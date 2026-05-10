@@ -7,15 +7,24 @@ function kindLabel(kind: string): string {
   return kind.replace(/_/g, " ");
 }
 
-/** Set of `"ComponentName/propName"` keys for every unused-prop finding. */
+/** Set of `"ComponentName/propName"` keys for every declared prop with no recorded usage. */
 function buildUnusedPropSet(report: WorkspaceReport): Set<string> {
   const s = new Set<string>();
-  for (const f of report.findings) {
-    if (f.rule_id !== "unused-prop") continue;
-    // Message format: "`ComponentName` prop `propName` is declared …"
-    const m = f.message.match(/^`([^`]+)` prop `([^`]+)`/);
-    if (m) s.add(`${m[1]}/${m[2]}`);
+  const usageByComponent = new Map(
+    (report.usage_by_component ?? []).map((usage) => [usage.component_name, usage.prop_frequencies ?? {}]),
+  );
+
+  for (const definition of report.definitions ?? []) {
+    const componentName = definition.component_name;
+    const propFrequencies = usageByComponent.get(componentName) ?? {};
+
+    for (const propName of definition.declared_props ?? []) {
+      if ((propFrequencies[propName] ?? 0) === 0) {
+        s.add(`${componentName}/${propName}`);
+      }
+    }
   }
+
   return s;
 }
 
