@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   href: string;
@@ -17,20 +17,15 @@ export function NavLink({ href, children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "NavLink",
-  title: "NavLink",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(NavLink, {
   section: "good",
   description: "Visible focus ring for keyboard users.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "href", label: "href", type: "string", default: "#!/overview" },
-  { key: "text", label: "Link text", type: "string", default: "Back to overview" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return (
-    <NavLink href={String(values.href)}>{String(values.text)}</NavLink>
-  );
-}
+  controls: [
+    { key: "href", label: "href", type: "string", default: "#!/overview" },
+    { key: "text", label: "Link text", type: "string", default: "Back to overview" },
+  ],
+  props: (values) => ({
+    href: String(values.href),
+    children: String(values.text),
+  }),
+});

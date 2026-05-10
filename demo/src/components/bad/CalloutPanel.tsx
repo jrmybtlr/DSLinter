@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -20,17 +20,17 @@ export function CalloutPanel({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "CalloutPanel",
-  title: "Callout panel",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(CalloutPanel, {
   section: "bad",
+  title: "Callout panel",
   description: "Inline hex styles — token-hardcoded-color and drift from the Tailwind theme.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "text", label: "Body text", type: "string", default: "This project is due Friday. Please review the checklist." },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return <CalloutPanel>{String(values.text)}</CalloutPanel>;
-}
+  controls: [
+    {
+      key: "text",
+      label: "Body text",
+      type: "string",
+      default: "This project is due Friday. Please review the checklist.",
+    },
+  ],
+  props: (values) => ({ children: String(values.text) }),
+});

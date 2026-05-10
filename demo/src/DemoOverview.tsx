@@ -10,9 +10,9 @@ export function DemoOverview() {
       />
       <div className="mx-auto max-w-3xl px-8 py-8 text-sm text-slate-600">
         <p>
-          Sidebar entries come from optional <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">playgroundMeta</code> and{" "}
-          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">PlaygroundPreview</code>{" "}
-          on each component module — no separate story files. The demo uses <code className="font-mono text-xs">import.meta.glob</code> in{" "}
+          Sidebar entries come from <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">definePlayground</code> (or hand-written{" "}
+          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">playgroundMeta</code> +{" "}
+          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">PlaygroundPreview</code>) on each component module — no separate story files. The demo uses <code className="font-mono text-xs">import.meta.glob</code> in{" "}
           <code className="font-mono text-xs">playground/buildRegistry.ts</code> to collect them.
         </p>
         <p className="mt-4">

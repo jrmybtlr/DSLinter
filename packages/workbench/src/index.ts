@@ -8,6 +8,8 @@ export type {
   PlaygroundSelectControl,
 } from "./types/controls";
 export { defaultArgsFromControls } from "./types/controls";
+export { definePlayground } from "./playground/definePlayground";
+export type { DefinedPlayground } from "./playground/definePlayground";
 export type { PlaygroundPreviewProps, PlaygroundPreviewComponent } from "./types/preview";
 export type {
   WorkspaceReport,

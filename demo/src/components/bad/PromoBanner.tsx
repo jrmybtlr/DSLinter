@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -13,20 +13,16 @@ export function PromoBanner({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground({
   id: "PromoBanner",
-  title: "Promo banner",
   section: "bad",
+  title: "Promo banner",
   description: "Hardcoded banner colors instead of tokens — triggers token-hardcoded-color.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "title", label: "Headline", type: "string", default: "Free shipping on orders over $50" },
-  { key: "showBadLink", label: "Show link without href (a11y demo)", type: "boolean", default: true },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return (
+  controls: [
+    { key: "title", label: "Headline", type: "string", default: "Free shipping on orders over $50" },
+    { key: "showBadLink", label: "Show link without href (a11y demo)", type: "boolean", default: true },
+  ],
+  render: (values) => (
     <PromoBanner>
       <>
         <p className="font-medium">{String(values.title)}</p>
@@ -35,5 +31,5 @@ export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
         ) : null}
       </>
     </PromoBanner>
-  );
-}
+  ),
+});

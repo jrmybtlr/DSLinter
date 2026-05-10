@@ -42,6 +42,8 @@ Any `src/components/**/*.tsx` module can opt into the sidebar by exporting:
 - `playgroundControls` — optional array of `{ type: "boolean" | "string" | "number" | "select", key, label, ... }` (omit or `[]` for static previews)
 - `PlaygroundPreview` — `function PlaygroundPreview({ values })` where `values` is the live prop bag from the workbench control panel
 
+**`definePlayground` from `@dslint/workbench`** returns those three exports in one call: pass your component plus `section`, `description`, `controls`, and a `props(values)` mapper, or pass a `render(values)` function for composed/static previews (see demo components).
+
 Components without those exports are omitted from the nav (same idea as DSLint inventory without story files). Vite discovers modules via `import.meta.glob` in `src/playground/buildRegistry.ts` — add the two exports to an existing component file to register a preview; no separate story file to maintain.
 
 ### DSLint report

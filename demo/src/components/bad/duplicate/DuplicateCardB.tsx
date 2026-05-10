@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 /** Same export name as DuplicateCardA — duplicate definition signal. */
 export function Card() {
@@ -10,15 +10,11 @@ export function Card() {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(Card, {
   id: "DuplicateCardB",
   title: "Card (order)",
   section: "bad",
   description: "Same export name as DuplicateCardA — duplicate definition signal.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [];
-
-export function PlaygroundPreview(_props: PlaygroundPreviewProps) {
-  return <Card />;
-}
+  controls: [],
+  props: () => ({}),
+});

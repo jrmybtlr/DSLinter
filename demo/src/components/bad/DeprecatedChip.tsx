@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   label: string;
@@ -11,17 +11,10 @@ export function DeprecatedChip({ label }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "DeprecatedChip",
-  title: "Deprecated tag",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(DeprecatedChip, {
   section: "bad",
+  title: "Deprecated tag",
   description: "Listed in `.dslint.json` deprecated_components — triggers deprecated-component rule.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "label", label: "Chip label", type: "string", default: "Beta" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return <DeprecatedChip label={String(values.label)} />;
-}
+  controls: [{ key: "label", label: "Chip label", type: "string", default: "Beta" }],
+  props: (values) => ({ label: String(values.label) }),
+});

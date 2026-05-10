@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -13,20 +13,15 @@ export function FlashBanner({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground({
   id: "FlashBanner",
-  title: "FlashBanner",
   section: "bad",
   description: "Hardcoded marketing hex instead of tokens — triggers token-hardcoded-color.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "title", label: "Banner title", type: "string", default: "Hardcoded neon banner" },
-  { key: "showBadLink", label: "Show link without href (a11y demo)", type: "boolean", default: true },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return (
+  controls: [
+    { key: "title", label: "Banner title", type: "string", default: "Hardcoded neon banner" },
+    { key: "showBadLink", label: "Show link without href (a11y demo)", type: "boolean", default: true },
+  ],
+  render: (values) => (
     <FlashBanner>
       <>
         <p className="font-medium">{String(values.title)}</p>
@@ -35,5 +30,5 @@ export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
         ) : null}
       </>
     </FlashBanner>
-  );
-}
+  ),
+});

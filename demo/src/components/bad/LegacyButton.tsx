@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -13,17 +13,10 @@ export function LegacyButton({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "LegacyButton",
-  title: "Legacy button",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(LegacyButton, {
   section: "bad",
+  title: "Legacy button",
   description: "@deprecated — arbitrary Tailwind color still referenced in the app.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "label", label: "Button label", type: "string", default: "Continue" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return <LegacyButton>{String(values.label)}</LegacyButton>;
-}
+  controls: [{ key: "label", label: "Button label", type: "string", default: "Continue" }],
+  props: (values) => ({ children: String(values.label) }),
+});

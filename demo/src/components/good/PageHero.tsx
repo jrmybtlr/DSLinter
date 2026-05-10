@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   title: string;
@@ -15,25 +15,21 @@ export function PageHero({ title, subtitle }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "PageHero",
-  title: "PageHero",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(PageHero, {
   section: "good",
   description: "Single clear title and optional subtitle.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "title", label: "Title", type: "string", default: "Example page" },
-  {
-    key: "subtitle",
-    label: "Subtitle",
-    type: "string",
-    default: "Heading hierarchy stays simple for screen readers and scanability.",
-  },
-  { key: "showSubtitle", label: "Show subtitle", type: "boolean", default: true },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  const subtitle = values.showSubtitle ? String(values.subtitle) : undefined;
-  return <PageHero title={String(values.title)} subtitle={subtitle} />;
-}
+  controls: [
+    { key: "title", label: "Title", type: "string", default: "Example page" },
+    {
+      key: "subtitle",
+      label: "Subtitle",
+      type: "string",
+      default: "Heading hierarchy stays simple for screen readers and scanability.",
+    },
+    { key: "showSubtitle", label: "Show subtitle", type: "boolean", default: true },
+  ],
+  props: (values) => ({
+    title: String(values.title),
+    subtitle: values.showSubtitle ? String(values.subtitle) : undefined,
+  }),
+});

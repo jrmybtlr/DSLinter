@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -20,17 +20,9 @@ export function InlinePaint({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "InlinePaint",
-  title: "InlinePaint",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(InlinePaint, {
   section: "bad",
   description: "Inline hex styles — token-hardcoded-color and drift from the Tailwind theme.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "text", label: "Inner text", type: "string", default: "Inline hex panel" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return <InlinePaint>{String(values.text)}</InlinePaint>;
-}
+  controls: [{ key: "text", label: "Inner text", type: "string", default: "Inline hex panel" }],
+  props: (values) => ({ children: String(values.text) }),
+});

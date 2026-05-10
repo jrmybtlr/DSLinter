@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -22,29 +22,25 @@ export function StatusBadge({ children, tone = "neutral" }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "StatusBadge",
-  title: "StatusBadge",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(StatusBadge, {
   section: "good",
   description: "Small status pill with constrained variants.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  {
-    key: "tone",
-    label: "Tone",
-    type: "select",
-    default: "success",
-    options: [
-      { value: "neutral", label: "neutral" },
-      { value: "success", label: "success" },
-      { value: "danger", label: "danger" },
-    ],
-  },
-  { key: "text", label: "Label text", type: "string", default: "Synced" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  const tone = values.tone === "neutral" || values.tone === "danger" ? values.tone : "success";
-  return <StatusBadge tone={tone}>{String(values.text)}</StatusBadge>;
-}
+  controls: [
+    {
+      key: "tone",
+      label: "Tone",
+      type: "select",
+      default: "success",
+      options: [
+        { value: "neutral", label: "neutral" },
+        { value: "success", label: "success" },
+        { value: "danger", label: "danger" },
+      ],
+    },
+    { key: "text", label: "Label text", type: "string", default: "Synced" },
+  ],
+  props: (values): Props => ({
+    children: String(values.text),
+    tone: values.tone === "neutral" || values.tone === "danger" ? values.tone : "success",
+  }),
+});

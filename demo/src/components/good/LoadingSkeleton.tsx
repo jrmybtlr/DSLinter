@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 /** Predictable loading placeholder blocks. */
 export function LoadingSkeleton() {
@@ -11,15 +11,10 @@ export function LoadingSkeleton() {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground({
   id: "LoadingSkeleton",
-  title: "LoadingSkeleton",
   section: "good",
   description: "Predictable loading placeholder blocks.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [];
-
-export function PlaygroundPreview(_props: PlaygroundPreviewProps) {
-  return <LoadingSkeleton />;
-}
+  controls: [],
+  render: () => <LoadingSkeleton />,
+});

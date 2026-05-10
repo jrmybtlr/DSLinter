@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 /** User photo without `alt` — common slip when the asset “looks decorative”. */
 export function AvatarImage() {
@@ -10,15 +10,11 @@ export function AvatarImage() {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground({
   id: "AvatarImage",
   title: "Profile image",
   section: "bad",
   description: "Image with no `alt` — triggers a11y-img-alt.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [];
-
-export function PlaygroundPreview(_props: PlaygroundPreviewProps) {
-  return <AvatarImage />;
-}
+  controls: [],
+  render: () => <AvatarImage />,
+});

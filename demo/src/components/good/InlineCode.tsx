@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -13,21 +13,14 @@ export function InlineCode({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground({
   id: "InlineCode",
-  title: "InlineCode",
   section: "good",
   description: "Inline code styled from the palette, not raw hex in JSX.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "snippet", label: "Code snippet", type: "string", default: "primary" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return (
+  controls: [{ key: "snippet", label: "Code snippet", type: "string", default: "primary" }],
+  render: (values) => (
     <p className="text-sm text-slate-700">
       Theme key <InlineCode>{String(values.snippet)}</InlineCode> maps to Tailwind extensions.
     </p>
-  );
-}
+  ),
+});

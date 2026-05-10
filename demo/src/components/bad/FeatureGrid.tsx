@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -14,21 +14,12 @@ export function FeatureGrid({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "FeatureGrid",
-  title: "Feature grid",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(FeatureGrid, {
   section: "bad",
+  title: "Feature grid",
   description: "Arbitrary pixel gaps (`[#px]`) instead of layout tokens.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "cellText", label: "Cell text", type: "string", default: "Summary" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return (
-    <FeatureGrid>
-      <span>{String(values.cellText)}</span>
-    </FeatureGrid>
-  );
-}
+  controls: [{ key: "cellText", label: "Cell text", type: "string", default: "Summary" }],
+  props: (values) => ({
+    children: <span>{String(values.cellText)}</span>,
+  }),
+});

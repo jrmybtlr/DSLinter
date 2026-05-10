@@ -4,7 +4,6 @@ import type { WorkspaceReport } from "../types/report";
 import { defaultArgsFromControls } from "../types/controls";
 import type { PlaygroundArgs } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
-import { formatHashRoute } from "./hashRoute";
 import { PlaygroundA11ySection, PlaygroundApiReference, PlaygroundUsageSection } from "./PlaygroundA11yAndCode";
 import { PlaygroundControls } from "./PlaygroundControls";
 
@@ -42,7 +41,6 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
     : entry.modulePath.replace(/^\.\.\//, "");
 
   const [values, setValues] = useState<PlaygroundArgs>(() => defaultArgsFromControls(entry.controls));
-  const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
 
   useEffect(() => {
     setValues(defaultArgsFromControls(entry.controls));
@@ -101,18 +99,6 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
       window.addEventListener("pointercancel", onUp);
     };
   }, []);
-
-  const copyPageUrl = useCallback(async () => {
-    const hash = formatHashRoute({ view: "component", componentId: entry.id });
-    const url = `${window.location.origin}${window.location.pathname}${window.location.search}${hash}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopyState("copied");
-      window.setTimeout(() => setCopyState("idle"), 2000);
-    } catch {
-      setCopyState("idle");
-    }
-  }, [entry.id]);
 
   const hasControls = entry.controls.length > 0;
 

@@ -1,5 +1,5 @@
 import { demoAvatarSrc } from "../../playground/demoAssets";
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   src: string;
@@ -17,17 +17,12 @@ export function UserAvatar({ src, name }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "UserAvatar",
-  title: "UserAvatar",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(UserAvatar, {
   section: "good",
   description: "Passes meaningful alt text for real user photos.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "name", label: "Name (used in alt)", type: "string", default: "Jordan Lee" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return <UserAvatar src={demoAvatarSrc} name={String(values.name)} />;
-}
+  controls: [{ key: "name", label: "Name (used in alt)", type: "string", default: "Jordan Lee" }],
+  props: (values) => ({
+    src: demoAvatarSrc,
+    name: String(values.name),
+  }),
+});

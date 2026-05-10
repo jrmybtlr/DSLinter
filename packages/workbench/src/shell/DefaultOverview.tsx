@@ -9,9 +9,10 @@ export function DefaultOverview() {
       </header>
       <div className="mx-auto max-w-3xl px-8 py-8 text-sm text-slate-600">
         <p>
-          Optional <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">playgroundMeta</code> and{" "}
-          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">PlaygroundPreview</code> on your
-          component modules register sidebar entries. Pass <code className="font-mono text-xs">overview</code> into{" "}
+          Use <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">definePlayground</code> from this package (or export{" "}
+          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">playgroundMeta</code> +{" "}
+          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">PlaygroundPreview</code> yourself) on
+          component modules to register sidebar entries. Pass <code className="font-mono text-xs">overview</code> into{" "}
           <code className="font-mono text-xs">WorkbenchLayout</code> to customize this page.
         </p>
         <p className="mt-4">

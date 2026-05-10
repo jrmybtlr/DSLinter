@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   children: React.ReactNode;
@@ -14,21 +14,11 @@ export function ChaosGrid({ children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "ChaosGrid",
-  title: "ChaosGrid",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(ChaosGrid, {
   section: "bad",
   description: "Arbitrary spacing drift (`[#px]`) instead of layout tokens.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  { key: "cellText", label: "Cell text", type: "string", default: "chaotic" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  return (
-    <ChaosGrid>
-      <span>{String(values.cellText)}</span>
-    </ChaosGrid>
-  );
-}
+  controls: [{ key: "cellText", label: "Cell text", type: "string", default: "chaotic" }],
+  props: (values) => ({
+    children: <span>{String(values.cellText)}</span>,
+  }),
+});

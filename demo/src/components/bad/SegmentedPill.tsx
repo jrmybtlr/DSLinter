@@ -1,4 +1,4 @@
-import type { PlaygroundControl, PlaygroundMeta, PlaygroundPreviewProps } from "@dslint/workbench";
+import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   /** Inconsistent API: elsewhere we use `tone` / `variant`; this uses `pressedTone`. */
@@ -20,30 +20,25 @@ export function SegmentedPill({ pressedTone, children }: Props) {
   );
 }
 
-export const playgroundMeta: PlaygroundMeta = {
-  id: "SegmentedPill",
-  title: "Segmented pill",
+export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(SegmentedPill, {
   section: "bad",
+  title: "Segmented pill",
   description: "Uses `pressedTone` instead of the `tone` / `variant` pattern used elsewhere.",
-};
-
-export const playgroundControls: PlaygroundControl[] = [
-  {
-    key: "pressedTone",
-    label: "pressedTone",
-    type: "select",
-    default: "on",
-    options: [
-      { value: "on", label: "on" },
-      { value: "off", label: "off" },
-    ],
-  },
-  { key: "label", label: "Label", type: "string", default: "Unread only" },
-];
-
-export function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-  const pressed = values.pressedTone === "off" ? "off" : "on";
-  return (
-    <SegmentedPill pressedTone={pressed}>{String(values.label)}</SegmentedPill>
-  );
-}
+  controls: [
+    {
+      key: "pressedTone",
+      label: "pressedTone",
+      type: "select",
+      default: "on",
+      options: [
+        { value: "on", label: "on" },
+        { value: "off", label: "off" },
+      ],
+    },
+    { key: "label", label: "Label", type: "string", default: "Unread only" },
+  ],
+  props: (values): Props => ({
+    pressedTone: values.pressedTone === "off" ? "off" : "on",
+    children: String(values.label),
+  }),
+});

@@ -30,9 +30,14 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
 
   return (
     <aside className="fixed h-full w-[240px] overflow-y-auto shrink-0 flex-col border-r">
-      <div className="border-b border-slate-200 px-4 py-4 sticky top-0 bg-white">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">DSLint</p>
-        <p className="mt-0.5 text-sm font-semibold tracking-tight text-slate-900">Playground</p>
+      <div className="border-b border-slate-200 px-6 py-4 sticky top-0 bg-white">
+        <p className=" text-neutral-900 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+              <g fill="currentColor">
+                <path fill="currentColor" d="M13 0L10.1 0 9.7 0.4 8 3 2 3 2 7 6 7 3 13 3 16 6 16 6.3 15.6 8 13 14 13 14 9 10 9 13 3z"></path>
+              </g>
+            </svg>
+        </p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-3">
