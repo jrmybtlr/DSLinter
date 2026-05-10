@@ -38,6 +38,9 @@ pub struct DslintConfig {
     pub exclude_globs: Vec<String>,
     #[serde(default)]
     pub smell: SmellConfig,
+    /// When true, emit `unused-prop` findings for declared props with no call-site usage.
+    #[serde(default)]
+    pub check_unused_props: bool,
 }
 
 impl DslintConfig {

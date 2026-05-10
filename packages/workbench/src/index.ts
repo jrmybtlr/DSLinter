@@ -16,6 +16,7 @@ export type {
   GovernanceScores,
   LintFinding,
   UsageSummary,
+  UsageLocation,
   ComponentDefinition,
   FileScan,
 } from "./types/report";

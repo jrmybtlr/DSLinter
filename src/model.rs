@@ -1,5 +1,6 @@
 //! Shared report types for scans and governance output.
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use serde::Serialize;
@@ -22,6 +23,9 @@ pub struct ComponentDefinition {
     pub name: String,
     pub kind: DefinitionKind,
     pub line: u32,
+    /// Props destructured from the first parameter of this component function, if detectable.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub declared_props: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -75,6 +79,15 @@ pub struct DuplicateComponent {
     pub locations: Vec<PathBuf>,
 }
 
+/// One call-site where a component is referenced.
+#[derive(Debug, Clone, Serialize)]
+pub struct UsageLocation {
+    pub path: PathBuf,
+    pub line: u32,
+    /// Props passed at this particular call site.
+    pub props: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct UsageSummary {
     pub component: String,
@@ -83,6 +96,12 @@ pub struct UsageSummary {
     /// Largest number of props observed on a single reference (variant / API surface signal).
     pub max_props_on_single_use: usize,
     pub files: Vec<PathBuf>,
+    /// How many call-sites pass each named prop (sorted key for deterministic JSON output).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub prop_frequencies: BTreeMap<String, u32>,
+    /// Every individual call-site with its file, line, and passed props.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub usage_locations: Vec<UsageLocation>,
 }
 
 #[derive(Debug, Clone, Serialize)]

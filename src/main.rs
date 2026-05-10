@@ -4,6 +4,8 @@ use clap::Parser;
 
 use dslint::model::Severity;
 
+mod watch;
+
 #[derive(Parser)]
 #[command(
     name = "dslint",
@@ -30,11 +32,35 @@ struct Cli {
     /// Fail when warning count exceeds this limit (inclusive allow).
     #[arg(long)]
     max_warnings: Option<u32>,
+
+    /// Watch for file changes and incrementally re-scan (hot reload).
+    /// Writes the JSON report to --output on every change.
+    #[arg(long)]
+    watch: bool,
+
+    /// Path to write the JSON report file (used with --watch / --serve).
+    /// Defaults to `<root>/public/dslint-report.json`.
+    #[arg(long, value_name = "PATH")]
+    output: Option<PathBuf>,
+
+    /// Start an HTTP server on the given port that serves the JSON report at
+    /// `/dslint-report.json` and an SSE update stream at `/events`.
+    /// Implies --watch.
+    #[arg(long, value_name = "PORT")]
+    serve: Option<u16>,
 }
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let root = std::fs::canonicalize(&cli.path).unwrap_or(cli.path);
+
+    // --serve implies --watch; either flag activates the live-reload path.
+    if cli.watch || cli.serve.is_some() {
+        let output = cli
+            .output
+            .unwrap_or_else(|| root.join("public").join("dslint-report.json"));
+        return watch::run_watch(&root, cli.parallel, output, cli.serve);
+    }
 
     let report = if cli.parallel {
         dslint::scan_workspace_parallel(&root)?
