@@ -68,7 +68,9 @@ pub fn run_watch(
 
     // Ensure output directory exists.
     if let Some(parent) = output.parent() {
-        fs::create_dir_all(parent).ok();
+        fs::create_dir_all(parent).with_context(|| {
+            format!("failed to create output directory {}", parent.display())
+        })?;
     }
     write_atomic(&output, &json)?;
     eprintln!("dslint: initial scan done — wrote {}", output.display());
