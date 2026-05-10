@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "dslint:report": "node scripts/gen-dslint-report.mjs"
+    "dslint:report": "node scripts/gen-dslint-report.mjs",
+    "dslint:watch": "cargo run --manifest-path ../Cargo.toml --release -- . --watch --output public/dslint-report.json",
+    "dslint:serve": "cargo run --manifest-path ../Cargo.toml --release -- . --serve 7878 --output public/dslint-report.json",
+    "dev:watch": "concurrently --names vite,dslint --prefix-colors blue,green \"vite\" \"npm run dslint:watch\"",
+    "dev:serve": "concurrently --names vite,dslint --prefix-colors blue,green \"vite --mode serve\" \"npm run dslint:serve\""
   },
   "dependencies": {
     "@dslint/workbench": "file:../packages/workbench",
@@ -19,6 +23,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "~5.6.3",

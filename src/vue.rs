@@ -1,20 +1,91 @@
 //! Vue single-file component extraction (template usages + script definitions).
 
 use std::path::Path;
+use std::sync::OnceLock;
 
 use regex::Regex;
 
 use crate::ecma::analyze_ecma_for_paths;
-use crate::model::{FileScan, JsxUsage, LintFinding, Severity};
+use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity};
 use crate::smells;
 
-/// Captures `<script ...>...</script>` blocks (non-greedy inner content).
-fn script_block_regex() -> Regex {
-    Regex::new(r#"(?si)<script([^>]*)>(.*?)</script>"#).expect("script regex")
+// ── Static regex helpers (compiled once) ────────────────────────────────────
+
+fn script_block_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"(?si)<script([^>]*)>(.*?)</script>"#).unwrap())
 }
 
-fn template_block_regex() -> Regex {
-    Regex::new(r#"(?si)<template(?:\s[^>]*)?>(.*?)</template>"#).expect("template regex")
+fn template_block_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"(?si)<template(?:\s[^>]*)?>(.*?)</template>"#).unwrap()
+    })
+}
+
+fn img_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"(?si)<img\s([^>]*?)\s*/?>"#).unwrap())
+}
+
+fn anchor_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"(?si)<a(\s[^>]*)?>"#).unwrap())
+}
+
+fn input_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"(?si)<input\s([^>]*?)\s*/?>"#).unwrap())
+}
+
+fn template_pascal_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"<([A-Z][A-Za-z0-9]*(?:\.[A-Z][A-Za-z0-9]*)*)"#).unwrap()
+    })
+}
+
+fn template_kebab_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)"#).unwrap())
+}
+
+/// `defineProps(['a', 'b'])` – array form.
+fn define_props_array_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"defineProps\s*\(\s*\[([^\]]*)\]"#).unwrap()
+    })
+}
+
+/// `defineProps({ a: ..., b: ... })` – object form (key names only).
+fn define_props_object_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"defineProps\s*\(\s*\{([^}]*)\}"#).unwrap())
+}
+
+/// Options API `props: ['a', 'b']`.
+fn options_props_array_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"props\s*:\s*\[([^\]]*)\]"#).unwrap())
+}
+
+/// Options API `props: { a: ..., b: ... }`.
+fn options_props_object_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"props\s*:\s*\{([^}]*)\}"#).unwrap())
+}
+
+/// Quoted string literal (single or double quotes).
+fn quoted_string_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"['"]([A-Za-z_$][A-Za-z0-9_$]*)['"]"#).unwrap())
+}
+
+/// Bare identifier key (start of an object property).
+fn ident_key_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"(?m)^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*:"#).unwrap())
 }
 
 fn lang_is_ts(attrs: &str) -> bool {
@@ -31,6 +102,59 @@ fn line_at(full_source: &str, byte_offset: usize) -> u32 {
         .count() as u32
 }
 
+// ── Prop extraction from Vue script source ───────────────────────────────────
+
+/// Extract prop names from a Vue `<script>` block by matching `defineProps` or
+/// the options API `props` field.  Returns an empty `Vec` when nothing is found.
+fn extract_vue_declared_props(script_src: &str) -> Vec<String> {
+    // Priority: defineProps array > defineProps object > options props array > options props object
+    if let Some(cap) = define_props_array_re().captures(script_src) {
+        return quoted_string_re()
+            .captures_iter(&cap[1])
+            .map(|c| c[1].to_string())
+            .collect();
+    }
+    if let Some(cap) = define_props_object_re().captures(script_src) {
+        return ident_key_re()
+            .captures_iter(&cap[1])
+            .map(|c| c[1].to_string())
+            .collect();
+    }
+    if let Some(cap) = options_props_array_re().captures(script_src) {
+        return quoted_string_re()
+            .captures_iter(&cap[1])
+            .map(|c| c[1].to_string())
+            .collect();
+    }
+    if let Some(cap) = options_props_object_re().captures(script_src) {
+        return ident_key_re()
+            .captures_iter(&cap[1])
+            .map(|c| c[1].to_string())
+            .collect();
+    }
+    Vec::new()
+}
+
+/// Infer the PascalCase component name from a `.vue` file path.
+fn component_name_from_path(path: &Path) -> Option<String> {
+    path.file_stem()
+        .and_then(|s| s.to_str())
+        .map(|stem| {
+            // Convert kebab-case file names to PascalCase.
+            stem.split('-')
+                .filter(|p| !p.is_empty())
+                .map(|seg| {
+                    let mut it = seg.chars();
+                    match it.next() {
+                        None => String::new(),
+                        Some(c) => c.to_uppercase().collect::<String>() + it.as_str(),
+                    }
+                })
+                .collect::<String>()
+        })
+        .filter(|n| n.chars().next().is_some_and(|c| c.is_ascii_uppercase()))
+}
+
 /// Template-only accessibility checks (HTML in `<template>`).
 fn vue_template_a11y_findings(
     path: &Path,
@@ -40,8 +164,7 @@ fn vue_template_a11y_findings(
 ) -> Vec<LintFinding> {
     let mut out = Vec::new();
 
-    let img_re = Regex::new(r#"(?si)<img\s([^>]*?)\s*/?>"#).expect("vue img regex");
-    for cap in img_re.captures_iter(template) {
+    for cap in img_re().captures_iter(template) {
         let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         if attrs.to_ascii_lowercase().contains("alt=") {
             continue;
@@ -57,8 +180,7 @@ fn vue_template_a11y_findings(
         });
     }
 
-    let a_open = Regex::new(r#"(?si)<a(\s[^>]*)?>"#).expect("vue anchor regex");
-    for cap in a_open.captures_iter(template) {
+    for cap in anchor_re().captures_iter(template) {
         let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         let lower = attrs.to_ascii_lowercase();
         let pos = template_inner_start + cap.get(0).unwrap().start();
@@ -92,8 +214,7 @@ fn vue_template_a11y_findings(
         }
     }
 
-    let input_re = Regex::new(r#"(?si)<input\s([^>]*?)\s*/?>"#).expect("vue input regex");
-    for cap in input_re.captures_iter(template) {
+    for cap in input_re().captures_iter(template) {
         let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         let lower = attrs.to_ascii_lowercase();
         if lower.contains("type=")
@@ -142,8 +263,7 @@ fn kebab_to_pascal(raw: &str) -> String {
 
 /// Merge Vue template component references into an ECMA analysis of the `<script>` blocks.
 pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
-    let script_re = script_block_regex();
-    let caps: Vec<_> = script_re.captures_iter(source).collect();
+    let caps: Vec<_> = script_block_re().captures_iter(source).collect();
 
     let pseudo_ts = path.with_extension("tsx");
     let pseudo_js = path.with_extension("jsx");
@@ -155,6 +275,14 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         parse_errors: Vec::new(),
         findings: Vec::new(),
     };
+
+    // Collect all script content for prop extraction.
+    let all_script: String = caps
+        .iter()
+        .filter_map(|c| c.get(2))
+        .map(|m| m.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
 
     if caps.is_empty() {
         scan.parse_errors
@@ -197,10 +325,31 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
 
     scan.path = path.to_path_buf();
 
+    // If the Vue SFC has no function-based component definition with props captured by
+    // the ECMAScript pass (e.g. <script setup> with defineProps), synthesise one using
+    // regex-based extraction so the unused-prop rule has something to check.
+    let vue_declared_props = extract_vue_declared_props(&all_script);
+    if !vue_declared_props.is_empty() {
+        // Find an existing top-level definition for this file or create a synthetic one.
+        let component_name = component_name_from_path(path).unwrap_or_else(|| "default".into());
+        if let Some(def) = scan.definitions.iter_mut().find(|d| d.name == component_name) {
+            if def.declared_props.is_empty() {
+                def.declared_props = vue_declared_props;
+            }
+        } else {
+            scan.definitions.push(ComponentDefinition {
+                name: component_name,
+                kind: DefinitionKind::ExportDefaultAnonymous,
+                line: 1,
+                declared_props: vue_declared_props,
+            });
+        }
+    }
+
     scan.findings
         .extend(smells::collect_text_smells(path, source));
 
-    if let Some(cap) = template_block_regex().captures(source) {
+    if let Some(cap) = template_block_re().captures(source) {
         let inner = cap.get(1).expect("template inner group");
         let tpl = inner.as_str();
         let tpl_start = inner.start();
@@ -218,11 +367,7 @@ fn merge_template_usages(
     template_inner_start: usize,
     usages: &mut Vec<JsxUsage>,
 ) {
-    let re_pascal = Regex::new(r#"<([A-Z][A-Za-z0-9]*(?:\.[A-Z][A-Za-z0-9]*)*)"#)
-        .expect("template component regex");
-    let re_kebab = Regex::new(r#"<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)"#).expect("kebab template regex");
-
-    for cap in re_pascal.captures_iter(template) {
+    for cap in template_pascal_re().captures_iter(template) {
         let component = cap.get(1).unwrap().as_str().to_string();
         let rel_start = cap.get(0).unwrap().start();
         let line_offset = template_inner_start + rel_start;
@@ -237,7 +382,7 @@ fn merge_template_usages(
         });
     }
 
-    for cap in re_kebab.captures_iter(template) {
+    for cap in template_kebab_re().captures_iter(template) {
         let raw = cap.get(1).unwrap().as_str();
         let component = kebab_to_pascal(raw);
         let rel_start = cap.get(0).unwrap().start();
@@ -304,5 +449,44 @@ const x = 1
             "{:?}",
             scan.findings
         );
+    }
+
+    #[test]
+    fn vue_define_props_array_syntax() {
+        let src = r#"<template><div /></template>
+<script setup lang="ts">
+defineProps(['title', 'color'])
+</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("MyCard.vue"), src);
+        let def = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "MyCard")
+            .expect("MyCard definition from file name");
+        assert!(
+            def.declared_props.contains(&"title".to_string()),
+            "{:?}",
+            def.declared_props
+        );
+        assert!(def.declared_props.contains(&"color".to_string()));
+    }
+
+    #[test]
+    fn vue_define_props_object_syntax() {
+        let src = r#"<template><div /></template>
+<script setup lang="ts">
+defineProps({
+  label: String,
+  disabled: Boolean,
+})
+</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("MyButton.vue"), src);
+        let def = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "MyButton")
+            .expect("MyButton definition");
+        assert!(def.declared_props.contains(&"label".to_string()));
+        assert!(def.declared_props.contains(&"disabled".to_string()));
     }
 }

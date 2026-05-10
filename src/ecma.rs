@@ -4,9 +4,9 @@ use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPatternKind, ExportDefaultDeclarationKind, Expression, Function, JSXAttribute,
-    JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXElement, JSXElementName,
-    JSXMemberExpressionObject, JSXOpeningElement, VariableDeclarator,
+    BindingPatternKind, ExportDefaultDeclarationKind, Expression, FormalParameters, Function,
+    JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXElement,
+    JSXElementName, JSXMemberExpressionObject, JSXOpeningElement, PropertyKey, VariableDeclarator,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
@@ -94,6 +94,28 @@ fn offset_line(source: &str, offset: u32) -> u32 {
 
 fn binding_name(id: &oxc_ast::ast::BindingIdentifier<'_>) -> String {
     id.name.as_str().to_string()
+}
+
+/// Extract prop names from the first parameter's object-destructure pattern.
+///
+/// Handles `function Button({ variant, size }: P)` and `({ variant }) => ...`.
+fn extract_props_from_params(params: &FormalParameters<'_>) -> Vec<String> {
+    let Some(first) = params.items.first() else {
+        return Vec::new();
+    };
+    let BindingPatternKind::ObjectPattern(obj) = &first.pattern.kind else {
+        return Vec::new();
+    };
+    let mut props: Vec<String> = obj
+        .properties
+        .iter()
+        .filter_map(|p| match &p.key {
+            PropertyKey::StaticIdentifier(id) => Some(id.name.as_str().to_string()),
+            _ => None,
+        })
+        .collect();
+    props.sort();
+    props
 }
 
 fn is_component_identifier(name: &str) -> bool {
@@ -378,10 +400,12 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
             if let Some(id) = &func.id {
                 let name = binding_name(id);
                 if is_component_identifier(&name) {
+                    let declared_props = extract_props_from_params(&func.params);
                     self.definitions.push(ComponentDefinition {
                         name,
                         kind: DefinitionKind::Function,
                         line: offset_line(self.source, func.span.start),
+                        declared_props,
                     });
                 }
             }
@@ -408,6 +432,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                         name,
                         kind: DefinitionKind::Class,
                         line: offset_line(self.source, class.span.start),
+                        declared_props: Vec::new(),
                     });
                 }
             }
@@ -429,19 +454,31 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
         match &decl.declaration {
             ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
                 if func.id.is_none() {
+                    let declared_props = extract_props_from_params(&func.params);
                     self.definitions.push(ComponentDefinition {
                         name: DEFAULT_EXPORT.to_string(),
                         kind: DefinitionKind::ExportDefaultAnonymous,
                         line: offset_line(self.source, decl.span.start),
+                        declared_props,
                     });
                 }
             }
-            ExportDefaultDeclarationKind::ArrowFunctionExpression(_)
-            | ExportDefaultDeclarationKind::FunctionExpression(_) => {
+            ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
+                let declared_props = extract_props_from_params(&arrow.params);
                 self.definitions.push(ComponentDefinition {
                     name: DEFAULT_EXPORT.to_string(),
                     kind: DefinitionKind::ExportDefaultAnonymous,
                     line: offset_line(self.source, decl.span.start),
+                    declared_props,
+                });
+            }
+            ExportDefaultDeclarationKind::FunctionExpression(func) => {
+                let declared_props = extract_props_from_params(&func.params);
+                self.definitions.push(ComponentDefinition {
+                    name: DEFAULT_EXPORT.to_string(),
+                    kind: DefinitionKind::ExportDefaultAnonymous,
+                    line: offset_line(self.source, decl.span.start),
+                    declared_props,
                 });
             }
             ExportDefaultDeclarationKind::Identifier(ident) => {
@@ -450,6 +487,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     name,
                     kind: DefinitionKind::ExportDefault,
                     line: offset_line(self.source, decl.span.start),
+                    declared_props: Vec::new(),
                 });
             }
             _ => {}
@@ -505,14 +543,22 @@ impl ExtractVisitor<'_> {
         let Some(init) = &decl.init else {
             return;
         };
-        let kind = if expr_is_component_like(init) {
-            match init {
+        let (kind, declared_props) = if expr_is_component_like(init) {
+            let props = match init {
+                Expression::ArrowFunctionExpression(arrow) => {
+                    extract_props_from_params(&arrow.params)
+                }
+                Expression::FunctionExpression(func) => extract_props_from_params(&func.params),
+                _ => Vec::new(),
+            };
+            let kind = match init {
                 Expression::ArrowFunctionExpression(_) => DefinitionKind::ConstArrow,
                 Expression::FunctionExpression(_) => DefinitionKind::ConstFunction,
                 _ => DefinitionKind::ConstArrow,
-            }
+            };
+            (kind, props)
         } else if expr_is_wrapper_call(init) {
-            DefinitionKind::WrappedComponent
+            (DefinitionKind::WrappedComponent, Vec::new())
         } else {
             return;
         };
@@ -520,6 +566,7 @@ impl ExtractVisitor<'_> {
             name,
             kind,
             line: offset_line(self.source, decl.span.start),
+            declared_props,
         });
     }
 }
@@ -596,6 +643,57 @@ const Panel = () => <aside />;
                 .any(|f| f.rule_id == "a11y-button-name"),
             "{:?}",
             scan.findings
+        );
+    }
+
+    #[test]
+    fn declared_props_extracted_from_destructured_function() {
+        let src = r#"
+export function Button({ variant, size, onClick }: ButtonProps) {
+  return <button />;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Button.tsx"), src);
+        assert!(scan.parse_errors.is_empty(), "{:?}", scan.parse_errors);
+        let btn = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Button")
+            .expect("Button definition");
+        assert_eq!(btn.declared_props, vec!["onClick", "size", "variant"]);
+    }
+
+    #[test]
+    fn declared_props_extracted_from_arrow_component() {
+        let src = r#"
+export const Card = ({ title, body }: CardProps) => <div>{title}</div>;
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Card.tsx"), src);
+        assert!(scan.parse_errors.is_empty(), "{:?}", scan.parse_errors);
+        let card = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Card")
+            .expect("Card definition");
+        assert_eq!(card.declared_props, vec!["body", "title"]);
+    }
+
+    #[test]
+    fn declared_props_empty_for_non_destructured_param() {
+        let src = r#"
+export function Label(props: LabelProps) {
+  return <span>{props.text}</span>;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Label.tsx"), src);
+        let label = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Label")
+            .expect("Label definition");
+        assert!(
+            label.declared_props.is_empty(),
+            "non-destructured params should yield no declared_props"
         );
     }
 }

@@ -1,7 +1,8 @@
 //! Governance rules (MVP): duplicates, deprecation, tokens, accessibility, and code smells.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use regex::Regex;
 
@@ -9,20 +10,40 @@ use crate::config::DslintConfig;
 use crate::directives::{apply_inline_suppressions, collect_workspace_sources};
 use crate::model::{
     DuplicateComponent, FileScan, GovernanceScores, LintFinding, OwnershipSummary, Severity,
-    UsageSummary, WorkspaceReport,
+    UsageLocation, UsageSummary, WorkspaceReport,
 };
+
+// ── Static regex helpers ─────────────────────────────────────────────────────
+
+fn hex_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b").expect("hex regex")
+    })
+}
+
+fn tw_arbitrary_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"\[(?:#[0-9a-fA-F]{3,8}|\d+px)\]").expect("tw arb regex")
+    })
+}
 
 pub fn evaluate_workspace(
     root: PathBuf,
     files: Vec<FileScan>,
     config: &DslintConfig,
 ) -> WorkspaceReport {
+    // Read every source file once and reuse the text throughout this function,
+    // eliminating duplicate disk reads across rules.
+    let sources = collect_workspace_sources(&root, &files);
+
     let mut findings = Vec::new();
     for file in &files {
         findings.extend(file.findings.iter().cloned());
     }
-    findings.extend(hardcoded_hex_colors(&files));
-    findings.extend(tailwind_arbitrary_tokens(&files));
+    findings.extend(hardcoded_hex_colors(&files, &sources));
+    findings.extend(tailwind_arbitrary_tokens(&files, &sources));
     dedupe_token_color_overlap(&mut findings);
     findings.extend(deprecated_usage(&files, config));
 
@@ -47,13 +68,14 @@ pub fn evaluate_workspace(
         });
     }
 
-    let sources = collect_workspace_sources(&root, &files);
+    findings.extend(unused_props_findings(&files, &usage_by_component, config));
+
     findings = apply_inline_suppressions(findings, &sources);
     findings = filter_smell_config(findings, config);
 
     let ownership = compute_ownership(&root, &files, config);
 
-    let scores = compute_scores(&findings, &duplicate_components, &files, config);
+    let scores = compute_scores(&findings, &duplicate_components, &files, config, &sources);
 
     WorkspaceReport {
         root,
@@ -67,28 +89,56 @@ pub fn evaluate_workspace(
 }
 
 fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
-    let mut map: HashMap<String, HashMap<PathBuf, u32>> = HashMap::new();
-    let mut max_props: HashMap<String, usize> = HashMap::new();
+    // per-component → per-file → count
+    let mut map: HashMap<String, HashMap<PathBuf, u32>> =
+        HashMap::with_capacity(files.len());
+    let mut max_props: HashMap<String, usize> = HashMap::with_capacity(files.len());
+    let mut prop_freqs: HashMap<String, BTreeMap<String, u32>> =
+        HashMap::with_capacity(files.len());
+    let mut locs: HashMap<String, Vec<UsageLocation>> = HashMap::with_capacity(files.len());
+
     for file in files {
         for u in &file.usages {
             let per_file = map.entry(u.component.clone()).or_default();
             *per_file.entry(file.path.clone()).or_insert(0) += 1;
+
             let entry = max_props.entry(u.component.clone()).or_insert(0);
             *entry = (*entry).max(u.props.len());
+
+            let pf = prop_freqs.entry(u.component.clone()).or_default();
+            for prop in &u.props {
+                *pf.entry(prop.clone()).or_insert(0) += 1;
+            }
+
+            locs.entry(u.component.clone())
+                .or_default()
+                .push(UsageLocation {
+                    path: file.path.clone(),
+                    line: u.line,
+                    props: u.props.clone(),
+                });
         }
     }
+
     let mut rows: Vec<UsageSummary> = map
         .into_iter()
         .map(|(component, files_map)| {
             let mut paths: Vec<PathBuf> = files_map.keys().cloned().collect();
             paths.sort();
             let reference_count: u32 = files_map.values().sum();
+            let prop_frequencies = prop_freqs.remove(&component).unwrap_or_default();
+            let mut usage_locations = locs.remove(&component).unwrap_or_default();
+            usage_locations.sort_by(|a, b| {
+                a.path.cmp(&b.path).then_with(|| a.line.cmp(&b.line))
+            });
             UsageSummary {
                 component: component.clone(),
                 reference_count,
                 file_count: paths.len(),
                 max_props_on_single_use: max_props.remove(&component).unwrap_or(0),
                 files: paths,
+                prop_frequencies,
+                usage_locations,
             }
         })
         .collect();
@@ -232,14 +282,17 @@ fn compute_ownership(
     out
 }
 
-fn tailwind_arbitrary_tokens(files: &[FileScan]) -> Vec<LintFinding> {
-    let re = Regex::new(r"\[(?:#[0-9a-fA-F]{3,8}|\d+px)\]").expect("tw arb regex");
+fn tailwind_arbitrary_tokens(
+    files: &[FileScan],
+    sources: &HashMap<PathBuf, String>,
+) -> Vec<LintFinding> {
+    let re = tw_arbitrary_re();
     let mut out = Vec::new();
     for file in files {
-        let Ok(text) = std::fs::read_to_string(&file.path) else {
+        let Some(text) = sources.get(&file.path) else {
             continue;
         };
-        for m in re.find_iter(&text) {
+        for m in re.find_iter(text) {
             let start = m.start();
             let line = 1 + text[..start].bytes().filter(|&b| b == b'\n').count() as u32;
             out.push(LintFinding {
@@ -304,14 +357,17 @@ fn deprecated_usage(files: &[FileScan], config: &DslintConfig) -> Vec<LintFindin
     out
 }
 
-fn hardcoded_hex_colors(files: &[FileScan]) -> Vec<LintFinding> {
-    let re = Regex::new(r"#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b").expect("hex regex");
+fn hardcoded_hex_colors(
+    files: &[FileScan],
+    sources: &HashMap<PathBuf, String>,
+) -> Vec<LintFinding> {
+    let re = hex_re();
     let mut out = Vec::new();
     for file in files {
-        let Ok(text) = std::fs::read_to_string(&file.path) else {
+        let Some(text) = sources.get(&file.path) else {
             continue;
         };
-        for m in re.find_iter(&text) {
+        for m in re.find_iter(text) {
             let start = m.start();
             let line = 1 + text[..start].bytes().filter(|&b| b == b'\n').count() as u32;
             out.push(LintFinding {
@@ -354,6 +410,7 @@ fn compute_scores(
     duplicates: &[DuplicateComponent],
     files: &[FileScan],
     config: &DslintConfig,
+    sources: &HashMap<PathBuf, String>,
 ) -> GovernanceScores {
     let warn = findings
         .iter()
@@ -361,7 +418,7 @@ fn compute_scores(
         .count() as i32;
     let dup_penalty = duplicates.len() as i32 * 5;
 
-    let token_adoption = token_adoption_pct(files, config);
+    let token_adoption = token_adoption_pct(files, config, sources);
     let maintainability =
         (100_i32 - warn * 3 - dup_penalty - smell_penalty(findings)).clamp(0, 100) as u8;
     let accessibility = (100_i32 - a11y_penalty(findings)).clamp(0, 100) as u8;
@@ -387,13 +444,17 @@ fn compute_scores(
 }
 
 /// Share of files that reference at least one configured token string (None if unset).
-fn token_adoption_pct(files: &[FileScan], config: &DslintConfig) -> Option<u8> {
+fn token_adoption_pct(
+    files: &[FileScan],
+    config: &DslintConfig,
+    sources: &HashMap<PathBuf, String>,
+) -> Option<u8> {
     if config.known_tokens.is_empty() {
         return None;
     }
     let mut hits = 0_u32;
     for file in files {
-        let Ok(text) = std::fs::read_to_string(&file.path) else {
+        let Some(text) = sources.get(&file.path) else {
             continue;
         };
         if config
@@ -408,6 +469,65 @@ fn token_adoption_pct(files: &[FileScan], config: &DslintConfig) -> Option<u8> {
         return Some(100);
     }
     Some(((hits * 100) / files.len() as u32).min(100) as u8)
+}
+
+/// Emit `unused-prop` findings for declared props that never appear at any call site.
+fn unused_props_findings(
+    files: &[FileScan],
+    usage_map: &[UsageSummary],
+    config: &DslintConfig,
+) -> Vec<LintFinding> {
+    if !config.check_unused_props {
+        return Vec::new();
+    }
+
+    // Build: component name → (definition file path, declared props).
+    // First definition wins; skip anonymous/default exports.
+    let mut def_map: HashMap<String, (PathBuf, Vec<String>)> = HashMap::new();
+    for file in files {
+        for def in &file.definitions {
+            if def.declared_props.is_empty() {
+                continue;
+            }
+            def_map
+                .entry(def.name.clone())
+                .or_insert_with(|| (file.path.clone(), def.declared_props.clone()));
+        }
+    }
+
+    // Build a quick lookup: component name → prop_frequencies.
+    let freq_map: HashMap<&str, &BTreeMap<String, u32>> = usage_map
+        .iter()
+        .map(|u| (u.component.as_str(), &u.prop_frequencies))
+        .collect();
+
+    let empty_freq = BTreeMap::new();
+    let mut out = Vec::new();
+    let mut keys: Vec<&String> = def_map.keys().collect();
+    keys.sort(); // deterministic output order
+    for component in keys {
+        let (path, declared) = &def_map[component];
+        let freq = freq_map.get(component.as_str()).copied().unwrap_or(&empty_freq);
+        for prop in declared {
+            // `children` is a React implicit prop — skip it.
+            if prop == "children" || prop == "className" || prop == "style" {
+                continue;
+            }
+            let count = freq.get(prop).copied().unwrap_or(0);
+            if count == 0 {
+                out.push(LintFinding {
+                    rule_id: "unused-prop".into(),
+                    message: format!(
+                        "`{component}` prop `{prop}` is declared but never passed at any call site."
+                    ),
+                    path: path.clone(),
+                    line: None,
+                    severity: Severity::Info,
+                });
+            }
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -454,5 +574,140 @@ mod dedupe_tests {
             1
         );
         assert!(findings.iter().any(|f| f.line == Some(11)));
+    }
+}
+
+#[cfg(test)]
+mod prop_tests {
+    use super::*;
+    use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage};
+    use std::path::PathBuf;
+
+    fn make_file(
+        path: &str,
+        defs: Vec<(&str, Vec<&str>)>,
+        usages: Vec<(&str, Vec<&str>)>,
+    ) -> FileScan {
+        FileScan {
+            path: PathBuf::from(path),
+            definitions: defs
+                .into_iter()
+                .map(|(name, props)| ComponentDefinition {
+                    name: name.to_string(),
+                    kind: DefinitionKind::Function,
+                    line: 1,
+                    declared_props: props.into_iter().map(|s| s.to_string()).collect(),
+                })
+                .collect(),
+            usages: usages
+                .into_iter()
+                .map(|(comp, props)| JsxUsage {
+                    component: comp.to_string(),
+                    line: 5,
+                    props: props.into_iter().map(|s| s.to_string()).collect(),
+                })
+                .collect(),
+            parse_errors: Vec::new(),
+            findings: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn rollup_captures_prop_frequencies() {
+        let files = vec![
+            make_file(
+                "a.tsx",
+                vec![],
+                vec![("Button", vec!["variant", "size"]), ("Button", vec!["variant"])],
+            ),
+            make_file("b.tsx", vec![], vec![("Button", vec!["variant", "onClick"])]),
+        ];
+        let rows = rollup_usage(&files);
+        let btn = rows.iter().find(|r| r.component == "Button").unwrap();
+        assert_eq!(btn.reference_count, 3);
+        assert_eq!(*btn.prop_frequencies.get("variant").unwrap(), 3);
+        assert_eq!(*btn.prop_frequencies.get("size").unwrap(), 1);
+        assert_eq!(*btn.prop_frequencies.get("onClick").unwrap(), 1);
+    }
+
+    #[test]
+    fn rollup_records_usage_locations() {
+        let files = vec![make_file(
+            "x.tsx",
+            vec![],
+            vec![("Card", vec!["title"]), ("Card", vec!["title", "body"])],
+        )];
+        let rows = rollup_usage(&files);
+        let card = rows.iter().find(|r| r.component == "Card").unwrap();
+        assert_eq!(card.usage_locations.len(), 2);
+        assert_eq!(card.usage_locations[0].props, vec!["title"]);
+    }
+
+    #[test]
+    fn unused_props_finds_never_passed_prop() {
+        let files = vec![
+            make_file(
+                "Btn.tsx",
+                vec![("Button", vec!["variant", "disabled", "onClick"])],
+                vec![],
+            ),
+            // Callers only pass `variant` and `onClick`.
+            make_file(
+                "page.tsx",
+                vec![],
+                vec![("Button", vec!["variant", "onClick"])],
+            ),
+        ];
+        let config = DslintConfig {
+            check_unused_props: true,
+            ..Default::default()
+        };
+        let usage_map = rollup_usage(&files);
+        let findings = unused_props_findings(&files, &usage_map, &config);
+        // `disabled` should be flagged; `variant` and `onClick` should not.
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.rule_id == "unused-prop" && f.message.contains("disabled")),
+            "{:?}",
+            findings
+        );
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.rule_id == "unused-prop" && f.message.contains("variant")),
+            "variant is used so should not be flagged"
+        );
+    }
+
+    #[test]
+    fn unused_props_off_by_default() {
+        let files = vec![
+            make_file("Btn.tsx", vec![("Button", vec!["unused"])], vec![]),
+        ];
+        let config = DslintConfig::default(); // check_unused_props = false
+        let usage_map = rollup_usage(&files);
+        let findings = unused_props_findings(&files, &usage_map, &config);
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn unused_props_skips_children_and_classname() {
+        let files = vec![
+            make_file(
+                "Wrap.tsx",
+                vec![("Wrapper", vec!["children", "className", "style", "extra"])],
+                vec![],
+            ),
+        ];
+        let config = DslintConfig {
+            check_unused_props: true,
+            ..Default::default()
+        };
+        let usage_map = rollup_usage(&files);
+        let findings = unused_props_findings(&files, &usage_map, &config);
+        // children/className/style are skipped; only `extra` should fire.
+        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert!(findings[0].message.contains("extra"));
     }
 }

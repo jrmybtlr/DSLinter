@@ -15,6 +15,8 @@ export interface ComponentDefinition {
   name: string;
   kind: DefinitionKind;
   line: number;
+  /** Props destructured from the first parameter, when detectable. */
+  declared_props?: string[];
 }
 
 export interface JsxUsage {
@@ -51,12 +53,23 @@ export interface DuplicateComponent {
   locations: string[];
 }
 
+/** One individual call-site where a component is referenced. */
+export interface UsageLocation {
+  path: string;
+  line: number;
+  props: string[];
+}
+
 export interface UsageSummary {
   component: string;
   reference_count: number;
   file_count: number;
   max_props_on_single_use: number;
   files: string[];
+  /** How many call-sites pass each named prop. */
+  prop_frequencies?: Record<string, number>;
+  /** Every individual call-site with its file, line, and passed props. */
+  usage_locations?: UsageLocation[];
 }
 
 export interface OwnershipSummary {
