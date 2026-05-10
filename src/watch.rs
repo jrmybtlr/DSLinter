@@ -195,7 +195,21 @@ pub fn run_watch(
 fn write_atomic(path: &Path, content: &str) -> anyhow::Result<()> {
     let tmp = path.with_extension("json.tmp");
     fs::write(&tmp, content).with_context(|| format!("write {}", tmp.display()))?;
-    fs::rename(&tmp, path).with_context(|| format!("rename to {}", path.display()))?;
+
+    #[cfg(windows)]
+    {
+        fs::remove_file(path)
+            .or_else(|err| {
+                if err.kind() == std::io::ErrorKind::NotFound {
+                    Ok(())
+                } else {
+                    Err(err)
+                }
+            })
+            .with_context(|| format!("remove {}", path.display()))?;
+    }
+
+    fs::rename(&tmp, path).with_context(|| format!("rename {} to {}", tmp.display(), path.display()))?;
     Ok(())
 }
 
