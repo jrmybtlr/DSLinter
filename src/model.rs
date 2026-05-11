@@ -111,6 +111,21 @@ pub struct OwnershipSummary {
     pub definitions: usize,
 }
 
+/// Workbench playground row derived from scan + `playground_groups` in config (no per-file TS).
+#[derive(Debug, Clone, Serialize)]
+pub struct PlaygroundSpec {
+    /// Stable id (file stem), used in URLs / sidebar.
+    pub id: String,
+    /// Named export to render (`Card` when file stem is `DuplicateCardA`, etc.).
+    pub export_name: String,
+    /// Path relative to workspace root, slash-separated.
+    pub rel_path: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub declared_props: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct WorkspaceReport {
     pub root: PathBuf,
@@ -120,4 +135,6 @@ pub struct WorkspaceReport {
     pub usage_by_component: Vec<UsageSummary>,
     pub ownership: Vec<OwnershipSummary>,
     pub scores: GovernanceScores,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub playgrounds: Vec<PlaygroundSpec>,
 }

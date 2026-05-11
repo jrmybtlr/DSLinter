@@ -1,4 +1,4 @@
-export type { PlaygroundEntry, PlaygroundMeta, PlaygroundSection } from "./types/playground";
+export type { PlaygroundEntry, PlaygroundMeta } from "./types/playground";
 export type {
   PlaygroundArgs,
   PlaygroundControl,
@@ -19,6 +19,7 @@ export type {
   UsageLocation,
   ComponentDefinition,
   FileScan,
+  PlaygroundSpec,
 } from "./types/report";
 export type {
   TokenCatalog,

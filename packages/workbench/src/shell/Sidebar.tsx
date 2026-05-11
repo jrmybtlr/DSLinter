@@ -51,11 +51,14 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
         </button>
 
         {sectionLabel("Components")}
-        <ul className="space-y-0.5">
-          {entries.map((e) => {
+        <div className="space-y-0.5">
+          {entries.map((e, i) => {
             const active = route.view === "component" && route.componentId === e.id;
+            const prev = entries[i - 1];
+            const showGroup = Boolean(e.meta.group) && (!prev || prev.meta.group !== e.meta.group);
             return (
-              <li key={e.id}>
+              <div key={e.id}>
+                {showGroup && e.meta.group ? sectionLabel(e.meta.group) : null}
                 <button
                   type="button"
                   onClick={() => onNavigate({ view: "component", componentId: e.id })}
@@ -63,10 +66,10 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
                 >
                   {e.meta.title}
                 </button>
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
 
         {sectionLabel("System")}
         <button

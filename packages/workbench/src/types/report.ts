@@ -78,6 +78,15 @@ export interface OwnershipSummary {
   definitions: number;
 }
 
+/** Emitted by dslint for workbench playgrounds (no per-component TS registration). */
+export interface PlaygroundSpec {
+  id: string;
+  export_name: string;
+  rel_path: string;
+  declared_props: string[];
+  group?: string | null;
+}
+
 export interface WorkspaceReport {
   root: string;
   files: FileScan[];
@@ -86,4 +95,5 @@ export interface WorkspaceReport {
   usage_by_component: UsageSummary[];
   ownership: OwnershipSummary[];
   scores: GovernanceScores;
+  playgrounds?: PlaygroundSpec[];
 }

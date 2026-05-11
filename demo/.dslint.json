@@ -11,7 +11,10 @@
     "gap-layout-"
   ],
   "ownership": {
-    "design-system": ["src/components/good/"]
+    "design-system": ["src/components/"]
+  },
+  "playground_groups": {
+    "components": ["src/components"]
   },
   "exclude_globs": [],
   "smell": {

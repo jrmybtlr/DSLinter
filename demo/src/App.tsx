@@ -1,6 +1,7 @@
+import { useMemo } from "react";
 import { useWorkspaceReport, WorkbenchLayout } from "@dslint/workbench";
 import { DemoOverview } from "./DemoOverview";
-import { playgroundEntries } from "./playground/buildRegistry";
+import { buildPlaygroundEntries } from "./playground/buildRegistry";
 import { tokenCatalog } from "./tokenCatalog";
 
 // When running `npm run dev:serve` Vite proxies /events to the Rust server,
@@ -16,6 +17,11 @@ export default function App() {
     // `npm run dslint:report` + page-save still updates automatically).
     refreshIntervalMs: IS_SERVE_MODE ? 0 : 5000,
   });
+
+  const playgroundEntries = useMemo(
+    () => buildPlaygroundEntries(dslintReport.report),
+    [dslintReport.report],
+  );
 
   return (
     <WorkbenchLayout

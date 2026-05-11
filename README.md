@@ -36,7 +36,7 @@ Optional config (repository root): `.dslint.json` or `dslint.json`:
 
 ## Demo
 
-See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with ten “good” and ten “bad” components plus `demo/.dslint.json`. The demo UI is a **workbench** from the [`packages/workbench`](packages/workbench/) npm package (`@dslint/workbench`): optional `playgroundMeta` / `PlaygroundPreview` exports on component modules plus `demo/public/dslint-report.json`.
+See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with a flat `src/components/` showcase plus `demo/.dslint.json`. The demo UI is a **workbench** from the [`packages/workbench`](packages/workbench/) npm package (`@dslint/workbench`): component previews are listed from **`playgrounds`** in `dslint-report.json` (built by the Rust scanner from source + `playground_groups` in config), joined to modules via `import.meta.glob` — no per-file `playgroundMeta` exports required.
 
 ```bash
 cd demo && npm install && npm run dev

@@ -1,5 +1,10 @@
 import { useMemo, useState } from "react";
-import { aggregateDefinitions, catalogComponentNames, usageMap } from "./aggregate";
+import {
+  aggregateDeclaredProps,
+  aggregateDefinitions,
+  catalogComponentNames,
+  usageMap,
+} from "./aggregate";
 import { shortPath } from "./paths";
 import type { WorkspaceReport } from "../types/report";
 
@@ -11,16 +16,18 @@ function kindLabel(kind: string): string {
 function buildUnusedPropSet(report: WorkspaceReport): Set<string> {
   const s = new Set<string>();
   const usageByComponent = new Map(
-    (report.usage_by_component ?? []).map((usage) => [usage.component_name, usage.prop_frequencies ?? {}]),
+    (report.usage_by_component ?? []).map((usage) => [usage.component, usage.prop_frequencies ?? {}]),
   );
 
-  for (const definition of report.definitions ?? []) {
-    const componentName = definition.component_name;
-    const propFrequencies = usageByComponent.get(componentName) ?? {};
+  for (const file of report.files ?? []) {
+    for (const definition of file.definitions ?? []) {
+      const componentName = definition.name;
+      const propFrequencies = usageByComponent.get(componentName) ?? {};
 
-    for (const propName of definition.declared_props ?? []) {
-      if ((propFrequencies[propName] ?? 0) === 0) {
-        s.add(`${componentName}/${propName}`);
+      for (const propName of definition.declared_props ?? []) {
+        if ((propFrequencies[propName] ?? 0) === 0) {
+          s.add(`${componentName}/${propName}`);
+        }
       }
     }
   }
@@ -109,12 +116,14 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
   const usages = usageMap(report);
   const names = catalogComponentNames(defs, usages);
   const unusedProps = useMemo(() => buildUnusedPropSet(report), [report]);
+  const declaredByName = useMemo(() => aggregateDeclaredProps(report), [report]);
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {names.map((name) => {
         const sites = defs.get(name) ?? [];
         const use = usages.get(name);
+        const declared = declaredByName.get(name) ?? [];
         return (
           <article
             key={name}
@@ -144,6 +153,24 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
               ) : (
                 <p className="text-neutral-400">No definition captured (usage-only / external).</p>
               )}
+
+              {declared.length > 0 ? (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+                    Declared props
+                  </p>
+                  <ul className="mt-1 flex flex-wrap gap-1">
+                    {declared.map((prop) => (
+                      <li
+                        key={prop}
+                        className="rounded bg-neutral-50 px-1.5 py-0.5 font-mono text-[10px] text-neutral-700 ring-1 ring-neutral-200/80"
+                      >
+                        {prop}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
               {use ? (
                 <>

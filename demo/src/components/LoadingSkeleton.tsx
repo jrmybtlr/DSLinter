@@ -1,4 +1,3 @@
-import { definePlayground } from "@dslint/workbench";
 
 /** Predictable loading placeholder blocks. */
 export function LoadingSkeleton() {
@@ -10,11 +9,3 @@ export function LoadingSkeleton() {
     </div>
   );
 }
-
-export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground({
-  id: "LoadingSkeleton",
-  section: "good",
-  description: "Predictable loading placeholder blocks.",
-  controls: [],
-  render: () => <LoadingSkeleton />,
-});

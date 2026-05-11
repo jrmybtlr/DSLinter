@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
-import type { PlaygroundMeta, PlaygroundSection } from "../types/playground";
+import type { PlaygroundMeta } from "../types/playground";
 import type { PlaygroundPreviewComponent, PlaygroundPreviewProps } from "../types/preview";
 
 export type DefinedPlayground = {
@@ -16,8 +16,10 @@ type PlaygroundDefinitionBase = {
    */
   id?: string;
   title?: string;
-  section: PlaygroundSection;
-  description?: string;
+  /** Sidebar / report group (e.g. from dslint `playground_groups`). */
+  group?: string;
+  /** @deprecated Use `group` — kept for older call sites. */
+  section?: string;
   controls?: PlaygroundControl[];
 };
 
@@ -47,33 +49,18 @@ function inferId(nameFallback: string | undefined): string {
 function resolveMeta(base: PlaygroundDefinitionBase, nameFallback: string | undefined): PlaygroundMeta {
   const id = base.id ?? inferId(nameFallback);
   const title = base.title ?? id;
+  const group = base.group ?? base.section;
   return {
     id,
     title,
-    section: base.section,
-    description: base.description,
+    ...(group !== undefined && group !== "" ? { group } : {}),
   };
 }
 
 /**
- * Declare workbench playground exports in one place. Expands to `playgroundMeta`,
- * `playgroundControls`, and `PlaygroundPreview` for use with `import.meta.glob` registries.
- *
- * @example
- * ```tsx
- * export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(
- *   PageHero,
- *   {
- *     section: "good",
- *     description: "…",
- *     controls: […],
- *     props: (values) => ({
- *       title: String(values.title),
- *       subtitle: values.showSubtitle ? String(values.subtitle) : undefined,
- *     }),
- *   },
- * );
- * ```
+ * Optional escape hatch: declare workbench playground exports manually. Prefer driving
+ * playgrounds from `dslint-report.json` (`playgrounds`) so component files stay free of
+ * workbench imports.
  */
 export function definePlayground<P extends Record<string, unknown>>(
   component: ComponentType<P>,

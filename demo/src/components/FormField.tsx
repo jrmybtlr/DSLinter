@@ -1,4 +1,3 @@
-import { definePlayground } from "@dslint/workbench";
 
 type Props = {
   id: string;
@@ -21,16 +20,3 @@ export function FormField({ id, label }: Props) {
     </div>
   );
 }
-
-export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground(FormField, {
-  section: "good",
-  description: "Label wired to control with explicit accessible name.",
-  controls: [
-    { key: "id", label: "Input id", type: "string", default: "playground-field" },
-    { key: "label", label: "Label", type: "string", default: "Email" },
-  ],
-  props: (values) => ({
-    id: String(values.id),
-    label: String(values.label),
-  }),
-});

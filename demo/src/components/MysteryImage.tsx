@@ -1,4 +1,3 @@
-import { definePlayground } from "@dslint/workbench";
 
 /** Decorative image with no `alt` — triggers a11y-img-alt. */
 export function MysteryImage() {
@@ -9,11 +8,3 @@ export function MysteryImage() {
     />
   );
 }
-
-export const { playgroundMeta, playgroundControls, PlaygroundPreview } = definePlayground({
-  id: "MysteryImage",
-  section: "bad",
-  description: "Decorative image with no `alt` — triggers a11y-img-alt.",
-  controls: [],
-  render: () => <MysteryImage />,
-});

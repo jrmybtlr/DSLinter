@@ -5,10 +5,12 @@ pub mod directives;
 pub mod ecma;
 pub mod gitignore;
 pub mod model;
+pub mod playground_emit;
 pub mod report;
 pub mod rules;
 pub mod scan;
 pub mod smells;
+mod ts_shape_map;
 pub mod vue;
 
 use std::path::Path;

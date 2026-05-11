@@ -1,12 +1,14 @@
 //! ECMAScript / TypeScript / JSX parsing via Oxc.
 
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPatternKind, ExportDefaultDeclarationKind, Expression, FormalParameters, Function,
-    JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXElement,
-    JSXElementName, JSXMemberExpressionObject, JSXOpeningElement, PropertyKey, VariableDeclarator,
+    BindingPatternKind, Declaration, ExportDefaultDeclarationKind, Expression, FormalParameters,
+    Function, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
+    JSXElement, JSXElementName, JSXMemberExpressionObject, JSXOpeningElement, PropertyKey,
+    VariableDeclarator,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
@@ -51,6 +53,7 @@ pub fn analyze_ecma_for_paths(
         };
     }
 
+    let ts_prop_shapes = crate::ts_shape_map::collect_ts_prop_shape_map(&program);
     let mut v = ExtractVisitor {
         path: report_path.to_path_buf(),
         source,
@@ -58,6 +61,8 @@ pub fn analyze_ecma_for_paths(
         usages: Vec::new(),
         findings: Vec::new(),
         fn_depth: 0,
+        ts_prop_shapes,
+        export_wrapped_component_spans: HashSet::new(),
     };
     v.visit_program(&program);
 
@@ -106,16 +111,31 @@ fn extract_props_from_params(params: &FormalParameters<'_>) -> Vec<String> {
     let BindingPatternKind::ObjectPattern(obj) = &first.pattern.kind else {
         return Vec::new();
     };
-    let mut props: Vec<String> = obj
-        .properties
-        .iter()
-        .filter_map(|p| match &p.key {
-            PropertyKey::StaticIdentifier(id) => Some(id.name.as_str().to_string()),
-            _ => None,
-        })
-        .collect();
+    let mut props: Vec<String> = Vec::new();
+    for p in &obj.properties {
+        if let PropertyKey::StaticIdentifier(id) = &p.key {
+            props.push(id.name.as_str().to_string());
+        } else if p.shorthand {
+            if let BindingPatternKind::BindingIdentifier(id) = &p.value.kind {
+                props.push(binding_name(id));
+            }
+        }
+    }
     props.sort();
     props
+}
+
+fn merge_declared_props(
+    params: &FormalParameters<'_>,
+    ts_shapes: &HashMap<String, Vec<String>>,
+) -> Vec<String> {
+    let mut keys = extract_props_from_params(params);
+    keys.extend(crate::ts_shape_map::props_from_first_param_type_annotation(
+        params, ts_shapes,
+    ));
+    keys.sort();
+    keys.dedup();
+    keys
 }
 
 fn is_component_identifier(name: &str) -> bool {
@@ -326,6 +346,9 @@ struct ExtractVisitor<'src> {
     usages: Vec<JsxUsage>,
     findings: Vec<LintFinding>,
     fn_depth: u32,
+    ts_prop_shapes: HashMap<String, Vec<String>>,
+    /// `export function Foo` is recorded here first so `visit_function` does not duplicate it.
+    export_wrapped_component_spans: HashSet<(u32, u32)>,
 }
 
 impl ExtractVisitor<'_> {
@@ -394,13 +417,39 @@ impl ExtractVisitor<'_> {
 }
 
 impl<'a> Visit<'a> for ExtractVisitor<'_> {
+    fn visit_export_named_declaration(&mut self, decl: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
+        if let Some(Declaration::FunctionDeclaration(func)) = &decl.declaration {
+            if let Some(id) = &func.id {
+                let name = binding_name(id);
+                if is_component_identifier(&name) {
+                    self
+                        .export_wrapped_component_spans
+                        .insert((func.span.start, func.span.end));
+                    let declared_props = merge_declared_props(&func.params, &self.ts_prop_shapes);
+                    self.definitions.push(ComponentDefinition {
+                        name,
+                        kind: DefinitionKind::Function,
+                        line: offset_line(self.source, func.span.start),
+                        declared_props,
+                    });
+                }
+            }
+        }
+        walk::walk_export_named_declaration(self, decl);
+    }
+
     fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
         self.fn_depth += 1;
         if self.fn_depth == 1 {
             if let Some(id) = &func.id {
                 let name = binding_name(id);
-                if is_component_identifier(&name) {
-                    let declared_props = extract_props_from_params(&func.params);
+                if is_component_identifier(&name)
+                    && !self
+                        .export_wrapped_component_spans
+                        .contains(&(func.span.start, func.span.end))
+                {
+                    let declared_props =
+                        merge_declared_props(&func.params, &self.ts_prop_shapes);
                     self.definitions.push(ComponentDefinition {
                         name,
                         kind: DefinitionKind::Function,
@@ -454,7 +503,8 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
         match &decl.declaration {
             ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
                 if func.id.is_none() {
-                    let declared_props = extract_props_from_params(&func.params);
+                    let declared_props =
+                        merge_declared_props(&func.params, &self.ts_prop_shapes);
                     self.definitions.push(ComponentDefinition {
                         name: DEFAULT_EXPORT.to_string(),
                         kind: DefinitionKind::ExportDefaultAnonymous,
@@ -464,7 +514,8 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                 }
             }
             ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-                let declared_props = extract_props_from_params(&arrow.params);
+                let declared_props =
+                    merge_declared_props(&arrow.params, &self.ts_prop_shapes);
                 self.definitions.push(ComponentDefinition {
                     name: DEFAULT_EXPORT.to_string(),
                     kind: DefinitionKind::ExportDefaultAnonymous,
@@ -473,7 +524,8 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                 });
             }
             ExportDefaultDeclarationKind::FunctionExpression(func) => {
-                let declared_props = extract_props_from_params(&func.params);
+                let declared_props =
+                    merge_declared_props(&func.params, &self.ts_prop_shapes);
                 self.definitions.push(ComponentDefinition {
                     name: DEFAULT_EXPORT.to_string(),
                     kind: DefinitionKind::ExportDefaultAnonymous,
@@ -546,9 +598,11 @@ impl ExtractVisitor<'_> {
         let (kind, declared_props) = if expr_is_component_like(init) {
             let props = match init {
                 Expression::ArrowFunctionExpression(arrow) => {
-                    extract_props_from_params(&arrow.params)
+                    merge_declared_props(&arrow.params, &self.ts_prop_shapes)
                 }
-                Expression::FunctionExpression(func) => extract_props_from_params(&func.params),
+                Expression::FunctionExpression(func) => {
+                    merge_declared_props(&func.params, &self.ts_prop_shapes)
+                }
                 _ => Vec::new(),
             };
             let kind = match init {
@@ -679,8 +733,9 @@ export const Card = ({ title, body }: CardProps) => <div>{title}</div>;
     }
 
     #[test]
-    fn declared_props_empty_for_non_destructured_param() {
+    fn declared_props_from_typed_non_destructured_param() {
         let src = r#"
+export type LabelProps = { text: string };
 export function Label(props: LabelProps) {
   return <span>{props.text}</span>;
 }
@@ -691,9 +746,44 @@ export function Label(props: LabelProps) {
             .iter()
             .find(|d| d.name == "Label")
             .expect("Label definition");
-        assert!(
-            label.declared_props.is_empty(),
-            "non-destructured params should yield no declared_props"
-        );
+        assert_eq!(label.declared_props, vec!["text"]);
+    }
+
+    #[test]
+    fn declared_props_merge_destructure_and_props_type() {
+        let src = r#"
+export type BtnProps = { variant?: string; size?: string };
+export function Button({ onClick }: { onClick: () => void } & BtnProps) {
+  return <button onClick={onClick} />;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Button.tsx"), src);
+        let btn = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Button")
+            .expect("Button definition");
+        assert_eq!(btn.declared_props, vec!["onClick", "size", "variant"]);
+    }
+
+    #[test]
+    fn declared_props_export_function_with_leading_blank_and_type_alias() {
+        let src = r#"
+
+type Props = {
+  children: React.ReactNode;
+};
+
+export function InlineCode({ children }: Props) {
+  return <code>{children}</code>;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("InlineCode.tsx"), src);
+        let def = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "InlineCode")
+            .expect("InlineCode definition");
+        assert_eq!(def.declared_props, vec!["children"]);
     }
 }

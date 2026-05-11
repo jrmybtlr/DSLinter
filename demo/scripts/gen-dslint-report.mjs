@@ -20,3 +20,6 @@ const json = execSync(cmd, {
 
 writeFileSync(outFile, `${json}\n`);
 console.log(`Wrote ${outFile}`);
+
+// Until every CLI build embeds `playgrounds`, ensure the field exists (mirrors Rust `build_playground_specs`).
+execSync("node scripts/merge-playgrounds.mjs", { cwd: demoRoot, stdio: "inherit" });

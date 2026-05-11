@@ -110,14 +110,16 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-slate-500">
-                  Components <span className="text-slate-300">/</span>{" "}
-                  <span className="capitalize text-slate-700">{entry.meta.section}</span>
+                  {entry.meta.group ? (
+                    <>
+                      Components <span className="text-slate-300">/</span>{" "}
+                      <span className="capitalize text-slate-700">{entry.meta.group}</span>
+                    </>
+                  ) : (
+                    "Components"
+                  )}
                 </p>
                 <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{entry.meta.title}</h1>
-                {/* <p className="mt-2 font-mono text-[13px] text-slate-500">{rel}</p> */}
-                {entry.meta.description ? (
-                  <p className="mt-1 max-w-2xl text-neutral-600">{entry.meta.description}</p>
-                ) : null}
               </div>
             </div>
           </div>
@@ -135,6 +137,22 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
               </section>
 
               <PlaygroundUsageSection entry={entry} values={values} />
+
+              {hasControls ? (
+                <section id="playground" className="scroll-mt-20">
+                  <h2 className="text-lg font-semibold tracking-tight text-slate-900">Playground</h2>
+                  <p className="mt-1 text-sm text-slate-600">Adjust props and watch the example update.</p>
+                  <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <PlaygroundControls
+                      controls={entry.controls}
+                      values={values}
+                      onChange={setValues}
+                      onReset={() => setValues(defaultArgsFromControls(entry.controls))}
+                      bare
+                    />
+                  </div>
+                </section>
+              ) : null}
 
               <section id="examples" className="scroll-mt-20">
                 <h2 className="text-lg font-semibold tracking-tight text-slate-900">Examples</h2>
@@ -172,22 +190,6 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                 </div>
               </section>
 
-              {hasControls ? (
-                <section id="playground" className="scroll-mt-20">
-                  <h2 className="text-lg font-semibold tracking-tight text-slate-900">Playground</h2>
-                  <p className="mt-1 text-sm text-slate-600">Adjust props and watch the example update.</p>
-                  <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <PlaygroundControls
-                      controls={entry.controls}
-                      values={values}
-                      onChange={setValues}
-                      onReset={() => setValues(defaultArgsFromControls(entry.controls))}
-                      bare
-                    />
-                  </div>
-                </section>
-              ) : null}
-
               <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
 
               <PlaygroundApiReference controls={entry.controls} />
@@ -201,8 +203,8 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">On this page</p>
                 <TocLink href="#source">Source</TocLink>
                 <TocLink href="#usage">Usage</TocLink>
-                <TocLink href="#examples">Examples</TocLink>
                 {hasControls ? <TocLink href="#playground">Playground</TocLink> : null}
+                <TocLink href="#examples">Examples</TocLink>
                 <TocLink href="#accessibility">Accessibility</TocLink>
                 {hasControls ? <TocLink href="#api-reference">API reference</TocLink> : null}
               </nav>

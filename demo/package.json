@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "dslint:report": "node scripts/gen-dslint-report.mjs",
+    "dslint:merge-playgrounds": "node scripts/merge-playgrounds.mjs",
     "dslint:watch": "cargo run --manifest-path ../Cargo.toml --release -- . --watch --output public/dslint-report.json",
     "dslint:serve": "cargo run --manifest-path ../Cargo.toml --release -- . --serve 7878 --output public/dslint-report.json",
     "dev:watch": "concurrently --names vite,dslint --prefix-colors blue,green \"vite\" \"npm run dslint:watch\"",

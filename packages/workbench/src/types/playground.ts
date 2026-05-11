@@ -1,14 +1,12 @@
 import type { PlaygroundArgs, PlaygroundControl } from "./controls";
 import type { PlaygroundPreviewComponent } from "./preview";
 
-export type PlaygroundSection = "good" | "bad";
-
 export type PlaygroundMeta = {
-  /** Stable URL segment, typically the component file basename without extension. */
+  /** Stable URL segment — matches `PlaygroundSpec.id` from dslint. */
   id: string;
   title: string;
-  section: PlaygroundSection;
-  description?: string;
+  /** From dslint `playground_groups` config (or manual `definePlayground`). */
+  group?: string;
 };
 
 export type PlaygroundEntry = {

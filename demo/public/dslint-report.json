@@ -231,7 +231,7 @@
       ]
     },
     {
-      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
       "definitions": [
         {
           "name": "ChaosGrid",
@@ -244,7 +244,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/bad/DeprecatedChip.tsx",
+      "path": "/workspace/demo/src/components/DeprecatedChip.tsx",
       "definitions": [
         {
           "name": "DeprecatedChip",
@@ -257,7 +257,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "path": "/workspace/demo/src/components/FlashBanner.tsx",
       "definitions": [
         {
           "name": "FlashBanner",
@@ -271,14 +271,14 @@
         {
           "rule_id": "smell-inline-style",
           "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-          "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+          "path": "/workspace/demo/src/components/FlashBanner.tsx",
           "line": 8,
           "severity": "info"
         }
       ]
     },
     {
-      "path": "/workspace/demo/src/components/bad/InconsistentToggle.tsx",
+      "path": "/workspace/demo/src/components/InconsistentToggle.tsx",
       "definitions": [
         {
           "name": "InconsistentToggle",
@@ -291,7 +291,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "path": "/workspace/demo/src/components/InlinePaint.tsx",
       "definitions": [
         {
           "name": "InlinePaint",
@@ -305,14 +305,14 @@
         {
           "rule_id": "smell-inline-style",
           "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-          "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+          "path": "/workspace/demo/src/components/InlinePaint.tsx",
           "line": 10,
           "severity": "info"
         }
       ]
     },
     {
-      "path": "/workspace/demo/src/components/bad/KitchenSinkModal.tsx",
+      "path": "/workspace/demo/src/components/KitchenSinkModal.tsx",
       "definitions": [
         {
           "name": "KitchenSinkModal",
@@ -325,7 +325,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
+      "path": "/workspace/demo/src/components/LegacyButton.tsx",
       "definitions": [
         {
           "name": "LegacyButton",
@@ -338,7 +338,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
+      "path": "/workspace/demo/src/components/MysteryImage.tsx",
       "definitions": [
         {
           "name": "MysteryImage",
@@ -352,14 +352,14 @@
         {
           "rule_id": "a11y-img-alt",
           "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
-          "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
+          "path": "/workspace/demo/src/components/MysteryImage.tsx",
           "line": 4,
           "severity": "warning"
         }
       ]
     },
     {
-      "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardA.tsx",
+      "path": "/workspace/demo/src/components/duplicate/DuplicateCardA.tsx",
       "definitions": [
         {
           "name": "Card",
@@ -372,7 +372,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardB.tsx",
+      "path": "/workspace/demo/src/components/duplicate/DuplicateCardB.tsx",
       "definitions": [
         {
           "name": "Card",
@@ -385,7 +385,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/ContentCard.tsx",
+      "path": "/workspace/demo/src/components/ContentCard.tsx",
       "definitions": [
         {
           "name": "ContentCard",
@@ -398,7 +398,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/FlexStack.tsx",
+      "path": "/workspace/demo/src/components/FlexStack.tsx",
       "definitions": [
         {
           "name": "FlexStack",
@@ -411,7 +411,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/FormField.tsx",
+      "path": "/workspace/demo/src/components/FormField.tsx",
       "definitions": [
         {
           "name": "FormField",
@@ -424,7 +424,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/InlineCode.tsx",
+      "path": "/workspace/demo/src/components/InlineCode.tsx",
       "definitions": [
         {
           "name": "InlineCode",
@@ -437,7 +437,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/LoadingSkeleton.tsx",
+      "path": "/workspace/demo/src/components/LoadingSkeleton.tsx",
       "definitions": [
         {
           "name": "LoadingSkeleton",
@@ -450,7 +450,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/NavLink.tsx",
+      "path": "/workspace/demo/src/components/NavLink.tsx",
       "definitions": [
         {
           "name": "NavLink",
@@ -463,7 +463,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/PageHero.tsx",
+      "path": "/workspace/demo/src/components/PageHero.tsx",
       "definitions": [
         {
           "name": "PageHero",
@@ -476,7 +476,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/PrimaryButton.tsx",
+      "path": "/workspace/demo/src/components/PrimaryButton.tsx",
       "definitions": [
         {
           "name": "PrimaryButton",
@@ -489,7 +489,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/StatusBadge.tsx",
+      "path": "/workspace/demo/src/components/StatusBadge.tsx",
       "definitions": [
         {
           "name": "StatusBadge",
@@ -502,7 +502,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/good/UserAvatar.tsx",
+      "path": "/workspace/demo/src/components/UserAvatar.tsx",
       "definitions": [
         {
           "name": "UserAvatar",
@@ -637,84 +637,84 @@
     {
       "rule_id": "smell-inline-style",
       "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "path": "/workspace/demo/src/components/FlashBanner.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "smell-inline-style",
       "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "path": "/workspace/demo/src/components/InlinePaint.tsx",
       "line": 10,
       "severity": "info"
     },
     {
       "rule_id": "a11y-img-alt",
       "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
-      "path": "/workspace/demo/src/components/bad/MysteryImage.tsx",
+      "path": "/workspace/demo/src/components/MysteryImage.tsx",
       "line": 4,
       "severity": "warning"
     },
     {
       "rule_id": "token-hardcoded-color",
       "message": "Hardcoded color `#00ff99` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "path": "/workspace/demo/src/components/InlinePaint.tsx",
       "line": 11,
       "severity": "info"
     },
     {
       "rule_id": "token-hardcoded-color",
       "message": "Hardcoded color `#333333` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "path": "/workspace/demo/src/components/InlinePaint.tsx",
       "line": 12,
       "severity": "info"
     },
     {
       "rule_id": "token-hardcoded-color",
       "message": "Hardcoded color `#9933ff` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/bad/InlinePaint.tsx",
+      "path": "/workspace/demo/src/components/InlinePaint.tsx",
       "line": 13,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[13px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[19px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
       "line": 9,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[7px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/bad/ChaosGrid.tsx",
+      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
       "line": 10,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[#ffffff]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/bad/FlashBanner.tsx",
+      "path": "/workspace/demo/src/components/FlashBanner.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[#7c3aed]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/bad/LegacyButton.tsx",
+      "path": "/workspace/demo/src/components/LegacyButton.tsx",
       "line": 10,
       "severity": "info"
     },
@@ -840,7 +840,7 @@
     {
       "rule_id": "duplicate-component",
       "message": "Component `Card` is defined in 2 files — consolidate or alias.",
-      "path": "/workspace/demo/src/components/bad/duplicate/DuplicateCardA.tsx",
+      "path": "/workspace/demo/src/components/duplicate/DuplicateCardA.tsx",
       "line": null,
       "severity": "warning"
     }
@@ -849,8 +849,8 @@
     {
       "name": "Card",
       "locations": [
-        "/workspace/demo/src/components/bad/duplicate/DuplicateCardA.tsx",
-        "/workspace/demo/src/components/bad/duplicate/DuplicateCardB.tsx"
+        "/workspace/demo/src/components/duplicate/DuplicateCardA.tsx",
+        "/workspace/demo/src/components/duplicate/DuplicateCardB.tsx"
       ]
     }
   ],
@@ -1125,5 +1125,165 @@
     "ux_consistency": 90,
     "accessibility": 92,
     "maintainability": 78
-  }
+  },
+  "playgrounds": [
+    {
+      "id": "ChaosGrid",
+      "export_name": "ChaosGrid",
+      "rel_path": "src/components/ChaosGrid.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
+    {
+      "id": "ContentCard",
+      "export_name": "ContentCard",
+      "rel_path": "src/components/ContentCard.tsx",
+      "declared_props": [
+        "children",
+        "title"
+      ]
+    },
+    {
+      "id": "DeprecatedChip",
+      "export_name": "DeprecatedChip",
+      "rel_path": "src/components/DeprecatedChip.tsx",
+      "declared_props": [
+        "label"
+      ]
+    },
+    {
+      "id": "DuplicateCardA",
+      "export_name": "Card",
+      "rel_path": "src/components/duplicate/DuplicateCardA.tsx",
+      "declared_props": []
+    },
+    {
+      "id": "DuplicateCardB",
+      "export_name": "Card",
+      "rel_path": "src/components/duplicate/DuplicateCardB.tsx",
+      "declared_props": []
+    },
+    {
+      "id": "FlashBanner",
+      "export_name": "FlashBanner",
+      "rel_path": "src/components/FlashBanner.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
+    {
+      "id": "FlexStack",
+      "export_name": "FlexStack",
+      "rel_path": "src/components/FlexStack.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
+    {
+      "id": "FormField",
+      "export_name": "FormField",
+      "rel_path": "src/components/FormField.tsx",
+      "declared_props": [
+        "id",
+        "label"
+      ]
+    },
+    {
+      "id": "InconsistentToggle",
+      "export_name": "InconsistentToggle",
+      "rel_path": "src/components/InconsistentToggle.tsx",
+      "declared_props": [
+        "children",
+        "pressedTone"
+      ]
+    },
+    {
+      "id": "InlineCode",
+      "export_name": "InlineCode",
+      "rel_path": "src/components/InlineCode.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
+    {
+      "id": "InlinePaint",
+      "export_name": "InlinePaint",
+      "rel_path": "src/components/InlinePaint.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
+    {
+      "id": "KitchenSinkModal",
+      "export_name": "KitchenSinkModal",
+      "rel_path": "src/components/KitchenSinkModal.tsx",
+      "declared_props": []
+    },
+    {
+      "id": "LegacyButton",
+      "export_name": "LegacyButton",
+      "rel_path": "src/components/LegacyButton.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
+    {
+      "id": "LoadingSkeleton",
+      "export_name": "LoadingSkeleton",
+      "rel_path": "src/components/LoadingSkeleton.tsx",
+      "declared_props": []
+    },
+    {
+      "id": "MysteryImage",
+      "export_name": "MysteryImage",
+      "rel_path": "src/components/MysteryImage.tsx",
+      "declared_props": []
+    },
+    {
+      "id": "NavLink",
+      "export_name": "NavLink",
+      "rel_path": "src/components/NavLink.tsx",
+      "declared_props": [
+        "children",
+        "href"
+      ]
+    },
+    {
+      "id": "PageHero",
+      "export_name": "PageHero",
+      "rel_path": "src/components/PageHero.tsx",
+      "declared_props": [
+        "subtitle",
+        "title"
+      ]
+    },
+    {
+      "id": "PrimaryButton",
+      "export_name": "PrimaryButton",
+      "rel_path": "src/components/PrimaryButton.tsx",
+      "declared_props": [
+        "children",
+        "type"
+      ]
+    },
+    {
+      "id": "StatusBadge",
+      "export_name": "StatusBadge",
+      "rel_path": "src/components/StatusBadge.tsx",
+      "declared_props": [
+        "children",
+        "tone"
+      ]
+    },
+    {
+      "id": "UserAvatar",
+      "export_name": "UserAvatar",
+      "rel_path": "src/components/UserAvatar.tsx",
+      "declared_props": [
+        "name",
+        "src"
+      ]
+    }
+  ]
 }

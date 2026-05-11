@@ -10,6 +10,7 @@
 ## Review
 
 - `cargo test` passes; CLI smoke-tested on empty tree
-- Workbench: `definePlayground()` helper + demo migrated; `npm run build` in `demo/` passes
+- Workbench: playgrounds from `dslint-report.json` (`playgrounds`) + glob; `definePlayground()` optional escape hatch; `npm run build` in `demo/` passes
+- Unified demo `src/components/` layout: run `npm run dslint:report` (needs `cargo`) for a full rescan; `merge-playgrounds.mjs` patches legacy paths and infers empty `declared_props` from TSX when needed
 
 - `ignore` crate omitted (pinned `globset` incompatible with Cargo 1.83); walker skips common vendor dirs

@@ -9,10 +9,11 @@ export function DefaultOverview() {
       </header>
       <div className="mx-auto max-w-3xl px-8 py-8 text-sm text-slate-600">
         <p>
-          Use <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">definePlayground</code> from this package (or export{" "}
-          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">playgroundMeta</code> +{" "}
-          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">PlaygroundPreview</code> yourself) on
-          component modules to register sidebar entries. Pass <code className="font-mono text-xs">overview</code> into{" "}
+          Component previews are listed from <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">dslint-report.json</code>{" "}
+          (<code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">playgrounds</code>), built by the Rust scanner from your
+          source files and <code className="rounded bg-white px-1 py-0.5 font-mono text-xs ring-1 ring-slate-200">playground_groups</code> in{" "}
+          <code className="font-mono text-xs">.dslint.json</code>. Optional <code className="font-mono text-xs">definePlayground</code> remains an escape hatch
+          in <code className="font-mono text-xs">@dslint/workbench</code> for edge cases. Pass <code className="font-mono text-xs">overview</code> into{" "}
           <code className="font-mono text-xs">WorkbenchLayout</code> to customize this page.
         </p>
         <p className="mt-4">

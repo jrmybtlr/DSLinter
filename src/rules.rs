@@ -12,6 +12,7 @@ use crate::model::{
     DuplicateComponent, FileScan, GovernanceScores, LintFinding, OwnershipSummary, Severity,
     UsageLocation, UsageSummary, WorkspaceReport,
 };
+use crate::playground_emit::build_playground_specs;
 
 // ── Static regex helpers ─────────────────────────────────────────────────────
 
@@ -77,6 +78,8 @@ pub fn evaluate_workspace(
 
     let scores = compute_scores(&findings, &duplicate_components, &files, config, &sources);
 
+    let playgrounds = build_playground_specs(&root, &files, config);
+
     WorkspaceReport {
         root,
         files,
@@ -85,6 +88,7 @@ pub fn evaluate_workspace(
         usage_by_component,
         ownership,
         scores,
+        playgrounds,
     }
 }
 

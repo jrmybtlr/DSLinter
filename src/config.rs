@@ -33,6 +33,9 @@ pub struct DslintConfig {
     /// Map of owner label → path prefixes (slash-normalized, relative to repo root).
     #[serde(default)]
     pub ownership: HashMap<String, Vec<String>>,
+    /// Playground sidebar groups: group id → path prefixes (longest prefix wins per file).
+    #[serde(default)]
+    pub playground_groups: HashMap<String, Vec<String>>,
     /// Extra glob lines merged with `.gitignore` / `.dslintignore` semantics.
     #[serde(default)]
     pub exclude_globs: Vec<String>,

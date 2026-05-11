@@ -14,7 +14,7 @@ type UsageProps = {
 export function PlaygroundUsageSection({ entry, values }: UsageProps) {
   const usage =
     entry.usageSnippet?.(values) ??
-    `// Add usageSnippet on this playground entry, or extend demo/playground/usageSnippets.ts\n<${entry.id} /* map values.* to props */ />`;
+    `// Pass usageSnippet on this PlaygroundEntry, or derive snippets from dslint controls.\n<${entry.id} />`;
 
   return (
     <section id="usage" className="scroll-mt-20">
