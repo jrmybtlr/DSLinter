@@ -1,6 +1,7 @@
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
+import type { LintFinding } from "../types/report";
 import { controlsToApiRows } from "./controlApiTable";
 
 const sectionTitleClass = "text-lg font-semibold tracking-tight text-slate-900";
@@ -23,6 +24,57 @@ export function PlaygroundUsageSection({ entry, values }: UsageProps) {
       <pre className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-950 p-4 text-[13px] leading-relaxed text-slate-100 shadow-sm">
         <code>{usage}</code>
       </pre>
+    </section>
+  );
+}
+
+type TokenStyleProps = {
+  findings: LintFinding[];
+  reportReady: boolean;
+};
+
+export function PlaygroundTokenStyleSection({ findings, reportReady }: TokenStyleProps) {
+  return (
+    <section id="design-tokens" className="scroll-mt-20">
+      <h2 className={sectionTitleClass}>Design tokens and colors</h2>
+      <p className={sectionDescClass}>
+        <span className="font-mono text-[13px]">token-*</span> findings for this file from{" "}
+        <span className="font-mono text-[13px]">dslint-report.json</span> (hardcoded colors, Tailwind arbitrary values).
+        Regenerate the report after edits.
+      </p>
+      <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        {reportReady && findings.length > 0 ? (
+          <table className="w-full min-w-[28rem] border-collapse text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/80">
+                <th className="px-3 py-2.5 font-semibold text-slate-700">Rule</th>
+                <th className="w-16 px-3 py-2.5 font-semibold text-slate-700">Line</th>
+                <th className="px-3 py-2.5 font-semibold text-slate-700">Severity</th>
+                <th className="px-3 py-2.5 font-semibold text-slate-700">Message</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-800">
+              {findings.map((f, i) => (
+                <tr key={`${f.rule_id}-${f.line ?? "x"}-${i}`} className="border-b border-slate-100 last:border-0">
+                  <td className="px-3 py-2.5 font-mono text-[11px] text-slate-900">{f.rule_id}</td>
+                  <td className="px-3 py-2.5 font-mono text-[12px] text-slate-600">{f.line ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-[12px] capitalize text-slate-600">{f.severity}</td>
+                  <td className="px-3 py-2.5 text-slate-700">{f.message}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : reportReady && findings.length === 0 ? (
+          <p className="p-4 text-sm text-slate-500">
+            No hardcoded or arbitrary token color findings on this file in the current report.
+          </p>
+        ) : (
+          <p className="p-4 text-sm text-slate-500">
+            Token findings update when <span className="font-mono">dslint-report.json</span> is available (same fetch as
+            Governance).
+          </p>
+        )}
+      </div>
     </section>
   );
 }

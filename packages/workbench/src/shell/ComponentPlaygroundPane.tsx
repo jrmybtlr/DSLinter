@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { a11ySummaryForModule } from "../report/a11yForModule";
+import { tokenStyleFindingsForModule } from "../report/tokenStyleFindingsForModule";
 import type { WorkspaceReport } from "../types/report";
 import { defaultArgsFromControls } from "../types/controls";
 import type { PlaygroundArgs } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
-import { PlaygroundA11ySection, PlaygroundApiReference, PlaygroundUsageSection } from "./PlaygroundA11yAndCode";
+import {
+  PlaygroundA11ySection,
+  PlaygroundApiReference,
+  PlaygroundTokenStyleSection,
+  PlaygroundUsageSection,
+} from "./PlaygroundA11yAndCode";
 import { PlaygroundControls } from "./PlaygroundControls";
 
 type Props = {
@@ -48,6 +54,11 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
 
   const a11y = useMemo(
     () => a11ySummaryForModule(reportReady ? workspaceReport : null, entry.modulePath),
+    [workspaceReport, entry.modulePath, reportReady],
+  );
+
+  const tokenStyleFindings = useMemo(
+    () => tokenStyleFindingsForModule(reportReady ? workspaceReport : null, entry.modulePath),
     [workspaceReport, entry.modulePath, reportReady],
   );
 
@@ -128,35 +139,8 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
         <div className="mx-auto max-w-6xl px-6 py-10 lg:px-12">
           <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-14">
             <div className="min-w-0 space-y-14">
-              <section id="source" className="scroll-mt-20">
-                <h2 className="text-lg font-semibold tracking-tight text-slate-900">Source</h2>
-                <p className="mt-1 text-sm text-slate-600">Module path in this workspace.</p>
-                <pre className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[13px] text-slate-800">
-                  <code>{rel}</code>
-                </pre>
-              </section>
-
-              <PlaygroundUsageSection entry={entry} values={values} />
-
-              {hasControls ? (
-                <section id="playground" className="scroll-mt-20">
-                  <h2 className="text-lg font-semibold tracking-tight text-slate-900">Playground</h2>
-                  <p className="mt-1 text-sm text-slate-600">Adjust props and watch the example update.</p>
-                  <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <PlaygroundControls
-                      controls={entry.controls}
-                      values={values}
-                      onChange={setValues}
-                      onReset={() => setValues(defaultArgsFromControls(entry.controls))}
-                      bare
-                    />
-                  </div>
-                </section>
-              ) : null}
-
               <section id="examples" className="scroll-mt-20">
                 <h2 className="text-lg font-semibold tracking-tight text-slate-900">Examples</h2>
-                <p className="mt-1 text-sm text-slate-600">Live preview. Drag the handles to resize the canvas.</p>
                 <div ref={previewMeasureRef} className="mt-4 w-full">
                   <div className="flex justify-center">
                     <div
@@ -190,6 +174,28 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                 </div>
               </section>
 
+             
+
+              {hasControls ? (
+                <section id="playground" className="scroll-mt-20">
+                  
+                  
+                  <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <PlaygroundControls
+                      controls={entry.controls}
+                      values={values}
+                      onChange={setValues}
+                      onReset={() => setValues(defaultArgsFromControls(entry.controls))}
+                      bare
+                    />
+                  </div>
+                </section>
+              ) : null}
+
+              <PlaygroundUsageSection entry={entry} values={values} />
+              
+              <PlaygroundTokenStyleSection findings={tokenStyleFindings} reportReady={reportReady} />
+
               <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
 
               <PlaygroundApiReference controls={entry.controls} />
@@ -205,6 +211,7 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                 <TocLink href="#usage">Usage</TocLink>
                 {hasControls ? <TocLink href="#playground">Playground</TocLink> : null}
                 <TocLink href="#examples">Examples</TocLink>
+                <TocLink href="#design-tokens">Design tokens</TocLink>
                 <TocLink href="#accessibility">Accessibility</TocLink>
                 {hasControls ? <TocLink href="#api-reference">API reference</TocLink> : null}
               </nav>

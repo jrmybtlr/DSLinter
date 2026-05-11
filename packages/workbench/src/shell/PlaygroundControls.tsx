@@ -27,7 +27,7 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
   const inner = (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Playground</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Controls</p>
         <button
           type="button"
           onClick={onReset}
