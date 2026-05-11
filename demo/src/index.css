@@ -1,6 +1,43 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@source "../../packages/workbench/src";
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+@theme {
+  --color-primary: #2563eb;
+  --color-primary-foreground: #ffffff;
+  --color-primary-muted: #93c5fd;
+
+  --color-surface: #f8fafc;
+  --color-surface-elevated: #ffffff;
+  --color-surface-border: #e2e8f0;
+
+  --color-danger: #dc2626;
+  --color-danger-foreground: #fef2f2;
+
+  --color-success: #15803d;
+  --color-success-foreground: #f0fdf4;
+
+  --color-warning: #ca8a04;
+  --color-warning-foreground: #422006;
+
+  --spacing-layout-xs: 0.5rem;
+  --spacing-layout-sm: 1rem;
+  --spacing-layout-md: 1.5rem;
+  --spacing-layout-lg: 2rem;
+
+  --radius-ds: 0.5rem;
+  --radius-ds-lg: 0.75rem;
+
+  --animate-progress-indeterminate: progress-indeterminate 1.2s ease-in-out infinite;
+}
 
 body {
   margin: 0;

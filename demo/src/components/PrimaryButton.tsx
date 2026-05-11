@@ -4,7 +4,7 @@ type Props = {
   type?: "button" | "submit";
 };
 
-/** Uses Tailwind theme tokens (`primary`) — “good” baseline. */
+/** Uses Tailwind theme tokens (`primary`). */
 export function PrimaryButton({ children, type = "button" }: Props) {
   return (
     <button

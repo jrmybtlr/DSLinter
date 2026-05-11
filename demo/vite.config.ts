@@ -1,10 +1,11 @@
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const DSLINT_SERVE_PORT = 7878;
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   optimizeDeps: {
     /** Linked workspace package: transpile from source so edits hot-reload like npm would after publish. */
     exclude: ["@dslint/workbench"],

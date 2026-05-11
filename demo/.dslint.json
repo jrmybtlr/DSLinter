@@ -3,6 +3,9 @@
   "known_tokens": [
     "bg-primary",
     "text-primary",
+    "bg-success",
+    "bg-warning",
+    "bg-danger",
     "bg-surface",
     "border-surface-border",
     "rounded-ds",

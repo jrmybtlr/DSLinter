@@ -3,8 +3,8 @@
  * (`playground_groups` in `.dslint.json`). Use after `cargo run … --json` when playgrounds
  * are not yet in the CLI output, or run `npm run dslint:report` once Rust is available.
  *
- * Also migrates legacy `src/components/good|bad/` paths to a flat `src/components/` tree
- * and, when `declared_props` is empty, infers binding names from the TSX file via TypeScript.
+ * Also normalizes legacy nested `src/components/…` paths in older reports to the flat tree,
+ * and when `declared_props` is empty, infers binding names from the TSX file via TypeScript.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

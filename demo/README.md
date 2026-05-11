@@ -1,6 +1,8 @@
-# DSLint demo (Vite + React + TypeScript + Tailwind)
+# DSLint demo (Vite + React + TypeScript + Tailwind CSS v4)
 
 This folder is a **small design-system sandbox**: ten components follow theme tokens and common UX conventions; ten illustrate drift (hardcoded colors, missing `alt`, duplicate `Card` definitions, oversized prop surfaces, deprecated names).
+
+Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `packages/workbench/src`, and defines tokens in `@theme` — there is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
 
 ## `@dslint/workbench` package
 
@@ -13,7 +15,7 @@ The demo app wires **data** as follows:
 
 - **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.tsx")` to resolve live previews (no `definePlayground` in each component file).
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
-- **`tokenCatalog.ts`** — token wall content (keep in sync with `tailwind.config.js`).
+- **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `src/index.css`).
 - **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslintReport` into `WorkbenchLayout`.
 - **`DemoOverview.tsx`** — custom landing copy for `#!/overview`.
 
@@ -37,7 +39,7 @@ The dev app is a single **workbench**: a left sidebar lists isolated component p
 
 - `#!/overview` — landing copy
 - `#!/component/PrimaryButton` — preview id matches the **file stem** listed in `dslint-report.json` → `playgrounds[].id`
-- `#!/tokens` — token wall (from `src/tokenCatalog.ts`, keep in sync with `tailwind.config.js`)
+- `#!/tokens` — token wall (from `src/tokenCatalog.ts`, keep in sync with `src/index.css` `@theme`)
 - `#!/governance` — scores, catalog, tokens, and findings from `public/dslint-report.json`
 
 ### Playgrounds from DSLint (no per-file registration)

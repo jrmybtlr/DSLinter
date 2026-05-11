@@ -29,7 +29,7 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
   const governanceActive = route.view === "governance";
 
   return (
-    <aside className="fixed h-full w-[240px] overflow-y-auto shrink-0 flex-col border-r">
+    <aside className="fixed h-full w-[240px] overflow-y-auto shrink-0 flex-col border-r border-gray-200">
       <div className="border-b border-slate-200 px-6 py-4 sticky top-0 bg-white">
         <p className=" text-neutral-900 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">

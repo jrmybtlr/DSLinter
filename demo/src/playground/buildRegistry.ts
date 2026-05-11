@@ -102,11 +102,42 @@ function getExport(mod: Record<string, unknown>, exportName: string): ComponentT
   return undefined;
 }
 
+function jsxTextOrStringifyExpression(text: string): string {
+  if (!/[<>{}&]/.test(text)) return text;
+  return `{JSON.stringify(${JSON.stringify(text)})}`;
+}
+
 function genericUsageSnippet(exportName: string, values: PlaygroundArgs): string {
-  const keys = Object.keys(values);
-  if (keys.length === 0) return `<${exportName} />`;
-  const props = keys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
-  return `<${exportName} ${props} />`;
+  const hasChildrenKey = Object.prototype.hasOwnProperty.call(values, "children");
+  const childVal = hasChildrenKey ? values.children : undefined;
+
+  const propKeys = Object.keys(values)
+    .filter((k) => k !== "children")
+    .sort((a, b) => a.localeCompare(b));
+  const propsStr = propKeys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
+
+  const openWithProps =
+    propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
+
+  if (!hasChildrenKey) {
+    return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
+  }
+
+  if (typeof childVal === "boolean") {
+    const allKeys = Object.keys(values).sort((a, b) => a.localeCompare(b));
+    const allProps = allKeys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
+    return allKeys.length === 0 ? `<${exportName} />` : `<${exportName} ${allProps} />`;
+  }
+
+  const asText = typeof childVal === "number" ? String(childVal) : String(childVal ?? "");
+  if (asText.length === 0) {
+    return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
+  }
+
+  const body = jsxTextOrStringifyExpression(asText);
+  return propKeys.length === 0
+    ? `<${exportName}>${body}</${exportName}>`
+    : `${openWithProps}>${body}</${exportName}>`;
 }
 
 /** Build playground entries from `dslint-report.json` + eager component modules. */

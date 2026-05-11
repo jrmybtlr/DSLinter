@@ -1,7 +1,7 @@
 import type { TokenCatalog } from "@dslint/workbench";
 
 /**
- * Mirrors `tailwind.config.js` theme.extend for the dashboard token wall.
+ * Mirrors `@theme` in `src/index.css` for the dashboard token wall.
  * Keep in sync when you change design tokens.
  */
 export const tokenCatalog = {

@@ -29,6 +29,14 @@ function clampPreviewWidth(w: number, maxOuterPx: number): number {
   return Math.min(Math.max(w, minBound), maxOuterPx);
 }
 
+/** If the preview was flush with the previous container width, grow/shrink with the viewport. */
+function nextPreviewWidthForResize(prevPreview: number, prevOuter: number, nextOuter: number): number {
+  if (prevOuter <= 0) return clampPreviewWidth(nextOuter, nextOuter);
+  if (nextOuter < prevOuter) return clampPreviewWidth(prevPreview, nextOuter);
+  if (Math.abs(prevPreview - prevOuter) <= 2) return clampPreviewWidth(nextOuter, nextOuter);
+  return clampPreviewWidth(prevPreview, nextOuter);
+}
+
 function TocLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <a
@@ -63,28 +71,28 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
   );
 
   const previewMeasureRef = useRef<HTMLDivElement>(null);
-  const maxOuterRef = useRef(10_000);
-  const [maxOuterPx, setMaxOuterPx] = useState(10_000);
+  const maxOuterRef = useRef(0);
+  const [maxOuterPx, setMaxOuterPx] = useState(0);
   const [previewWidthPx, setPreviewWidthPx] = useState(DEFAULT_PREVIEW_PX);
+
+  const syncPreviewToOuterWidth = useCallback((nextOuter: number) => {
+    if (!Number.isFinite(nextOuter) || nextOuter <= 0) return;
+    const prevOuter = maxOuterRef.current;
+    maxOuterRef.current = nextOuter;
+    setMaxOuterPx(nextOuter);
+    setPreviewWidthPx((pw) => nextPreviewWidthForResize(pw, prevOuter, nextOuter));
+  }, []);
 
   useLayoutEffect(() => {
     const el = previewMeasureRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
-      const w = el.clientWidth;
-      setMaxOuterPx(w);
-      maxOuterRef.current = w;
+      syncPreviewToOuterWidth(el.clientWidth);
     });
     ro.observe(el);
-    const w = el.clientWidth;
-    setMaxOuterPx(w);
-    maxOuterRef.current = w;
+    syncPreviewToOuterWidth(el.clientWidth);
     return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    setPreviewWidthPx((prev) => clampPreviewWidth(prev, maxOuterPx));
-  }, [maxOuterPx]);
+  }, [syncPreviewToOuterWidth]);
 
   const attachSymmetricWidthDrag = useCallback((side: "left" | "right") => {
     return (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -131,6 +139,9 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                   )}
                 </p>
                 <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{entry.meta.title}</h1>
+                <p className="mt-1 truncate font-mono text-xs text-slate-500" title={rel}>
+                  {rel}
+                </p>
               </div>
             </div>
           </div>
@@ -144,7 +155,7 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                 <div ref={previewMeasureRef} className="mt-4 w-full">
                   <div className="flex justify-center">
                     <div
-                      className="relative shrink-0 select-none rounded-lg border border-slate-200 bg-slate-50/80 shadow-sm"
+                      className="relative min-w-0 shrink-0 select-none rounded-lg border border-slate-200 bg-slate-50/80 shadow-sm"
                       style={{ width: previewWidthPx }}
                     >
                       <button
@@ -168,9 +179,11 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                       </div>
                     </div>
                   </div>
-                  <p className="mt-2 text-center text-[11px] tabular-nums text-slate-400">
-                    Preview width {Math.round(previewWidthPx)}px (max {Math.round(maxOuterPx)}px)
-                  </p>
+                  {maxOuterPx > 0 ? (
+                    <p className="mt-2 text-center text-[11px] tabular-nums text-slate-400">
+                      Preview width {Math.round(previewWidthPx)}px (container {Math.round(maxOuterPx)}px)
+                    </p>
+                  ) : null}
                 </div>
               </section>
 
