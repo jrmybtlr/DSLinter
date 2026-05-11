@@ -66,6 +66,49 @@ function controlsFromDeclaredProps(declaredProps: string[]): PlaygroundControl[]
   return out;
 }
 
+const controlOverrides: Record<string, PlaygroundControl[]> = {
+  LegacyButton: [
+    {
+      key: "children",
+      label: "children",
+      type: "string",
+      default: "Preview",
+      placeholder: "Text content",
+    },
+    {
+      key: "variant",
+      label: "variant",
+      type: "select",
+      default: "primary",
+      options: [
+        { value: "primary", label: "primary" },
+        { value: "secondary", label: "secondary" },
+        { value: "danger", label: "danger" },
+        { value: "success", label: "success" },
+        { value: "warning", label: "warning" },
+        { value: "ghost", label: "ghost" },
+      ],
+    },
+    {
+      key: "size",
+      label: "size",
+      type: "select",
+      default: "md",
+      options: [
+        { value: "sm", label: "sm" },
+        { value: "md", label: "md" },
+        { value: "lg", label: "lg" },
+      ],
+    },
+  ],
+};
+
+function controlsForSpec(id: string, declaredProps: string[]): PlaygroundControl[] {
+  const override = controlOverrides[id];
+  if (override) return override;
+  return controlsFromDeclaredProps(declaredProps);
+}
+
 function valuesToComponentProps(declaredProps: string[], values: PlaygroundArgs): Record<string, unknown> {
   const o: Record<string, unknown> = {};
   for (const key of declaredProps) {
@@ -155,7 +198,7 @@ export function buildPlaygroundEntries(report: WorkspaceReport | null | undefine
     const PreviewComponent = Cmp;
 
     const declared = spec.declared_props ?? [];
-    const controls = controlsFromDeclaredProps(declared);
+    const controls = controlsForSpec(spec.id, declared);
     const staticDefaults = playgroundStaticDefaults[spec.id] ?? {};
 
     function Preview({ values }: { values: PlaygroundArgs }) {

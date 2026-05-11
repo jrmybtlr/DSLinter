@@ -1,16 +1,13 @@
 import { DashboardBody } from "../dashboard/DashboardBody";
 import type { DslintReportState } from "../dashboard/useWorkspaceReport";
-import type { TokenCatalog } from "../types/tokenCatalog";
 
 type Props = {
-  tokenCatalog: TokenCatalog;
   reportUrl?: string;
   dslintReportHint?: string;
   dslintReport: DslintReportState;
 };
 
 export function GovernancePane({
-  tokenCatalog,
   reportUrl = "/dslint-report.json",
   dslintReportHint = "npm run dslint:report",
   dslintReport,
@@ -55,7 +52,7 @@ export function GovernancePane({
         <p className="mt-2 font-mono text-[11px] text-slate-400">Root: {report.root}</p>
       </header>
       <div className="mx-auto max-w-6xl px-6 py-8">
-        <DashboardBody report={report} tokenCatalog={tokenCatalog} />
+        <DashboardBody report={report} />
       </div>
     </div>
   );

@@ -2,35 +2,48 @@
 
 This folder is a **small design-system sandbox**: ten components follow theme tokens and common UX conventions; ten illustrate drift (hardcoded colors, missing `alt`, duplicate `Card` definitions, oversized prop surfaces, deprecated names).
 
-Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `packages/workbench/src`, and defines tokens in `@theme` — there is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
+Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `packages/workbench/src`, and pulls in **`@import "@dslint/workbench/theme.css"`** (shadcn/ui tokens + DSLint layout tokens from the package). There is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
+
+This repo uses **workspace linking** at the repo root so every dependency declared by `@dslint/workbench` is installed once and TypeScript can resolve it from `demo/`:
+
+- **npm:** `package.json` at the repo root has `"workspaces": ["demo", "packages/workbench"]`.
+- **pnpm:** `pnpm-workspace.yaml` lists the same packages. `demo` links the workbench with **`"file:../packages/workbench"`** (a bare `"*"` would hit the public npm registry and 404).
 
 ## `@dslint/workbench` package
 
 The workbench UI (sidebar, hash routing, token wall, governance panels) lives in [`../packages/workbench/`](../packages/workbench/) and is consumed like a published library:
 
-- **Local (same as `npm pack` + install):** `demo/package.json` uses `"@dslint/workbench": "file:../packages/workbench"`. Vite is configured with `optimizeDeps.exclude: ["@dslint/workbench"]` so edits under `packages/workbench/src/` hot-reload with `npm run dev` in `demo/`.
-- **After publish:** replace that dependency with `"@dslint/workbench": "^0.0.1"` (or your registry scope).
+- **Local:** `demo/package.json` uses `"@dslint/workbench": "file:../packages/workbench"`. Vite is configured with `optimizeDeps.exclude: ["@dslint/workbench"]` so edits under `packages/workbench/src/` hot-reload with `npm run dev` / `pnpm dev` in `demo/`.
+- **After publish:** depend on `"@dslint/workbench": "^0.0.1"` (or your registry scope) and keep the same **`@import "@dslint/workbench/theme.css"`** line after Tailwind in your app CSS.
 
 The demo app wires **data** as follows:
 
 - **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.tsx")` to resolve live previews (no `definePlayground` in each component file).
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
-- **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `src/index.css`).
+- **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `@dslint/workbench/theme.css`).
 - **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslintReport` into `WorkbenchLayout`.
 - **`DemoOverview.tsx`** — custom landing copy for `#!/overview`.
 
 ## Run the UI
 
+From the **repository root** (recommended):
+
 ```bash
-cd demo
-npm install
-npm run dev
+# npm
+npm install && cd demo && npm run dev
+
+# pnpm
+pnpm install && cd demo && pnpm dev
 ```
+
+**pnpm:** install from the repo root the first time so the workspace is linked. Running `pnpm install` only inside `demo/` without a parent `pnpm-workspace.yaml` will not see `packages/workbench`.
+
+With **npm**, `cd demo && npm install` still discovers the root `package.json` workspaces.
 
 Build:
 
 ```bash
-npm run build
+cd demo && npm run build
 ```
 
 ## Storybook-style playground

@@ -1,8 +1,9 @@
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
-import type { LintFinding } from "../types/report";
+import type { LintFinding, UsageSummary } from "../types/report";
 import { controlsToApiRows } from "./controlApiTable";
+import { PlaygroundUsageCode } from "./PlaygroundUsageCode";
 
 const sectionTitleClass = "text-lg font-semibold tracking-tight text-slate-900";
 const sectionDescClass = "mt-1 text-sm text-slate-600";
@@ -21,9 +22,7 @@ export function PlaygroundUsageSection({ entry, values }: UsageProps) {
     <section id="usage" className="scroll-mt-20">
       <h2 className={sectionTitleClass}>Usage</h2>
       <p className={sectionDescClass}>Example import-style usage for the current playground values.</p>
-      <pre className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-950 p-4 text-[13px] leading-relaxed text-slate-100 shadow-sm">
-        <code>{usage}</code>
-      </pre>
+      <PlaygroundUsageCode source={usage} />
     </section>
   );
 }
@@ -134,39 +133,138 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
 
 type ApiProps = {
   controls: PlaygroundControl[];
+  /** When set, adds columns for how often each prop appears at scanned JSX call sites. */
+  reportUsage?: UsageSummary;
+  /** Declared prop names from the scan (definitions + playground specs), used for “never passed” hints. */
+  declaredPropsFromScan?: string[];
+  /** True when `dslint-report.json` is loaded (even if this component has no usage row). */
+  governanceReportLoaded?: boolean;
 };
 
-export function PlaygroundApiReference({ controls }: ApiProps) {
+function formatRepoLiteralChips(byVal: Record<string, number> | undefined, max = 6): string {
+  if (!byVal || Object.keys(byVal).length === 0) return "—";
+  const entries = Object.entries(byVal).sort((x, y) => y[1] - x[1]);
+  const shown = entries.slice(0, max);
+  const tail = Math.max(0, entries.length - max);
+  return shown.map(([val, n]) => `${JSON.stringify(val)} ×${n}`).join(" · ") + (tail > 0 ? ` · +${tail}` : "");
+}
+
+export function PlaygroundApiReference({
+  controls,
+  reportUsage,
+  declaredPropsFromScan = [],
+  governanceReportLoaded = false,
+}: ApiProps) {
   if (controls.length === 0) return null;
 
   const rows = controlsToApiRows(controls);
+  const showRepo = reportUsage != null;
+  const freqs = reportUsage?.prop_frequencies ?? {};
+  const valueFreqs = reportUsage?.prop_value_frequencies ?? {};
+  const controlKeys = new Set(rows.map((r) => r.prop));
+  const extraRepoProps = showRepo
+    ? Object.keys(freqs)
+        .filter((k) => !controlKeys.has(k))
+        .sort((a, b) => a.localeCompare(b))
+    : [];
+
+  const neverPassedDeclared =
+    showRepo && declaredPropsFromScan.length > 0
+      ? declaredPropsFromScan.filter((p) => controlKeys.has(p) && (freqs[p] ?? 0) === 0)
+      : [];
 
   return (
     <section id="api-reference" className="scroll-mt-20">
       <h2 className={sectionTitleClass}>API reference</h2>
-      <p className={sectionDescClass}>Playground controls and their mapped types. Wire these to your component props as needed.</p>
+      <p className={sectionDescClass}>
+        Playground controls and their mapped types.
+        {showRepo
+          ? " The last columns summarize how each prop appears across scanned JSX in the repo (call-site counts and literal values only)."
+          : governanceReportLoaded
+            ? " No JSX usage was recorded for this component in the current report, so repo adoption columns are omitted."
+            : " Load dslint-report.json to add repo call-site and literal columns for each prop."}
+      </p>
       <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="w-full min-w-[32rem] border-collapse text-left text-[13px]">
+        <table className="w-full min-w-[36rem] border-collapse text-left text-[13px]">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/80">
               <th className="px-3 py-2.5 font-semibold text-slate-700">Prop</th>
               <th className="px-3 py-2.5 font-semibold text-slate-700">Type</th>
               <th className="px-3 py-2.5 font-semibold text-slate-700">Default</th>
               <th className="px-3 py-2.5 font-semibold text-slate-700">Description</th>
+              {showRepo ? (
+                <>
+                  <th className="w-28 px-3 py-2.5 font-semibold text-slate-700">Repo call sites</th>
+                  <th className="min-w-[14rem] px-3 py-2.5 font-semibold text-slate-700">Repo literals</th>
+                </>
+              ) : null}
             </tr>
           </thead>
           <tbody className="text-slate-800">
-            {rows.map((r) => (
-              <tr key={r.prop} className="border-b border-slate-100 last:border-0">
-                <td className="px-3 py-2.5 font-mono text-[12px] text-slate-900">{r.prop}</td>
-                <td className="max-w-[12rem] px-3 py-2.5 font-mono text-[11px] text-slate-600">{r.type}</td>
-                <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">{r.default}</td>
-                <td className="px-3 py-2.5 text-slate-600">{r.description}</td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const n = showRepo ? (freqs[r.prop] ?? 0) : 0;
+              const unusedAtRepo = showRepo && declaredPropsFromScan.includes(r.prop) && n === 0;
+              return (
+                <tr key={r.prop} className="border-b border-slate-100 last:border-0">
+                  <td className="px-3 py-2.5 font-mono text-[12px] text-slate-900">{r.prop}</td>
+                  <td className="max-w-[12rem] px-3 py-2.5 font-mono text-[11px] text-slate-600">{r.type}</td>
+                  <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">{r.default}</td>
+                  <td className="px-3 py-2.5 text-slate-600">{r.description}</td>
+                  {showRepo ? (
+                    <>
+                      <td
+                        className={`px-3 py-2.5 font-mono text-[12px] tabular-nums ${unusedAtRepo ? "text-slate-400" : "text-slate-700"}`}
+                        title={unusedAtRepo ? "Declared in the scanned component but not passed at any captured call site" : undefined}
+                      >
+                        ×{n}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-[11px] leading-snug text-slate-600">
+                        {formatRepoLiteralChips(valueFreqs[r.prop])}
+                      </td>
+                    </>
+                  ) : null}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {showRepo && neverPassedDeclared.length > 0 ? (
+        <div className="mt-3 rounded-md border border-amber-200/80 bg-amber-50/50 px-3 py-2 text-[12px] text-amber-950">
+          <span className="font-semibold">Declared but never passed in repo: </span>
+          <span className="font-mono text-[11px]">{neverPassedDeclared.join(", ")}</span>
+        </div>
+      ) : null}
+
+      {showRepo && extraRepoProps.length > 0 ? (
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold text-slate-800">Also seen in repo (not in playground)</h3>
+          <p className="mt-1 text-xs text-slate-600">
+            These prop names appear in scanned JSX but are not wired as playground controls on this page.
+          </p>
+          <div className="mt-2 overflow-x-auto rounded-md border border-slate-200 bg-white">
+            <table className="w-full min-w-[28rem] border-collapse text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/80">
+                  <th className="px-3 py-2.5 font-semibold text-slate-700">Prop</th>
+                  <th className="w-28 px-3 py-2.5 font-semibold text-slate-700">Repo call sites</th>
+                  <th className="min-w-[14rem] px-3 py-2.5 font-semibold text-slate-700">Repo literals</th>
+                </tr>
+              </thead>
+              <tbody>
+                {extraRepoProps.map((prop) => (
+                  <tr key={prop} className="border-b border-slate-100 last:border-0">
+                    <td className="px-3 py-2.5 font-mono text-[12px] text-slate-900">{prop}</td>
+                    <td className="px-3 py-2.5 font-mono text-[12px] tabular-nums text-slate-700">×{freqs[prop] ?? 0}</td>
+                    <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">{formatRepoLiteralChips(valueFreqs[prop])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

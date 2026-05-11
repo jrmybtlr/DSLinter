@@ -45,7 +45,6 @@ export function WorkbenchLayout({
   } else if (route.view === "governance") {
     main = (
       <GovernancePane
-        tokenCatalog={tokenCatalog}
         reportUrl={reportUrl}
         dslintReportHint={dslintReportHint}
         dslintReport={dslintReport}

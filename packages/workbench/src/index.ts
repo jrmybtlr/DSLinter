@@ -1,3 +1,7 @@
+/**
+ * DSLint workbench — React UI for playgrounds, tokens, and governance.
+ * Host apps should import styles once: `@import "@dslint/workbench/theme.css";` (after Tailwind + `@source` for this package).
+ */
 export type { PlaygroundEntry, PlaygroundMeta } from "./types/playground";
 export type {
   PlaygroundArgs,

@@ -23,6 +23,8 @@ export interface JsxUsage {
   component: string;
   line: number;
   props: string[];
+  /** Statically-known literal prop values (non-literals omitted). */
+  prop_values?: Record<string, string>;
 }
 
 export interface LintFinding {
@@ -58,6 +60,8 @@ export interface UsageLocation {
   path: string;
   line: number;
   props: string[];
+  /** Statically-known literal prop values at this call-site (non-literals omitted). */
+  prop_values?: Record<string, string>;
 }
 
 export interface UsageSummary {
@@ -68,6 +72,8 @@ export interface UsageSummary {
   files: string[];
   /** How many call-sites pass each named prop. */
   prop_frequencies?: Record<string, number>;
+  /** How many call-sites pass each literal value for each prop. */
+  prop_value_frequencies?: Record<string, Record<string, number>>;
   /** Every individual call-site with its file, line, and passed props. */
   usage_locations?: UsageLocation[];
 }

@@ -379,6 +379,7 @@ fn merge_template_usages(
             component,
             line,
             props: Vec::new(),
+            prop_values: std::collections::BTreeMap::new(),
         });
     }
 
@@ -395,6 +396,7 @@ fn merge_template_usages(
             component,
             line,
             props: Vec::new(),
+            prop_values: std::collections::BTreeMap::new(),
         });
     }
 }

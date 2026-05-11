@@ -1,6 +1,6 @@
 //! ECMAScript / TypeScript / JSX parsing via Oxc.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
@@ -212,6 +212,65 @@ fn props_from_attributes(items: &[JSXAttributeItem<'_>]) -> Vec<String> {
     props.sort();
     props.dedup();
     props
+}
+
+fn literal_value_from_jsx_attr_value(value: &Option<JSXAttributeValue<'_>>) -> Option<String> {
+    match value {
+        None => Some("true".to_string()), // boolean shorthand: <Comp disabled />
+        Some(JSXAttributeValue::StringLiteral(s)) => Some(s.value.to_string()),
+        Some(JSXAttributeValue::ExpressionContainer(expr)) => {
+            let oxc_ast::ast::JSXExpression::Expression(inner) = &expr.expression else {
+                return None;
+            };
+            match inner {
+                Expression::StringLiteral(s) => Some(s.value.to_string()),
+                Expression::NumericLiteral(n) => Some(n.value.to_string()),
+                Expression::BooleanLiteral(b) => Some(b.value.to_string()),
+                Expression::NullLiteral(_) => Some("null".to_string()),
+                Expression::Identifier(id) if id.name.as_str() == "undefined" => {
+                    Some("undefined".to_string())
+                }
+                Expression::TemplateLiteral(tpl) if tpl.expressions.is_empty() => {
+                    // Treat as a string when it's fully static.
+                    let cooked = tpl
+                        .quasis
+                        .iter()
+                        .map(|q| q.value.cooked.as_deref().unwrap_or(""))
+                        .collect::<Vec<_>>()
+                        .join("");
+                    Some(cooked)
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn prop_values_from_attributes(items: &[JSXAttributeItem<'_>]) -> BTreeMap<String, String> {
+    let mut out = BTreeMap::new();
+    for item in items {
+        let JSXAttributeItem::Attribute(attr) = item else {
+            continue;
+        };
+
+        let key = match &attr.name {
+            JSXAttributeName::Identifier(id) => id.name.as_str().to_string(),
+            JSXAttributeName::NamespacedName(ns) => format!(
+                "{}:{}",
+                ns.namespace.name.as_str(),
+                ns.property.name.as_str()
+            ),
+        };
+
+        let Some(val) = literal_value_from_jsx_attr_value(&attr.value) else {
+            continue;
+        };
+
+        // If a prop is repeated (invalid JSX, but possible in malformed files), keep the first.
+        out.entry(key).or_insert(val);
+    }
+    out
 }
 
 fn expr_is_component_like(expr: &Expression<'_>) -> bool {
@@ -573,10 +632,12 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
         };
         if usage_is_design_component(&component) {
             let props = props_from_attributes(&el.attributes);
+            let prop_values = prop_values_from_attributes(&el.attributes);
             self.usages.push(JsxUsage {
                 component,
                 line: offset_line(self.source, el.span.start),
                 props,
+                prop_values,
             });
         }
         walk::walk_jsx_opening_element(self, el);

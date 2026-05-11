@@ -115,8 +115,14 @@ if (Object.keys(playgroundGroups).length) {
     const def = pickDefinition(file.definitions ?? [], stem);
     if (!def) continue;
     let declared = def.declared_props ?? [];
-    if (!declared.length) {
-      declared = inferDeclaredPropsFromTsx(demoRoot, rel, def.name);
+    // Prefer the TSX source-of-truth for destructured props when available.
+    // This keeps `declared_props` fresh even if the JSON report is stale or
+    // the Rust extractor doesn't populate `declared_props` for a file yet.
+    const inferred = inferDeclaredPropsFromTsx(demoRoot, rel, def.name);
+    if (inferred.length) {
+      if (!declared.length || inferred.length > declared.length) {
+        declared = inferred;
+      }
     }
     const row = {
       id: stem,

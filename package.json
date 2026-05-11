@@ -1,0 +1,5 @@
+{
+  "name": "dslint",
+  "private": true,
+  "workspaces": ["demo", "packages/workbench"]
+}

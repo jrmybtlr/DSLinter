@@ -99,6 +99,8 @@ fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
     let mut max_props: HashMap<String, usize> = HashMap::with_capacity(files.len());
     let mut prop_freqs: HashMap<String, BTreeMap<String, u32>> =
         HashMap::with_capacity(files.len());
+    let mut prop_value_freqs: HashMap<String, BTreeMap<String, BTreeMap<String, u32>>> =
+        HashMap::with_capacity(files.len());
     let mut locs: HashMap<String, Vec<UsageLocation>> = HashMap::with_capacity(files.len());
 
     for file in files {
@@ -114,12 +116,23 @@ fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
                 *pf.entry(prop.clone()).or_insert(0) += 1;
             }
 
+            if !u.prop_values.is_empty() {
+                let pvf = prop_value_freqs.entry(u.component.clone()).or_default();
+                for (prop, value) in &u.prop_values {
+                    *pvf.entry(prop.clone())
+                        .or_default()
+                        .entry(value.clone())
+                        .or_insert(0) += 1;
+                }
+            }
+
             locs.entry(u.component.clone())
                 .or_default()
                 .push(UsageLocation {
                     path: file.path.clone(),
                     line: u.line,
                     props: u.props.clone(),
+                    prop_values: u.prop_values.clone(),
                 });
         }
     }
@@ -131,6 +144,8 @@ fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
             paths.sort();
             let reference_count: u32 = files_map.values().sum();
             let prop_frequencies = prop_freqs.remove(&component).unwrap_or_default();
+            let prop_value_frequencies =
+                prop_value_freqs.remove(&component).unwrap_or_default();
             let mut usage_locations = locs.remove(&component).unwrap_or_default();
             usage_locations.sort_by(|a, b| {
                 a.path.cmp(&b.path).then_with(|| a.line.cmp(&b.line))
@@ -142,6 +157,7 @@ fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
                 max_props_on_single_use: max_props.remove(&component).unwrap_or(0),
                 files: paths,
                 prop_frequencies,
+                prop_value_frequencies,
                 usage_locations,
             }
         })
@@ -615,6 +631,7 @@ mod prop_tests {
                     component: comp.to_string(),
                     line: 5,
                     props: props.into_iter().map(|s| s.to_string()).collect(),
+                    prop_values: std::collections::BTreeMap::new(),
                 })
                 .collect(),
             parse_errors: Vec::new(),

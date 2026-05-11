@@ -1,16 +1,12 @@
-import type { TokenCatalog } from "../types/tokenCatalog";
 import type { WorkspaceReport } from "../types/report";
 import { ComponentCatalog } from "./ComponentCatalog";
 import { FindingsList } from "./FindingsList";
 import { ScoreStrip } from "./ScoreStrip";
-import { TokenWall } from "./TokenWall";
 
 export function DashboardBody({
   report,
-  tokenCatalog,
 }: {
   report: WorkspaceReport;
-  tokenCatalog: TokenCatalog;
 }) {
   return (
     <div className="space-y-10">
@@ -65,23 +61,17 @@ export function DashboardBody({
         <ComponentCatalog report={report} />
       </section>
 
-      <section className="grid gap-10 lg:grid-cols-2">
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-neutral-900">Design tokens</h2>
-          <TokenWall catalog={tokenCatalog} />
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-sm font-semibold text-neutral-900">Governance signals</h2>
-              <p className="text-xs text-neutral-500">
-                Accessibility (`a11y-*`) and code smell (`smell-*`) rules from the latest DSLint run.
-              </p>
-            </div>
-            <span className="text-xs text-neutral-400">{report.findings.length} total</span>
+      <section className="space-y-3">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-semibold text-neutral-900">Governance signals</h2>
+            <p className="text-xs text-neutral-500">
+              Accessibility (`a11y-*`) and code smell (`smell-*`) rules from the latest DSLint run.
+            </p>
           </div>
-          <FindingsList findings={report.findings} root={report.root} />
+          <span className="text-xs text-neutral-400">{report.findings.length} total</span>
         </div>
+        <FindingsList findings={report.findings} root={report.root} />
       </section>
     </div>
   );

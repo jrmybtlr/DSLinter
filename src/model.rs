@@ -33,7 +33,13 @@ pub struct JsxUsage {
     /// Fully-qualified JSX name, e.g. `Card` or `Stack.Item`.
     pub component: String,
     pub line: u32,
+    /// Prop names passed at this call site.
     pub props: Vec<String>,
+    /// Statically-known literal prop values (e.g. `size="sm"`, `disabled`, `rows={3}`).
+    ///
+    /// Non-literal expressions are intentionally omitted.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub prop_values: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -86,6 +92,9 @@ pub struct UsageLocation {
     pub line: u32,
     /// Props passed at this particular call site.
     pub props: Vec<String>,
+    /// Statically-known literal prop values at this call site.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub prop_values: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -99,6 +108,11 @@ pub struct UsageSummary {
     /// How many call-sites pass each named prop (sorted key for deterministic JSON output).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub prop_frequencies: BTreeMap<String, u32>,
+    /// How many call-sites pass each literal value for each prop.
+    ///
+    /// Example: `size` → { "sm": 12, "md": 3 }
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub prop_value_frequencies: BTreeMap<String, BTreeMap<String, u32>>,
     /// Every individual call-site with its file, line, and passed props.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub usage_locations: Vec<UsageLocation>,

@@ -57,28 +57,50 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
         {chip("Errors", "error", counts.error)}
         {chip("Info", "info", counts.info)}
       </div>
-      <ul className="max-h-[28rem] divide-y divide-neutral-100 overflow-y-auto rounded-lg border border-neutral-200 bg-white">
-        {filtered.map((f, i) => (
-          <li
-            key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
-            className="flex flex-col gap-1 px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between"
-          >
-            <div className="min-w-0">
-              <span
-                className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${severityStyle[f.severity] ?? severityStyle.info}`}
-              >
-                {f.severity}
-              </span>
-              <p className="mt-1 font-mono text-[11px] text-neutral-500">{f.rule_id}</p>
-              <p className="mt-1 text-sm text-neutral-900">{f.message}</p>
-            </div>
-            <p className="shrink-0 font-mono text-[11px] text-neutral-400">
-              {shortPath(root, f.path)}
-              {f.line != null ? `:${f.line}` : ""}
-            </p>
-          </li>
-        ))}
-      </ul>
+      <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        <div className="max-h-112 overflow-auto">
+          <table className="min-w-full divide-y divide-neutral-100 text-left text-xs">
+            <thead className="bg-neutral-50 text-neutral-500">
+              <tr>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Severity
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Rule
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Message
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  File
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Line
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100 align-top text-neutral-800">
+              {filtered.map((f, i) => (
+                <tr key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}>
+                  <td className="px-3 py-2">
+                    <span
+                      className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${severityStyle[f.severity] ?? severityStyle.info}`}
+                    >
+                      {f.severity}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 font-mono text-[11px] text-neutral-600">{f.rule_id}</td>
+                  <td className="px-3 py-2 text-sm text-neutral-900">{f.message}</td>
+                  <td className="px-3 py-2 font-mono text-[11px] text-neutral-500">{shortPath(root, f.path)}</td>
+                  <td className="px-3 py-2 font-mono text-[11px] text-neutral-500">
+                    {f.line != null ? f.line : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

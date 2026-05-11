@@ -2,9 +2,11 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { a11ySummaryForModule } from "../report/a11yForModule";
 import { tokenStyleFindingsForModule } from "../report/tokenStyleFindingsForModule";
 import type { WorkspaceReport } from "../types/report";
+import { aggregateDeclaredProps, usageMap } from "../dashboard/aggregate";
 import { defaultArgsFromControls } from "../types/controls";
 import type { PlaygroundArgs } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
+import { ComponentUsageDetails } from "../dashboard/ComponentUsageDetails";
 import {
   PlaygroundA11ySection,
   PlaygroundApiReference,
@@ -69,6 +71,16 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
     () => tokenStyleFindingsForModule(reportReady ? workspaceReport : null, entry.modulePath),
     [workspaceReport, entry.modulePath, reportReady],
   );
+
+  const repoUsage = useMemo(() => {
+    if (!reportReady || !workspaceReport) return undefined;
+    return usageMap(workspaceReport).get(entry.id);
+  }, [workspaceReport, entry.id, reportReady]);
+
+  const declaredPropsFromScan = useMemo(() => {
+    if (!reportReady || !workspaceReport) return [];
+    return aggregateDeclaredProps(workspaceReport).get(entry.id) ?? [];
+  }, [workspaceReport, entry.id, reportReady]);
 
   const previewMeasureRef = useRef<HTMLDivElement>(null);
   const maxOuterRef = useRef(0);
@@ -206,12 +218,33 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
               ) : null}
 
               <PlaygroundUsageSection entry={entry} values={values} />
+
+              <section id="repo-usage" className="scroll-mt-20">
+                <h2 className="text-lg font-semibold tracking-tight text-slate-900">Repo usage</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Every scanned JSX reference to <span className="font-mono text-[13px]">{entry.id}</span> in the workspace: file,
+                  line, and props captured at that call site (literals shown as{" "}
+                  <span className="font-mono text-[13px]">size=&quot;sm&quot;</span>). Prop frequency across the repo is listed under{" "}
+                  <a href="#api-reference" className="font-medium text-slate-800 underline decoration-slate-300 underline-offset-2 hover:decoration-slate-500">
+                    API reference
+                  </a>
+                  .
+                </p>
+                <div className="mt-4">
+                  <ComponentUsageDetails report={reportReady ? workspaceReport : null} componentId={entry.id} />
+                </div>
+              </section>
               
               <PlaygroundTokenStyleSection findings={tokenStyleFindings} reportReady={reportReady} />
 
               <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
 
-              <PlaygroundApiReference controls={entry.controls} />
+              <PlaygroundApiReference
+                controls={entry.controls}
+                reportUsage={repoUsage}
+                declaredPropsFromScan={declaredPropsFromScan}
+                governanceReportLoaded={reportReady && workspaceReport != null}
+              />
             </div>
 
             <aside className="relative mt-12 hidden xl:mt-0 xl:block">
@@ -222,6 +255,7 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">On this page</p>
                 <TocLink href="#source">Source</TocLink>
                 <TocLink href="#usage">Usage</TocLink>
+                <TocLink href="#repo-usage">Repo usage</TocLink>
                 {hasControls ? <TocLink href="#playground">Playground</TocLink> : null}
                 <TocLink href="#examples">Examples</TocLink>
                 <TocLink href="#design-tokens">Design tokens</TocLink>
