@@ -1,5 +1,18 @@
 {
   "name": "dslint",
   "private": true,
-  "workspaces": ["demo", "packages/workbench"]
+  "workspaces": [
+    "demo",
+    "packages/workbench"
+  ],
+  "scripts": {
+    "fmt": "oxfmt demo packages/workbench",
+    "fmt:check": "oxfmt --check demo packages/workbench",
+    "lint": "oxlint --ignore-pattern \"**/dist/**\" demo packages/workbench",
+    "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" demo packages/workbench"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.16.0",
+    "oxlint": "^1.64.0"
+  }
 }

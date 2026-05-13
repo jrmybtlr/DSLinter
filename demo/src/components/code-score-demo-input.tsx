@@ -17,8 +17,9 @@ export function CodeScoreDemoInput(): JSX.Element {
     } catch {
       // smell-empty-catch
     }
+    // eslint-disable-next-line no-constant-condition -- DSLint demo: `if (false)` is scanned for smells
     if (false) {
-      // smell-debugger (never runs; still scanned)
+      // eslint-disable-next-line no-debugger -- DSLint demo: smell-debugger (never runs; still scanned)
       debugger;
     }
   }, []);
@@ -36,7 +37,9 @@ export function CodeScoreDemoInput(): JSX.Element {
   const tailwindArbitraryDemo = "shadow-[0_0_0_1px] ring-[12px]";
 
   return (
-    <div className={`space-y-3 rounded border border-dashed border-amber-400 p-3 text-xs ${tailwindArbitraryDemo}`}>
+    <div
+      className={`space-y-3 rounded border border-dashed border-amber-400 p-3 text-xs ${tailwindArbitraryDemo}`}
+    >
       {/* smell-redundant-fragment — wraps a single element */}
       <>
         <div className="space-y-2">
@@ -71,7 +74,11 @@ export function CodeScoreDemoInput(): JSX.Element {
           />
 
           {/* a11y-input-label */}
-          <input type="text" placeholder="Unlabeled field" className="w-full rounded border px-2 py-1" />
+          <input
+            type="text"
+            placeholder="Unlabeled field"
+            className="w-full rounded border px-2 py-1"
+          />
 
           {/* a11y-button-name */}
           <button type="button" className="h-8 w-8 rounded bg-gray-200" />
