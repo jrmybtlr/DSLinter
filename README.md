@@ -49,7 +49,7 @@ cd demo && npm run dslint:report   # regenerate dashboard JSON
 - Component definitions (functions, classes, `const` arrows, `forwardRef` / `memo`, exports)
 - PascalCase JSX / Vue template usage with prop lists (variant-surface hint)
 - Accessibility: `<img>` alt, meaningful `<a href>`, `<button>` accessible names, `<input>` accessible names (JSX AST + Vue `<template>`); governance score weights all `a11y-*` rules
-- Code smells (`smell-*`): console/debugger noise, suppressions, TODO markers, oversized files, inline JSX `style`, empty `catch`, redundant fragments; lightly lowers maintainability score
+- Code quality heuristics (`smell-*` rule ids): console/debugger noise, suppressions, TODO markers, oversized files, inline JSX `style`, empty `catch`, redundant fragments; lightly lowers maintainability score
 - Duplicate definition detection, deprecation usage, hardcoded hex colors, Tailwind arbitrary bracket values (`token-tailwind-arbitrary`)
 - Ownership rollup in `--json` / dashboard when `ownership` paths are configured
 - Heuristic governance scores (design-system health omits token pillar until `known_tokens` is set) and `--json` output for dashboards / CI
