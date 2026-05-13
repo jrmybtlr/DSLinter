@@ -1,4 +1,3 @@
-
 type Props = {
   label: string;
 };

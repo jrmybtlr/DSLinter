@@ -12,17 +12,16 @@ type Props = {
 
 const variantClass: Record<Variant, string> = {
   primary:
-    "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-primary",
+    "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 focus-visible:outline-primary",
   secondary:
-    "border border-surface-border bg-surface-elevated text-gray-800 shadow-sm hover:bg-gray-50 focus-visible:outline-gray-400",
+    "border border-surface-border bg-surface-elevated text-gray-800 shadow-xs hover:bg-gray-50 focus-visible:outline-gray-400",
   danger:
-    "bg-danger text-danger-foreground shadow-sm hover:bg-danger/90 focus-visible:outline-danger",
+    "bg-danger text-danger-foreground shadow-xs hover:bg-danger/90 focus-visible:outline-danger",
   success:
-    "bg-success text-success-foreground shadow-sm hover:bg-success/90 focus-visible:outline-success",
+    "bg-success text-success-foreground shadow-xs hover:bg-success/90 focus-visible:outline-success",
   warning:
-    "bg-warning text-warning-foreground shadow-sm hover:bg-warning/90 focus-visible:outline-warning",
-  ghost:
-    "bg-transparent text-gray-800 hover:bg-gray-100 focus-visible:outline-gray-400",
+    "bg-warning text-warning-foreground shadow-xs hover:bg-warning/90 focus-visible:outline-warning",
+  ghost: "bg-transparent text-gray-800 hover:bg-gray-100 focus-visible:outline-gray-400",
 };
 
 const sizeClass: Record<Size, string> = {

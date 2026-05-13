@@ -1,4 +1,3 @@
-
 /** Same export name as DuplicateCardA — duplicate definition signal. */
 export function Card() {
   return (

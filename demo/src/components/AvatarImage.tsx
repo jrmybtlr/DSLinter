@@ -1,4 +1,3 @@
-
 /** User photo without `alt` — common slip when the asset “looks decorative”. */
 export function AvatarImage() {
   return (

@@ -1,4 +1,12 @@
 import { useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
 import { shortPath } from "./paths";
@@ -31,7 +39,8 @@ export function ComponentUsageDetails({
   if (!report) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-500">
-        Load <span className="font-mono">dslint-report.json</span> to see where this component is referenced in the workspace.
+        Load <span className="font-mono">dslint-report.json</span> to see where this component is
+        referenced in the workspace.
       </div>
     );
   }
@@ -39,7 +48,8 @@ export function ComponentUsageDetails({
   if (!usage) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-500">
-        No scanned JSX references found for <span className="font-mono text-gray-800">{componentId}</span>.
+        No scanned JSX references found for{" "}
+        <span className="font-mono text-gray-800">{componentId}</span>.
       </div>
     );
   }
@@ -48,7 +58,7 @@ export function ComponentUsageDetails({
   const hasSites = rows.length > 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
       <p className="text-sm text-gray-600">
         <span className="font-mono text-gray-900">×{usage.reference_count}</span>{" "}
         <span className="text-gray-400">references</span> across{" "}
@@ -66,33 +76,46 @@ export function ComponentUsageDetails({
       </p>
 
       {hasSites ? (
-        <div className="mt-4 overflow-x-auto rounded-md border border-gray-200">
-          <table className="w-full min-w-72 border-collapse text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50/80">
-                <th className="px-3 py-2.5 font-semibold text-gray-700">File</th>
-                <th className="w-16 px-3 py-2.5 font-semibold text-gray-700">Line</th>
-                <th className="px-3 py-2.5 font-semibold text-gray-700">Props at this call site</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-800">
+        <div className="mt-4 rounded-md border border-border">
+          <Table className="min-w-72 border-collapse text-left">
+            <TableHeader>
+              <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
+                <TableHead className="h-auto px-3 py-2.5 font-semibold text-muted-foreground">
+                  File
+                </TableHead>
+                <TableHead className="h-auto w-16 px-3 py-2.5 font-semibold text-muted-foreground">
+                  Line
+                </TableHead>
+                <TableHead className="h-auto px-3 py-2.5 font-semibold text-muted-foreground">
+                  Props at this call site
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="text-foreground">
               {rows.map((loc, i) => (
-                <tr key={`${loc.path}-${loc.line}-${i}`} className="border-b border-gray-100 last:border-0">
-                  <td className="px-3 py-2.5 font-mono text-[12px] text-gray-700">{shortPath(report.root, loc.path)}</td>
-                  <td className="px-3 py-2.5 font-mono text-[12px] tabular-nums text-gray-600">{loc.line}</td>
-                  <td className="px-3 py-2.5 font-mono text-[11px] leading-relaxed text-gray-600">{formatCallSiteProps(loc)}</td>
-                </tr>
+                <TableRow
+                  key={`${loc.path}-${loc.line}-${i}`}
+                  className="border-border hover:bg-transparent"
+                >
+                  <TableCell className="px-3 py-2.5 font-mono text-xs">{shortPath(report.root, loc.path)}</TableCell>
+                  <TableCell className="px-3 py-2.5 font-mono text-xs tabular-nums text-muted-foreground">
+                    {loc.line}
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    {formatCallSiteProps(loc)}
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <p className="mt-3 text-sm text-gray-500">
-          Usage counts are present but individual call sites were not recorded in this report. Regenerate with a current{" "}
-          <span className="font-mono">dslint</span> build if you expect a site list.
+          Usage counts are present but individual call sites were not recorded in this report.
+          Regenerate with a current <span className="font-mono">dslint</span> build if you expect a
+          site list.
         </p>
       )}
     </div>
   );
 }
-

@@ -8,11 +8,12 @@ export function TokensPane({ tokenCatalog }: { tokenCatalog: TokenCatalog }) {
         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">System</p>
         <h1 className="mt-1 text-lg font-semibold tracking-tight text-gray-900">Design tokens</h1>
         <p className="mt-2 max-w-2xl text-sm text-gray-600">
-          Supply a catalog object (same shape as your Tailwind theme docs) — keep it aligned with your design tokens.
+          Supply a catalog object (same shape as your Tailwind theme docs) — keep it aligned with
+          your design tokens.
         </p>
       </header>
       <div className="mx-auto max-w-4xl px-8 py-8">
-        <div className="rounded-ds-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-ds-lg border border-gray-200 bg-white p-6 shadow-xs">
           <TokenWall catalog={tokenCatalog} />
         </div>
       </div>

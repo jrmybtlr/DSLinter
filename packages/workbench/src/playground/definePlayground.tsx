@@ -46,7 +46,10 @@ function inferId(nameFallback: string | undefined): string {
   );
 }
 
-function resolveMeta(base: PlaygroundDefinitionBase, nameFallback: string | undefined): PlaygroundMeta {
+function resolveMeta(
+  base: PlaygroundDefinitionBase,
+  nameFallback: string | undefined,
+): PlaygroundMeta {
   const id = base.id ?? inferId(nameFallback);
   const title = base.title ?? id;
   const group = base.group ?? base.section;

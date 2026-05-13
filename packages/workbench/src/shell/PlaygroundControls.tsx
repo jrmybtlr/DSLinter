@@ -36,7 +36,9 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
   const inner = (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Controls</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Controls
+        </p>
         <Button type="button" variant="outline" size="sm" onClick={onReset}>
           Reset defaults
         </Button>
@@ -81,8 +83,7 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
               );
             case "number": {
               const raw = values[c.key];
-              const parsed =
-                typeof raw === "number" && Number.isFinite(raw) ? raw : Number(raw);
+              const parsed = typeof raw === "number" && Number.isFinite(raw) ? raw : Number(raw);
               const safe = Number.isFinite(parsed) ? parsed : c.default;
               return (
                 <div key={c.key} className="flex min-w-0 flex-col gap-1.5">
@@ -140,7 +141,7 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
   }
 
   return (
-    <div className="mx-auto mb-6 max-w-5xl rounded-ds-lg border border-border bg-card p-4 text-card-foreground shadow-sm">
+    <div className="mx-auto mb-6 max-w-5xl rounded-ds-lg border border-border bg-card p-4 text-card-foreground shadow-xs">
       {inner}
     </div>
   );

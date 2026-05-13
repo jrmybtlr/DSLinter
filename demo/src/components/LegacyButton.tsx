@@ -13,21 +13,21 @@ const variantClass: Record<Variant, string> = {
 const sizeClass: Record<Size, string> = {
   sm: "text-xs py-1 px-3",
   md: "text-sm py-2 px-4",
-  lg: "text-lg py-3 px-6"
+  lg: "text-lg py-3 px-6",
 };
 
 /** Test button. */
 export function LegacyButton({
   children,
   variant = "primary",
-  size = "md"
+  size = "md",
 }: {
   children: React.ReactNode;
   variant?: Variant;
   size?: Size;
 }): JSX.Element {
-  const v: Variant = variant in variantClass ? variant as Variant : "primary";
-  const s: Size = size in sizeClass ? size as Size : "md";
+  const v: Variant = variant in variantClass ? (variant as Variant) : "primary";
+  const s: Size = size in sizeClass ? (size as Size) : "md";
   return (
     <button type="button" className={`rounded-md font-medium ${variantClass[v]} ${sizeClass[s]}`}>
       {children}

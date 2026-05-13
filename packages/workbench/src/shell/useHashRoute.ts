@@ -7,11 +7,11 @@ function subscribe(onStoreChange: () => void) {
 }
 
 function getHashSnapshot() {
-  return window.location.hash || "#!/overview";
+  return window.location.hash || "#!/governance";
 }
 
 function getServerHashSnapshot() {
-  return "#!/overview";
+  return "#!/governance";
 }
 
 export function useHashRoute(): [HashRoute, (next: HashRoute) => void] {

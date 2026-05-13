@@ -43,7 +43,11 @@ function formatDescription(c: PlaygroundControl): string {
   if (c.type === "string" && c.placeholder) parts.push(`Placeholder: ${c.placeholder}`);
   if (c.type === "number") {
     if (c.min != null || c.max != null) {
-      parts.push([c.min != null ? `min ${c.min}` : null, c.max != null ? `max ${c.max}` : null].filter(Boolean).join(", "));
+      parts.push(
+        [c.min != null ? `min ${c.min}` : null, c.max != null ? `max ${c.max}` : null]
+          .filter(Boolean)
+          .join(", "),
+      );
     }
   }
   return parts.length > 0 ? parts.join(" · ") : "—";

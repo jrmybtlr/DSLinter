@@ -22,7 +22,6 @@ The demo app wires **data** as follows:
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
 - **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `@dslint/workbench/theme.css`).
 - **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslintReport` into `WorkbenchLayout`.
-- **`DemoOverview.tsx`** — custom landing copy for `#!/overview`.
 
 ## Run the UI
 
@@ -50,10 +49,9 @@ cd demo && npm run build
 
 The dev app is a single **workbench**: a left sidebar lists isolated component previews, **Design tokens**, and **Governance** (DSLint inventory). Navigation uses the URL hash, for example:
 
-- `#!/overview` — landing copy
+- `#!/governance` — default landing: package intro plus scores, catalog, tokens, and findings from `public/dslint-report.json`
 - `#!/component/PrimaryButton` — preview id matches the **file stem** listed in `dslint-report.json` → `playgrounds[].id`
 - `#!/tokens` — token wall (from `src/tokenCatalog.ts`, keep in sync with `src/index.css` `@theme`)
-- `#!/governance` — scores, catalog, tokens, and findings from `public/dslint-report.json`
 
 ### Playgrounds from DSLint (no per-file registration)
 

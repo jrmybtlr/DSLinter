@@ -30,12 +30,9 @@ export function TextareaField({
   const helperId = `${id}-helper`;
   const errorId = `${id}-error`;
   const hasError = Boolean(errorMessage && errorMessage.trim().length > 0);
-  const describedBy = [
-    helperText?.trim() ? helperId : null,
-    hasError ? errorId : null,
-  ]
-    .filter(Boolean)
-    .join(" ") || undefined;
+  const describedBy =
+    [helperText?.trim() ? helperId : null, hasError ? errorId : null].filter(Boolean).join(" ") ||
+    undefined;
 
   const areaClass = [
     "w-full resize-y rounded-ds border bg-surface-elevated px-layout-sm py-layout-xs text-sm outline-none transition",

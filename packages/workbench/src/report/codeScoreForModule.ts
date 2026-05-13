@@ -1,7 +1,6 @@
 import type { LintFinding, WorkspaceReport } from "../types/report";
 import { pathsMatch, resolveModuleSourcePath } from "./modulePathMatch";
 
-/** DSLint quality rules (`smell-*` ids in reports); these feed repo maintainability scoring in the Rust linter. */
 function isCodeScoreRule(ruleId: string): boolean {
   return ruleId.startsWith("smell-");
 }
@@ -11,7 +10,6 @@ function lineSortKey(line: number | null): number {
 }
 
 export type CodeScoreModuleSummary = {
-  /** 0–100 heuristic from `smell-*` findings on this source file (same weights as a11y playground score). */
   score: number;
   issueCount: number;
   findings: LintFinding[];
@@ -26,7 +24,9 @@ export function codeScoreSummaryForModule(
   }
 
   const target = resolveModuleSourcePath(report.root, modulePath);
-  const rows = report.findings.filter((f) => isCodeScoreRule(f.rule_id) && pathsMatch(f.path, target));
+  const rows = report.findings.filter(
+    (f) => isCodeScoreRule(f.rule_id) && pathsMatch(f.path, target),
+  );
   const findings = [...rows].sort((a, b) => lineSortKey(a.line) - lineSortKey(b.line));
 
   let penalty = 0;

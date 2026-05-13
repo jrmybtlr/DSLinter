@@ -1,4 +1,3 @@
-
 /** Intentional duplicate component name — triggers duplicate-component in DSLint. */
 export function Card() {
   return (

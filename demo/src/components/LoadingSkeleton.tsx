@@ -1,4 +1,3 @@
-
 /** Predictable loading placeholder blocks. */
 export function LoadingSkeleton() {
   return (

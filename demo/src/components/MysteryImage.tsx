@@ -1,4 +1,3 @@
-
 /** Decorative image with no `alt` — triggers a11y-img-alt. */
 export function MysteryImage() {
   return (

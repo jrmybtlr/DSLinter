@@ -93,7 +93,13 @@ function longestGroup(rel) {
   return entries[0][1];
 }
 
-const PLAYABLE = new Set(["function", "class", "const_arrow", "const_function", "wrapped_component"]);
+const PLAYABLE = new Set([
+  "function",
+  "class",
+  "const_arrow",
+  "const_function",
+  "wrapped_component",
+]);
 
 function pickDefinition(definitions, stem) {
   const playable = definitions.filter((d) => PLAYABLE.has(d.kind));
@@ -111,7 +117,11 @@ if (Object.keys(playgroundGroups).length) {
     if (!rel) continue;
     if (!longestGroup(rel)) continue;
     if (!/\.(tsx|jsx)$/i.test(rel)) continue;
-    const stem = rel.split("/").pop()?.replace(/\.(tsx|jsx)$/i, "") ?? "";
+    const stem =
+      rel
+        .split("/")
+        .pop()
+        ?.replace(/\.(tsx|jsx)$/i, "") ?? "";
     const def = pickDefinition(file.definitions ?? [], stem);
     if (!def) continue;
     let declared = def.declared_props ?? [];

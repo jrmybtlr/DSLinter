@@ -1,5 +1,13 @@
 import { Fragment, useMemo, useState } from "react";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import {
   aggregateDeclaredProps,
   aggregateDefinitions,
   catalogComponentNames,
@@ -16,7 +24,10 @@ function kindLabel(kind: string): string {
 function buildUnusedPropSet(report: WorkspaceReport): Set<string> {
   const s = new Set<string>();
   const usageByComponent = new Map(
-    (report.usage_by_component ?? []).map((usage) => [usage.component, usage.prop_frequencies ?? {}]),
+    (report.usage_by_component ?? []).map((usage) => [
+      usage.component,
+      usage.prop_frequencies ?? {},
+    ]),
   );
 
   for (const file of report.files ?? []) {
@@ -75,7 +86,10 @@ function PropFrequencyTable({
   );
 }
 
-function formatCallSiteProps(loc: { props: string[]; prop_values?: Record<string, string> }): string {
+function formatCallSiteProps(loc: {
+  props: string[];
+  prop_values?: Record<string, string>;
+}): string {
   if (!loc.props.length) return "—";
   return loc.props
     .map((p) => (loc.prop_values?.[p] != null ? `${p}=${JSON.stringify(loc.prop_values[p])}` : p))
@@ -87,30 +101,50 @@ function CatalogUsageSitesTable({
   locations,
 }: {
   root: string;
-  locations: { path: string; line: number; props: string[]; prop_values?: Record<string, string> }[];
+  locations: {
+    path: string;
+    line: number;
+    props: string[];
+    prop_values?: Record<string, string>;
+  }[];
 }) {
   if (locations.length === 0) return null;
   const rows = [...locations].sort((a, b) => a.path.localeCompare(b.path) || a.line - b.line);
   return (
-    <div className="overflow-x-auto rounded border border-neutral-200 bg-white">
-      <table className="w-full min-w-[28rem] border-collapse text-left text-[11px]">
-        <thead>
-          <tr className="border-b border-neutral-200 bg-neutral-50/90">
-            <th className="px-2 py-1.5 font-semibold text-neutral-600">File</th>
-            <th className="w-12 px-2 py-1.5 font-semibold text-neutral-600">Line</th>
-            <th className="px-2 py-1.5 font-semibold text-neutral-600">Props at call site</th>
-          </tr>
-        </thead>
-        <tbody className="text-neutral-800">
+    <div className="rounded border border-border bg-card">
+      <Table className="min-w-[28rem] border-collapse text-left text-[11px]">
+        <TableHeader>
+          <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
+            <TableHead className="h-auto px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              File
+            </TableHead>
+            <TableHead className="h-auto w-12 px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              Line
+            </TableHead>
+            <TableHead className="h-auto px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              Props at call site
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="text-foreground">
           {rows.map((loc, i) => (
-            <tr key={`${loc.path}-${loc.line}-${i}`} className="border-b border-neutral-100 last:border-0">
-              <td className="px-2 py-1.5 font-mono text-[10px] text-neutral-700">{shortPath(root, loc.path)}</td>
-              <td className="px-2 py-1.5 font-mono text-[10px] tabular-nums text-neutral-600">{loc.line}</td>
-              <td className="px-2 py-1.5 font-mono text-[10px] leading-relaxed text-neutral-600">{formatCallSiteProps(loc)}</td>
-            </tr>
+            <TableRow
+              key={`${loc.path}-${loc.line}-${i}`}
+              className="border-border hover:bg-transparent"
+            >
+              <TableCell className="px-2 py-1.5 font-mono text-[10px]">
+                {shortPath(root, loc.path)}
+              </TableCell>
+              <TableCell className="px-2 py-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+                {loc.line}
+              </TableCell>
+              <TableCell className="whitespace-normal px-2 py-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                {formatCallSiteProps(loc)}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -169,29 +203,28 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
   const [openComponent, setOpenComponent] = useState<string | null>(null);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-neutral-100 text-left text-xs">
-          <thead className="bg-neutral-50 text-neutral-500">
-            <tr>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Component
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Defined
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Declared props
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Usage
-              </th>
-              <th scope="col" className="px-3 py-2 font-medium">
-                Details
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100 align-top text-neutral-800">
+    <div className="overflow-hidden rounded-lg border border-border bg-card">
+      <Table className="min-w-full text-left text-xs">
+        <TableHeader>
+          <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
+            <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+              Component
+            </TableHead>
+            <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+              Defined
+            </TableHead>
+            <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+              Declared props
+            </TableHead>
+            <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+              Usage
+            </TableHead>
+            <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+              Details
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="align-top text-foreground">
             {names.map((name) => {
               const sites = defs.get(name) ?? [];
               const use = usages.get(name);
@@ -199,12 +232,12 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
               const isOpen = openComponent === name;
               return (
                 <Fragment key={name}>
-                  <tr>
-                    <td className="px-3 py-2 font-medium text-neutral-900">
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableCell className="px-3 py-2 font-medium">
                       <span className="font-mono text-[11px]">{name}</span>
-                    </td>
+                    </TableCell>
 
-                    <td className="px-3 py-2 text-neutral-600">
+                    <TableCell className="px-3 py-2 text-muted-foreground">
                       {sites.length > 0 ? (
                         <ul className="space-y-1">
                           {sites.map((s, i) => (
@@ -212,21 +245,21 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
                               key={`${s.path}-${s.line}-${i}`}
                               className="flex flex-wrap items-center gap-x-2 gap-y-0.5"
                             >
-                              <span className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[10px] text-neutral-600">
+                              <span className="rounded bg-muted px-1 py-0.5 font-mono text-[10px] text-muted-foreground">
                                 {kindLabel(s.kind)}
                               </span>
-                              <span className="font-mono text-[11px] text-neutral-500">
+                              <span className="font-mono text-[11px] text-muted-foreground">
                                 {shortPath(report.root, s.path)}:{s.line}
                               </span>
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <span className="text-neutral-400">No definition captured.</span>
+                        <span className="text-muted-foreground/70">No definition captured.</span>
                       )}
-                    </td>
+                    </TableCell>
 
-                    <td className="px-3 py-2 text-neutral-600">
+                    <TableCell className="px-3 py-2 text-muted-foreground">
                       {declared.length > 0 ? (
                         <ul className="flex min-w-48 flex-wrap gap-1">
                           {declared.map((prop) => {
@@ -234,12 +267,16 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
                             return (
                               <li
                                 key={prop}
-                                className={`rounded px-1.5 py-0.5 font-mono text-[10px] ring-1 ring-neutral-200/80 ${
+                                className={`rounded px-1.5 py-0.5 font-mono text-[10px] ring-1 ring-border ${
                                   isUnused
-                                    ? "bg-neutral-50 text-neutral-400 line-through"
-                                    : "bg-neutral-50 text-neutral-700"
+                                    ? "bg-muted/50 text-muted-foreground/70 line-through"
+                                    : "bg-muted/80 text-foreground"
                                 }`}
-                                title={isUnused ? "Declared but never passed at any call site" : undefined}
+                                title={
+                                  isUnused
+                                    ? "Declared but never passed at any call site"
+                                    : undefined
+                                }
                               >
                                 {prop}
                               </li>
@@ -247,54 +284,67 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
                           })}
                         </ul>
                       ) : (
-                        <span className="text-neutral-400">—</span>
+                        <span className="text-muted-foreground/70">—</span>
                       )}
-                    </td>
+                    </TableCell>
 
-                    <td className="px-3 py-2 text-neutral-600">
+                    <TableCell className="px-3 py-2 text-muted-foreground">
                       {use ? (
-                        <span className="font-mono text-[11px] text-neutral-700">
-                          ×{use.reference_count} refs · {use.file_count} files · max {use.max_props_on_single_use} props
+                        <span className="font-mono text-[11px]">
+                          ×{use.reference_count} refs · {use.file_count} files · max{" "}
+                          {use.max_props_on_single_use} props
                         </span>
                       ) : sites.length > 0 ? (
-                        <span className="text-neutral-400">Not referenced in scanned JSX.</span>
+                        <span className="text-muted-foreground/70">Not referenced in scanned JSX.</span>
                       ) : (
-                        <span className="text-neutral-400">—</span>
+                        <span className="text-muted-foreground/70">—</span>
                       )}
-                    </td>
+                    </TableCell>
 
-                    <td className="px-3 py-2 text-neutral-600">
+                    <TableCell className="px-3 py-2 text-muted-foreground">
                       <button
                         type="button"
-                        className="rounded border border-neutral-200 bg-white px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-50"
+                        className="rounded border border-border bg-background px-2 py-1 text-[11px] font-medium hover:bg-muted/50"
                         onClick={() => setOpenComponent((cur) => (cur === name ? null : name))}
                       >
                         {isOpen ? "Close" : "Open"}
                       </button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
 
                   {isOpen && (
-                    <tr>
-                      <td colSpan={5} className="px-3 py-3">
-                        <div className="rounded-lg border border-neutral-200 bg-neutral-50/50 p-3">
-                          <div className="font-mono text-[12px] font-semibold text-neutral-800">{name}</div>
+                    <TableRow className="border-border hover:bg-transparent">
+                      <TableCell colSpan={5} className="p-3">
+                        <div className="rounded-lg border border-border bg-muted/30 p-3">
+                          <div className="font-mono text-xs font-semibold text-foreground">
+                            {name}
+                          </div>
 
                           {use ? (
                             <>
-                              <p className="mt-2 text-[11px] text-neutral-600">
-                                <span className="font-mono text-neutral-800">×{use.reference_count}</span> references across{" "}
-                                <span className="font-mono text-neutral-800">{use.file_count}</span> files
+                              <p className="mt-2 text-[11px] text-muted-foreground">
+                                <span className="font-mono text-foreground">
+                                  ×{use.reference_count}
+                                </span>{" "}
+                                references across{" "}
+                                <span className="font-mono text-foreground">{use.file_count}</span>{" "}
+                                files
                                 {use.max_props_on_single_use > 0 ? (
                                   <>
-                                    ; up to <span className="font-mono text-neutral-800">{use.max_props_on_single_use}</span> props
-                                    on one tag
+                                    ; up to{" "}
+                                    <span className="font-mono text-foreground">
+                                      {use.max_props_on_single_use}
+                                    </span>{" "}
+                                    props on one tag
                                   </>
                                 ) : null}
                                 .
                               </p>
                               <div className="mt-3">
-                                <CatalogUsageSitesTable root={report.root} locations={use.usage_locations ?? []} />
+                                <CatalogUsageSitesTable
+                                  root={report.root}
+                                  locations={use.usage_locations ?? []}
+                                />
                               </div>
                               <div className="mt-4 grid gap-4 md:grid-cols-2">
                                 <div>
@@ -311,18 +361,19 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
                               </div>
                             </>
                           ) : (
-                            <p className="mt-2 text-[11px] text-neutral-400">No scanned JSX references found.</p>
+                            <p className="mt-2 text-[11px] text-muted-foreground/70">
+                              No scanned JSX references found.
+                            </p>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
                 </Fragment>
               );
             })}
-          </tbody>
-        </table>
-      </div>
+        </TableBody>
+      </Table>
     </div>
   );
 }

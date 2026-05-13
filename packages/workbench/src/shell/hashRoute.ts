@@ -1,5 +1,4 @@
 export type HashRoute =
-  | { view: "overview" }
   | { view: "tokens" }
   | { view: "governance" }
   | { view: "component"; componentId: string };
@@ -19,7 +18,7 @@ function stripShebang(hash: string): string {
 export function parseHashRoute(hash: string): HashRoute {
   const raw = stripShebang(hash).trim();
   if (raw === "" || raw === "overview") {
-    return { view: "overview" };
+    return { view: "governance" };
   }
   if (raw === "tokens") {
     return { view: "tokens" };
@@ -33,13 +32,11 @@ export function parseHashRoute(hash: string): HashRoute {
       return { view: "component", componentId };
     }
   }
-  return { view: "overview" };
+  return { view: "governance" };
 }
 
 export function formatHashRoute(route: HashRoute): string {
   switch (route.view) {
-    case "overview":
-      return `${PREFIX}overview`;
     case "tokens":
       return `${PREFIX}tokens`;
     case "governance":
@@ -47,6 +44,6 @@ export function formatHashRoute(route: HashRoute): string {
     case "component":
       return `${PREFIX}component/${encodeURIComponent(route.componentId)}`;
     default:
-      return `${PREFIX}overview`;
+      return `${PREFIX}governance`;
   }
 }

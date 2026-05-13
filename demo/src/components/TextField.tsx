@@ -25,19 +25,14 @@ export function TextField({
   const helperId = `${id}-helper`;
   const errorId = `${id}-error`;
   const hasError = Boolean(errorMessage && errorMessage.trim().length > 0);
-  const describedBy = [
-    helperText?.trim() ? helperId : null,
-    hasError ? errorId : null,
-  ]
-    .filter(Boolean)
-    .join(" ") || undefined;
+  const describedBy =
+    [helperText?.trim() ? helperId : null, hasError ? errorId : null].filter(Boolean).join(" ") ||
+    undefined;
 
   const inputClass = [
     "w-full rounded-ds border bg-surface-elevated px-layout-sm py-layout-xs text-sm outline-none transition",
     "ring-primary focus-visible:ring-2",
-    hasError
-      ? "border-danger focus-visible:ring-danger"
-      : "border-surface-border",
+    hasError ? "border-danger focus-visible:ring-danger" : "border-surface-border",
     disabled ? "cursor-not-allowed opacity-60" : "",
   ]
     .filter(Boolean)

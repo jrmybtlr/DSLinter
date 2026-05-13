@@ -1,4 +1,3 @@
-
 export type SettingsDialogProps = {
   title?: string;
   subtitle?: string;
@@ -20,16 +19,14 @@ export type SettingsDialogProps = {
 
 /** Typical “settings” dialog with a prop list that grows every sprint. */
 export function SettingsDialog(props: SettingsDialogProps) {
-  const {
-    title = "Notification settings",
-    subtitle,
-    confirmLabel,
-    cancelLabel,
-    ...rest
-  } = props;
+  const { title = "Notification settings", subtitle, confirmLabel, cancelLabel, ...rest } = props;
 
   return (
-    <div role="dialog" aria-label={title} className="rounded-lg border border-gray-300 bg-white p-4 shadow-lg">
+    <div
+      role="dialog"
+      aria-label={title}
+      className="rounded-lg border border-gray-300 bg-white p-4 shadow-lg"
+    >
       <h2 className="text-lg font-semibold">{title}</h2>
       {subtitle ? <p className="text-sm text-gray-600">{subtitle}</p> : null}
       <div className="mt-3 flex gap-2 text-sm">

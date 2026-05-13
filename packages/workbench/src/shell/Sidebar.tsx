@@ -10,7 +10,7 @@ type Props = {
 function navButtonClass(active: boolean) {
   return `w-full rounded-md px-2.5 py-1.5 text-left text-xs font-medium transition ${
     active
-      ? "bg-gray-900 text-white shadow-sm"
+      ? "bg-gray-900 text-white shadow-xs"
       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
   }`;
 }
@@ -24,7 +24,6 @@ function sectionLabel(text: string) {
 }
 
 export function Sidebar({ entries, route, onNavigate }: Props) {
-  const overviewActive = route.view === "overview";
   const tokensActive = route.view === "tokens";
   const governanceActive = route.view === "governance";
 
@@ -32,11 +31,14 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
     <aside className="fixed h-full w-[240px] overflow-y-auto shrink-0 flex-col border-r border-gray-200">
       <div className="border-b border-gray-200 px-6 py-4 sticky top-0 bg-white">
         <p className=" text-neutral-900 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-              <g fill="currentColor">
-                <path fill="currentColor" d="M13 0L10.1 0 9.7 0.4 8 3 2 3 2 7 6 7 3 13 3 16 6 16 6.3 15.6 8 13 14 13 14 9 10 9 13 3z"></path>
-              </g>
-            </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+            <g fill="currentColor">
+              <path
+                fill="currentColor"
+                d="M13 0L10.1 0 9.7 0.4 8 3 2 3 2 7 6 7 3 13 3 16 6 16 6.3 15.6 8 13 14 13 14 9 10 9 13 3z"
+              ></path>
+            </g>
+          </svg>
         </p>
       </div>
 
@@ -44,10 +46,10 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
         {sectionLabel("Explore")}
         <button
           type="button"
-          onClick={() => onNavigate({ view: "overview" })}
-          className={navButtonClass(overviewActive)}
+          onClick={() => onNavigate({ view: "governance" })}
+          className={navButtonClass(governanceActive)}
         >
-          Overview
+          Governance
         </button>
 
         {sectionLabel("Components")}
@@ -78,13 +80,6 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
           className={navButtonClass(tokensActive)}
         >
           Design tokens
-        </button>
-        <button
-          type="button"
-          onClick={() => onNavigate({ view: "governance" })}
-          className={`${navButtonClass(governanceActive)} mt-0.5`}
-        >
-          Governance
         </button>
       </nav>
     </aside>

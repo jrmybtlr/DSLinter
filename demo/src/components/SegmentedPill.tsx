@@ -1,4 +1,3 @@
-
 type Props = {
   /** Inconsistent API: elsewhere we use `tone` / `variant`; this uses `pressedTone`. */
   pressedTone: "on" | "off";

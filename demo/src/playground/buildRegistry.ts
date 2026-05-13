@@ -28,7 +28,7 @@ function isLikelyBooleanProp(name: string): boolean {
 }
 
 function defaultStringForProp(key: string): string {
-  if (key === "href") return "#!/overview";
+  if (key === "href") return "#!/governance";
   const k = key.toLowerCase();
   if (k === "title" || k === "label" || k === "text" || k === "name" || k === "heading") {
     return "Label";
@@ -109,7 +109,10 @@ function controlsForSpec(id: string, declaredProps: string[]): PlaygroundControl
   return controlsFromDeclaredProps(declaredProps);
 }
 
-function valuesToComponentProps(declaredProps: string[], values: PlaygroundArgs): Record<string, unknown> {
+function valuesToComponentProps(
+  declaredProps: string[],
+  values: PlaygroundArgs,
+): Record<string, unknown> {
   const o: Record<string, unknown> = {};
   for (const key of declaredProps) {
     if (key === "key" || key === "ref") continue;
@@ -139,7 +142,10 @@ function mergeStaticDefaults(
   return o;
 }
 
-function getExport(mod: Record<string, unknown>, exportName: string): ComponentType<Record<string, unknown>> | undefined {
+function getExport(
+  mod: Record<string, unknown>,
+  exportName: string,
+): ComponentType<Record<string, unknown>> | undefined {
   const x = mod[exportName];
   if (typeof x === "function") return x as ComponentType<Record<string, unknown>>;
   return undefined;
@@ -159,8 +165,7 @@ function genericUsageSnippet(exportName: string, values: PlaygroundArgs): string
     .sort((a, b) => a.localeCompare(b));
   const propsStr = propKeys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
 
-  const openWithProps =
-    propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
+  const openWithProps = propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
 
   if (!hasChildrenKey) {
     return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
@@ -184,7 +189,9 @@ function genericUsageSnippet(exportName: string, values: PlaygroundArgs): string
 }
 
 /** Build playground entries from `dslint-report.json` + eager component modules. */
-export function buildPlaygroundEntries(report: WorkspaceReport | null | undefined): PlaygroundEntry[] {
+export function buildPlaygroundEntries(
+  report: WorkspaceReport | null | undefined,
+): PlaygroundEntry[] {
   const specs = report?.playgrounds;
   if (!specs?.length) return [];
 

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { a11ySummaryForModule } from "../report/a11yForModule";
 import { codeScoreSummaryForModule } from "../report/codeScoreForModule";
 import { tokenStyleFindingsForModule } from "../report/tokenStyleFindingsForModule";
@@ -34,7 +42,11 @@ function clampPreviewWidth(w: number, maxOuterPx: number): number {
 }
 
 /** If the preview was flush with the previous container width, grow/shrink with the viewport. */
-function nextPreviewWidthForResize(prevPreview: number, prevOuter: number, nextOuter: number): number {
+function nextPreviewWidthForResize(
+  prevPreview: number,
+  prevOuter: number,
+  nextOuter: number,
+): number {
   if (prevOuter <= 0) return clampPreviewWidth(nextOuter, nextOuter);
   if (nextOuter < prevOuter) return clampPreviewWidth(prevPreview, nextOuter);
   if (Math.abs(prevPreview - prevOuter) <= 2) return clampPreviewWidth(nextOuter, nextOuter);
@@ -68,13 +80,20 @@ function TocLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceReport, reportReady }: Props) {
+export function ComponentPlaygroundPane({
+  entry,
+  formatModulePath,
+  workspaceReport,
+  reportReady,
+}: Props) {
   const { Preview } = entry;
   const rel = formatModulePath
     ? formatModulePath(entry.modulePath)
     : entry.modulePath.replace(/^\.\.\//, "");
 
-  const [values, setValues] = useState<PlaygroundArgs>(() => defaultArgsFromControls(entry.controls));
+  const [values, setValues] = useState<PlaygroundArgs>(() =>
+    defaultArgsFromControls(entry.controls),
+  );
 
   useEffect(() => {
     setValues(defaultArgsFromControls(entry.controls));
@@ -163,7 +182,7 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
           <div className="mx-auto">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-gray-500">
+                <p className="text-sm font-medium text-gray-500">
                   {entry.meta.group ? (
                     <>
                       Components <span className="text-gray-300">/</span>{" "}
@@ -173,7 +192,9 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
                     "Components"
                   )}
                 </p>
-                <h1 className="text-3xl font-semibold tracking-tight text-gray-900">{entry.meta.title}</h1>
+                <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+                  {entry.meta.title}
+                </h1>
                 <p className="mt-1 truncate font-mono text-xs text-gray-500" title={rel}>
                   {rel}
                 </p>
@@ -182,64 +203,55 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
           </div>
         </header>
 
-                <section
-                  id="examples"
-                  className="scroll-mt-20 p-16 border-b"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle, #e2e8f0 1px, transparent 1.5px)",
-                    backgroundSize: "18px 18px"
-                  }}
+        <section
+          id="examples"
+          className="px-16 py-10 border-b"
+          style={{
+            backgroundImage: "radial-gradient(circle, #e2e8f0 1px, transparent 1.5px)",
+            backgroundSize: "18px 18px",
+          }}
+        >
+          <div ref={previewMeasureRef}>
+            <div className="flex justify-center">
+              <div
+                className="relative min-w-0 shrink-0 select-none rounded-lg border border-gray-200 bg-gray-50/80 shadow-xs"
+                style={{ width: previewWidthPx }}
+              >
+                <button
+                  type="button"
+                  className="absolute left-0 top-0 bottom-0 z-10 flex w-4 -translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-gray-100 p-0 shadow-xs ring-1 ring-gray-200/80 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+                  aria-label="Resize preview from center (drag left or right)"
+                  onPointerDown={attachSymmetricWidthDrag("left")}
                 >
-           
-                
-                <div ref={previewMeasureRef} className="mt-4 w-full">
-                  <div className="flex justify-center">
-                    <div
-                      className="relative min-w-0 shrink-0 select-none rounded-lg border border-gray-200 bg-gray-50/80 shadow-sm"
-                      style={{ width: previewWidthPx }}
-                    >
-                      <button
-                        type="button"
-                        className="absolute left-0 top-0 bottom-0 z-10 flex w-4 -translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-gray-100 p-0 shadow-sm ring-1 ring-gray-200/80 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
-                        aria-label="Resize preview from center (drag left or right)"
-                        onPointerDown={attachSymmetricWidthDrag("left")}
-                      >
-                        <span className="h-10 w-px rounded-full bg-gray-400/90" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className="absolute right-0 top-0 bottom-0 z-10 flex w-4 translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-gray-100 p-0 shadow-sm ring-1 ring-gray-200/80 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
-                        aria-label="Resize preview from center (drag left or right)"
-                        onPointerDown={attachSymmetricWidthDrag("right")}
-                      >
-                        <span className="h-10 w-px rounded-full bg-gray-400/90" aria-hidden />
-                      </button>
-                      <div className="min-w-0 bg-white p-8">
-                        <Preview values={values} />
-                      </div>
-                    </div>
-                  </div>
-                  {maxOuterPx > 0 ? (
-                    <p className="mt-2 bg-white w-fit mx-auto p-1 text-center text-xs/none tabular-nums text-gray-400">
-                      Preview width {Math.round(previewWidthPx)}px (container {Math.round(maxOuterPx)}px)
-                    </p>
-                  ) : null}
+                  <span className="h-10 w-px rounded-full bg-gray-400/90" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 bottom-0 z-10 flex w-4 translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-gray-100 p-0 shadow-xs ring-1 ring-gray-200/80 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+                  aria-label="Resize preview from center (drag left or right)"
+                  onPointerDown={attachSymmetricWidthDrag("right")}
+                >
+                  <span className="h-10 w-px rounded-full bg-gray-400/90" aria-hidden />
+                </button>
+                <div className="min-w-0 bg-white p-8">
+                  <Preview values={values} />
                 </div>
-              </section>
-
-            
+              </div>
+            </div>
+            {maxOuterPx > 0 ? (
+              <p className="mt-2 bg-white w-fit mx-auto p-1 text-center text-xs/none tabular-nums text-gray-400">
+                Preview width {Math.round(previewWidthPx)}px (container {Math.round(maxOuterPx)}px)
+              </p>
+            ) : null}
+          </div>
+        </section>
 
         <div className="mx-auto max-w-6xl px-6 py-10 lg:px-12">
           <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-14">
             <div className="min-w-0 space-y-14">
- 
-
               {hasControls ? (
                 <section id="playground" className="scroll-mt-20">
-                  
-                  
-                  <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
                     <PlaygroundControls
                       controls={entry.controls}
                       values={values}
@@ -256,11 +268,17 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
               <section id="repo-usage" className="scroll-mt-20">
                 <h2 className="text-lg font-semibold tracking-tight text-gray-900">Repo usage</h2>
                 <div className="mt-4">
-                  <ComponentUsageDetails report={reportReady ? workspaceReport : null} componentId={entry.id} />
+                  <ComponentUsageDetails
+                    report={reportReady ? workspaceReport : null}
+                    componentId={entry.id}
+                  />
                 </div>
               </section>
-              
-              <PlaygroundTokenStyleSection findings={tokenStyleFindings} reportReady={reportReady} />
+
+              <PlaygroundTokenStyleSection
+                findings={tokenStyleFindings}
+                reportReady={reportReady}
+              />
 
               <PlaygroundCodeScoreSection codeScore={codeScore} reportReady={reportReady} />
 
@@ -274,12 +292,14 @@ export function ComponentPlaygroundPane({ entry, formatModulePath, workspaceRepo
               />
             </div>
 
-            <aside className=" mt-12 hidden xl:mt-0 xl:block sticky top-8">
+            <aside className="mt-12 hidden self-start sticky top-8 xl:mt-0 xl:block">
               <nav
                 aria-label="On this page"
-                className="sticky top-8 space-y-0.5 border-l border-gray-200 pl-4 text-[13px]"
+                className="space-y-0.5 border-l border-gray-200 pl-4 text-sm"
               >
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">On this page</p>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                  On this page
+                </p>
                 <TocLink href="#source">Source</TocLink>
                 <TocLink href="#usage">Usage</TocLink>
                 <TocLink href="#repo-usage">Repo usage</TocLink>

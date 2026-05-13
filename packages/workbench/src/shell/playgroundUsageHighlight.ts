@@ -36,7 +36,10 @@ function assertNotAborted(signal: AbortSignal | undefined): void {
  * Renders usage source to Shiki HTML. Twoslash runs only when {@link usageSnippetNeedsTwoslash} is true
  * (loaded in a separate async chunk so the default bundle stays smaller).
  */
-export async function renderPlaygroundUsageHtml(source: string, signal?: AbortSignal): Promise<string> {
+export async function renderPlaygroundUsageHtml(
+  source: string,
+  signal?: AbortSignal,
+): Promise<string> {
   const highlighter = await getHighlighter();
   assertNotAborted(signal);
 

@@ -3,7 +3,6 @@ import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslintReportState } from "../dashboard/useWorkspaceReport";
 import { ComponentPlaygroundPane } from "./ComponentPlaygroundPane";
-import { DefaultOverview } from "./DefaultOverview";
 import { GovernancePane } from "./GovernancePane";
 import { Sidebar } from "./Sidebar";
 import { TokensPane } from "./TokensPane";
@@ -12,7 +11,7 @@ import { useHashRoute } from "./useHashRoute";
 export type WorkbenchLayoutProps = {
   playgroundEntries: PlaygroundEntry[];
   tokenCatalog: TokenCatalog;
-  /** Custom overview main area; defaults to package copy. */
+  /** Custom intro shown above the governance inventory on `#!/governance`; defaults to package copy. */
   overview?: ReactNode;
   /** Fetch URL for `dslint --json` output. */
   reportUrl?: string;
@@ -38,13 +37,12 @@ export function WorkbenchLayout({
   const getEntry = (id: string) => playgroundEntries.find((e) => e.id === id);
 
   let main: ReactNode;
-  if (route.view === "overview") {
-    main = overview ?? <DefaultOverview />;
-  } else if (route.view === "tokens") {
+  if (route.view === "tokens") {
     main = <TokensPane tokenCatalog={tokenCatalog} />;
   } else if (route.view === "governance") {
     main = (
       <GovernancePane
+        landing={overview}
         reportUrl={reportUrl}
         dslintReportHint={dslintReportHint}
         dslintReport={dslintReport}
@@ -61,10 +59,10 @@ export function WorkbenchLayout({
           </p>
           <button
             type="button"
-            onClick={() => navigate({ view: "overview" })}
+            onClick={() => navigate({ view: "governance" })}
             className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
           >
-            Back to overview
+            Back to governance
           </button>
         </div>
       );
@@ -74,7 +72,9 @@ export function WorkbenchLayout({
           entry={entry}
           formatModulePath={formatModulePath}
           workspaceReport={dslintReport.report}
-          reportReady={!dslintReport.loading && dslintReport.error == null && dslintReport.report != null}
+          reportReady={
+            !dslintReport.loading && dslintReport.error == null && dslintReport.report != null
+          }
         />
       );
     }
@@ -82,8 +82,8 @@ export function WorkbenchLayout({
 
   return (
     <div className="flex h-screen min-h-0 bg-white">
-        <Sidebar entries={playgroundEntries} route={route} onNavigate={navigate} />
-        <div className="min-h-0 min-w-0 flex-1 ml-[240px]">{main}</div>
+      <Sidebar entries={playgroundEntries} route={route} onNavigate={navigate} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col ml-[240px]">{main}</div>
     </div>
   );
 }

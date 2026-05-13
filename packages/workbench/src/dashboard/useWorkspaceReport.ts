@@ -40,10 +40,9 @@ export function useWorkspaceReport(
     reportUrl = "/dslint-report.json",
     watchUrl,
     refreshIntervalMs = 0,
-  }: UseWorkspaceReportOptions =
-    typeof reportUrlOrOptions === "string"
-      ? { reportUrl: reportUrlOrOptions }
-      : reportUrlOrOptions;
+  }: UseWorkspaceReportOptions = typeof reportUrlOrOptions === "string"
+    ? { reportUrl: reportUrlOrOptions }
+    : reportUrlOrOptions;
 
   const [report, setReport] = useState<WorkspaceReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,8 +60,7 @@ export function useWorkspaceReport(
         if (!cancelled.value) setReport(r);
       })
       .catch((e: unknown) => {
-        if (!cancelled.value)
-          setError(e instanceof Error ? e.message : "Failed to load report");
+        if (!cancelled.value) setError(e instanceof Error ? e.message : "Failed to load report");
       })
       .finally(() => {
         if (!cancelled.value) setLoading(false);
@@ -114,8 +112,7 @@ export function useWorkspaceReport(
       try {
         // Use HEAD to check for changes before fetching the full JSON.
         const head = await fetch(reportUrl, { method: "HEAD", cache: "no-store" });
-        const etag =
-          head.headers.get("ETag") ?? head.headers.get("Last-Modified") ?? null;
+        const etag = head.headers.get("ETag") ?? head.headers.get("Last-Modified") ?? null;
         if (etag && etag === etagRef.current) {
           // Not changed — skip.
           return;
