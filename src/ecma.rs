@@ -223,7 +223,7 @@ fn literal_value_from_jsx_attr_value(value: &Option<JSXAttributeValue<'_>>) -> O
         None => Some("true".to_string()), // boolean shorthand: <Comp disabled />
         Some(JSXAttributeValue::StringLiteral(s)) => Some(s.value.to_string()),
         Some(JSXAttributeValue::ExpressionContainer(expr)) => {
-            let oxc_ast::ast::JSXExpression::Expression(inner) = &expr.expression else {
+            let Some(inner) = expr.expression.as_expression() else {
                 return None;
             };
             match inner {

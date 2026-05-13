@@ -38,7 +38,7 @@ export function ComponentUsageDetails({
 
   if (!report) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-500">
+      <div className="rounded-lg border  bg-white p-4 text-sm text-gray-500">
         Load <span className="font-mono">dslint-report.json</span> to see where this component is
         referenced in the workspace.
       </div>
@@ -47,7 +47,7 @@ export function ComponentUsageDetails({
 
   if (!usage) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-500">
+      <div className="rounded-lg border  bg-white p-4 text-sm text-gray-500">
         No scanned JSX references found for{" "}
         <span className="font-mono text-gray-800">{componentId}</span>.
       </div>
@@ -58,7 +58,7 @@ export function ComponentUsageDetails({
   const hasSites = rows.length > 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
+    <div className="rounded-lg border  bg-white p-4 shadow-xs">
       <p className="text-sm text-gray-600">
         <span className="font-mono text-gray-900">×{usage.reference_count}</span>{" "}
         <span className="text-gray-400">references</span> across{" "}

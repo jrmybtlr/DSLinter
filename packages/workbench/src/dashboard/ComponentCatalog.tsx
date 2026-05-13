@@ -64,7 +64,7 @@ function PropFrequencyTable({
   if (entries.length === 0) return null;
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
         Prop Frequency
       </p>
       <ul className="mt-1 space-y-0.5">
@@ -132,13 +132,13 @@ function CatalogUsageSitesTable({
               key={`${loc.path}-${loc.line}-${i}`}
               className="border-border hover:bg-transparent"
             >
-              <TableCell className="px-2 py-1.5 font-mono text-[10px]">
+              <TableCell className="px-2 py-1.5 font-mono text-xs">
                 {shortPath(root, loc.path)}
               </TableCell>
-              <TableCell className="px-2 py-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+              <TableCell className="px-2 py-1.5 font-mono text-xs tabular-nums text-muted-foreground">
                 {loc.line}
               </TableCell>
-              <TableCell className="whitespace-normal px-2 py-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
+              <TableCell className="whitespace-normal px-2 py-1.5 font-mono text-xs leading-relaxed text-muted-foreground">
                 {formatCallSiteProps(loc)}
               </TableCell>
             </TableRow>
@@ -159,7 +159,7 @@ function PropValueFrequencyTable({
   if (props.length === 0) return null;
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
         Prop Value Frequency (literals only)
       </p>
       <div className="mt-1 space-y-2">
@@ -174,14 +174,14 @@ function PropValueFrequencyTable({
                   {entries.slice(0, 12).map(([val, count]) => (
                     <li
                       key={`${prop}-${val}`}
-                      className="rounded bg-white px-1.5 py-0.5 font-mono text-[10px] text-neutral-700 ring-1 ring-neutral-200/80"
+                      className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-neutral-700 ring-1 ring-neutral-200/80"
                       title={`${count} call-sites`}
                     >
                       {JSON.stringify(val)} <span className="text-neutral-400">×{count}</span>
                     </li>
                   ))}
                   {entries.length > 12 && (
-                    <li className="px-1.5 py-0.5 text-[10px] text-neutral-400">
+                    <li className="px-1.5 py-0.5 text-xs text-neutral-400">
                       +{entries.length - 12} more
                     </li>
                   )}
@@ -245,7 +245,7 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
                               key={`${s.path}-${s.line}-${i}`}
                               className="flex flex-wrap items-center gap-x-2 gap-y-0.5"
                             >
-                              <span className="rounded bg-muted px-1 py-0.5 font-mono text-[10px] text-muted-foreground">
+                              <span className="rounded bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground">
                                 {kindLabel(s.kind)}
                               </span>
                               <span className="font-mono text-[11px] text-muted-foreground">
@@ -267,7 +267,7 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
                             return (
                               <li
                                 key={prop}
-                                className={`rounded px-1.5 py-0.5 font-mono text-[10px] ring-1 ring-border ${
+                                className={`rounded px-1.5 py-0.5 font-mono text-xs ring-1 ring-border ${
                                   isUnused
                                     ? "bg-muted/50 text-muted-foreground/70 line-through"
                                     : "bg-muted/80 text-foreground"

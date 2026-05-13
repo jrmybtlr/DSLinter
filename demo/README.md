@@ -35,6 +35,18 @@ npm install && cd demo && npm run dev
 pnpm install && cd demo && pnpm dev
 ```
 
+`npm run dev` is a small wrapper ([scripts/dev.mjs](./scripts/dev.mjs)) that auto-detects whether `cargo` is on `PATH`:
+
+- **Rust installed** — delegates to `npm run dev:serve`: **Vite** (in `--mode serve`) and **`dslint --serve 7878`** concurrently. Vite proxies `/dslint-report.json` and `/events` to the Rust server (see [vite.config.ts](./vite.config.ts)), so the dashboard receives SSE updates the moment a `.tsx` under `src/components/` changes — no manual `npm run dslint:report` step. First boot compiles the dslint binary in release mode (~30s); subsequent runs are instant.
+- **Rust missing** — delegates to `npm run dev:vite-only` with a warning. Vite serves the dashboard against the committed `public/dslint-report.json`; that file won't refresh on source changes. Install Rust at <https://rustup.rs> to enable live updates.
+
+| Script | When to use |
+|---|---|
+| `npm run dev` | Default — auto-detects cargo and picks the right flavor |
+| `npm run dev:serve` | Force SSE flavor (errors if cargo isn't installed) |
+| `npm run dev:watch` | Polling fallback — Vite hot-reloads when the JSON file is rewritten on a 5s tick (still requires cargo) |
+| `npm run dev:vite-only` | Vite alone, no Rust toolchain needed; dashboard reads the committed `public/dslint-report.json` and won't update on source changes |
+
 **pnpm:** Prefer **`pnpm install` from the repo root** (predictable, one lockfile). Running `pnpm install` from `demo/` still picks up the parent `pnpm-workspace.yaml` and scopes all workspace packages, but pnpm may **prompt** to wipe and reinstall `node_modules` (non-interactive shells can appear to hang — use root installs or `CI=true pnpm install` in CI).
 
 With **npm**, `cd demo && npm install` still discovers the root `package.json` workspaces.
@@ -61,7 +73,7 @@ The demo joins those rows to Vite modules under `src/components/**` and builds c
 
 ### DSLint report
 
-Governance and the component sidebar read `public/dslint-report.json`. Regenerate whenever sources change:
+Governance and the component sidebar read `public/dslint-report.json`. `npm run dev` keeps it fresh automatically (SSE) — `npm run dslint:report` only matters when `dev` isn't running, e.g. for one-off CI builds, committing a refreshed snapshot, or seeding the file before opening the UI under `dev:vite-only`:
 
 ```bash
 npm run dslint:report

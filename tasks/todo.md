@@ -22,6 +22,11 @@
 - [x] Update workbench `WorkspaceReport` TypeScript types to mirror new JSON fields
 - [x] Update dashboard `ComponentCatalog` expanded row: **call-site table** plus prop frequency / literal breakdown (no separate Usage/Props tabs)
 - [x] Playground **Repo usage**: table of call sites; **API reference** gains repo call-site + literal columns (and “repo-only” props) when a report is loaded
+- [ ] Dev UX: allow prebuilt `dslint` binary for demo live mode
+  - [x] Add `demo/scripts/run-dslint.mjs` wrapper (prefers `dslint`, falls back to `cargo run`)
+  - [x] Update `demo/package.json` `dslint:*` scripts to use wrapper + add `dslint:print-cmd`
+  - [x] Update `demo/scripts/dev.mjs` to enable live mode when either `dslint` or `cargo` exists
+  - [ ] Verification: `npm run dslint:print-cmd` and `npm run build` in `demo/`
 - [ ] Debug: LegacyButton prop/controls not updating in workbench
   - [ ] Trace how `dslint-report.json` builds `playgrounds[].controls` and `declared_props`
   - [ ] Confirm whether the workbench is serving a stale `dslint-report.json` (or not regenerating it)

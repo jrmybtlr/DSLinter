@@ -40,9 +40,14 @@ See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with a f
 
 ```bash
 cd demo && npm install && npm run dev
-cargo run --release -- demo -p
-cd demo && npm run dslint:report   # regenerate dashboard JSON
 ```
+
+`npm run dev` auto-detects whether `cargo` is on `PATH`:
+
+- **Rust installed** — runs Vite **and** `dslint --serve` together, so the dashboard refreshes over SSE whenever a `.tsx` under `demo/src/` changes (no manual report regeneration). The dslint binary is built on first run with `cargo run --release` (~30s).
+- **Rust missing** — falls back to Vite alone with a warning. The dashboard reads the committed `demo/public/dslint-report.json` and won't auto-update. Install Rust at <https://rustup.rs> to enable live updates.
+
+Force a flavor explicitly with `npm run dev:serve` (SSE), `npm run dev:watch` (5s polling), or `npm run dev:vite-only`.
 
 ## MVP scope
 

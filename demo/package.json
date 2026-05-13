@@ -4,15 +4,17 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
+    "dev:vite-only": "vite",
+    "dev:watch": "concurrently --names vite,dslint --prefix-colors blue,green \"vite\" \"npm run dslint:watch\"",
+    "dev:serve": "concurrently --names vite,dslint --prefix-colors blue,green \"vite --mode serve\" \"npm run dslint:serve\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "dslint:report": "node scripts/gen-dslint-report.mjs",
     "dslint:merge-playgrounds": "node scripts/merge-playgrounds.mjs",
-    "dslint:watch": "cargo run --manifest-path ../Cargo.toml --release -- . --watch --output public/dslint-report.json",
-    "dslint:serve": "cargo run --manifest-path ../Cargo.toml --release -- . --serve 7878 --output public/dslint-report.json",
-    "dev:watch": "concurrently --names vite,dslint --prefix-colors blue,green \"vite\" \"npm run dslint:watch\"",
-    "dev:serve": "concurrently --names vite,dslint --prefix-colors blue,green \"vite --mode serve\" \"npm run dslint:serve\""
+    "dslint:watch": "node scripts/run-dslint.mjs . --watch --output public/dslint-report.json",
+    "dslint:serve": "node scripts/run-dslint.mjs . --serve 7878 --output public/dslint-report.json",
+    "dslint:print-cmd": "node scripts/run-dslint.mjs --print-cmd . --serve 7878 --output public/dslint-report.json"
   },
   "dependencies": {
     "@dslint/workbench": "file:../packages/workbench",

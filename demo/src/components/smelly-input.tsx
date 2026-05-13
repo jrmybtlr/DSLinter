@@ -2,24 +2,23 @@ import { useEffect } from "react";
 import { KitchenSinkModal } from "./KitchenSinkModal";
 import { LegacyButton } from "./TestingButton";
 
-/** Stress fixture: exercise DSLint quality rules (`smell-*`), tokens, deprecation, variant explosion, and intrinsic a11y rules. */
-export function CodeScoreDemoInput(): JSX.Element {
+/** Intentionally awful: exercise DSLint smells, tokens, deprecation, variant explosion, and intrinsic a11y rules. */
+export function SmellyInput(): JSX.Element {
   // token-hardcoded-color (keep off the same source line as `[#…]` / `[…px]` arbitrary classes — dedupe drops hex there)
   const HARDCODED_CHART_COLOR = "#ff00ff";
 
   useEffect(() => {
     // smell-console + smell-console-error
     // eslint-disable-next-line no-console -- demo: suppression-comment smell
-    console.warn("code-score-demo: console noise");
-    console.error("code-score-demo: console.error");
+    console.warn("smelly-input: console noise");
+    console.error("smelly-input: console.error");
     try {
       JSON.parse("{");
     } catch {
       // smell-empty-catch
     }
-    // eslint-disable-next-line no-constant-condition -- DSLint demo: `if (false)` is scanned for smells
     if (false) {
-      // eslint-disable-next-line no-debugger -- DSLint demo: smell-debugger (never runs; still scanned)
+      // smell-debugger (never runs; still scanned)
       debugger;
     }
   }, []);
@@ -37,13 +36,11 @@ export function CodeScoreDemoInput(): JSX.Element {
   const tailwindArbitraryDemo = "shadow-[0_0_0_1px] ring-[12px]";
 
   return (
-    <div
-      className={`space-y-3 rounded border border-dashed border-amber-400 p-3 text-xs ${tailwindArbitraryDemo}`}
-    >
+    <div className={`space-y-3 rounded border border-dashed border-amber-400 p-3 text-xs ${tailwindArbitraryDemo}`}>
       {/* smell-redundant-fragment — wraps a single element */}
       <>
         <div className="space-y-2">
-          <p className="font-medium text-amber-900">Code score demo (governance)</p>
+          <p className="font-medium text-amber-900">Smelly input (governance demo)</p>
 
           {/* smell-inline-style */}
           <span style={{ display: "block" }}>Inline style (prefer tokens / utilities)</span>
@@ -55,7 +52,7 @@ export function CodeScoreDemoInput(): JSX.Element {
 
           {/* variant-explosion — ≥14 props on one JSX tag */}
           <KitchenSinkModal
-            title="Demo modal"
+            title="Smell"
             subtitle="Kitchen sink"
             icon="⚠️"
             confirmLabel="OK"
@@ -67,21 +64,17 @@ export function CodeScoreDemoInput(): JSX.Element {
             footerAlign="end"
             scrollLock
             overlayBlur
-            analyticsId="code-score-demo-input"
-            testId="code-score-demo-modal"
+            analyticsId="smelly-input"
+            testId="smelly-modal"
             role="dialog"
             portal
           />
 
           {/* a11y-input-label */}
-          <input
-            type="text"
-            placeholder="Unlabeled field"
-            className="w-full rounded border px-2 py-1"
-          />
+          <input type="text" placeholder="Unlabeled field" className="w-full rounded border px-2 py-1" />
 
           {/* a11y-button-name */}
-          <button type="button" className="h-8 w-8 rounded bg-gray-200" />
+          <button type="button" className="h-8 w-8 rounded bg-slate-200" />
 
           {/* a11y-img-alt */}
           <img

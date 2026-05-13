@@ -22,7 +22,7 @@ export function GovernancePane({
     return (
       <div className="min-h-0 flex-1 overflow-auto bg-gray-50">
         {landing}
-        <header className="border-b border-gray-200 bg-white px-8 py-6">
+        <header className="border-b  bg-white px-8 py-6">
           <h1 className="text-lg font-semibold tracking-tight text-gray-900">Governance</h1>
         </header>
         <div className="mx-auto max-w-lg px-8 py-16 text-center">

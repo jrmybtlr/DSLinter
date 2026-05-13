@@ -11,8 +11,8 @@ use oxc_ast::ast::{
 };
 
 /// Map type name → unique property keys from object literals / interfaces / aliases (declaration order).
-pub fn collect_ts_prop_shape_map(program: &Program<'_>) -> HashMap<String, Vec<String>> {
-    let mut alias_rhs: HashMap<String, &TSType<'_>> = HashMap::new();
+pub fn collect_ts_prop_shape_map<'a>(program: &'a Program<'a>) -> HashMap<String, Vec<String>> {
+    let mut alias_rhs: HashMap<String, &'a TSType<'a>> = HashMap::new();
     let mut interface_keys: HashMap<String, Vec<String>> = HashMap::new();
 
     for stmt in &program.body {
@@ -57,9 +57,9 @@ pub fn props_from_first_param_type_annotation(
     props_from_ts_type(&note.type_annotation, shapes, &mut HashSet::new())
 }
 
-fn ingest_top_level_statement(
-    stmt: &Statement<'_>,
-    alias_rhs: &mut HashMap<String, &TSType<'_>>,
+fn ingest_top_level_statement<'a>(
+    stmt: &'a Statement<'a>,
+    alias_rhs: &mut HashMap<String, &'a TSType<'a>>,
     interface_keys: &mut HashMap<String, Vec<String>>,
 ) {
     match stmt {
@@ -78,9 +78,9 @@ fn ingest_top_level_statement(
     }
 }
 
-fn ingest_export_named(
-    ex: &ExportNamedDeclaration<'_>,
-    alias_rhs: &mut HashMap<String, &TSType<'_>>,
+fn ingest_export_named<'a>(
+    ex: &'a ExportNamedDeclaration<'a>,
+    alias_rhs: &mut HashMap<String, &'a TSType<'a>>,
     interface_keys: &mut HashMap<String, Vec<String>>,
 ) {
     let Some(decl) = &ex.declaration else {
@@ -151,16 +151,16 @@ fn merge_prop_vecs(vecs: impl Iterator<Item = Vec<String>>) -> Vec<String> {
     acc
 }
 
-fn type_reference_root_name(type_name: &TSTypeName<'_>) -> Option<&str> {
+fn type_reference_root_name<'a>(type_name: &'a TSTypeName<'a>) -> Option<&'a str> {
     match type_name {
         TSTypeName::IdentifierReference(id) => Some(id.name.as_str()),
         TSTypeName::QualifiedName(qn) => Some(qn.right.name.as_str()),
     }
 }
 
-fn shape_for_symbol(
+fn shape_for_symbol<'a>(
     sym: &str,
-    alias_rhs: &HashMap<String, &TSType<'_>>,
+    alias_rhs: &HashMap<String, &'a TSType<'a>>,
     interface_keys: &HashMap<String, Vec<String>>,
     memo: &mut HashMap<String, Vec<String>>,
     stack: &mut HashSet<String>,
@@ -184,9 +184,9 @@ fn shape_for_symbol(
     keys
 }
 
-fn expand_type_to_prop_keys(
-    ty: &TSType<'_>,
-    alias_rhs: &HashMap<String, &TSType<'_>>,
+fn expand_type_to_prop_keys<'a>(
+    ty: &'a TSType<'a>,
+    alias_rhs: &HashMap<String, &'a TSType<'a>>,
     interface_keys: &HashMap<String, Vec<String>>,
     memo: &mut HashMap<String, Vec<String>>,
     stack: &mut HashSet<String>,

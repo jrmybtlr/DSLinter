@@ -34,7 +34,7 @@ export function Tag({ children, tone = "neutral", dismissible = false }: Props) 
           aria-label="Remove"
           onClick={() => setVisible(false)}
         >
-          <span aria-hidden className="text-[10px] leading-none">
+          <span aria-hidden className="text-xs leading-none">
             ×
           </span>
         </button>

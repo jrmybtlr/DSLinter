@@ -1,6 +1,6 @@
 //! Build workbench playground rows from scanned components + config (no TS boilerplate).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::config::DslintConfig;
 use crate::model::{ComponentDefinition, DefinitionKind, FileScan, PlaygroundSpec};
@@ -127,6 +127,7 @@ mod tests {
     use super::*;
     use crate::model::{ComponentDefinition, DefinitionKind};
     use std::collections::HashMap;
+    use std::path::PathBuf;
 
     fn cfg_single_components() -> DslintConfig {
         let mut playground_groups = HashMap::new();

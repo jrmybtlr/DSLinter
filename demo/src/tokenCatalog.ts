@@ -1,8 +1,14 @@
 import type { TokenCatalog } from "@dslint/workbench";
+import {
+  defaultTailwindFontFamilies,
+  defaultTailwindFontSizes,
+  defaultTailwindFontWeights,
+} from "@dslint/workbench";
 
 /**
- * Mirrors `@theme` in `src/index.css` for the dashboard token wall.
- * Keep in sync when you change design tokens.
+ * Mirrors `@theme` in `src/index.css` + `@dslint/workbench/theme.css` for the dashboard token wall.
+ * Keep colors/spacing/radius in sync when you change design tokens.
+ * Typography stacks should match `--font-sans`, `--font-serif`, `--font-mono` when you override them.
  */
 export const tokenCatalog = {
   colors: [
@@ -25,4 +31,9 @@ export const tokenCatalog = {
     { token: "ds", value: "0.5rem", tw: "rounded-ds" },
     { token: "ds-lg", value: "0.75rem", tw: "rounded-ds-lg" },
   ],
+  typography: {
+    families: [...defaultTailwindFontFamilies],
+    sizes: [...defaultTailwindFontSizes],
+    weights: [...defaultTailwindFontWeights],
+  },
 } as const satisfies TokenCatalog;

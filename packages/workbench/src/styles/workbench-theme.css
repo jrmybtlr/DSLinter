@@ -67,6 +67,14 @@
   --radius-ds: 0.5rem;
   --radius-ds-lg: 0.75rem;
   --animate-progress-indeterminate: progress-indeterminate 1.2s ease-in-out infinite;
+
+  --font-sans:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
 }
 
 @keyframes progress-indeterminate {
@@ -155,11 +163,19 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     margin: 0;
-    font-family:
-      ui-sans-serif,
-      system-ui,
-      sans-serif;
+  }
+}
+
+/** Subtle dot grid for playground preview areas (examples, variant matrix). */
+@layer utilities {
+  .ds-playground-dot-surface {
+    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-size: 10px 10px;
+  }
+
+  .dark .ds-playground-dot-surface {
+    background-image: radial-gradient(circle, rgb(148 163 184 / 0.22) 1px, transparent 1px);
   }
 }

@@ -318,7 +318,7 @@ fn tailwind_arbitrary_tokens(
             out.push(LintFinding {
                 rule_id: "token-tailwind-arbitrary".into(),
                 message: format!(
-                    "Tailwind arbitrary value `{}` — prefer theme tokens or extended config keys.",
+                    "Tailwind arbitrary value `{}`",
                     m.as_str()
                 ),
                 path: file.path.clone(),

@@ -30,7 +30,16 @@ export type {
   TokenCatalogColor,
   TokenCatalogSpacing,
   TokenCatalogRadius,
+  TokenCatalogTypography,
+  TokenCatalogFontFamily,
+  TokenCatalogFontSize,
+  TokenCatalogFontWeight,
 } from "./types/tokenCatalog";
+export {
+  defaultTailwindFontFamilies,
+  defaultTailwindFontSizes,
+  defaultTailwindFontWeights,
+} from "./types/defaultTailwindTypography";
 
 export { WorkbenchLayout } from "./shell/WorkbenchLayout";
 export type { WorkbenchLayoutProps } from "./shell/WorkbenchLayout";

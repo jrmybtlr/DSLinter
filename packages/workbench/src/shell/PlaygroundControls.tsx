@@ -35,7 +35,7 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
 
   const inner = (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+      <div className="flex p-3 pl-5 flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Controls
         </p>
@@ -43,7 +43,7 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
           Reset defaults
         </Button>
       </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className=" p-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {controls.map((c) => {
           const id = `ctrl-${c.key}`;
           switch (c.type) {
@@ -61,7 +61,7 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
                       {c.label}
                     </Label>
                   </div>
-                  {c.hint ? <p className="text-[10px] text-muted-foreground">{c.hint}</p> : null}
+                  {c.hint ? <p className="text-xs text-muted-foreground">{c.hint}</p> : null}
                 </div>
               );
             }

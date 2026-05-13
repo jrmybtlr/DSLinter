@@ -24,6 +24,8 @@ import {
   PlaygroundUsageSection,
 } from "./PlaygroundA11yAndCode";
 import { PlaygroundControls } from "./PlaygroundControls";
+import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
+import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
 
 type Props = {
   entry: PlaygroundEntry;
@@ -175,10 +177,20 @@ export function ComponentPlaygroundPane({
 
   const hasControls = entry.controls.length > 0;
 
+  const variantEnumeration = useMemo(
+    () => enumerateControlCombinations(entry.controls, values),
+    [entry.controls, values],
+  );
+
+  const showVariantsSection =
+    hasControls &&
+    (variantEnumeration.combinations.length > 0 ||
+      (variantEnumeration.combinations.length === 0 && variantEnumeration.totalCount === 0));
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
       <div className="min-h-0 flex-1 overflow-auto">
-        <header id="source" className="scroll-mt-20 border-b border-gray-200 bg-white p-6">
+        <header id="source" className="scroll-mt-20 border-b  bg-white p-6">
           <div className="mx-auto">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
@@ -203,18 +215,11 @@ export function ComponentPlaygroundPane({
           </div>
         </header>
 
-        <section
-          id="examples"
-          className="px-16 py-10 border-b"
-          style={{
-            backgroundImage: "radial-gradient(circle, #e2e8f0 1px, transparent 1.5px)",
-            backgroundSize: "18px 18px",
-          }}
-        >
+        <section id="examples" className="ds-playground-dot-surface border-b px-16 py-10">
           <div ref={previewMeasureRef}>
             <div className="flex justify-center">
               <div
-                className="relative min-w-0 shrink-0 select-none rounded-lg border border-gray-200 bg-gray-50/80 shadow-xs"
+                className="relative min-w-0 shrink-0 select-none rounded-lg border  bg-gray-50/80 shadow-xs"
                 style={{ width: previewWidthPx }}
               >
                 <button
@@ -251,7 +256,7 @@ export function ComponentPlaygroundPane({
             <div className="min-w-0 space-y-14">
               {hasControls ? (
                 <section id="playground" className="scroll-mt-20">
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
+                  <div className="rounded-lg border  bg-white shadow-xs">
                     <PlaygroundControls
                       controls={entry.controls}
                       values={values}
@@ -295,7 +300,7 @@ export function ComponentPlaygroundPane({
             <aside className="mt-12 hidden self-start sticky top-8 xl:mt-0 xl:block">
               <nav
                 aria-label="On this page"
-                className="space-y-0.5 border-l border-gray-200 pl-4 text-sm"
+                className="space-y-0.5 border-l  pl-4 text-sm"
               >
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                   On this page
@@ -309,10 +314,29 @@ export function ComponentPlaygroundPane({
                 <TocLink href="#code-score">Code score</TocLink>
                 <TocLink href="#accessibility">Accessibility</TocLink>
                 {hasControls ? <TocLink href="#api-reference">API reference</TocLink> : null}
+                {showVariantsSection ? <TocLink href="#variants">Variants</TocLink> : null}
               </nav>
             </aside>
           </div>
         </div>
+
+        {variantEnumeration.combinations.length > 0 ? (
+          <section
+            id="variants"
+            className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t  pt-10 pb-12"
+          >
+            <div className="mx-auto max-w-6xl px-6 lg:px-12">
+              <h2 className="text-xl bg-white w-fit font-semibold tracking-tight text-gray-900">All variants</h2>
+                <PlaygroundVariantMatrix
+                  Preview={Preview}
+                  combinations={variantEnumeration.combinations}
+                  finiteAxisKeys={variantEnumeration.finiteAxisKeys}
+                  totalCount={variantEnumeration.totalCount}
+                  capped={variantEnumeration.capped}
+                />
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

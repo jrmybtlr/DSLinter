@@ -95,7 +95,7 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
                 >
                   <TableCell className="px-3 py-2">
                     <span
-                      className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${severityStyle[f.severity] ?? severityStyle.info}`}
+                      className={`inline-block rounded border px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide ${severityStyle[f.severity] ?? severityStyle.info}`}
                     >
                       {f.severity}
                     </span>

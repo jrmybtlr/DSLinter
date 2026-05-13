@@ -1,268 +1,118 @@
 {
-  "root": "/workspace/demo",
+  "root": "/Users/jeremy/Development/DSLint/demo",
   "files": [
     {
-      "path": "/workspace/demo/src/App.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/App.tsx",
       "definitions": [
         {
           "name": "App",
           "kind": "function",
-          "line": 7
+          "line": 10
         }
       ],
       "usages": [
         {
-          "component": "DemoGallery",
-          "line": 40,
-          "props": []
-        },
-        {
-          "component": "Dashboard",
-          "line": 40,
-          "props": []
+          "component": "WorkbenchLayout",
+          "line": 26,
+          "props": [
+            "dslintReport",
+            "dslintReportHint",
+            "formatModulePath",
+            "playgroundEntries",
+            "tokenCatalog"
+          ],
+          "prop_values": {
+            "dslintReportHint": "npm run dslint:report (from demo/)"
+          }
         }
       ],
       "parse_errors": [],
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/DemoGallery.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/AvatarImage.tsx",
       "definitions": [
         {
-          "name": "DemoGallery",
+          "name": "AvatarImage",
           "kind": "function",
-          "line": 25
+          "line": 2
         }
       ],
-      "usages": [
-        {
-          "component": "PageHero",
-          "line": 28,
-          "props": [
-            "subtitle",
-            "title"
-          ]
-        },
-        {
-          "component": "FlexStack",
-          "line": 34,
-          "props": []
-        },
-        {
-          "component": "ContentCard",
-          "line": 35,
-          "props": [
-            "title"
-          ]
-        },
-        {
-          "component": "InlineCode",
-          "line": 37,
-          "props": []
-        },
-        {
-          "component": "InlineCode",
-          "line": 38,
-          "props": []
-        },
-        {
-          "component": "InlineCode",
-          "line": 38,
-          "props": []
-        },
-        {
-          "component": "PrimaryButton",
-          "line": 41,
-          "props": []
-        },
-        {
-          "component": "UserAvatar",
-          "line": 42,
-          "props": [
-            "name",
-            "src"
-          ]
-        },
-        {
-          "component": "StatusBadge",
-          "line": 43,
-          "props": [
-            "tone"
-          ]
-        },
-        {
-          "component": "FormField",
-          "line": 46,
-          "props": [
-            "id",
-            "label"
-          ]
-        },
-        {
-          "component": "NavLink",
-          "line": 47,
-          "props": [
-            "href"
-          ]
-        },
-        {
-          "component": "LoadingSkeleton",
-          "line": 51,
-          "props": []
-        },
-        {
-          "component": "ContentCard",
-          "line": 53,
-          "props": [
-            "title"
-          ]
-        },
-        {
-          "component": "FlexStack",
-          "line": 58,
-          "props": []
-        },
-        {
-          "component": "ContentCard",
-          "line": 59,
-          "props": [
-            "title"
-          ]
-        },
-        {
-          "component": "FlashBanner",
-          "line": 60,
-          "props": []
-        },
-        {
-          "component": "LegacyButton",
-          "line": 67,
-          "props": []
-        },
-        {
-          "component": "DeprecatedChip",
-          "line": 68,
-          "props": [
-            "label"
-          ]
-        },
-        {
-          "component": "MysteryImage",
-          "line": 69,
-          "props": []
-        },
-        {
-          "component": "InlinePaint",
-          "line": 70,
-          "props": []
-        },
-        {
-          "component": "ChaosGrid",
-          "line": 71,
-          "props": []
-        },
-        {
-          "component": "InconsistentToggle",
-          "line": 74,
-          "props": [
-            "pressedTone"
-          ]
-        },
-        {
-          "component": "ContentCard",
-          "line": 80,
-          "props": [
-            "title"
-          ]
-        },
-        {
-          "component": "InlineCode",
-          "line": 82,
-          "props": []
-        },
-        {
-          "component": "DuplicateTeamCard",
-          "line": 85,
-          "props": []
-        },
-        {
-          "component": "DuplicateProductCard",
-          "line": 86,
-          "props": []
-        },
-        {
-          "component": "ContentCard",
-          "line": 90,
-          "props": [
-            "title"
-          ]
-        },
-        {
-          "component": "KitchenSinkModal",
-          "line": 91,
-          "props": [
-            "analyticsId",
-            "bannerTone",
-            "cancelLabel",
-            "confirmLabel",
-            "dismissible",
-            "footerAlign",
-            "icon",
-            "initialFocus",
-            "overlayBlur",
-            "role",
-            "scrollLock",
-            "subtitle",
-            "testId",
-            "title",
-            "width"
-          ]
-        }
-      ],
+      "usages": [],
       "parse_errors": [],
       "findings": [
         {
-          "rule_id": "a11y-anchor-href",
-          "message": "`<a>` must have a meaningful `href` for navigation.",
-          "path": "/workspace/demo/src/DemoGallery.tsx",
-          "line": 63,
+          "rule_id": "a11y-img-alt",
+          "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/AvatarImage.tsx",
+          "line": 4,
           "severity": "warning"
         }
       ]
     },
     {
-      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
       "definitions": [
         {
-          "name": "ChaosGrid",
+          "name": "Button",
           "kind": "function",
-          "line": 6
+          "line": 185,
+          "declared_props": [
+            "variant",
+            "size",
+            "loading",
+            "disabled",
+            "className",
+            "onClick",
+            "children",
+            "as",
+            "href"
+          ]
+        },
+        {
+          "name": "LoadingSpinner",
+          "kind": "function",
+          "line": 266
+        },
+        {
+          "name": "TouchTarget",
+          "kind": "function",
+          "line": 276,
+          "declared_props": [
+            "children"
+          ]
         }
       ],
-      "usages": [],
+      "usages": [
+        {
+          "component": "TouchTarget",
+          "line": 226,
+          "props": []
+        },
+        {
+          "component": "TouchTarget",
+          "line": 242,
+          "props": []
+        },
+        {
+          "component": "LoadingSpinner",
+          "line": 250,
+          "props": []
+        }
+      ],
       "parse_errors": [],
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/DeprecatedChip.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/CalloutPanel.tsx",
       "definitions": [
         {
-          "name": "DeprecatedChip",
+          "name": "CalloutPanel",
           "kind": "function",
-          "line": 6
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/FlashBanner.tsx",
-      "definitions": [
-        {
-          "name": "FlashBanner",
-          "kind": "function",
-          "line": 6
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
         }
       ],
       "usages": [],
@@ -271,53 +121,234 @@
         {
           "rule_id": "smell-inline-style",
           "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-          "path": "/workspace/demo/src/components/FlashBanner.tsx",
-          "line": 8,
-          "severity": "info"
-        }
-      ]
-    },
-    {
-      "path": "/workspace/demo/src/components/InconsistentToggle.tsx",
-      "definitions": [
-        {
-          "name": "InconsistentToggle",
-          "kind": "function",
-          "line": 8
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/InlinePaint.tsx",
-      "definitions": [
-        {
-          "name": "InlinePaint",
-          "kind": "function",
-          "line": 6
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": [
-        {
-          "rule_id": "smell-inline-style",
-          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-          "path": "/workspace/demo/src/components/InlinePaint.tsx",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/CalloutPanel.tsx",
           "line": 10,
           "severity": "info"
         }
       ]
     },
     {
-      "path": "/workspace/demo/src/components/KitchenSinkModal.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ChaosGrid.tsx",
+      "definitions": [
+        {
+          "name": "ChaosGrid",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ContentCard.tsx",
+      "definitions": [
+        {
+          "name": "ContentCard",
+          "kind": "function",
+          "line": 9,
+          "declared_props": [
+            "title",
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/DeprecatedChip.tsx",
+      "definitions": [
+        {
+          "name": "DeprecatedChip",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "label"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FeatureGrid.tsx",
+      "definitions": [
+        {
+          "name": "FeatureGrid",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FlashBanner.tsx",
+      "definitions": [
+        {
+          "name": "FlashBanner",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": [
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/FlashBanner.tsx",
+          "line": 8,
+          "severity": "info"
+        }
+      ]
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FlexStack.tsx",
+      "definitions": [
+        {
+          "name": "FlexStack",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FormField.tsx",
+      "definitions": [
+        {
+          "name": "FormField",
+          "kind": "function",
+          "line": 7,
+          "declared_props": [
+            "id",
+            "label"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InconsistentToggle.tsx",
+      "definitions": [
+        {
+          "name": "InconsistentToggle",
+          "kind": "function",
+          "line": 8,
+          "declared_props": [
+            "pressedTone",
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlineAlert.tsx",
+      "definitions": [
+        {
+          "name": "InlineAlert",
+          "kind": "function",
+          "line": 24,
+          "declared_props": [
+            "children",
+            "variant",
+            "title"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlineCode.tsx",
+      "definitions": [
+        {
+          "name": "InlineCode",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlinePaint.tsx",
+      "definitions": [
+        {
+          "name": "InlinePaint",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": [
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlinePaint.tsx",
+          "line": 10,
+          "severity": "info"
+        }
+      ]
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/KitchenSinkModal.tsx",
       "definitions": [
         {
           "name": "KitchenSinkModal",
           "kind": "function",
-          "line": 21
+          "line": 21,
+          "declared_props": [
+            "title",
+            "subtitle",
+            "icon",
+            "confirmLabel",
+            "cancelLabel",
+            "width",
+            "dismissible",
+            "initialFocus",
+            "bannerTone",
+            "footerAlign",
+            "scrollLock",
+            "overlayBlur",
+            "analyticsId",
+            "testId",
+            "role",
+            "portal"
+          ]
         }
       ],
       "usages": [],
@@ -325,12 +356,12 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/LegacyButton.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/LoadingSkeleton.tsx",
       "definitions": [
         {
-          "name": "LegacyButton",
+          "name": "LoadingSkeleton",
           "kind": "function",
-          "line": 6
+          "line": 2
         }
       ],
       "usages": [],
@@ -338,7 +369,7 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/MysteryImage.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/MysteryImage.tsx",
       "definitions": [
         {
           "name": "MysteryImage",
@@ -352,110 +383,23 @@
         {
           "rule_id": "a11y-img-alt",
           "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
-          "path": "/workspace/demo/src/components/MysteryImage.tsx",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/MysteryImage.tsx",
           "line": 4,
           "severity": "warning"
         }
       ]
     },
     {
-      "path": "/workspace/demo/src/components/duplicate/DuplicateCardA.tsx",
-      "definitions": [
-        {
-          "name": "Card",
-          "kind": "function",
-          "line": 2
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/duplicate/DuplicateCardB.tsx",
-      "definitions": [
-        {
-          "name": "Card",
-          "kind": "function",
-          "line": 2
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/ContentCard.tsx",
-      "definitions": [
-        {
-          "name": "ContentCard",
-          "kind": "function",
-          "line": 7
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/FlexStack.tsx",
-      "definitions": [
-        {
-          "name": "FlexStack",
-          "kind": "function",
-          "line": 6
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/FormField.tsx",
-      "definitions": [
-        {
-          "name": "FormField",
-          "kind": "function",
-          "line": 7
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/InlineCode.tsx",
-      "definitions": [
-        {
-          "name": "InlineCode",
-          "kind": "function",
-          "line": 6
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/LoadingSkeleton.tsx",
-      "definitions": [
-        {
-          "name": "LoadingSkeleton",
-          "kind": "function",
-          "line": 2
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/components/NavLink.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/NavLink.tsx",
       "definitions": [
         {
           "name": "NavLink",
           "kind": "function",
-          "line": 7
+          "line": 7,
+          "declared_props": [
+            "href",
+            "children"
+          ]
         }
       ],
       "usages": [],
@@ -463,12 +407,16 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/PageHero.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/PageHero.tsx",
       "definitions": [
         {
           "name": "PageHero",
           "kind": "function",
-          "line": 7
+          "line": 7,
+          "declared_props": [
+            "title",
+            "subtitle"
+          ]
         }
       ],
       "usages": [],
@@ -476,12 +424,66 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/PrimaryButton.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ProgressBar.tsx",
       "definitions": [
         {
-          "name": "PrimaryButton",
+          "name": "ProgressBar",
           "kind": "function",
-          "line": 7
+          "line": 9,
+          "declared_props": [
+            "value",
+            "max",
+            "isIndeterminate"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": [
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/ProgressBar.tsx",
+          "line": 31,
+          "severity": "info"
+        }
+      ]
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/PromoBanner.tsx",
+      "definitions": [
+        {
+          "name": "PromoBanner",
+          "kind": "function",
+          "line": 6,
+          "declared_props": [
+            "children"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": [
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/PromoBanner.tsx",
+          "line": 8,
+          "severity": "info"
+        }
+      ]
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/SegmentedPill.tsx",
+      "definitions": [
+        {
+          "name": "SegmentedPill",
+          "kind": "function",
+          "line": 8,
+          "declared_props": [
+            "pressedTone",
+            "children"
+          ]
         }
       ],
       "usages": [],
@@ -489,12 +491,108 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/StatusBadge.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/SelectField.tsx",
+      "definitions": [
+        {
+          "name": "SelectField",
+          "kind": "function",
+          "line": 22,
+          "declared_props": [
+            "id",
+            "label",
+            "options",
+            "helperText",
+            "errorMessage",
+            "disabled",
+            "required",
+            "defaultValue"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/SemanticButton.tsx",
+      "definitions": [
+        {
+          "name": "SemanticButton",
+          "kind": "function",
+          "line": 33,
+          "declared_props": [
+            "children",
+            "variant",
+            "size",
+            "type",
+            "disabled",
+            "isLoading"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/SettingsDialog.tsx",
+      "definitions": [
+        {
+          "name": "SettingsDialog",
+          "kind": "function",
+          "line": 21,
+          "declared_props": [
+            "title",
+            "subtitle",
+            "icon",
+            "confirmLabel",
+            "cancelLabel",
+            "width",
+            "dismissible",
+            "initialFocus",
+            "bannerTone",
+            "footerAlign",
+            "scrollLock",
+            "overlayBlur",
+            "analyticsId",
+            "testId",
+            "role",
+            "portal"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Spinner.tsx",
+      "definitions": [
+        {
+          "name": "Spinner",
+          "kind": "function",
+          "line": 16,
+          "declared_props": [
+            "label",
+            "size"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/StatusBadge.tsx",
       "definitions": [
         {
           "name": "StatusBadge",
           "kind": "function",
-          "line": 13
+          "line": 13,
+          "declared_props": [
+            "children",
+            "tone"
+          ]
         }
       ],
       "usages": [],
@@ -502,12 +600,117 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/components/UserAvatar.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Tag.tsx",
+      "definitions": [
+        {
+          "name": "Tag",
+          "kind": "function",
+          "line": 20,
+          "declared_props": [
+            "children",
+            "tone",
+            "dismissible"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "definitions": [
+        {
+          "name": "LegacyButton",
+          "kind": "function",
+          "line": 20,
+          "declared_props": [
+            "children",
+            "variant",
+            "size"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TextField.tsx",
+      "definitions": [
+        {
+          "name": "TextField",
+          "kind": "function",
+          "line": 14,
+          "declared_props": [
+            "id",
+            "label",
+            "placeholder",
+            "helperText",
+            "errorMessage",
+            "disabled",
+            "required",
+            "defaultValue"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TextLink.tsx",
+      "definitions": [
+        {
+          "name": "TextLink",
+          "kind": "function",
+          "line": 8,
+          "declared_props": [
+            "children",
+            "href",
+            "external"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TextareaField.tsx",
+      "definitions": [
+        {
+          "name": "TextareaField",
+          "kind": "function",
+          "line": 14,
+          "declared_props": [
+            "id",
+            "label",
+            "placeholder",
+            "helperText",
+            "errorMessage",
+            "disabled",
+            "required",
+            "rows",
+            "defaultValue"
+          ]
+        }
+      ],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/UserAvatar.tsx",
       "definitions": [
         {
           "name": "UserAvatar",
           "kind": "function",
-          "line": 7
+          "line": 7,
+          "declared_props": [
+            "src",
+            "name"
+          ]
         }
       ],
       "usages": [],
@@ -515,66 +718,191 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
       "definitions": [
         {
-          "name": "ComponentCatalog",
+          "name": "CodeScoreDemoInput",
           "kind": "function",
-          "line": 9
-        }
-      ],
-      "usages": [],
-      "parse_errors": [],
-      "findings": []
-    },
-    {
-      "path": "/workspace/demo/src/dashboard/Dashboard.tsx",
-      "definitions": [
-        {
-          "name": "Dashboard",
-          "kind": "function",
-          "line": 16
+          "line": 6
         }
       ],
       "usages": [
         {
-          "component": "ScoreStrip",
-          "line": 75,
+          "component": "LegacyButton",
+          "line": 52,
           "props": [
-            "scores"
-          ]
+            "size",
+            "variant"
+          ],
+          "prop_values": {
+            "size": "sm",
+            "variant": "ghost"
+          }
         },
         {
-          "component": "ComponentCatalog",
-          "line": 125,
+          "component": "KitchenSinkModal",
+          "line": 57,
           "props": [
-            "report"
-          ]
-        },
-        {
-          "component": "TokenWall",
-          "line": 131,
-          "props": []
-        },
-        {
-          "component": "FindingsList",
-          "line": 143,
-          "props": [
-            "findings",
-            "root"
-          ]
+            "analyticsId",
+            "bannerTone",
+            "cancelLabel",
+            "confirmLabel",
+            "dismissible",
+            "footerAlign",
+            "icon",
+            "initialFocus",
+            "overlayBlur",
+            "portal",
+            "role",
+            "scrollLock",
+            "subtitle",
+            "testId",
+            "title",
+            "width"
+          ],
+          "prop_values": {
+            "analyticsId": "code-score-demo-input",
+            "bannerTone": "warning",
+            "cancelLabel": "Cancel",
+            "confirmLabel": "OK",
+            "dismissible": "true",
+            "footerAlign": "end",
+            "icon": "⚠️",
+            "initialFocus": "confirm",
+            "overlayBlur": "true",
+            "portal": "true",
+            "role": "dialog",
+            "scrollLock": "true",
+            "subtitle": "Kitchen sink",
+            "testId": "code-score-demo-modal",
+            "title": "Demo modal",
+            "width": "max-w-md"
+          }
         }
       ],
       "parse_errors": [],
-      "findings": []
+      "findings": [
+        {
+          "rule_id": "a11y-input-label",
+          "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 77,
+          "severity": "info"
+        },
+        {
+          "rule_id": "a11y-button-name",
+          "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 84,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "a11y-img-alt",
+          "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 87,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "a11y-anchor-href",
+          "message": "`<a>` must have a meaningful `href` for navigation.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 95,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "a11y-anchor-placeholder-href",
+          "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 98,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "smell-console",
+          "message": "`console.warn(...)` left in source — remove before shipping or gate behind dev-only checks.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 13,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-console-error",
+          "message": "`console.error(...)` left in source — remove or route through logging.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 14,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-empty-catch",
+          "message": "Empty `catch` block swallows errors — log, rethrow, or handle intentionally.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 17,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-debugger",
+          "message": "`debugger` statement should not ship to production.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 23,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 49,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 12,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 20,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 22,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 30,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-todo-marker",
+          "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 34,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-todo-marker",
+          "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 36,
+          "severity": "info"
+        }
+      ]
     },
     {
-      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/duplicate/DuplicateCardA.tsx",
       "definitions": [
         {
-          "name": "FindingsList",
+          "name": "Card",
           "kind": "function",
-          "line": 13
+          "line": 2
         }
       ],
       "usages": [],
@@ -582,12 +910,12 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/dashboard/ScoreStrip.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/duplicate/DuplicateCardB.tsx",
       "definitions": [
         {
-          "name": "ScoreStrip",
+          "name": "Card",
           "kind": "function",
-          "line": 3
+          "line": 2
         }
       ],
       "usages": [],
@@ -595,20 +923,172 @@
       "findings": []
     },
     {
-      "path": "/workspace/demo/src/dashboard/TokenWall.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
       "definitions": [
         {
-          "name": "TokenWall",
+          "name": "SmellyInput",
           "kind": "function",
-          "line": 3
+          "line": 6
         }
       ],
-      "usages": [],
+      "usages": [
+        {
+          "component": "LegacyButton",
+          "line": 49,
+          "props": [
+            "size",
+            "variant"
+          ],
+          "prop_values": {
+            "size": "sm",
+            "variant": "ghost"
+          }
+        },
+        {
+          "component": "KitchenSinkModal",
+          "line": 54,
+          "props": [
+            "analyticsId",
+            "bannerTone",
+            "cancelLabel",
+            "confirmLabel",
+            "dismissible",
+            "footerAlign",
+            "icon",
+            "initialFocus",
+            "overlayBlur",
+            "portal",
+            "role",
+            "scrollLock",
+            "subtitle",
+            "testId",
+            "title",
+            "width"
+          ],
+          "prop_values": {
+            "analyticsId": "smelly-input",
+            "bannerTone": "warning",
+            "cancelLabel": "Cancel",
+            "confirmLabel": "OK",
+            "dismissible": "true",
+            "footerAlign": "end",
+            "icon": "⚠️",
+            "initialFocus": "confirm",
+            "overlayBlur": "true",
+            "portal": "true",
+            "role": "dialog",
+            "scrollLock": "true",
+            "subtitle": "Kitchen sink",
+            "testId": "smelly-modal",
+            "title": "Smell",
+            "width": "max-w-md"
+          }
+        }
+      ],
       "parse_errors": [],
-      "findings": []
+      "findings": [
+        {
+          "rule_id": "a11y-input-label",
+          "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 74,
+          "severity": "info"
+        },
+        {
+          "rule_id": "a11y-button-name",
+          "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 77,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "a11y-img-alt",
+          "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 80,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "a11y-anchor-href",
+          "message": "`<a>` must have a meaningful `href` for navigation.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 88,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "a11y-anchor-placeholder-href",
+          "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 91,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "smell-console",
+          "message": "`console.warn(...)` left in source — remove before shipping or gate behind dev-only checks.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 13,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-console-error",
+          "message": "`console.error(...)` left in source — remove or route through logging.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 14,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-empty-catch",
+          "message": "Empty `catch` block swallows errors — log, rethrow, or handle intentionally.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 17,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-debugger",
+          "message": "`debugger` statement should not ship to production.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 22,
+          "severity": "warning"
+        },
+        {
+          "rule_id": "smell-inline-style",
+          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 46,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 12,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 29,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-todo-marker",
+          "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 33,
+          "severity": "info"
+        },
+        {
+          "rule_id": "smell-todo-marker",
+          "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 35,
+          "severity": "info"
+        }
+      ]
     },
     {
-      "path": "/workspace/demo/src/main.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/main.tsx",
       "definitions": [],
       "usages": [
         {
@@ -628,219 +1108,548 @@
   ],
   "findings": [
     {
-      "rule_id": "a11y-anchor-href",
-      "message": "`<a>` must have a meaningful `href` for navigation.",
-      "path": "/workspace/demo/src/DemoGallery.tsx",
-      "line": 63,
+      "rule_id": "a11y-img-alt",
+      "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/AvatarImage.tsx",
+      "line": 4,
       "severity": "warning"
     },
     {
       "rule_id": "smell-inline-style",
       "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-      "path": "/workspace/demo/src/components/FlashBanner.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/CalloutPanel.tsx",
+      "line": 10,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-inline-style",
+      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FlashBanner.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "smell-inline-style",
       "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-      "path": "/workspace/demo/src/components/InlinePaint.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlinePaint.tsx",
       "line": 10,
       "severity": "info"
     },
     {
       "rule_id": "a11y-img-alt",
       "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
-      "path": "/workspace/demo/src/components/MysteryImage.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/MysteryImage.tsx",
       "line": 4,
       "severity": "warning"
     },
     {
+      "rule_id": "smell-inline-style",
+      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ProgressBar.tsx",
+      "line": 31,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-inline-style",
+      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/PromoBanner.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "a11y-input-label",
+      "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 77,
+      "severity": "info"
+    },
+    {
+      "rule_id": "a11y-button-name",
+      "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 84,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "a11y-img-alt",
+      "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 87,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "a11y-anchor-href",
+      "message": "`<a>` must have a meaningful `href` for navigation.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 95,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "a11y-anchor-placeholder-href",
+      "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 98,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "smell-console",
+      "message": "`console.warn(...)` left in source — remove before shipping or gate behind dev-only checks.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 13,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-console-error",
+      "message": "`console.error(...)` left in source — remove or route through logging.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 14,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-empty-catch",
+      "message": "Empty `catch` block swallows errors — log, rethrow, or handle intentionally.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 17,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-debugger",
+      "message": "`debugger` statement should not ship to production.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 23,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "smell-inline-style",
+      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 49,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 12,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 20,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 22,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 30,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-todo-marker",
+      "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 34,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-todo-marker",
+      "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 36,
+      "severity": "info"
+    },
+    {
+      "rule_id": "a11y-input-label",
+      "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 74,
+      "severity": "info"
+    },
+    {
+      "rule_id": "a11y-button-name",
+      "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 77,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "a11y-img-alt",
+      "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 80,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "a11y-anchor-href",
+      "message": "`<a>` must have a meaningful `href` for navigation.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 88,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "a11y-anchor-placeholder-href",
+      "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 91,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "smell-console",
+      "message": "`console.warn(...)` left in source — remove before shipping or gate behind dev-only checks.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 13,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-console-error",
+      "message": "`console.error(...)` left in source — remove or route through logging.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 14,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-empty-catch",
+      "message": "Empty `catch` block swallows errors — log, rethrow, or handle intentionally.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 17,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-debugger",
+      "message": "`debugger` statement should not ship to production.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 22,
+      "severity": "warning"
+    },
+    {
+      "rule_id": "smell-inline-style",
+      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 46,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 12,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 29,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-todo-marker",
+      "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 33,
+      "severity": "info"
+    },
+    {
+      "rule_id": "smell-todo-marker",
+      "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 35,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#E3622B` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+      "line": 99,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#C14510` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+      "line": 99,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#0052CC` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+      "line": 102,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#0042A4` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+      "line": 102,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#2f4e45` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+      "line": 105,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#f1f5f9` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/CalloutPanel.tsx",
+      "line": 11,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#334155` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/CalloutPanel.tsx",
+      "line": 12,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#cbd5e1` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/CalloutPanel.tsx",
+      "line": 13,
+      "severity": "info"
+    },
+    {
       "rule_id": "token-hardcoded-color",
       "message": "Hardcoded color `#00ff99` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/InlinePaint.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlinePaint.tsx",
       "line": 11,
       "severity": "info"
     },
     {
       "rule_id": "token-hardcoded-color",
       "message": "Hardcoded color `#333333` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/InlinePaint.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlinePaint.tsx",
       "line": 12,
       "severity": "info"
     },
     {
       "rule_id": "token-hardcoded-color",
       "message": "Hardcoded color `#9933ff` — prefer design tokens or theme variables.",
-      "path": "/workspace/demo/src/components/InlinePaint.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/InlinePaint.tsx",
       "line": 13,
       "severity": "info"
     },
     {
-      "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[13px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#ff00ff` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#ff00ff` — prefer design tokens or theme variables.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[19px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
+      "message": "Tailwind arbitrary value `[#ECEDEE]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+      "line": 77,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[13px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ChaosGrid.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
+      "message": "Tailwind arbitrary value `[19px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ChaosGrid.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ChaosGrid.tsx",
       "line": 9,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[7px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/ChaosGrid.tsx",
+      "message": "Tailwind arbitrary value `[7px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/ChaosGrid.tsx",
       "line": 10,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[#ffffff]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/FlashBanner.tsx",
+      "message": "Tailwind arbitrary value `[13px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FeatureGrid.tsx",
       "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[#7c3aed]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/components/LegacyButton.tsx",
+      "message": "Tailwind arbitrary value `[19px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FeatureGrid.tsx",
+      "line": 8,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[11px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FeatureGrid.tsx",
+      "line": 9,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[7px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FeatureGrid.tsx",
       "line": 10,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
-      "line": 29,
+      "message": "Tailwind arbitrary value `[#ffffff]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/FlashBanner.tsx",
+      "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
-      "line": 35,
+      "message": "Tailwind arbitrary value `[#ffffff]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/PromoBanner.tsx",
+      "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
-      "line": 38,
+      "message": "Tailwind arbitrary value `[3px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/Spinner.tsx",
+      "line": 12,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
-      "line": 51,
+      "message": "Tailwind arbitrary value `[#5b21b6]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 5,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/ComponentCatalog.tsx",
-      "line": 54,
+      "message": "Tailwind arbitrary value `[#4a148c]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 5,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/Dashboard.tsx",
-      "line": 62,
+      "message": "Tailwind arbitrary value `[#e2e8f0]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 6,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/Dashboard.tsx",
-      "line": 68,
+      "message": "Tailwind arbitrary value `[#cbd5e1]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 6,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
-      "line": 42,
+      "message": "Tailwind arbitrary value `[#dc2626]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 7,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
-      "line": 69,
+      "message": "Tailwind arbitrary value `[#b91c1c]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 7,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
-      "line": 73,
+      "message": "Tailwind arbitrary value `[#16a34a]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/FindingsList.tsx",
-      "line": 76,
+      "message": "Tailwind arbitrary value `[#15803d]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 8,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/ScoreStrip.tsx",
-      "line": 18,
+      "message": "Tailwind arbitrary value `[#f59e0b]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 9,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[11px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/TokenWall.tsx",
-      "line": 27,
+      "message": "Tailwind arbitrary value `[#d97706]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/TestingButton.tsx",
+      "line": 9,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[10px]` — prefer theme tokens or extended config keys.",
-      "path": "/workspace/demo/src/dashboard/TokenWall.tsx",
-      "line": 28,
+      "message": "Tailwind arbitrary value `[12px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 37,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[12px]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 36,
       "severity": "info"
     },
     {
       "rule_id": "deprecated-component",
       "message": "Deprecated component `LegacyButton` is still referenced.",
-      "path": "/workspace/demo/src/DemoGallery.tsx",
-      "line": 67,
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+      "line": 52,
       "severity": "warning"
     },
     {
       "rule_id": "deprecated-component",
-      "message": "Deprecated component `DeprecatedChip` is still referenced.",
-      "path": "/workspace/demo/src/DemoGallery.tsx",
-      "line": 68,
+      "message": "Deprecated component `LegacyButton` is still referenced.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+      "line": 49,
       "severity": "warning"
     },
     {
       "rule_id": "variant-explosion",
-      "message": "`KitchenSinkModal` reached 15 props on a single tag — consider splitting variants or using composition.",
-      "path": "/workspace/demo/src/DemoGallery.tsx",
+      "message": "`KitchenSinkModal` reached 16 props on a single tag — consider splitting variants or using composition.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
       "line": null,
       "severity": "info"
     },
     {
       "rule_id": "duplicate-component",
       "message": "Component `Card` is defined in 2 files — consolidate or alias.",
-      "path": "/workspace/demo/src/components/duplicate/DuplicateCardA.tsx",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/duplicate/DuplicateCardA.tsx",
       "line": null,
       "severity": "warning"
     }
@@ -849,37 +1658,242 @@
     {
       "name": "Card",
       "locations": [
-        "/workspace/demo/src/components/duplicate/DuplicateCardA.tsx",
-        "/workspace/demo/src/components/duplicate/DuplicateCardB.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/components/duplicate/DuplicateCardA.tsx",
+        "/Users/jeremy/Development/DSLint/demo/src/components/duplicate/DuplicateCardB.tsx"
       ]
     }
   ],
   "usage_by_component": [
     {
-      "component": "ContentCard",
-      "reference_count": 5,
-      "file_count": 1,
-      "max_props_on_single_use": 1,
+      "component": "KitchenSinkModal",
+      "reference_count": 2,
+      "file_count": 2,
+      "max_props_on_single_use": 16,
       "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+        "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx"
+      ],
+      "prop_frequencies": {
+        "analyticsId": 2,
+        "bannerTone": 2,
+        "cancelLabel": 2,
+        "confirmLabel": 2,
+        "dismissible": 2,
+        "footerAlign": 2,
+        "icon": 2,
+        "initialFocus": 2,
+        "overlayBlur": 2,
+        "portal": 2,
+        "role": 2,
+        "scrollLock": 2,
+        "subtitle": 2,
+        "testId": 2,
+        "title": 2,
+        "width": 2
+      },
+      "prop_value_frequencies": {
+        "analyticsId": {
+          "code-score-demo-input": 1,
+          "smelly-input": 1
+        },
+        "bannerTone": {
+          "warning": 2
+        },
+        "cancelLabel": {
+          "Cancel": 2
+        },
+        "confirmLabel": {
+          "OK": 2
+        },
+        "dismissible": {
+          "true": 2
+        },
+        "footerAlign": {
+          "end": 2
+        },
+        "icon": {
+          "⚠️": 2
+        },
+        "initialFocus": {
+          "confirm": 2
+        },
+        "overlayBlur": {
+          "true": 2
+        },
+        "portal": {
+          "true": 2
+        },
+        "role": {
+          "dialog": 2
+        },
+        "scrollLock": {
+          "true": 2
+        },
+        "subtitle": {
+          "Kitchen sink": 2
+        },
+        "testId": {
+          "code-score-demo-modal": 1,
+          "smelly-modal": 1
+        },
+        "title": {
+          "Demo modal": 1,
+          "Smell": 1
+        },
+        "width": {
+          "max-w-md": 2
+        }
+      },
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 57,
+          "props": [
+            "analyticsId",
+            "bannerTone",
+            "cancelLabel",
+            "confirmLabel",
+            "dismissible",
+            "footerAlign",
+            "icon",
+            "initialFocus",
+            "overlayBlur",
+            "portal",
+            "role",
+            "scrollLock",
+            "subtitle",
+            "testId",
+            "title",
+            "width"
+          ],
+          "prop_values": {
+            "analyticsId": "code-score-demo-input",
+            "bannerTone": "warning",
+            "cancelLabel": "Cancel",
+            "confirmLabel": "OK",
+            "dismissible": "true",
+            "footerAlign": "end",
+            "icon": "⚠️",
+            "initialFocus": "confirm",
+            "overlayBlur": "true",
+            "portal": "true",
+            "role": "dialog",
+            "scrollLock": "true",
+            "subtitle": "Kitchen sink",
+            "testId": "code-score-demo-modal",
+            "title": "Demo modal",
+            "width": "max-w-md"
+          }
+        },
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 54,
+          "props": [
+            "analyticsId",
+            "bannerTone",
+            "cancelLabel",
+            "confirmLabel",
+            "dismissible",
+            "footerAlign",
+            "icon",
+            "initialFocus",
+            "overlayBlur",
+            "portal",
+            "role",
+            "scrollLock",
+            "subtitle",
+            "testId",
+            "title",
+            "width"
+          ],
+          "prop_values": {
+            "analyticsId": "smelly-input",
+            "bannerTone": "warning",
+            "cancelLabel": "Cancel",
+            "confirmLabel": "OK",
+            "dismissible": "true",
+            "footerAlign": "end",
+            "icon": "⚠️",
+            "initialFocus": "confirm",
+            "overlayBlur": "true",
+            "portal": "true",
+            "role": "dialog",
+            "scrollLock": "true",
+            "subtitle": "Kitchen sink",
+            "testId": "smelly-modal",
+            "title": "Smell",
+            "width": "max-w-md"
+          }
+        }
       ]
     },
     {
-      "component": "InlineCode",
-      "reference_count": 4,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
+      "component": "LegacyButton",
+      "reference_count": 2,
+      "file_count": 2,
+      "max_props_on_single_use": 2,
       "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+        "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx"
+      ],
+      "prop_frequencies": {
+        "size": 2,
+        "variant": 2
+      },
+      "prop_value_frequencies": {
+        "size": {
+          "sm": 2
+        },
+        "variant": {
+          "ghost": 2
+        }
+      },
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
+          "line": 52,
+          "props": [
+            "size",
+            "variant"
+          ],
+          "prop_values": {
+            "size": "sm",
+            "variant": "ghost"
+          }
+        },
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/smelly-input.tsx",
+          "line": 49,
+          "props": [
+            "size",
+            "variant"
+          ],
+          "prop_values": {
+            "size": "sm",
+            "variant": "ghost"
+          }
+        }
       ]
     },
     {
-      "component": "FlexStack",
+      "component": "TouchTarget",
       "reference_count": 2,
       "file_count": 1,
       "max_props_on_single_use": 0,
       "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx"
+      ],
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+          "line": 226,
+          "props": []
+        },
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+          "line": 242,
+          "props": []
+        }
       ]
     },
     {
@@ -888,178 +1902,30 @@
       "file_count": 1,
       "max_props_on_single_use": 0,
       "files": [
-        "/workspace/demo/src/main.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/main.tsx"
+      ],
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/main.tsx",
+          "line": 8,
+          "props": []
+        }
       ]
     },
     {
-      "component": "ChaosGrid",
+      "component": "LoadingSpinner",
       "reference_count": 1,
       "file_count": 1,
       "max_props_on_single_use": 0,
       "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "ComponentCatalog",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 1,
-      "files": [
-        "/workspace/demo/src/dashboard/Dashboard.tsx"
-      ]
-    },
-    {
-      "component": "Dashboard",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/App.tsx"
-      ]
-    },
-    {
-      "component": "DemoGallery",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/App.tsx"
-      ]
-    },
-    {
-      "component": "DeprecatedChip",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 1,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "DuplicateProductCard",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "DuplicateTeamCard",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "FindingsList",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 2,
-      "files": [
-        "/workspace/demo/src/dashboard/Dashboard.tsx"
-      ]
-    },
-    {
-      "component": "FlashBanner",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "FormField",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 2,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "InconsistentToggle",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 1,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "InlinePaint",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "KitchenSinkModal",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 15,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "LegacyButton",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "LoadingSkeleton",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "MysteryImage",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "NavLink",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 1,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "PageHero",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 2,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "PrimaryButton",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx"
+      ],
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+          "line": 250,
+          "props": []
+        }
       ]
     },
     {
@@ -1068,65 +1934,102 @@
       "file_count": 1,
       "max_props_on_single_use": 0,
       "files": [
-        "/workspace/demo/src/main.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/main.tsx"
+      ],
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/main.tsx",
+          "line": 7,
+          "props": []
+        }
       ]
     },
     {
-      "component": "ScoreStrip",
+      "component": "WorkbenchLayout",
       "reference_count": 1,
       "file_count": 1,
-      "max_props_on_single_use": 1,
+      "max_props_on_single_use": 5,
       "files": [
-        "/workspace/demo/src/dashboard/Dashboard.tsx"
-      ]
-    },
-    {
-      "component": "StatusBadge",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 1,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
-      ]
-    },
-    {
-      "component": "TokenWall",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/workspace/demo/src/dashboard/Dashboard.tsx"
-      ]
-    },
-    {
-      "component": "UserAvatar",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 2,
-      "files": [
-        "/workspace/demo/src/DemoGallery.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/App.tsx"
+      ],
+      "prop_frequencies": {
+        "dslintReport": 1,
+        "dslintReportHint": 1,
+        "formatModulePath": 1,
+        "playgroundEntries": 1,
+        "tokenCatalog": 1
+      },
+      "prop_value_frequencies": {
+        "dslintReportHint": {
+          "npm run dslint:report (from demo/)": 1
+        }
+      },
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/App.tsx",
+          "line": 26,
+          "props": [
+            "dslintReport",
+            "dslintReportHint",
+            "formatModulePath",
+            "playgroundEntries",
+            "tokenCatalog"
+          ],
+          "prop_values": {
+            "dslintReportHint": "npm run dslint:report (from demo/)"
+          }
+        }
       ]
     }
   ],
   "ownership": [
     {
       "owner": "design-system",
-      "files": 10,
-      "definitions": 10
+      "files": 37,
+      "definitions": 39
     },
     {
       "owner": "unowned",
-      "files": 18,
-      "definitions": 17
+      "files": 2,
+      "definitions": 1
     }
   ],
   "scores": {
-    "design_system_health": 73,
-    "ux_consistency": 90,
-    "accessibility": 92,
-    "maintainability": 78
+    "design_system_health": 49,
+    "ux_consistency": 70,
+    "accessibility": 56,
+    "maintainability": 25
   },
   "playgrounds": [
+    {
+      "id": "AvatarImage",
+      "export_name": "AvatarImage",
+      "rel_path": "src/components/AvatarImage.tsx"
+    },
+    {
+      "id": "Button",
+      "export_name": "Button",
+      "rel_path": "src/components/Button.tsx",
+      "declared_props": [
+        "variant",
+        "size",
+        "loading",
+        "disabled",
+        "className",
+        "onClick",
+        "children",
+        "as",
+        "href"
+      ]
+    },
+    {
+      "id": "CalloutPanel",
+      "export_name": "CalloutPanel",
+      "rel_path": "src/components/CalloutPanel.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
     {
       "id": "ChaosGrid",
       "export_name": "ChaosGrid",
@@ -1140,8 +2043,8 @@
       "export_name": "ContentCard",
       "rel_path": "src/components/ContentCard.tsx",
       "declared_props": [
-        "children",
-        "title"
+        "title",
+        "children"
       ]
     },
     {
@@ -1153,16 +2056,12 @@
       ]
     },
     {
-      "id": "DuplicateCardA",
-      "export_name": "Card",
-      "rel_path": "src/components/duplicate/DuplicateCardA.tsx",
-      "declared_props": []
-    },
-    {
-      "id": "DuplicateCardB",
-      "export_name": "Card",
-      "rel_path": "src/components/duplicate/DuplicateCardB.tsx",
-      "declared_props": []
+      "id": "FeatureGrid",
+      "export_name": "FeatureGrid",
+      "rel_path": "src/components/FeatureGrid.tsx",
+      "declared_props": [
+        "children"
+      ]
     },
     {
       "id": "FlashBanner",
@@ -1194,8 +2093,18 @@
       "export_name": "InconsistentToggle",
       "rel_path": "src/components/InconsistentToggle.tsx",
       "declared_props": [
+        "pressedTone",
+        "children"
+      ]
+    },
+    {
+      "id": "InlineAlert",
+      "export_name": "InlineAlert",
+      "rel_path": "src/components/InlineAlert.tsx",
+      "declared_props": [
         "children",
-        "pressedTone"
+        "variant",
+        "title"
       ]
     },
     {
@@ -1218,37 +2127,42 @@
       "id": "KitchenSinkModal",
       "export_name": "KitchenSinkModal",
       "rel_path": "src/components/KitchenSinkModal.tsx",
-      "declared_props": []
-    },
-    {
-      "id": "LegacyButton",
-      "export_name": "LegacyButton",
-      "rel_path": "src/components/LegacyButton.tsx",
       "declared_props": [
-        "children",
-        "size",
-        "variant"
+        "title",
+        "subtitle",
+        "icon",
+        "confirmLabel",
+        "cancelLabel",
+        "width",
+        "dismissible",
+        "initialFocus",
+        "bannerTone",
+        "footerAlign",
+        "scrollLock",
+        "overlayBlur",
+        "analyticsId",
+        "testId",
+        "role",
+        "portal"
       ]
     },
     {
       "id": "LoadingSkeleton",
       "export_name": "LoadingSkeleton",
-      "rel_path": "src/components/LoadingSkeleton.tsx",
-      "declared_props": []
+      "rel_path": "src/components/LoadingSkeleton.tsx"
     },
     {
       "id": "MysteryImage",
       "export_name": "MysteryImage",
-      "rel_path": "src/components/MysteryImage.tsx",
-      "declared_props": []
+      "rel_path": "src/components/MysteryImage.tsx"
     },
     {
       "id": "NavLink",
       "export_name": "NavLink",
       "rel_path": "src/components/NavLink.tsx",
       "declared_props": [
-        "children",
-        "href"
+        "href",
+        "children"
       ]
     },
     {
@@ -1256,17 +2170,95 @@
       "export_name": "PageHero",
       "rel_path": "src/components/PageHero.tsx",
       "declared_props": [
-        "subtitle",
-        "title"
+        "title",
+        "subtitle"
       ]
     },
     {
-      "id": "PrimaryButton",
-      "export_name": "PrimaryButton",
-      "rel_path": "src/components/PrimaryButton.tsx",
+      "id": "ProgressBar",
+      "export_name": "ProgressBar",
+      "rel_path": "src/components/ProgressBar.tsx",
+      "declared_props": [
+        "value",
+        "max",
+        "isIndeterminate"
+      ]
+    },
+    {
+      "id": "PromoBanner",
+      "export_name": "PromoBanner",
+      "rel_path": "src/components/PromoBanner.tsx",
+      "declared_props": [
+        "children"
+      ]
+    },
+    {
+      "id": "SegmentedPill",
+      "export_name": "SegmentedPill",
+      "rel_path": "src/components/SegmentedPill.tsx",
+      "declared_props": [
+        "pressedTone",
+        "children"
+      ]
+    },
+    {
+      "id": "SelectField",
+      "export_name": "SelectField",
+      "rel_path": "src/components/SelectField.tsx",
+      "declared_props": [
+        "id",
+        "label",
+        "options",
+        "helperText",
+        "errorMessage",
+        "disabled",
+        "required",
+        "defaultValue"
+      ]
+    },
+    {
+      "id": "SemanticButton",
+      "export_name": "SemanticButton",
+      "rel_path": "src/components/SemanticButton.tsx",
       "declared_props": [
         "children",
-        "type"
+        "variant",
+        "size",
+        "type",
+        "disabled",
+        "isLoading"
+      ]
+    },
+    {
+      "id": "SettingsDialog",
+      "export_name": "SettingsDialog",
+      "rel_path": "src/components/SettingsDialog.tsx",
+      "declared_props": [
+        "title",
+        "subtitle",
+        "icon",
+        "confirmLabel",
+        "cancelLabel",
+        "width",
+        "dismissible",
+        "initialFocus",
+        "bannerTone",
+        "footerAlign",
+        "scrollLock",
+        "overlayBlur",
+        "analyticsId",
+        "testId",
+        "role",
+        "portal"
+      ]
+    },
+    {
+      "id": "Spinner",
+      "export_name": "Spinner",
+      "rel_path": "src/components/Spinner.tsx",
+      "declared_props": [
+        "label",
+        "size"
       ]
     },
     {
@@ -1279,13 +2271,94 @@
       ]
     },
     {
+      "id": "Tag",
+      "export_name": "Tag",
+      "rel_path": "src/components/Tag.tsx",
+      "declared_props": [
+        "children",
+        "tone",
+        "dismissible"
+      ]
+    },
+    {
+      "id": "TestingButton",
+      "export_name": "LegacyButton",
+      "rel_path": "src/components/TestingButton.tsx",
+      "declared_props": [
+        "children",
+        "variant",
+        "size"
+      ]
+    },
+    {
+      "id": "TextField",
+      "export_name": "TextField",
+      "rel_path": "src/components/TextField.tsx",
+      "declared_props": [
+        "id",
+        "label",
+        "placeholder",
+        "helperText",
+        "errorMessage",
+        "disabled",
+        "required",
+        "defaultValue"
+      ]
+    },
+    {
+      "id": "TextLink",
+      "export_name": "TextLink",
+      "rel_path": "src/components/TextLink.tsx",
+      "declared_props": [
+        "children",
+        "href",
+        "external"
+      ]
+    },
+    {
+      "id": "TextareaField",
+      "export_name": "TextareaField",
+      "rel_path": "src/components/TextareaField.tsx",
+      "declared_props": [
+        "id",
+        "label",
+        "placeholder",
+        "helperText",
+        "errorMessage",
+        "disabled",
+        "required",
+        "rows",
+        "defaultValue"
+      ]
+    },
+    {
       "id": "UserAvatar",
       "export_name": "UserAvatar",
       "rel_path": "src/components/UserAvatar.tsx",
       "declared_props": [
-        "name",
-        "src"
+        "src",
+        "name"
       ]
+    },
+    {
+      "id": "code-score-demo-input",
+      "export_name": "CodeScoreDemoInput",
+      "rel_path": "src/components/code-score-demo-input.tsx"
+    },
+    {
+      "id": "DuplicateCardA",
+      "export_name": "Card",
+      "rel_path": "src/components/duplicate/DuplicateCardA.tsx"
+    },
+    {
+      "id": "DuplicateCardB",
+      "export_name": "Card",
+      "rel_path": "src/components/duplicate/DuplicateCardB.tsx"
+    },
+    {
+      "id": "smelly-input",
+      "export_name": "SmellyInput",
+      "rel_path": "src/components/smelly-input.tsx"
     }
   ]
 }
