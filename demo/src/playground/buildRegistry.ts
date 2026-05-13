@@ -1,10 +1,12 @@
 import { createElement, type ComponentType } from "react";
 import type {
+  DeclaredPropKind,
   PlaygroundArgs,
   PlaygroundControl,
   PlaygroundEntry,
   PlaygroundMeta,
   PlaygroundPreviewComponent,
+  PlaygroundSpec,
   WorkspaceReport,
 } from "@dslint/workbench";
 
@@ -17,6 +19,24 @@ const modules = import.meta.glob("../components/**/*.tsx", {
 function relPathToGlobKey(relPath: string): string {
   const trimmed = relPath.replace(/^\/+/, "").replace(/^src\//, "");
   return `../${trimmed}`;
+}
+
+function coerceDeclaredPropKind(v: unknown): DeclaredPropKind | undefined {
+  if (v === "boolean" || v === "string" || v === "number" || v === "unknown") return v;
+  return undefined;
+}
+
+/** Drops invalid entries; treats `unknown` as absent so name heuristics still apply. */
+function normalizedPropKinds(
+  raw: PlaygroundSpec["declared_prop_kinds"],
+): Partial<Record<string, DeclaredPropKind>> | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const out: Partial<Record<string, DeclaredPropKind>> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const ck = coerceDeclaredPropKind(v);
+    if (ck && ck !== "unknown") out[k] = ck;
+  }
+  return Object.keys(out).length ? out : undefined;
 }
 
 function isLikelyBooleanProp(name: string): boolean {
@@ -36,7 +56,10 @@ function defaultStringForProp(key: string): string {
   return key;
 }
 
-function controlsFromDeclaredProps(declaredProps: string[]): PlaygroundControl[] {
+function controlsFromDeclaredProps(
+  declaredProps: string[],
+  propKinds?: Partial<Record<string, DeclaredPropKind>>,
+): PlaygroundControl[] {
   const skip = new Set(["key", "ref"]);
   const out: PlaygroundControl[] = [];
   for (const key of declaredProps) {
@@ -51,7 +74,20 @@ function controlsFromDeclaredProps(declaredProps: string[]): PlaygroundControl[]
       });
       continue;
     }
-    if (isLikelyBooleanProp(key)) {
+    const kind = propKinds?.[key];
+    if (kind === "boolean") {
+      out.push({ key, label: key, type: "boolean", default: false });
+    } else if (kind === "number") {
+      out.push({ key, label: key, type: "number", default: 0 });
+    } else if (kind === "string") {
+      out.push({
+        key,
+        label: key,
+        type: "string",
+        default: defaultStringForProp(key),
+        placeholder: key,
+      });
+    } else if (isLikelyBooleanProp(key)) {
       out.push({ key, label: key, type: "boolean", default: false });
     } else {
       out.push({
@@ -154,15 +190,17 @@ function controlsForSpec(
   id: string,
   exportName: string,
   declaredProps: string[],
+  propKinds?: Partial<Record<string, DeclaredPropKind>>,
 ): PlaygroundControl[] {
   const override = controlOverrides[id] ?? controlOverrides[exportName];
   if (override) return override;
-  return controlsFromDeclaredProps(declaredProps);
+  return controlsFromDeclaredProps(declaredProps, propKinds);
 }
 
 function valuesToComponentProps(
   declaredProps: string[],
   values: PlaygroundArgs,
+  propKinds?: Partial<Record<string, DeclaredPropKind>>,
 ): Record<string, unknown> {
   const o: Record<string, unknown> = {};
   for (const key of declaredProps) {
@@ -170,6 +208,21 @@ function valuesToComponentProps(
     if (key === "children") {
       const v = values.children;
       o[key] = v !== undefined && v !== null && String(v).length > 0 ? String(v) : "Preview";
+      continue;
+    }
+    const kind = propKinds?.[key];
+    if (kind === "boolean") {
+      o[key] = Boolean(values[key]);
+      continue;
+    }
+    if (kind === "number") {
+      const raw = values[key];
+      const n = typeof raw === "number" ? raw : Number(raw);
+      o[key] = Number.isFinite(n) ? n : 0;
+      continue;
+    }
+    if (kind === "string") {
+      o[key] = values[key];
       continue;
     }
     if (isLikelyBooleanProp(key)) {
@@ -256,11 +309,12 @@ export function buildPlaygroundEntries(
     const PreviewComponent = Cmp;
 
     const declared = spec.declared_props ?? [];
-    const controls = controlsForSpec(spec.id, spec.export_name, declared);
+    const propKinds = normalizedPropKinds(spec.declared_prop_kinds);
+    const controls = controlsForSpec(spec.id, spec.export_name, declared, propKinds);
     const staticDefaults = playgroundStaticDefaults[spec.id] ?? {};
 
     function Preview({ values }: { values: PlaygroundArgs }) {
-      const fromValues = valuesToComponentProps(declared, values);
+      const fromValues = valuesToComponentProps(declared, values, propKinds);
       const merged = mergeStaticDefaults(fromValues, staticDefaults);
       return createElement(PreviewComponent, merged);
     }

@@ -24,6 +24,7 @@ export type {
   ComponentDefinition,
   FileScan,
   PlaygroundSpec,
+  DeclaredPropKind,
 } from "./types/report";
 export type {
   TokenCatalog,

@@ -1,5 +1,6 @@
 //! Build workbench playground rows from scanned components + config (no TS boilerplate).
 
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use crate::config::DslintConfig;
@@ -115,6 +116,7 @@ pub fn build_playground_specs(root: &Path, files: &[FileScan], config: &DslintCo
             export_name: def.name.clone(),
             rel_path: rel,
             declared_props: def.declared_props.clone(),
+            declared_prop_kinds: BTreeMap::new(),
             group,
         });
     }

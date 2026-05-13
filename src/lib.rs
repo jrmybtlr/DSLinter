@@ -9,7 +9,7 @@ pub mod playground_emit;
 pub mod report;
 pub mod rules;
 pub mod scan;
-pub mod smells;
+pub mod code_quality;
 mod ts_shape_map;
 pub mod vue;
 

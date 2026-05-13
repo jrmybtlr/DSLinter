@@ -25,13 +25,13 @@ const DEFAULT_EXPORT: &str = "default";
 /// Analyze ECMA/JSX with diagnostics attributed to `report_path` (e.g. real `.vue` path).
 ///
 /// `parse_as_path` selects [`SourceType`] (often a pseudo `.tsx` path for Vue script).
-/// When `include_text_smells` is false, only AST smells run — caller should run
-/// [`crate::smells::collect_text_smells`] on the full file (e.g. entire `.vue` source).
+/// When `include_text_code_quality` is false, only AST code-quality rules run — caller should run
+/// [`crate::code_quality::collect_text_code_quality`] on the full file (e.g. entire `.vue` source).
 pub fn analyze_ecma_for_paths(
     report_path: &Path,
     parse_as_path: &Path,
     source: &str,
-    include_text_smells: bool,
+    include_text_code_quality: bool,
 ) -> FileScan {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(parse_as_path).unwrap_or_else(|_| SourceType::tsx());
@@ -67,13 +67,16 @@ pub fn analyze_ecma_for_paths(
     v.visit_program(&program);
 
     let mut findings = v.findings;
-    findings.extend(crate::smells::collect_ast_smells(
+    findings.extend(crate::code_quality::collect_ast_code_quality(
         report_path,
         source,
         &program,
     ));
-    if include_text_smells {
-        findings.extend(crate::smells::collect_text_smells(report_path, source));
+    if include_text_code_quality {
+        findings.extend(crate::code_quality::collect_text_code_quality(
+            report_path,
+            source,
+        ));
     }
 
     FileScan {

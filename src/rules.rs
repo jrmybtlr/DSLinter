@@ -393,7 +393,7 @@ fn hardcoded_hex_colors(
             out.push(LintFinding {
                 rule_id: "token-hardcoded-color".into(),
                 message: format!(
-                    "Hardcoded color `{}` — prefer design tokens or theme variables.",
+                    "Hardcoded color `{}`",
                     m.as_str()
                 ),
                 path: file.path.clone(),

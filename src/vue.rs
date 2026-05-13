@@ -7,7 +7,7 @@ use regex::Regex;
 
 use crate::ecma::analyze_ecma_for_paths;
 use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity};
-use crate::smells;
+use crate::code_quality;
 
 // ── Static regex helpers (compiled once) ────────────────────────────────────
 
@@ -347,7 +347,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
     }
 
     scan.findings
-        .extend(smells::collect_text_smells(path, source));
+        .extend(code_quality::collect_text_code_quality(path, source));
 
     if let Some(cap) = template_block_re().captures(source) {
         let inner = cap.get(1).expect("template inner group");

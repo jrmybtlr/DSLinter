@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { detectBreakpoint, detectContainerBreakpoint } from "usemods";
 import { a11ySummaryForModule } from "../report/a11yForModule";
 import { codeScoreSummaryForModule } from "../report/codeScoreForModule";
 import { tokenStyleFindingsForModule } from "../report/tokenStyleFindingsForModule";
@@ -146,9 +147,14 @@ export function ComponentPlaygroundPane({
   }, [workspaceReport, entry.id, reportReady]);
 
   const previewMeasureRef = useRef<HTMLDivElement>(null);
+  const previewFrameRef = useRef<HTMLDivElement>(null);
   const maxOuterRef = useRef(0);
   const [maxOuterPx, setMaxOuterPx] = useState(0);
   const [previewWidthPx, setPreviewWidthPx] = useState(DEFAULT_PREVIEW_PX);
+  const [windowBreakpoint, setWindowBreakpoint] = useState<string | null>(null);
+  const [containerBreakpoint, setContainerBreakpoint] = useState<string | null>(
+    null,
+  );
 
   const syncPreviewToOuterWidth = useCallback((nextOuter: number) => {
     if (!Number.isFinite(nextOuter) || nextOuter <= 0) return;
@@ -170,6 +176,29 @@ export function ComponentPlaygroundPane({
     syncPreviewToOuterWidth(el.clientWidth);
     return () => ro.disconnect();
   }, [syncPreviewToOuterWidth]);
+
+  const syncUsemodsBreakpoints = useCallback(() => {
+    setWindowBreakpoint(detectBreakpoint());
+    const frame = previewFrameRef.current;
+    setContainerBreakpoint(frame ? detectContainerBreakpoint(frame) : null);
+  }, []);
+
+  useLayoutEffect(() => {
+    const frame = previewFrameRef.current;
+    if (!frame) return;
+    const ro = new ResizeObserver(() => {
+      syncUsemodsBreakpoints();
+    });
+    ro.observe(frame);
+    syncUsemodsBreakpoints();
+    return () => ro.disconnect();
+  }, [syncUsemodsBreakpoints]);
+
+  useEffect(() => {
+    syncUsemodsBreakpoints();
+    window.addEventListener("resize", syncUsemodsBreakpoints);
+    return () => window.removeEventListener("resize", syncUsemodsBreakpoints);
+  }, [syncUsemodsBreakpoints]);
 
   const attachSymmetricWidthDrag = useCallback((side: "left" | "right") => {
     return (e: React.PointerEvent<HTMLButtonElement>) => {
@@ -251,6 +280,7 @@ export function ComponentPlaygroundPane({
           <div ref={previewMeasureRef}>
             <div className="flex justify-center">
               <div
+                ref={previewFrameRef}
                 className="relative min-w-0 shrink-0 select-none rounded-lg border  bg-gray-50/80 shadow-xs"
                 style={{ width: previewWidthPx }}
               >
@@ -282,9 +312,22 @@ export function ComponentPlaygroundPane({
               </div>
             </div>
             {maxOuterPx > 0 ? (
-              <p className="mt-2 bg-white w-fit mx-auto p-1 text-center text-xs/none tabular-nums text-gray-400">
-                Preview width {Math.round(previewWidthPx)}px (container{" "}
-                {Math.round(maxOuterPx)}px)
+              <p className="mt-2 mx-auto w-fit bg-white p-1 text-center text-xs/none tabular-nums text-gray-400">
+                {Math.round(previewWidthPx)}px
+                <span className="text-gray-300"> · </span>
+                <span
+                  className="text-gray-500"
+                  title="usemods detectBreakpoint"
+                >
+                  window {windowBreakpoint ?? "—"}
+                </span>
+                <span className="text-gray-300"> · </span>
+                <span
+                  className="text-gray-500"
+                  title="usemods detectContainerBreakpoint"
+                >
+                  preview {containerBreakpoint ?? "—"}
+                </span>
               </p>
             ) : null}
           </div>
@@ -344,8 +387,6 @@ export function ComponentPlaygroundPane({
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
                   On this page
                 </p>
-                <TocLink href="#source">Source</TocLink>
-                <TocLink href="#examples">Examples</TocLink>
                 {hasControls ? (
                   <TocLink href="#api-reference">API reference</TocLink>
                 ) : null}

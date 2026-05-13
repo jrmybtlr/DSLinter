@@ -3,7 +3,8 @@
  * `npm run dev` entry point.
  *
  * Picks the right dev flavor for the current machine:
- *   - `dslint` or `cargo` on PATH -> `npm run dev:serve` (vite + dslint --serve, SSE updates)
+ *   - `dslint` or `cargo` on PATH -> `npm run dev:serve` (dslint --serve first; Vite waits for
+ *     tcp:127.0.0.1:7878 so the proxy does not log ECONNREFUSED while Rust builds)
  *   - neither                   -> `npm run dev:vite-only` with a warning
  *
  * Use `npm run dev:serve` / `npm run dev:watch` directly to force a flavor.

@@ -59,60 +59,39 @@ export function PlaygroundTokenStyleSection({
         <span className="font-mono">dslint-report.json</span> is available (same
         fetch as Governance).
       </p>
-      <div className="mt-4 rounded-lg border border-border bg-card shadow-xs">
-        {reportReady && findings.length > 0 ? (
-          <Table className="border-collapse text-left">
-            <TableHeader>
-              <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                  Rule
-                </TableHead>
-                <TableHead className="h-auto w-16 px-3 py-2.5 font-semibold ">
-                  Line
-                </TableHead>
-                <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                  Severity
-                </TableHead>
-                <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                  Message
-                </TableHead>
+      {reportReady && findings.length > 0 ? (
+        <Table className="mt-4">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Rule</TableHead>
+              <TableHead>Line</TableHead>
+              <TableHead>Severity</TableHead>
+              <TableHead>Message</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {findings.map((f, i) => (
+              <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${i}`}>
+                <TableCell>{f.rule_id}</TableCell>
+                <TableCell>{f.line ?? "—"}</TableCell>
+                <TableCell>{f.severity}</TableCell>
+                <TableCell>{f.message}</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody className="text-foreground">
-              {findings.map((f, i) => (
-                <TableRow
-                  key={`${f.rule_id}-${f.line ?? "x"}-${i}`}
-                  className="border-border hover:bg-transparent"
-                >
-                  <TableCell className="px-3 py-2.5 font-mono text-xs">
-                    {f.rule_id}
-                  </TableCell>
-                  <TableCell className="px-3 py-2.5 font-mono text-xs ">
-                    {f.line ?? "—"}
-                  </TableCell>
-                  <TableCell className="px-3 py-2.5 text-xs capitalize ">
-                    {f.severity}
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2.5 ">
-                    {f.message}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : reportReady && findings.length === 0 ? (
-          <p className="p-4 text-sm text-gray-500">
-            No hardcoded or arbitrary token color findings on this file in the
-            current report.
-          </p>
-        ) : (
-          <p className="p-4 text-sm text-gray-500">
-            Token findings update when{" "}
-            <span className="font-mono">dslint-report.json</span> is available
-            (same fetch as Governance).
-          </p>
-        )}
-      </div>
+            ))}
+          </TableBody>
+        </Table>
+      ) : reportReady && findings.length === 0 ? (
+        <p className="mt-4 text-sm text-gray-500">
+          No hardcoded or arbitrary token color findings on this file in the
+          current report.
+        </p>
+      ) : (
+        <p className="mt-4 text-sm text-gray-500">
+          Token findings update when{" "}
+          <span className="font-mono">dslint-report.json</span> is available
+          (same fetch as Governance).
+        </p>
+      )}
     </section>
   );
 }
@@ -138,47 +117,26 @@ export function PlaygroundCodeScoreSection({
 
       {hasFindingRows ? (
         <>
-          <div className="mt-3 rounded-md border border-border">
-            <Table className="min-w-72 border-collapse text-left">
-              <TableHeader>
-                <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                    Rule
-                  </TableHead>
-                  <TableHead className="h-auto w-16 px-3 py-2.5 font-semibold ">
-                    Line
-                  </TableHead>
-                  <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                    Severity
-                  </TableHead>
-                  <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                    Message
-                  </TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rule</TableHead>
+                <TableHead>Line</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead>Message</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {findings.map((f, i) => (
+                <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${i}`}>
+                  <TableCell>{f.rule_id}</TableCell>
+                  <TableCell>{f.line ?? "—"}</TableCell>
+                  <TableCell>{f.severity}</TableCell>
+                  <TableCell>{f.message}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody className="text-foreground">
-                {findings.map((f, i) => (
-                  <TableRow
-                    key={`${f.rule_id}-${f.line ?? "x"}-${i}`}
-                    className="border-border hover:bg-transparent"
-                  >
-                    <TableCell className="px-3 py-2.5 font-mono text-xs">
-                      {f.rule_id}
-                    </TableCell>
-                    <TableCell className="px-3 py-2.5 font-mono text-xs ">
-                      {f.line ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-3 py-2.5 text-xs capitalize ">
-                      {f.severity}
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-3 py-2.5 ">
-                      {f.message}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </>
       ) : (
         <div className="flex items-center justify-between gap-3">
@@ -307,115 +265,71 @@ export function PlaygroundApiReference({
     : [];
 
   return (
-    <section id="api-reference" className="scroll-mt-20">
-      <h2 className={sectionTitleClass}>API reference</h2>
-      <div className="mt-4 rounded-lg border border-border bg-card shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-1.5 pl-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Props
-          </p>
-          <Button type="button" variant="outline" size="sm" onClick={onReset}>
-            Reset defaults
-          </Button>
-        </div>
-        <Table className="border-collapse text-left">
-          <TableHeader>
-            <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-              <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                Prop
-              </TableHead>
-              <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                Type
-              </TableHead>
-              <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                Default
-              </TableHead>
-              <TableHead className="h-auto min-w-[12rem] px-3 py-2.5 font-semibold ">
-                Value
-              </TableHead>
-              {showRepo ? (
-                <>
-                  <TableHead className="h-auto w-28 px-3 py-2.5 font-semibold ">
-                    Usage
-                  </TableHead>
-                  <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                    Values
-                  </TableHead>
-                </>
-              ) : null}
-            </TableRow>
-          </TableHeader>
-          <TableBody className="text-foreground">
-            {controls.map((c) => {
-              const r = rows.find((row) => row.prop === c.key);
-              if (!r) return null;
-              const n = showRepo ? (freqs[r.prop] ?? 0) : 0;
-              const unusedAtRepo =
-                showRepo && declaredPropsFromScan.includes(r.prop) && n === 0;
-              const valueChips = formatRepoLiteralChips(valueFreqs[r.prop]);
-              return (
-                <TableRow
-                  key={r.prop}
-                  className="border-border hover:bg-transparent"
-                >
-                  <TableCell className="w-[1%] whitespace-nowrap px-3 py-2.5 align-top font-mono text-xs">
-                    {r.prop}
-                  </TableCell>
-                  <TableCell className="max-w-md whitespace-normal px-3 py-2.5 align-top text-xs leading-snug">
-                    {r.unionLiterals ? (
-                      <div className="flex flex-wrap items-center gap-1">
-                        {r.unionLiterals.map((lit) => (
-                          <Badge
-                            key={lit}
-                            variant="outline"
-                            size="sm"
-                            className="max-w-full break-all border-border bg-muted/60"
-                          >
-                            {lit}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="font-mono">{r.type}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="w-[1%] whitespace-nowrap px-3 py-2.5 align-top font-mono text-xs">
-                    {r.default}
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2.5 align-top">
-                    <PlaygroundControlField
-                      control={c}
-                      values={values}
-                      patch={patch}
-                      idPrefix="api"
-                      layout="table"
-                    />
-                  </TableCell>
-                  {showRepo ? (
-                    <>
-                      <TableCell
-                        className={`px-3 py-2.5 font-mono text-xs tabular-nums align-top ${unusedAtRepo ? "text-muted-foreground" : "text-foreground"}`}
-                        title={
-                          unusedAtRepo
-                            ? "Declared in the scanned component but not passed at any captured call site"
-                            : undefined
-                        }
-                      >
-                        {n}
-                      </TableCell>
-                      <TableCell
-                        className={`whitespace-normal px-3 py-2.5 align-top font-mono text-xs leading-snug ${valueChips === "—" ? "text-muted-foreground" : ""}`}
-                      >
-                        {valueChips}
-                      </TableCell>
-                    </>
-                  ) : null}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+    <section id="api-reference" className="scroll-mt-20 grid gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className={sectionTitleClass}>API reference</h2>
+        <Button type="button" variant="outline" size="sm" onClick={onReset}>
+          Reset defaults
+        </Button>
       </div>
+      <Table className="border-collapse text-left">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Prop</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Default</TableHead>
+            <TableHead>Value</TableHead>
+            {showRepo ? (
+              <>
+                <TableHead>Usage</TableHead>
+                <TableHead>Values</TableHead>
+              </>
+            ) : null}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {controls.map((c) => {
+            const r = rows.find((row) => row.prop === c.key);
+            if (!r) return null;
+            const n = showRepo ? (freqs[r.prop] ?? 0) : 0;
+            const valueChips = formatRepoLiteralChips(valueFreqs[r.prop]);
+            return (
+              <TableRow key={r.prop}>
+                <TableCell>{r.prop}</TableCell>
+                <TableCell>
+                  {r.unionLiterals ? (
+                    <div className="flex flex-wrap items-center gap-1">
+                      {r.unionLiterals.map((lit) => (
+                        <Badge key={lit} variant="outline" size="sm">
+                          {lit}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="font-mono">{r.type}</span>
+                  )}
+                </TableCell>
+                <TableCell>{r.default}</TableCell>
+                <TableCell>
+                  <PlaygroundControlField
+                    control={c}
+                    values={values}
+                    patch={patch}
+                    idPrefix="api"
+                    layout="table"
+                  />
+                </TableCell>
+                {showRepo ? (
+                  <>
+                    <TableCell>{n}</TableCell>
+                    <TableCell>{valueChips}</TableCell>
+                  </>
+                ) : null}
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
 
       {showRepo && extraRepoProps.length > 0 ? (
         <div className="mt-4">
@@ -426,41 +340,26 @@ export function PlaygroundApiReference({
             These prop names appear in scanned JSX but are not wired as
             playground controls on this page.
           </p>
-          <div className="mt-2 rounded-md border border-border bg-card">
-            <Table className=" border-collapse text-left text-sm">
-              <TableHeader>
-                <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                    Prop
-                  </TableHead>
-                  <TableHead className="h-auto w-28 px-3 py-2.5 font-semibold ">
-                    Repo call sites
-                  </TableHead>
-                  <TableHead className="h-auto min-w-[14rem] px-3 py-2.5 font-semibold ">
-                    Repo literals
-                  </TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Prop</TableHead>
+                <TableHead>Repo call sites</TableHead>
+                <TableHead>Repo literals</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {extraRepoProps.map((prop) => (
+                <TableRow key={prop}>
+                  <TableCell>{prop}</TableCell>
+                  <TableCell>×{freqs[prop] ?? 0}</TableCell>
+                  <TableCell>
+                    {formatRepoLiteralChips(valueFreqs[prop])}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {extraRepoProps.map((prop) => (
-                  <TableRow
-                    key={prop}
-                    className="border-border hover:bg-transparent"
-                  >
-                    <TableCell className="px-3 py-2.5 font-mono text-xs">
-                      {prop}
-                    </TableCell>
-                    <TableCell className="px-3 py-2.5 font-mono text-xs tabular-nums">
-                      ×{freqs[prop] ?? 0}
-                    </TableCell>
-                    <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-xs ">
-                      {formatRepoLiteralChips(valueFreqs[prop])}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : null}
     </section>

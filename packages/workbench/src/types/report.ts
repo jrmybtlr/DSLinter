@@ -84,6 +84,12 @@ export interface OwnershipSummary {
   definitions: number;
 }
 
+/**
+ * Simplified prop kind from TypeScript (e.g. demo `merge-playgrounds.mjs`).
+ * Workbench falls back to name heuristics when a key is missing or kind is `unknown`.
+ */
+export type DeclaredPropKind = "boolean" | "string" | "number" | "unknown";
+
 /** Emitted by dslint for workbench playgrounds (no per-component TS registration). */
 export interface PlaygroundSpec {
   id: string;
@@ -91,6 +97,11 @@ export interface PlaygroundSpec {
   rel_path: string;
   declared_props: string[];
   group?: string | null;
+  /**
+   * Optional map from prop name to simplified TS kind, filled by tooling that runs the TS checker
+   * (demo: `merge-playgrounds.mjs`). Omitted when empty or unavailable.
+   */
+  declared_prop_kinds?: Partial<Record<string, DeclaredPropKind>>;
 }
 
 export interface WorkspaceReport {

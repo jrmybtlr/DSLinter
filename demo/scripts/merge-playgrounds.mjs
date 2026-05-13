@@ -5,9 +5,12 @@
  *
  * Also normalizes legacy nested `src/components/…` paths in older reports to the flat tree,
  * and when `declared_props` is empty, infers binding names from the TSX file via TypeScript.
+ *
+ * When `tsconfig.json` resolves, also fills `declared_prop_kinds` using the TypeScript checker
+ * (`boolean` | `string` | `number`) so the workbench does not rely on name heuristics alone.
  */
 import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
@@ -63,6 +66,126 @@ function inferDeclaredPropsFromTsx(demoRootDir, relPath, exportName) {
   return [...new Set(names)];
 }
 
+function hasExportModifier(node) {
+  return node.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+}
+
+/** First parameter type for an exported function or exported const arrow/function. */
+function getExportFirstParameterType(checker, sf, exportName) {
+  let found;
+  function visit(node) {
+    if (found !== undefined) return;
+    if (
+      ts.isFunctionDeclaration(node) &&
+      node.name?.text === exportName &&
+      hasExportModifier(node)
+    ) {
+      const p0 = node.parameters[0];
+      if (p0) found = checker.getTypeAtLocation(p0);
+      return;
+    }
+    if (ts.isVariableStatement(node) && hasExportModifier(node)) {
+      for (const decl of node.declarationList.declarations) {
+        if (!ts.isIdentifier(decl.name) || decl.name.text !== exportName || !decl.initializer) {
+          continue;
+        }
+        const init = decl.initializer;
+        if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) {
+          const p0 = init.parameters[0];
+          if (p0) {
+            found = checker.getTypeAtLocation(p0);
+            return;
+          }
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(sf);
+  return found;
+}
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ * @returns {"boolean" | "string" | "number" | null}
+ */
+function classifyPropType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  if (nn.isUnion()) {
+    const parts = nn.types.map((u) => classifyPropType(checker, checker.getNonNullableType(u)));
+    const ok = parts.filter((p) => p !== null);
+    if (!ok.length) return null;
+    const set = new Set(ok);
+    if (set.size === 1) return [...set][0];
+    if ([...set].every((x) => x === "string")) return "string";
+    if ([...set].every((x) => x === "number")) return "number";
+    return null;
+  }
+  if (nn.flags & (ts.TypeFlags.Boolean | ts.TypeFlags.BooleanLiteral)) return "boolean";
+  if (nn.flags & (ts.TypeFlags.Enum | ts.TypeFlags.EnumLiteral)) return "string";
+  if (nn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) return "number";
+  if (nn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) return "string";
+  return null;
+}
+
+/** @returns {Record<string, string>} */
+function inferDeclaredPropKindsFromTs(checker, program, demoRootDir, relPath, exportName, declaredProps) {
+  const abs = resolve(demoRootDir, relPath);
+  const norm = (p) => p.replace(/\\/g, "/");
+  const want = norm(abs);
+  const sf = program.getSourceFiles().find((f) => norm(f.fileName) === want);
+  if (!sf) return {};
+  const paramType = getExportFirstParameterType(checker, sf, exportName);
+  if (!paramType) return {};
+  /** @type {Record<string, string>} */
+  const kinds = {};
+  for (const key of declaredProps) {
+    if (key === "key" || key === "ref") continue;
+    const sym = checker.getPropertyOfType(paramType, key);
+    if (!sym) continue;
+    const t = checker.getTypeOfSymbol(sym);
+    const k = classifyPropType(checker, t);
+    if (k !== null) kinds[key] = k;
+  }
+  return kinds;
+}
+
+let cachedCheckerProgram;
+
+function getDemoCheckerProgram(demoRootDir) {
+  if (cachedCheckerProgram !== undefined) return cachedCheckerProgram;
+  const configPathTs = join(demoRootDir, "tsconfig.json");
+  const readJson = ts.readConfigFile(configPathTs, ts.sys.readFile);
+  if (readJson.error) {
+    console.warn("merge-playgrounds: skip declared_prop_kinds (tsconfig read error)");
+    cachedCheckerProgram = null;
+    return null;
+  }
+  const parsed = ts.parseJsonConfigFileContent(
+    readJson.config,
+    ts.sys,
+    demoRootDir,
+    undefined,
+    configPathTs,
+  );
+  if (parsed.errors.length) {
+    const msg = parsed.errors.map((e) => e.messageText).join("; ");
+    console.warn(`merge-playgrounds: skip declared_prop_kinds (parse config: ${msg})`);
+    cachedCheckerProgram = null;
+    return null;
+  }
+  const program = ts.createProgram({
+    rootNames: parsed.fileNames,
+    options: parsed.options,
+  });
+  cachedCheckerProgram = {
+    program,
+    checker: program.getTypeChecker(),
+  };
+  return cachedCheckerProgram;
+}
+
 const report = patchLegacyComponentPathsInReport(JSON.parse(readFileSync(reportPath, "utf8")));
 const config = JSON.parse(readFileSync(configPath, "utf8"));
 const playgroundGroups = config.playground_groups ?? {};
@@ -111,6 +234,8 @@ function pickDefinition(definitions, stem) {
 }
 
 const playgrounds = [];
+const checkerBundle = getDemoCheckerProgram(demoRoot);
+
 if (Object.keys(playgroundGroups).length) {
   for (const file of report.files ?? []) {
     const rel = relPath(file.path);
@@ -142,6 +267,19 @@ if (Object.keys(playgroundGroups).length) {
     };
     if (playgroundGroupKeyCount > 1) {
       row.group = longestGroup(rel);
+    }
+    if (checkerBundle) {
+      const kinds = inferDeclaredPropKindsFromTs(
+        checkerBundle.checker,
+        checkerBundle.program,
+        demoRoot,
+        rel,
+        def.name,
+        declared,
+      );
+      if (Object.keys(kinds).length) {
+        row.declared_prop_kinds = kinds;
+      }
     }
     playgrounds.push(row);
   }

@@ -9,14 +9,14 @@ import {
 } from "../components/ui/table";
 import { shortPath } from "./paths";
 import type { LintFinding, Severity } from "../types/report";
-
-const severityStyle: Record<string, string> = {
-  warning: "text-amber-800 bg-amber-50 border-amber-100",
-  error: "text-red-800 bg-red-50 border-red-100",
-  info: "text-neutral-700 bg-neutral-50 border-neutral-100",
-};
+import { Badge } from "../components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 
 type Filter = "all" | Severity;
+
+function isFilter(value: string): value is Filter {
+  return value === "all" || value === "error" || value === "warning" || value === "info";
+}
 
 export function FindingsList({
   findings,
@@ -48,97 +48,80 @@ export function FindingsList({
     );
   }
 
-  const chip = (label: string, value: Filter, count: number) => (
-    <button
-      key={label}
-      type="button"
-      onClick={() => setFilter(value)}
-      className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-        filter === value
-          ? "border-neutral-900 bg-neutral-900 text-white"
-          : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
-      }`}
-    >
-      {label}
-      <span className="ml-1 tabular-nums text-neutral-400">{count}</span>
-    </button>
-  );
-
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {chip("All", "all", findings.length)}
-        {chip("Warnings", "warning", counts.warning)}
-        {chip("Errors", "error", counts.error)}
-        {chip("Info", "info", counts.info)}
+        <ToggleGroup
+          type="single"
+          value={filter}
+          onValueChange={(value) => {
+            if (isFilter(value)) setFilter(value);
+          }}
+          variant="outline"
+          size="sm"
+          aria-label="Filter findings by severity"
+          className="contents"
+        >
+          <ToggleGroupItem value="all" className="rounded-full px-2.5 text-xs font-medium">
+            All
+            <span className="ml-1 tabular-nums text-muted-foreground">{findings.length}</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="warning" className="rounded-full px-2.5 text-xs font-medium">
+            Warnings
+            <span className="ml-1 tabular-nums text-muted-foreground">{counts.warning}</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="error" className="rounded-full px-2.5 text-xs font-medium">
+            Errors
+            <span className="ml-1 tabular-nums text-muted-foreground">{counts.error}</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="info" className="rounded-full px-2.5 text-xs font-medium">
+            Info
+            <span className="ml-1 tabular-nums text-muted-foreground">{counts.info}</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
       <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <div className="max-h-112 overflow-auto">
-          <Table className="min-w-full text-left text-xs">
-            <TableHeader>
-              <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                <TableHead
-                  scope="col"
-                  className="h-auto px-3 py-2 text-muted-foreground"
-                >
-                  Severity
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="h-auto px-3 py-2 text-muted-foreground"
-                >
-                  Rule
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="h-auto px-3 py-2 text-muted-foreground"
-                >
-                  Message
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="h-auto px-3 py-2 text-muted-foreground"
-                >
-                  File
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="h-auto px-3 py-2 text-muted-foreground"
-                >
-                  Line
-                </TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col">Severity</TableHead>
+              <TableHead scope="col">Rule</TableHead>
+              <TableHead scope="col">Message</TableHead>
+              <TableHead scope="col">File</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="align-top text-foreground">
+            {filtered.map((f, i) => (
+              <TableRow
+                key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
+                className="border-border hover:bg-transparent"
+              >
+                <TableCell className="px-3 py-2">
+                  <Badge
+                    variant={
+                      f.severity === "error"
+                        ? "destructive"
+                        : f.severity === "warning"
+                          ? "secondary"
+                          : "outline"
+                    }
+                  >
+                    {f.severity}
+                  </Badge>
+                </TableCell>
+                <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                  {f.rule_id}
+                </TableCell>
+                <TableCell className="whitespace-normal px-3 py-2 text-sm">
+                  {f.message}
+                </TableCell>
+                <TableCell className="whitespace-normal px-3 py-2 font-mono text-xs text-muted-foreground">
+                  {shortPath(root, f.path)}:{f.line != null ? f.line : "—"}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody className="align-top text-foreground">
-              {filtered.map((f, i) => (
-                <TableRow
-                  key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
-                  className="border-border hover:bg-transparent"
-                >
-                  <TableCell className="px-3 py-2">
-                    <span
-                      className={`inline-block rounded border px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide ${severityStyle[f.severity] ?? severityStyle.info}`}
-                    >
-                      {f.severity}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
-                    {f.rule_id}
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2 text-sm">
-                    {f.message}
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2 font-mono text-xs text-muted-foreground">
-                    {shortPath(root, f.path)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
-                    {f.line != null ? f.line : "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

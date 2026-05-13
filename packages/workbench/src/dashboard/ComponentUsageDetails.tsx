@@ -88,41 +88,24 @@ export function ComponentUsageDetails({
       </p>
 
       {hasSites ? (
-        <div className="mt-4 rounded-md border border-border">
-          <Table className="min-w-72 border-collapse text-left">
-            <TableHeader>
-              <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                <TableHead className="h-auto px-3 py-2.5 font-semibold text-muted-foreground">
-                  File
-                </TableHead>
-                <TableHead className="h-auto w-16 px-3 py-2.5 font-semibold text-muted-foreground">
-                  Line
-                </TableHead>
-                <TableHead className="h-auto px-3 py-2.5 font-semibold text-muted-foreground">
-                  Props at this call site
-                </TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>File</TableHead>
+              <TableHead>Line</TableHead>
+              <TableHead>Props at this call site</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((loc, i) => (
+              <TableRow key={`${loc.path}-${loc.line}-${i}`}>
+                <TableCell>{shortPath(report.root, loc.path)}</TableCell>
+                <TableCell>{loc.line}</TableCell>
+                <TableCell>{formatCallSiteProps(loc)}</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody className="text-foreground">
-              {rows.map((loc, i) => (
-                <TableRow
-                  key={`${loc.path}-${loc.line}-${i}`}
-                  className="border-border hover:bg-transparent"
-                >
-                  <TableCell className="px-3 py-2.5 font-mono text-xs">
-                    {shortPath(report.root, loc.path)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2.5 font-mono text-xs tabular-nums text-muted-foreground">
-                    {loc.line}
-                  </TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-xs leading-relaxed text-muted-foreground">
-                    {formatCallSiteProps(loc)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       ) : (
         <p className="mt-3 text-sm text-gray-500">
           Usage counts are present but individual call sites were not recorded

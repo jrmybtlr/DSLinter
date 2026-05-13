@@ -136,6 +136,9 @@ pub struct PlaygroundSpec {
     pub rel_path: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub declared_props: Vec<String>,
+    /// Simplified TS kinds per prop (`boolean` \| `string` \| `number` \| `unknown`), when tooling fills them.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub declared_prop_kinds: BTreeMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
 }
