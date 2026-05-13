@@ -6,7 +6,6 @@ export type ApiTableRow = {
   /** Select option values as JSON literals; Type column renders these as badges instead of a `|` string. */
   unionLiterals: string[] | null;
   default: string;
-  description: string;
 };
 
 function formatDefault(c: PlaygroundControl): string {
@@ -44,28 +43,11 @@ function unionLiteralsForControl(c: PlaygroundControl): string[] | null {
   return c.options.map((o) => JSON.stringify(o.value));
 }
 
-function formatDescription(c: PlaygroundControl): string {
-  const parts: string[] = [];
-  if (c.type === "boolean" && c.hint) parts.push(c.hint);
-  if (c.type === "string" && c.placeholder) parts.push(`Placeholder: ${c.placeholder}`);
-  if (c.type === "number") {
-    if (c.min != null || c.max != null) {
-      parts.push(
-        [c.min != null ? `min ${c.min}` : null, c.max != null ? `max ${c.max}` : null]
-          .filter(Boolean)
-          .join(", "),
-      );
-    }
-  }
-  return parts.length > 0 ? parts.join(" · ") : "—";
-}
-
 export function controlsToApiRows(controls: PlaygroundControl[]): ApiTableRow[] {
   return controls.map((c) => ({
     prop: c.key,
     type: formatType(c),
     unionLiterals: unionLiteralsForControl(c),
     default: formatDefault(c),
-    description: formatDescription(c),
   }));
 }

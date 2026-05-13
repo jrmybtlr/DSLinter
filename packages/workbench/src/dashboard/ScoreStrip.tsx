@@ -15,10 +15,12 @@ export function ScoreStrip({ scores }: { scores: GovernanceScores }) {
           key={label}
           className="rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-xs"
         >
-          <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
             {label}
           </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-neutral-900">{value}</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-neutral-900">
+            {value}
+          </p>
         </div>
       ))}
     </section>

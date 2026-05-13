@@ -1,9 +1,11 @@
+import { useCallback } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
 import type { CodeScoreModuleSummary } from "../report/codeScoreForModule";
 import type { LintFinding, UsageSummary } from "../types/report";
 import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,6 +15,7 @@ import {
   TableRow,
 } from "../components/ui/table";
 import { controlsToApiRows } from "./controlApiTable";
+import { PlaygroundControlField } from "./PlaygroundControlField";
 import { PlaygroundUsageCode } from "./PlaygroundUsageCode";
 
 const sectionTitleClass = "text-lg font-semibold tracking-tight text-gray-900";
@@ -52,7 +55,9 @@ export function PlaygroundTokenStyleSection({
     <section id="design-tokens" className="scroll-mt-20">
       <h2 className={sectionTitleClass}>Design tokens and colors</h2>
       <p className={sectionDescClass}>
-        Token findings update when <span className="font-mono">dslint-report.json</span> is available (same fetch as Governance).
+        Token findings update when{" "}
+        <span className="font-mono">dslint-report.json</span> is available (same
+        fetch as Governance).
       </p>
       <div className="mt-4 rounded-lg border border-border bg-card shadow-xs">
         {reportReady && findings.length > 0 ? (
@@ -157,7 +162,7 @@ export function PlaygroundCodeScoreSection({
                     key={`${f.rule_id}-${f.line ?? "x"}-${i}`}
                     className="border-border hover:bg-transparent"
                   >
-                    <TableCell className="px-3 py-2.5 font-mono text-[11px]">
+                    <TableCell className="px-3 py-2.5 font-mono text-xs">
                       {f.rule_id}
                     </TableCell>
                     <TableCell className="px-3 py-2.5 font-mono text-xs ">
@@ -247,6 +252,9 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
 
 type ApiProps = {
   controls: PlaygroundControl[];
+  values: PlaygroundArgs;
+  onChange: (next: PlaygroundArgs) => void;
+  onReset: () => void;
   /** When set, adds columns for how often each prop appears at scanned JSX call sites. */
   reportUsage?: UsageSummary;
   /** Declared prop names from the scan (definitions + playground specs), used for “never passed” hints. */
@@ -271,11 +279,21 @@ function formatRepoLiteralChips(
 
 export function PlaygroundApiReference({
   controls,
+  values,
+  onChange,
+  onReset,
   reportUsage,
   declaredPropsFromScan = [],
   governanceReportLoaded: _governanceReportLoaded = false,
 }: ApiProps) {
   if (controls.length === 0) return null;
+
+  const patch = useCallback(
+    (key: string, value: string | number | boolean) => {
+      onChange({ ...values, [key]: value });
+    },
+    [onChange, values],
+  );
 
   const rows = controlsToApiRows(controls);
   const showRepo = reportUsage != null;
@@ -292,6 +310,14 @@ export function PlaygroundApiReference({
     <section id="api-reference" className="scroll-mt-20">
       <h2 className={sectionTitleClass}>API reference</h2>
       <div className="mt-4 rounded-lg border border-border bg-card shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-1.5 pl-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Props
+          </p>
+          <Button type="button" variant="outline" size="sm" onClick={onReset}>
+            Reset defaults
+          </Button>
+        </div>
         <Table className="border-collapse text-left">
           <TableHeader>
             <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
@@ -304,8 +330,8 @@ export function PlaygroundApiReference({
               <TableHead className="h-auto px-3 py-2.5 font-semibold ">
                 Default
               </TableHead>
-              <TableHead className="h-auto px-3 py-2.5 font-semibold ">
-                Description
+              <TableHead className="h-auto min-w-[12rem] px-3 py-2.5 font-semibold ">
+                Value
               </TableHead>
               {showRepo ? (
                 <>
@@ -320,7 +346,9 @@ export function PlaygroundApiReference({
             </TableRow>
           </TableHeader>
           <TableBody className="text-foreground">
-            {rows.map((r) => {
+            {controls.map((c) => {
+              const r = rows.find((row) => row.prop === c.key);
+              if (!r) return null;
               const n = showRepo ? (freqs[r.prop] ?? 0) : 0;
               const unusedAtRepo =
                 showRepo && declaredPropsFromScan.includes(r.prop) && n === 0;
@@ -354,10 +382,14 @@ export function PlaygroundApiReference({
                   <TableCell className="w-[1%] whitespace-nowrap px-3 py-2.5 align-top font-mono text-xs">
                     {r.default}
                   </TableCell>
-                  <TableCell
-                    className={`whitespace-normal px-3 py-2.5 align-top text-sm ${r.description === "—" ? "text-muted-foreground" : ""}`}
-                  >
-                    {r.description}
+                  <TableCell className="whitespace-normal px-3 py-2.5 align-top">
+                    <PlaygroundControlField
+                      control={c}
+                      values={values}
+                      patch={patch}
+                      idPrefix="api"
+                      layout="table"
+                    />
                   </TableCell>
                   {showRepo ? (
                     <>
@@ -372,7 +404,7 @@ export function PlaygroundApiReference({
                         {n}
                       </TableCell>
                       <TableCell
-                        className={`whitespace-normal px-3 py-2.5 align-top font-mono text-[11px] leading-snug ${valueChips === "—" ? "text-muted-foreground" : ""}`}
+                        className={`whitespace-normal px-3 py-2.5 align-top font-mono text-xs leading-snug ${valueChips === "—" ? "text-muted-foreground" : ""}`}
                       >
                         {valueChips}
                       </TableCell>
@@ -421,7 +453,7 @@ export function PlaygroundApiReference({
                     <TableCell className="px-3 py-2.5 font-mono text-xs tabular-nums">
                       ×{freqs[prop] ?? 0}
                     </TableCell>
-                    <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-[11px] ">
+                    <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-xs ">
                       {formatRepoLiteralChips(valueFreqs[prop])}
                     </TableCell>
                   </TableRow>

@@ -168,7 +168,8 @@ function cn(...inputs: ClassValue[]): string {
 
 function pickSizeClasses(variant: Variant, size: Size | IconSize): string {
   if (ICON_VARIANTS.has(variant)) {
-    const key = (size as IconSize) in styles.iconSizes ? (size as IconSize) : "default";
+    const key =
+      (size as IconSize) in styles.iconSizes ? (size as IconSize) : "default";
     return styles.iconSizes[key];
   }
   const key = (size as Size) in styles.sizes ? (size as Size) : "default";
@@ -219,7 +220,8 @@ export function Button({
         aria-disabled={isDisabled || undefined}
         className={cn(
           "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-x-1.5",
-          !isIconVariant && "[&>svg:nth-child(1)]:-ml-1.5 [&>svg:nth-child(2)]:-mr-1.5",
+          !isIconVariant &&
+            "[&>svg:nth-child(1)]:-ml-1.5 [&>svg:nth-child(2)]:-mr-1.5",
           classes,
         )}
       >
@@ -252,7 +254,8 @@ export function Button({
         <span
           className={cn(
             "inline-flex min-w-0 items-center justify-center gap-x-1.5",
-            !isIconVariant && "[&>svg:nth-child(1)]:-ml-1.5 [&>svg:nth-child(2)]:-mr-1.5",
+            !isIconVariant &&
+              "[&>svg:nth-child(1)]:-ml-1.5 [&>svg:nth-child(2)]:-mr-1.5",
             loading && "opacity-0",
           )}
         >

@@ -18,7 +18,13 @@ const severityStyle: Record<string, string> = {
 
 type Filter = "all" | Severity;
 
-export function FindingsList({ findings, root }: { findings: LintFinding[]; root: string }) {
+export function FindingsList({
+  findings,
+  root,
+}: {
+  findings: LintFinding[];
+  root: string;
+}) {
   const [filter, setFilter] = useState<Filter>("all");
 
   const counts = useMemo(() => {
@@ -31,7 +37,8 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
     return c;
   }, [findings]);
 
-  const filtered = filter === "all" ? findings : findings.filter((f) => f.severity === filter);
+  const filtered =
+    filter === "all" ? findings : findings.filter((f) => f.severity === filter);
 
   if (findings.length === 0) {
     return (
@@ -46,7 +53,7 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
       key={label}
       type="button"
       onClick={() => setFilter(value)}
-      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+      className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
         filter === value
           ? "border-neutral-900 bg-neutral-900 text-white"
           : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
@@ -70,19 +77,34 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
           <Table className="min-w-full text-left text-xs">
             <TableHeader>
               <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+                <TableHead
+                  scope="col"
+                  className="h-auto px-3 py-2 text-muted-foreground"
+                >
                   Severity
                 </TableHead>
-                <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+                <TableHead
+                  scope="col"
+                  className="h-auto px-3 py-2 text-muted-foreground"
+                >
                   Rule
                 </TableHead>
-                <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+                <TableHead
+                  scope="col"
+                  className="h-auto px-3 py-2 text-muted-foreground"
+                >
                   Message
                 </TableHead>
-                <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+                <TableHead
+                  scope="col"
+                  className="h-auto px-3 py-2 text-muted-foreground"
+                >
                   File
                 </TableHead>
-                <TableHead scope="col" className="h-auto px-3 py-2 text-muted-foreground">
+                <TableHead
+                  scope="col"
+                  className="h-auto px-3 py-2 text-muted-foreground"
+                >
                   Line
                 </TableHead>
               </TableRow>
@@ -100,14 +122,16 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
                       {f.severity}
                     </span>
                   </TableCell>
-                  <TableCell className="px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                  <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
                     {f.rule_id}
                   </TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2 text-sm">{f.message}</TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                  <TableCell className="whitespace-normal px-3 py-2 text-sm">
+                    {f.message}
+                  </TableCell>
+                  <TableCell className="whitespace-normal px-3 py-2 font-mono text-xs text-muted-foreground">
                     {shortPath(root, f.path)}
                   </TableCell>
-                  <TableCell className="px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                  <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
                     {f.line != null ? f.line : "—"}
                   </TableCell>
                 </TableRow>

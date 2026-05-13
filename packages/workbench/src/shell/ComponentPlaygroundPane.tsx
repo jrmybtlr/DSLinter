@@ -23,7 +23,6 @@ import {
   PlaygroundTokenStyleSection,
   PlaygroundUsageSection,
 } from "./PlaygroundA11yAndCode";
-import { PlaygroundControls } from "./PlaygroundControls";
 import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
 import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
 
@@ -51,14 +50,22 @@ function nextPreviewWidthForResize(
 ): number {
   if (prevOuter <= 0) return clampPreviewWidth(nextOuter, nextOuter);
   if (nextOuter < prevOuter) return clampPreviewWidth(prevPreview, nextOuter);
-  if (Math.abs(prevPreview - prevOuter) <= 2) return clampPreviewWidth(nextOuter, nextOuter);
+  if (Math.abs(prevPreview - prevOuter) <= 2)
+    return clampPreviewWidth(nextOuter, nextOuter);
   return clampPreviewWidth(prevPreview, nextOuter);
 }
 
 function TocLink({ href, children }: { href: string; children: ReactNode }) {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Modifier keys / non-primary clicks → fall back to default browser behaviour.
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+    if (
+      e.defaultPrevented ||
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    ) {
       return;
     }
     const id = href.startsWith("#") ? href.slice(1) : href;
@@ -102,17 +109,29 @@ export function ComponentPlaygroundPane({
   }, [entry.id]);
 
   const a11y = useMemo(
-    () => a11ySummaryForModule(reportReady ? workspaceReport : null, entry.modulePath),
+    () =>
+      a11ySummaryForModule(
+        reportReady ? workspaceReport : null,
+        entry.modulePath,
+      ),
     [workspaceReport, entry.modulePath, reportReady],
   );
 
   const tokenStyleFindings = useMemo(
-    () => tokenStyleFindingsForModule(reportReady ? workspaceReport : null, entry.modulePath),
+    () =>
+      tokenStyleFindingsForModule(
+        reportReady ? workspaceReport : null,
+        entry.modulePath,
+      ),
     [workspaceReport, entry.modulePath, reportReady],
   );
 
   const codeScore = useMemo(
-    () => codeScoreSummaryForModule(reportReady ? workspaceReport : null, entry.modulePath),
+    () =>
+      codeScoreSummaryForModule(
+        reportReady ? workspaceReport : null,
+        entry.modulePath,
+      ),
     [workspaceReport, entry.modulePath, reportReady],
   );
 
@@ -136,7 +155,9 @@ export function ComponentPlaygroundPane({
     const prevOuter = maxOuterRef.current;
     maxOuterRef.current = nextOuter;
     setMaxOuterPx(nextOuter);
-    setPreviewWidthPx((pw) => nextPreviewWidthForResize(pw, prevOuter, nextOuter));
+    setPreviewWidthPx((pw) =>
+      nextPreviewWidthForResize(pw, prevOuter, nextOuter),
+    );
   }, []);
 
   useLayoutEffect(() => {
@@ -161,7 +182,9 @@ export function ComponentPlaygroundPane({
       const onMove = (ev: PointerEvent) => {
         const dx = ev.clientX - lastX;
         lastX = ev.clientX;
-        setPreviewWidthPx((w) => clampPreviewWidth(w + sign * 2 * dx, maxOuterRef.current));
+        setPreviewWidthPx((w) =>
+          clampPreviewWidth(w + sign * 2 * dx, maxOuterRef.current),
+        );
       };
       const onUp = (ev: PointerEvent) => {
         target.releasePointerCapture(ev.pointerId);
@@ -185,7 +208,8 @@ export function ComponentPlaygroundPane({
   const showVariantsSection =
     hasControls &&
     (variantEnumeration.combinations.length > 0 ||
-      (variantEnumeration.combinations.length === 0 && variantEnumeration.totalCount === 0));
+      (variantEnumeration.combinations.length === 0 &&
+        variantEnumeration.totalCount === 0));
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
@@ -198,7 +222,9 @@ export function ComponentPlaygroundPane({
                   {entry.meta.group ? (
                     <>
                       Components <span className="text-gray-300">/</span>{" "}
-                      <span className="capitalize text-gray-700">{entry.meta.group}</span>
+                      <span className="capitalize text-gray-700">
+                        {entry.meta.group}
+                      </span>
                     </>
                   ) : (
                     "Components"
@@ -207,7 +233,10 @@ export function ComponentPlaygroundPane({
                 <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
                   {entry.meta.title}
                 </h1>
-                <p className="mt-1 truncate font-mono text-xs text-gray-500" title={rel}>
+                <p
+                  className="mt-1 truncate font-mono text-xs text-gray-500"
+                  title={rel}
+                >
                   {rel}
                 </p>
               </div>
@@ -215,7 +244,10 @@ export function ComponentPlaygroundPane({
           </div>
         </header>
 
-        <section id="examples" className="ds-playground-dot-surface border-b px-16 py-10">
+        <section
+          id="examples"
+          className="ds-playground-dot-surface border-b px-16 py-10"
+        >
           <div ref={previewMeasureRef}>
             <div className="flex justify-center">
               <div
@@ -228,7 +260,10 @@ export function ComponentPlaygroundPane({
                   aria-label="Resize preview from center (drag left or right)"
                   onPointerDown={attachSymmetricWidthDrag("left")}
                 >
-                  <span className="h-10 w-px rounded-full bg-gray-400/90" aria-hidden />
+                  <span
+                    className="h-10 w-px rounded-full bg-gray-400/90"
+                    aria-hidden
+                  />
                 </button>
                 <button
                   type="button"
@@ -236,7 +271,10 @@ export function ComponentPlaygroundPane({
                   aria-label="Resize preview from center (drag left or right)"
                   onPointerDown={attachSymmetricWidthDrag("right")}
                 >
-                  <span className="h-10 w-px rounded-full bg-gray-400/90" aria-hidden />
+                  <span
+                    className="h-10 w-px rounded-full bg-gray-400/90"
+                    aria-hidden
+                  />
                 </button>
                 <div className="min-w-0 bg-white p-8">
                   <Preview values={values} />
@@ -245,7 +283,8 @@ export function ComponentPlaygroundPane({
             </div>
             {maxOuterPx > 0 ? (
               <p className="mt-2 bg-white w-fit mx-auto p-1 text-center text-xs/none tabular-nums text-gray-400">
-                Preview width {Math.round(previewWidthPx)}px (container {Math.round(maxOuterPx)}px)
+                Preview width {Math.round(previewWidthPx)}px (container{" "}
+                {Math.round(maxOuterPx)}px)
               </p>
             ) : null}
           </div>
@@ -255,23 +294,27 @@ export function ComponentPlaygroundPane({
           <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-14">
             <div className="min-w-0 space-y-14">
               {hasControls ? (
-                <section id="playground" className="scroll-mt-20">
-                  <div className="rounded-lg border  bg-white shadow-xs">
-                    <PlaygroundControls
-                      controls={entry.controls}
-                      values={values}
-                      onChange={setValues}
-                      onReset={() => setValues(defaultArgsFromControls(entry.controls))}
-                      bare
-                    />
-                  </div>
-                </section>
+                <PlaygroundApiReference
+                  controls={entry.controls}
+                  values={values}
+                  onChange={setValues}
+                  onReset={() =>
+                    setValues(defaultArgsFromControls(entry.controls))
+                  }
+                  reportUsage={repoUsage}
+                  declaredPropsFromScan={declaredPropsFromScan}
+                  governanceReportLoaded={
+                    reportReady && workspaceReport != null
+                  }
+                />
               ) : null}
 
               <PlaygroundUsageSection entry={entry} values={values} />
 
               <section id="repo-usage" className="scroll-mt-20">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900">Repo usage</h2>
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+                  Repo usage
+                </h2>
                 <div className="mt-4">
                   <ComponentUsageDetails
                     report={reportReady ? workspaceReport : null}
@@ -285,16 +328,12 @@ export function ComponentPlaygroundPane({
                 reportReady={reportReady}
               />
 
-              <PlaygroundCodeScoreSection codeScore={codeScore} reportReady={reportReady} />
+              <PlaygroundCodeScoreSection
+                codeScore={codeScore}
+                reportReady={reportReady}
+              />
 
               <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
-
-              <PlaygroundApiReference
-                controls={entry.controls}
-                reportUsage={repoUsage}
-                declaredPropsFromScan={declaredPropsFromScan}
-                governanceReportLoaded={reportReady && workspaceReport != null}
-              />
             </div>
 
             <aside className="mt-12 hidden self-start sticky top-8 xl:mt-0 xl:block">
@@ -302,19 +341,22 @@ export function ComponentPlaygroundPane({
                 aria-label="On this page"
                 className="space-y-0.5 border-l  pl-4 text-sm"
               >
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
                   On this page
                 </p>
                 <TocLink href="#source">Source</TocLink>
+                <TocLink href="#examples">Examples</TocLink>
+                {hasControls ? (
+                  <TocLink href="#api-reference">API reference</TocLink>
+                ) : null}
                 <TocLink href="#usage">Usage</TocLink>
                 <TocLink href="#repo-usage">Repo usage</TocLink>
-                {hasControls ? <TocLink href="#playground">Playground</TocLink> : null}
-                <TocLink href="#examples">Examples</TocLink>
                 <TocLink href="#design-tokens">Design tokens</TocLink>
                 <TocLink href="#code-score">Code score</TocLink>
                 <TocLink href="#accessibility">Accessibility</TocLink>
-                {hasControls ? <TocLink href="#api-reference">API reference</TocLink> : null}
-                {showVariantsSection ? <TocLink href="#variants">Variants</TocLink> : null}
+                {showVariantsSection ? (
+                  <TocLink href="#variants">Variants</TocLink>
+                ) : null}
               </nav>
             </aside>
           </div>
@@ -326,14 +368,16 @@ export function ComponentPlaygroundPane({
             className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t  pt-10 pb-12"
           >
             <div className="mx-auto max-w-6xl px-6 lg:px-12">
-              <h2 className="text-xl bg-white w-fit font-semibold tracking-tight text-gray-900">All variants</h2>
-                <PlaygroundVariantMatrix
-                  Preview={Preview}
-                  combinations={variantEnumeration.combinations}
-                  finiteAxisKeys={variantEnumeration.finiteAxisKeys}
-                  totalCount={variantEnumeration.totalCount}
-                  capped={variantEnumeration.capped}
-                />
+              <h2 className="text-xl bg-white w-fit font-semibold tracking-tight text-gray-900">
+                All variants
+              </h2>
+              <PlaygroundVariantMatrix
+                Preview={Preview}
+                combinations={variantEnumeration.combinations}
+                finiteAxisKeys={variantEnumeration.finiteAxisKeys}
+                totalCount={variantEnumeration.totalCount}
+                capped={variantEnumeration.capped}
+              />
             </div>
           </section>
         ) : null}

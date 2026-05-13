@@ -14,11 +14,17 @@ import { shortPath } from "./paths";
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";
   return loc.props
-    .map((p) => (loc.prop_values?.[p] != null ? `${p}=${JSON.stringify(loc.prop_values[p])}` : p))
+    .map((p) =>
+      loc.prop_values?.[p] != null
+        ? `${p}=${JSON.stringify(loc.prop_values[p])}`
+        : p,
+    )
     .join(", ");
 }
 
-function sortedLocations(locations: UsageLocation[] | undefined): UsageLocation[] {
+function sortedLocations(
+  locations: UsageLocation[] | undefined,
+): UsageLocation[] {
   const list = [...(locations ?? [])];
   list.sort((a, b) => a.path.localeCompare(b.path) || a.line - b.line);
   return list;
@@ -39,8 +45,8 @@ export function ComponentUsageDetails({
   if (!report) {
     return (
       <div className="rounded-lg border  bg-white p-4 text-sm text-gray-500">
-        Load <span className="font-mono">dslint-report.json</span> to see where this component is
-        referenced in the workspace.
+        Load <span className="font-mono">dslint-report.json</span> to see where
+        this component is referenced in the workspace.
       </div>
     );
   }
@@ -60,14 +66,20 @@ export function ComponentUsageDetails({
   return (
     <div className="rounded-lg border  bg-white p-4 shadow-xs">
       <p className="text-sm text-gray-600">
-        <span className="font-mono text-gray-900">×{usage.reference_count}</span>{" "}
+        <span className="font-mono text-gray-900">
+          ×{usage.reference_count}
+        </span>{" "}
         <span className="text-gray-400">references</span> across{" "}
         <span className="font-mono text-gray-900">{usage.file_count}</span>{" "}
-        <span className="text-gray-400">{usage.file_count === 1 ? "file" : "files"}</span>
+        <span className="text-gray-400">
+          {usage.file_count === 1 ? "file" : "files"}
+        </span>
         {usage.max_props_on_single_use > 0 ? (
           <>
             . Busiest call site passes up to{" "}
-            <span className="font-mono text-gray-900">{usage.max_props_on_single_use}</span>{" "}
+            <span className="font-mono text-gray-900">
+              {usage.max_props_on_single_use}
+            </span>{" "}
             <span className="text-gray-400">props</span>.
           </>
         ) : (
@@ -97,11 +109,13 @@ export function ComponentUsageDetails({
                   key={`${loc.path}-${loc.line}-${i}`}
                   className="border-border hover:bg-transparent"
                 >
-                  <TableCell className="px-3 py-2.5 font-mono text-xs">{shortPath(report.root, loc.path)}</TableCell>
+                  <TableCell className="px-3 py-2.5 font-mono text-xs">
+                    {shortPath(report.root, loc.path)}
+                  </TableCell>
                   <TableCell className="px-3 py-2.5 font-mono text-xs tabular-nums text-muted-foreground">
                     {loc.line}
                   </TableCell>
-                  <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                  <TableCell className="whitespace-normal px-3 py-2.5 font-mono text-xs leading-relaxed text-muted-foreground">
                     {formatCallSiteProps(loc)}
                   </TableCell>
                 </TableRow>
@@ -111,9 +125,10 @@ export function ComponentUsageDetails({
         </div>
       ) : (
         <p className="mt-3 text-sm text-gray-500">
-          Usage counts are present but individual call sites were not recorded in this report.
-          Regenerate with a current <span className="font-mono">dslint</span> build if you expect a
-          site list.
+          Usage counts are present but individual call sites were not recorded
+          in this report. Regenerate with a current{" "}
+          <span className="font-mono">dslint</span> build if you expect a site
+          list.
         </p>
       )}
     </div>

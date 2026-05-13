@@ -56,7 +56,7 @@
         {
           "name": "Button",
           "kind": "function",
-          "line": 185,
+          "line": 186,
           "declared_props": [
             "variant",
             "size",
@@ -72,12 +72,12 @@
         {
           "name": "LoadingSpinner",
           "kind": "function",
-          "line": 266
+          "line": 269
         },
         {
           "name": "TouchTarget",
           "kind": "function",
-          "line": 276,
+          "line": 279,
           "declared_props": [
             "children"
           ]
@@ -86,17 +86,17 @@
       "usages": [
         {
           "component": "TouchTarget",
-          "line": 226,
+          "line": 228,
           "props": []
         },
         {
           "component": "TouchTarget",
-          "line": 242,
+          "line": 244,
           "props": []
         },
         {
           "component": "LoadingSpinner",
-          "line": 250,
+          "line": 252,
           "props": []
         }
       ],
@@ -1886,12 +1886,12 @@
       "usage_locations": [
         {
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
-          "line": 226,
+          "line": 228,
           "props": []
         },
         {
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
-          "line": 242,
+          "line": 244,
           "props": []
         }
       ]
@@ -1923,7 +1923,7 @@
       "usage_locations": [
         {
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
-          "line": 250,
+          "line": 252,
           "props": []
         }
       ]

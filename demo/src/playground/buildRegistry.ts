@@ -21,7 +21,7 @@ function relPathToGlobKey(relPath: string): string {
 
 function isLikelyBooleanProp(name: string): boolean {
   const n = name.toLowerCase();
-  if (n === "disabled") return true;
+  if (n === "disabled" || n === "loading") return true;
   if (n.startsWith("is") || n.startsWith("has")) return true;
   if (n.startsWith("show") || n.startsWith("hide")) return true;
   return false;
@@ -66,6 +66,7 @@ function controlsFromDeclaredProps(declaredProps: string[]): PlaygroundControl[]
   return out;
 }
 
+/** Keys may match playground `id` (file stem) or `export_name` from the report. */
 const controlOverrides: Record<string, PlaygroundControl[]> = {
   LegacyButton: [
     {
@@ -101,10 +102,60 @@ const controlOverrides: Record<string, PlaygroundControl[]> = {
       ],
     },
   ],
+  /** Mirrors `Variant` / `Size | IconSize` in `Button.tsx` — the scanner only emits prop names, not union literals. */
+  Button: [
+    {
+      key: "children",
+      label: "children",
+      type: "string",
+      default: "Preview",
+      placeholder: "Text content",
+    },
+    {
+      key: "variant",
+      label: "variant",
+      type: "select",
+      default: "white",
+      options: [
+        { value: "black", label: "black" },
+        { value: "dark", label: "dark" },
+        { value: "muted", label: "muted" },
+        { value: "white", label: "white" },
+        { value: "primary", label: "primary" },
+        { value: "danger", label: "danger" },
+        { value: "gitlab", label: "gitlab" },
+        { value: "bitbucket", label: "bitbucket" },
+        { value: "nightwatch", label: "nightwatch" },
+        { value: "ghost", label: "ghost" },
+        { value: "outline", label: "outline" },
+        { value: "danger-outline", label: "danger-outline" },
+        { value: "icon", label: "icon" },
+        { value: "icon-outline", label: "icon-outline" },
+      ],
+    },
+    {
+      key: "size",
+      label: "size",
+      type: "select",
+      default: "default",
+      options: [
+        { value: "small", label: "small" },
+        { value: "medium", label: "medium" },
+        { value: "default", label: "default" },
+        { value: "large", label: "large" },
+      ],
+    },
+    { key: "loading", label: "loading", type: "boolean", default: false },
+    { key: "disabled", label: "disabled", type: "boolean", default: false },
+  ],
 };
 
-function controlsForSpec(id: string, declaredProps: string[]): PlaygroundControl[] {
-  const override = controlOverrides[id];
+function controlsForSpec(
+  id: string,
+  exportName: string,
+  declaredProps: string[],
+): PlaygroundControl[] {
+  const override = controlOverrides[id] ?? controlOverrides[exportName];
   if (override) return override;
   return controlsFromDeclaredProps(declaredProps);
 }
@@ -205,7 +256,7 @@ export function buildPlaygroundEntries(
     const PreviewComponent = Cmp;
 
     const declared = spec.declared_props ?? [];
-    const controls = controlsForSpec(spec.id, declared);
+    const controls = controlsForSpec(spec.id, spec.export_name, declared);
     const staticDefaults = playgroundStaticDefaults[spec.id] ?? {};
 
     function Preview({ values }: { values: PlaygroundArgs }) {
