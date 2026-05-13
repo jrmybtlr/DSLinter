@@ -7,10 +7,10 @@ type Props = {
 };
 
 const variantClass: Record<Variant, string> = {
-  info: "border-primary/30 bg-primary/5 text-slate-900",
-  success: "border-success/30 bg-success/5 text-slate-900",
-  warning: "border-warning/40 bg-warning/10 text-slate-900",
-  danger: "border-danger/40 bg-danger/5 text-slate-900",
+  info: "border-primary/30 bg-primary/5 text-gray-900",
+  success: "border-success/30 bg-success/5 text-gray-900",
+  warning: "border-warning/40 bg-warning/10 text-gray-900",
+  danger: "border-danger/40 bg-danger/5 text-gray-900",
 };
 
 const roleForVariant: Record<Variant, "status" | "alert"> = {
@@ -29,7 +29,7 @@ export function InlineAlert({ children, variant = "info", title }: Props) {
       className={`rounded-ds border px-layout-sm py-layout-xs text-sm ${variantClass[v]}`}
     >
       {title ? <p className="mb-1 font-semibold">{title}</p> : null}
-      <div className="text-slate-800 [&_p]:m-0 [&_p+_p]:mt-2">{children}</div>
+      <div className="text-gray-800 [&_p]:m-0 [&_p+_p]:mt-2">{children}</div>
     </div>
   );
 }

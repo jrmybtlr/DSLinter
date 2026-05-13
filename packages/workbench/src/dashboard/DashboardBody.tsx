@@ -66,7 +66,7 @@ export function DashboardBody({
           <div>
             <h2 className="text-sm font-semibold text-neutral-900">Governance signals</h2>
             <p className="text-xs text-neutral-500">
-              Accessibility (`a11y-*`) and code smell (`smell-*`) rules from the latest DSLint run.
+              Accessibility (`a11y-*`) and code-quality heuristics (`smell-*` rule ids) from the latest DSLint run.
             </p>
           </div>
           <span className="text-xs text-neutral-400">{report.findings.length} total</span>

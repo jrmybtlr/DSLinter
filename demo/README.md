@@ -36,7 +36,7 @@ npm install && cd demo && npm run dev
 pnpm install && cd demo && pnpm dev
 ```
 
-**pnpm:** install from the repo root the first time so the workspace is linked. Running `pnpm install` only inside `demo/` without a parent `pnpm-workspace.yaml` will not see `packages/workbench`.
+**pnpm:** Prefer **`pnpm install` from the repo root** (predictable, one lockfile). Running `pnpm install` from `demo/` still picks up the parent `pnpm-workspace.yaml` and scopes all workspace packages, but pnpm may **prompt** to wipe and reinstall `node_modules` (non-interactive shells can appear to hang — use root installs or `CI=true pnpm install` in CI).
 
 With **npm**, `cd demo && npm install` still discovers the root `package.json` workspaces.
 
@@ -97,7 +97,7 @@ Configuration for this tree lives in `demo/.dslint.json` (deprecated component n
 - **deprecated-component** — `LegacyButton`, `DeprecatedChip` referenced while listed as deprecated.
 - **token-hardcoded-color** — hex values in `FlashBanner`, `InlinePaint`, `LegacyButton`, etc.
 - **a11y-img-alt**, **a11y-anchor-href**, **a11y-anchor-placeholder-href**, **a11y-button-name**, **a11y-input-label** — JSX via AST; Vue `<template>` scanned for img / anchor / input (e.g. `MysteryImage`, `<a>` without `href` inside `FlashBanner`).
-- **`smell-*`** — `console.log` / etc. (`smell-console`), `console.error` (`smell-console-error`), debugger, lint/ts suppressions, TODO markers, huge files, inline JSX `style={{}}`, empty `catch`, redundant fragments.
+- **`smell-*` (code quality / maintainability signals)** — `console.log` / etc. (`smell-console`), `console.error` (`smell-console-error`), debugger, lint/ts suppressions, TODO markers, huge files, inline JSX `style={{}}`, empty `catch`, redundant fragments.
 - **variant-explosion** — `KitchenSinkModal`’s `PlaygroundPreview` passes many props for the demo.
 - **usage rollup** — imports such as `PrimaryButton`, `ContentCard`, `KitchenSinkModal` appear in JSON output.
 

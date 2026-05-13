@@ -10,14 +10,14 @@ type Props = {
 function navButtonClass(active: boolean) {
   return `w-full rounded-md px-2.5 py-1.5 text-left text-xs font-medium transition ${
     active
-      ? "bg-slate-900 text-white shadow-sm"
-      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+      ? "bg-gray-900 text-white shadow-sm"
+      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
   }`;
 }
 
 function sectionLabel(text: string) {
   return (
-    <p className="mb-1.5 mt-4 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 first:mt-0">
+    <p className="mb-1.5 mt-4 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 first:mt-0">
       {text}
     </p>
   );
@@ -30,7 +30,7 @@ export function Sidebar({ entries, route, onNavigate }: Props) {
 
   return (
     <aside className="fixed h-full w-[240px] overflow-y-auto shrink-0 flex-col border-r border-gray-200">
-      <div className="border-b border-slate-200 px-6 py-4 sticky top-0 bg-white">
+      <div className="border-b border-gray-200 px-6 py-4 sticky top-0 bg-white">
         <p className=" text-neutral-900 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
               <g fill="currentColor">

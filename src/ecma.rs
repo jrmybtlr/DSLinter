@@ -121,8 +121,13 @@ fn extract_props_from_params(params: &FormalParameters<'_>) -> Vec<String> {
             }
         }
     }
-    props.sort();
     props
+}
+
+/// Drop duplicate prop names while keeping the first occurrence (destructure order, then type keys).
+fn dedupe_props_preserve_order(keys: &mut Vec<String>) {
+    let mut seen = HashSet::new();
+    keys.retain(|k| seen.insert(k.clone()));
 }
 
 fn merge_declared_props(
@@ -133,8 +138,7 @@ fn merge_declared_props(
     keys.extend(crate::ts_shape_map::props_from_first_param_type_annotation(
         params, ts_shapes,
     ));
-    keys.sort();
-    keys.dedup();
+    dedupe_props_preserve_order(&mut keys);
     keys
 }
 
@@ -775,7 +779,7 @@ export function Button({ variant, size, onClick }: ButtonProps) {
             .iter()
             .find(|d| d.name == "Button")
             .expect("Button definition");
-        assert_eq!(btn.declared_props, vec!["onClick", "size", "variant"]);
+        assert_eq!(btn.declared_props, vec!["variant", "size", "onClick"]);
     }
 
     #[test]
@@ -790,7 +794,7 @@ export const Card = ({ title, body }: CardProps) => <div>{title}</div>;
             .iter()
             .find(|d| d.name == "Card")
             .expect("Card definition");
-        assert_eq!(card.declared_props, vec!["body", "title"]);
+        assert_eq!(card.declared_props, vec!["title", "body"]);
     }
 
     #[test]
@@ -824,7 +828,7 @@ export function Button({ onClick }: { onClick: () => void } & BtnProps) {
             .iter()
             .find(|d| d.name == "Button")
             .expect("Button definition");
-        assert_eq!(btn.declared_props, vec!["onClick", "size", "variant"]);
+        assert_eq!(btn.declared_props, vec!["onClick", "variant", "size"]);
     }
 
     #[test]

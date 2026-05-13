@@ -10,7 +10,7 @@ type Props = {
 };
 
 const toneClass: Record<Tone, string> = {
-  neutral: "bg-slate-100 text-slate-800 border-surface-border",
+  neutral: "bg-gray-100 text-gray-800 border-surface-border",
   success: "bg-emerald-50 text-emerald-900 border-emerald-200",
   warning: "bg-amber-50 text-amber-950 border-amber-200",
   danger: "bg-danger/10 text-danger border-danger/30",
@@ -30,7 +30,7 @@ export function Tag({ children, tone = "neutral", dismissible = false }: Props) 
       {dismissible ? (
         <button
           type="button"
-          className="-mr-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-slate-400"
+          className="-mr-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-gray-400"
           aria-label="Remove"
           onClick={() => setVisible(false)}
         >

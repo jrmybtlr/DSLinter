@@ -12,7 +12,7 @@ export function SegmentedPill({ pressedTone, children }: Props) {
     <button
       type="button"
       aria-pressed={active}
-      className={`rounded px-3 py-1 text-sm ${active ? "bg-slate-900 text-white" : "bg-slate-200"}`}
+      className={`rounded px-3 py-1 text-sm ${active ? "bg-gray-900 text-white" : "bg-gray-200"}`}
     >
       {children}
     </button>

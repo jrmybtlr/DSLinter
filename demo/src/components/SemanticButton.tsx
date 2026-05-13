@@ -14,7 +14,7 @@ const variantClass: Record<Variant, string> = {
   primary:
     "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-primary",
   secondary:
-    "border border-surface-border bg-surface-elevated text-slate-800 shadow-sm hover:bg-slate-50 focus-visible:outline-slate-400",
+    "border border-surface-border bg-surface-elevated text-gray-800 shadow-sm hover:bg-gray-50 focus-visible:outline-gray-400",
   danger:
     "bg-danger text-danger-foreground shadow-sm hover:bg-danger/90 focus-visible:outline-danger",
   success:
@@ -22,7 +22,7 @@ const variantClass: Record<Variant, string> = {
   warning:
     "bg-warning text-warning-foreground shadow-sm hover:bg-warning/90 focus-visible:outline-warning",
   ghost:
-    "bg-transparent text-slate-800 hover:bg-slate-100 focus-visible:outline-slate-400",
+    "bg-transparent text-gray-800 hover:bg-gray-100 focus-visible:outline-gray-400",
 };
 
 const sizeClass: Record<Size, string> = {

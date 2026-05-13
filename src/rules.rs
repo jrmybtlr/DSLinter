@@ -1,4 +1,4 @@
-//! Governance rules (MVP): duplicates, deprecation, tokens, accessibility, and code smells.
+//! Governance rules (MVP): duplicates, deprecation, tokens, accessibility, and code-quality heuristics (`smell-*`).
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};

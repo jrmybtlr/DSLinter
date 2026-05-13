@@ -1,5 +1,5 @@
-//! Code smell heuristics for sloppy or redundant patterns (console noise,
-//! suppressions, oversized files, inline styles, empty catches, etc.).
+//! Code quality heuristics (rule ids `smell-*`): patterns that add noise or risk
+//! (console/debugger, suppressions, oversized files, inline styles, empty catches, etc.).
 
 use std::path::{Path, PathBuf};
 

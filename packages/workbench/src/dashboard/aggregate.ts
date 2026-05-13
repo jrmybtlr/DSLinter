@@ -24,19 +24,21 @@ export function aggregateDefinitions(report: WorkspaceReport): Map<string, Defin
   return map;
 }
 
-/** Merges `declared_props` from scan definitions and playground rows (sorted, deduped). */
+/** Merges `declared_props` from scan definitions and playground rows (source order, then deduped). */
 export function aggregateDeclaredProps(report: WorkspaceReport): Map<string, string[]> {
-  const map = new Map<string, Set<string>>();
+  const map = new Map<string, string[]>();
 
   const add = (name: string, props: readonly string[] | undefined) => {
     if (HIDDEN_COMPONENTS.has(name)) return;
     if (!props?.length) return;
-    let set = map.get(name);
-    if (!set) {
-      set = new Set();
-      map.set(name, set);
+    let list = map.get(name);
+    if (!list) {
+      list = [];
+      map.set(name, list);
     }
-    for (const p of props) set.add(p);
+    for (const p of props) {
+      if (!list.includes(p)) list.push(p);
+    }
   };
 
   for (const file of report.files ?? []) {
@@ -48,11 +50,7 @@ export function aggregateDeclaredProps(report: WorkspaceReport): Map<string, str
     add(pg.export_name, pg.declared_props);
   }
 
-  const out = new Map<string, string[]>();
-  for (const [name, set] of map) {
-    out.set(name, [...set].sort((a, b) => a.localeCompare(b)));
-  }
-  return out;
+  return map;
 }
 
 export function usageMap(report: WorkspaceReport): Map<string, UsageSummary> {

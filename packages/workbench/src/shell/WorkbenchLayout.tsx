@@ -54,15 +54,15 @@ export function WorkbenchLayout({
     const entry = getEntry(route.componentId);
     if (!entry) {
       main = (
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-slate-50 px-8 text-center">
-          <p className="text-sm font-medium text-slate-900">Unknown preview</p>
-          <p className="max-w-md text-xs text-slate-500">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-gray-50 px-8 text-center">
+          <p className="text-sm font-medium text-gray-900">Unknown preview</p>
+          <p className="max-w-md text-xs text-gray-500">
             No playground registered for <span className="font-mono">{route.componentId}</span>.
           </p>
           <button
             type="button"
             onClick={() => navigate({ view: "overview" })}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+            className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
           >
             Back to overview
           </button>

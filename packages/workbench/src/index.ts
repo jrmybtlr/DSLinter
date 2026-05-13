@@ -39,6 +39,8 @@ export type { DslintReportState } from "./dashboard/useWorkspaceReport";
 export { a11ySummaryForModule, resolveModuleSourcePath } from "./report/a11yForModule";
 export type { A11yModuleSummary } from "./report/a11yForModule";
 export { tokenStyleFindingsForModule } from "./report/tokenStyleFindingsForModule";
+export { codeScoreSummaryForModule } from "./report/codeScoreForModule";
+export type { CodeScoreModuleSummary } from "./report/codeScoreForModule";
 export { TokenWall } from "./dashboard/TokenWall";
 export { DashboardBody } from "./dashboard/DashboardBody";
 

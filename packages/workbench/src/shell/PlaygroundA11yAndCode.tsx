@@ -1,12 +1,13 @@
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
+import type { CodeScoreModuleSummary } from "../report/codeScoreForModule";
 import type { LintFinding, UsageSummary } from "../types/report";
 import { controlsToApiRows } from "./controlApiTable";
 import { PlaygroundUsageCode } from "./PlaygroundUsageCode";
 
-const sectionTitleClass = "text-lg font-semibold tracking-tight text-slate-900";
-const sectionDescClass = "mt-1 text-sm text-slate-600";
+const sectionTitleClass = "text-lg font-semibold tracking-tight text-gray-900";
+const sectionDescClass = "mt-1 text-sm text-gray-600";
 
 type UsageProps = {
   entry: PlaygroundEntry;
@@ -41,38 +42,111 @@ export function PlaygroundTokenStyleSection({ findings, reportReady }: TokenStyl
         <span className="font-mono text-[13px]">dslint-report.json</span> (hardcoded colors, Tailwind arbitrary values).
         Regenerate the report after edits.
       </p>
-      <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-xs">
         {reportReady && findings.length > 0 ? (
           <table className="w-full min-w-[28rem] border-collapse text-left text-[13px]">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="px-3 py-2.5 font-semibold text-slate-700">Rule</th>
-                <th className="w-16 px-3 py-2.5 font-semibold text-slate-700">Line</th>
-                <th className="px-3 py-2.5 font-semibold text-slate-700">Severity</th>
-                <th className="px-3 py-2.5 font-semibold text-slate-700">Message</th>
+              <tr className="border-b border-gray-200 bg-gray-50/80">
+                <th className="px-3 py-2.5 font-semibold text-gray-700">Rule</th>
+                <th className="w-16 px-3 py-2.5 font-semibold text-gray-700">Line</th>
+                <th className="px-3 py-2.5 font-semibold text-gray-700">Severity</th>
+                <th className="px-3 py-2.5 font-semibold text-gray-700">Message</th>
               </tr>
             </thead>
-            <tbody className="text-slate-800">
+            <tbody className="text-gray-800">
               {findings.map((f, i) => (
-                <tr key={`${f.rule_id}-${f.line ?? "x"}-${i}`} className="border-b border-slate-100 last:border-0">
-                  <td className="px-3 py-2.5 font-mono text-[11px] text-slate-900">{f.rule_id}</td>
-                  <td className="px-3 py-2.5 font-mono text-[12px] text-slate-600">{f.line ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-[12px] capitalize text-slate-600">{f.severity}</td>
-                  <td className="px-3 py-2.5 text-slate-700">{f.message}</td>
+                <tr key={`${f.rule_id}-${f.line ?? "x"}-${i}`} className="border-b border-gray-100 last:border-0">
+                  <td className="px-3 py-2.5 font-mono text-[11px] text-gray-900">{f.rule_id}</td>
+                  <td className="px-3 py-2.5 font-mono text-[12px] text-gray-600">{f.line ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-[12px] capitalize text-gray-600">{f.severity}</td>
+                  <td className="px-3 py-2.5 text-gray-700">{f.message}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : reportReady && findings.length === 0 ? (
-          <p className="p-4 text-sm text-slate-500">
+          <p className="p-4 text-sm text-gray-500">
             No hardcoded or arbitrary token color findings on this file in the current report.
           </p>
         ) : (
-          <p className="p-4 text-sm text-slate-500">
+          <p className="p-4 text-sm text-gray-500">
             Token findings update when <span className="font-mono">dslint-report.json</span> is available (same fetch as
             Governance).
           </p>
         )}
+      </div>
+    </section>
+  );
+}
+
+type CodeScoreProps = {
+  codeScore: CodeScoreModuleSummary;
+  reportReady: boolean;
+};
+
+export function PlaygroundCodeScoreSection({ codeScore, reportReady }: CodeScoreProps) {
+  const { findings } = codeScore;
+  const scoreTone =
+    codeScore.score >= 85
+      ? "text-emerald-800 bg-emerald-50 border-emerald-200"
+      : codeScore.score >= 60
+        ? "text-amber-900 bg-amber-50 border-amber-200"
+        : "text-red-900 bg-red-50 border-red-200";
+
+  return (
+    <section id="code-score" className="scroll-mt-20">
+      <h2 className={sectionTitleClass}>Code score</h2>
+      <p className={sectionDescClass}>
+        Heuristic quality checks on this file (rule ids use the <span className="font-mono text-[13px]">smell-*</span>{" "}
+        prefix in <span className="font-mono text-[13px]">dslint-report.json</span>) — they feed repo maintainability.
+        Regenerate the report after edits.
+      </p>
+      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1" />
+          <div className={`shrink-0 rounded-lg border px-3 py-2 text-center ${scoreTone}`}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide opacity-80">Code score</p>
+            <p className="text-2xl font-bold tabular-nums">{reportReady ? codeScore.score : "—"}</p>
+            {reportReady ? (
+              <p className="mt-0.5 text-[10px] opacity-90">
+                {codeScore.issueCount} finding{codeScore.issueCount === 1 ? "" : "s"}
+              </p>
+            ) : (
+              <p className="mt-0.5 max-w-40 text-[10px] opacity-90">Load report…</p>
+            )}
+          </div>
+        </div>
+        <div className="mt-4 overflow-x-auto rounded-md border border-gray-100">
+          {reportReady && findings.length > 0 ? (
+            <table className="w-full min-w-72 border-collapse text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50/80">
+                  <th className="px-3 py-2.5 font-semibold text-gray-700">Rule</th>
+                  <th className="w-16 px-3 py-2.5 font-semibold text-gray-700">Line</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-700">Severity</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-700">Message</th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-800">
+                {findings.map((f, i) => (
+                  <tr key={`${f.rule_id}-${f.line ?? "x"}-${i}`} className="border-b border-gray-100 last:border-0">
+                    <td className="px-3 py-2.5 font-mono text-[11px] text-gray-900">{f.rule_id}</td>
+                    <td className="px-3 py-2.5 font-mono text-[12px] text-gray-600">{f.line ?? "—"}</td>
+                    <td className="px-3 py-2.5 text-[12px] capitalize text-gray-600">{f.severity}</td>
+                    <td className="px-3 py-2.5 text-gray-700">{f.message}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : reportReady && findings.length === 0 ? (
+            <p className="p-4 text-sm text-gray-500">No quality findings on this file in the current report.</p>
+          ) : (
+            <p className="p-4 text-sm text-gray-500">
+              Code score updates when <span className="font-mono">dslint-report.json</span> is available (same fetch as
+              Governance).
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -94,7 +168,7 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
         Score from <span className="font-mono text-[13px]">a11y-*</span> findings on this file in{" "}
         <span className="font-mono text-[13px]">dslint-report.json</span>. Regenerate the report after edits.
       </p>
-      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1" />
           <div className={`shrink-0 rounded-lg border px-3 py-2 text-center ${scoreTone}`}>
@@ -108,21 +182,21 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
           </div>
         </div>
         {reportReady && a11y.findings.length > 0 ? (
-          <ul className="mt-4 max-h-48 divide-y divide-slate-100 overflow-y-auto rounded-md border border-slate-100 bg-slate-50 text-xs">
+          <ul className="mt-4 max-h-48 divide-y divide-gray-100 overflow-y-auto rounded-md border border-gray-100 bg-gray-50 text-xs">
             {a11y.findings.map((f, i) => (
               <li key={`${f.rule_id}-${i}`} className="flex flex-col gap-0.5 px-2 py-2 sm:flex-row sm:justify-between">
-                <span className="font-mono text-[10px] text-slate-600">{f.rule_id}</span>
-                <span className="text-slate-800">{f.message}</span>
+                <span className="font-mono text-[10px] text-gray-600">{f.rule_id}</span>
+                <span className="text-gray-800">{f.message}</span>
                 {f.line != null ? (
-                  <span className="shrink-0 font-mono text-[10px] text-slate-400">:{f.line}</span>
+                  <span className="shrink-0 font-mono text-[10px] text-gray-400">:{f.line}</span>
                 ) : null}
               </li>
             ))}
           </ul>
         ) : reportReady && a11y.issueCount === 0 ? (
-          <p className="mt-4 text-xs text-slate-500">No accessibility findings on this file in the current report.</p>
+          <p className="mt-4 text-xs text-gray-500">No accessibility findings on this file in the current report.</p>
         ) : (
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-gray-500">
             A11y score updates when <span className="font-mono">dslint-report.json</span> is available (same fetch as Governance).
           </p>
         )}
@@ -184,41 +258,41 @@ export function PlaygroundApiReference({
             ? " No JSX usage was recorded for this component in the current report, so repo adoption columns are omitted."
             : " Load dslint-report.json to add repo call-site and literal columns for each prop."}
       </p>
-      <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-xs">
         <table className="w-full min-w-[36rem] border-collapse text-left text-[13px]">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/80">
-              <th className="px-3 py-2.5 font-semibold text-slate-700">Prop</th>
-              <th className="px-3 py-2.5 font-semibold text-slate-700">Type</th>
-              <th className="px-3 py-2.5 font-semibold text-slate-700">Default</th>
-              <th className="px-3 py-2.5 font-semibold text-slate-700">Description</th>
+            <tr className="border-b border-gray-200 bg-gray-50/80">
+              <th className="px-3 py-2.5 font-semibold text-gray-700">Prop</th>
+              <th className="px-3 py-2.5 font-semibold text-gray-700">Type</th>
+              <th className="px-3 py-2.5 font-semibold text-gray-700">Default</th>
+              <th className="px-3 py-2.5 font-semibold text-gray-700">Description</th>
               {showRepo ? (
                 <>
-                  <th className="w-28 px-3 py-2.5 font-semibold text-slate-700">Repo call sites</th>
-                  <th className="min-w-[14rem] px-3 py-2.5 font-semibold text-slate-700">Repo literals</th>
+                  <th className="w-28 px-3 py-2.5 font-semibold text-gray-700">Repo call sites</th>
+                  <th className="min-w-[14rem] px-3 py-2.5 font-semibold text-gray-700">Repo literals</th>
                 </>
               ) : null}
             </tr>
           </thead>
-          <tbody className="text-slate-800">
+          <tbody className="text-gray-800">
             {rows.map((r) => {
               const n = showRepo ? (freqs[r.prop] ?? 0) : 0;
               const unusedAtRepo = showRepo && declaredPropsFromScan.includes(r.prop) && n === 0;
               return (
-                <tr key={r.prop} className="border-b border-slate-100 last:border-0">
-                  <td className="px-3 py-2.5 font-mono text-[12px] text-slate-900">{r.prop}</td>
-                  <td className="max-w-[12rem] px-3 py-2.5 font-mono text-[11px] text-slate-600">{r.type}</td>
-                  <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">{r.default}</td>
-                  <td className="px-3 py-2.5 text-slate-600">{r.description}</td>
+                <tr key={r.prop} className="border-b border-gray-100 last:border-0">
+                  <td className="px-3 py-2.5 font-mono text-[12px] text-gray-900">{r.prop}</td>
+                  <td className="max-w-[12rem] px-3 py-2.5 font-mono text-[11px] text-gray-600">{r.type}</td>
+                  <td className="px-3 py-2.5 font-mono text-[11px] text-gray-600">{r.default}</td>
+                  <td className="px-3 py-2.5 text-gray-600">{r.description}</td>
                   {showRepo ? (
                     <>
                       <td
-                        className={`px-3 py-2.5 font-mono text-[12px] tabular-nums ${unusedAtRepo ? "text-slate-400" : "text-slate-700"}`}
+                        className={`px-3 py-2.5 font-mono text-[12px] tabular-nums ${unusedAtRepo ? "text-gray-400" : "text-gray-700"}`}
                         title={unusedAtRepo ? "Declared in the scanned component but not passed at any captured call site" : undefined}
                       >
                         ×{n}
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-[11px] leading-snug text-slate-600">
+                      <td className="px-3 py-2.5 font-mono text-[11px] leading-snug text-gray-600">
                         {formatRepoLiteralChips(valueFreqs[r.prop])}
                       </td>
                     </>
@@ -239,25 +313,25 @@ export function PlaygroundApiReference({
 
       {showRepo && extraRepoProps.length > 0 ? (
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-slate-800">Also seen in repo (not in playground)</h3>
-          <p className="mt-1 text-xs text-slate-600">
+          <h3 className="text-sm font-semibold text-gray-800">Also seen in repo (not in playground)</h3>
+          <p className="mt-1 text-xs text-gray-600">
             These prop names appear in scanned JSX but are not wired as playground controls on this page.
           </p>
-          <div className="mt-2 overflow-x-auto rounded-md border border-slate-200 bg-white">
+          <div className="mt-2 overflow-x-auto rounded-md border border-gray-200 bg-white">
             <table className="w-full min-w-[28rem] border-collapse text-left text-[13px]">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80">
-                  <th className="px-3 py-2.5 font-semibold text-slate-700">Prop</th>
-                  <th className="w-28 px-3 py-2.5 font-semibold text-slate-700">Repo call sites</th>
-                  <th className="min-w-[14rem] px-3 py-2.5 font-semibold text-slate-700">Repo literals</th>
+                <tr className="border-b border-gray-200 bg-gray-50/80">
+                  <th className="px-3 py-2.5 font-semibold text-gray-700">Prop</th>
+                  <th className="w-28 px-3 py-2.5 font-semibold text-gray-700">Repo call sites</th>
+                  <th className="min-w-[14rem] px-3 py-2.5 font-semibold text-gray-700">Repo literals</th>
                 </tr>
               </thead>
               <tbody>
                 {extraRepoProps.map((prop) => (
-                  <tr key={prop} className="border-b border-slate-100 last:border-0">
-                    <td className="px-3 py-2.5 font-mono text-[12px] text-slate-900">{prop}</td>
-                    <td className="px-3 py-2.5 font-mono text-[12px] tabular-nums text-slate-700">×{freqs[prop] ?? 0}</td>
-                    <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">{formatRepoLiteralChips(valueFreqs[prop])}</td>
+                  <tr key={prop} className="border-b border-gray-100 last:border-0">
+                    <td className="px-3 py-2.5 font-mono text-[12px] text-gray-900">{prop}</td>
+                    <td className="px-3 py-2.5 font-mono text-[12px] tabular-nums text-gray-700">×{freqs[prop] ?? 0}</td>
+                    <td className="px-3 py-2.5 font-mono text-[11px] text-gray-600">{formatRepoLiteralChips(valueFreqs[prop])}</td>
                   </tr>
                 ))}
               </tbody>

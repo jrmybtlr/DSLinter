@@ -19,7 +19,7 @@ export function ProgressBar({ value = 0, max = 100, isIndeterminate = false }: P
       aria-valuemax={isIndeterminate ? undefined : safeMax}
       aria-valuenow={isIndeterminate ? undefined : clamped}
       aria-label={isIndeterminate ? "Loading" : `${pct}% complete`}
-      className="h-2 w-full max-w-md overflow-hidden rounded-full bg-slate-200"
+      className="h-2 w-full max-w-md overflow-hidden rounded-full bg-gray-200"
     >
       {isIndeterminate ? (
         <div className="h-full w-full">

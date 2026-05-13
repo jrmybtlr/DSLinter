@@ -48,7 +48,7 @@ export function TextareaField({
 
   return (
     <div className="flex w-full max-w-md flex-col gap-layout-xs">
-      <label htmlFor={id} id={labelId} className="text-sm font-medium text-slate-800">
+      <label htmlFor={id} id={labelId} className="text-sm font-medium text-gray-800">
         {label}
         {required ? (
           <span className="text-danger" aria-hidden>
@@ -71,7 +71,7 @@ export function TextareaField({
         className={areaClass}
       />
       {helperText?.trim() ? (
-        <p id={helperId} className="text-xs text-slate-600">
+        <p id={helperId} className="text-xs text-gray-600">
           {helperText}
         </p>
       ) : null}

@@ -10,7 +10,7 @@ const DEFAULT_CONFIG_NAMES: &[&str] = &[".dslint.json", "dslint.json"];
 
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct SmellConfig {
-    /// Rule ids or prefixes (`smell-*`) to silence for this repo.
+    /// Rule ids or prefixes (`smell-*` quality heuristics) to silence for this repo.
     #[serde(default)]
     pub disabled_rules: Vec<String>,
     /// When false, `console.error` calls are not reported (`smell-console-error` dropped).

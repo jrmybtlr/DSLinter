@@ -10,7 +10,7 @@ use oxc_ast::ast::{
     TSInterfaceBody, TSSignature, TSType, TSTypeLiteral, TSTypeName,
 };
 
-/// Map type name → sorted unique property keys from object literals / interfaces / aliases.
+/// Map type name → unique property keys from object literals / interfaces / aliases (declaration order).
 pub fn collect_ts_prop_shape_map(program: &Program<'_>) -> HashMap<String, Vec<String>> {
     let mut alias_rhs: HashMap<String, &TSType<'_>> = HashMap::new();
     let mut interface_keys: HashMap<String, Vec<String>> = HashMap::new();
@@ -114,7 +114,7 @@ fn keys_from_interface_body(body: &TSInterfaceBody<'_>) -> Vec<String> {
             }
         }
     }
-    sort_dedup(&mut keys);
+    dedupe_preserve_order(&mut keys);
     keys
 }
 
@@ -129,21 +129,25 @@ fn keys_from_type_literal(lit: &TSTypeLiteral<'_>) -> Vec<String> {
             }
         }
     }
-    sort_dedup(&mut keys);
+    dedupe_preserve_order(&mut keys);
     keys
 }
 
-fn sort_dedup(keys: &mut Vec<String>) {
-    keys.sort();
-    keys.dedup();
+fn dedupe_preserve_order(keys: &mut Vec<String>) {
+    let mut seen = HashSet::new();
+    keys.retain(|k| seen.insert(k.clone()));
 }
 
 fn merge_prop_vecs(vecs: impl Iterator<Item = Vec<String>>) -> Vec<String> {
     let mut acc: Vec<String> = Vec::new();
+    let mut seen = HashSet::new();
     for v in vecs {
-        acc.extend(v);
+        for k in v {
+            if seen.insert(k.clone()) {
+                acc.push(k);
+            }
+        }
     }
-    sort_dedup(&mut acc);
     acc
 }
 

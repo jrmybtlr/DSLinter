@@ -9,7 +9,7 @@ export function FormField({ id, label }: Props) {
   const labelId = `${id}-label`;
   return (
     <div className="flex flex-col gap-layout-xs">
-      <label htmlFor={id} id={labelId} className="text-sm font-medium text-slate-800">
+      <label htmlFor={id} id={labelId} className="text-sm font-medium text-gray-800">
         {label}
       </label>
       <input
