@@ -312,23 +312,18 @@ export function ComponentPlaygroundPane({
               </div>
             </div>
             {maxOuterPx > 0 ? (
-              <p className="mt-2 mx-auto w-fit bg-white p-1 text-center text-xs/none tabular-nums text-gray-400">
-                {Math.round(previewWidthPx)}px
-                <span className="text-gray-300"> · </span>
-                <span
-                  className="text-gray-500"
-                  title="usemods detectBreakpoint"
-                >
-                  window {windowBreakpoint ?? "—"}
+              <div className="mt-4 divide-x h-6 overflow-hidden items-center mx-auto flex w-fit bg-white text-center text-xs/none tabular-nums font-mono border rounded-sm text-muted-foreground">
+                <span className="p-2.5">{Math.round(previewWidthPx)}px</span>
+                <span className=" p-2.5" title="usemods detectBreakpoint">
+                  Screen: {windowBreakpoint ?? "—"}
                 </span>
-                <span className="text-gray-300"> · </span>
                 <span
-                  className="text-gray-500"
+                  className=" p-2.5"
                   title="usemods detectContainerBreakpoint"
                 >
-                  preview {containerBreakpoint ?? "—"}
+                  Container: {containerBreakpoint ?? "—"}
                 </span>
-              </p>
+              </div>
             ) : null}
           </div>
         </section>

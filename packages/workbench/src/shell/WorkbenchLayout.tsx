@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslintReportState } from "../dashboard/useWorkspaceReport";
@@ -6,6 +7,7 @@ import { ComponentPlaygroundPane } from "./ComponentPlaygroundPane";
 import { GovernancePane } from "./GovernancePane";
 import { Sidebar } from "./Sidebar";
 import { TokensPane } from "./TokensPane";
+import { WorkbenchCommandPalette } from "./WorkbenchCommandPalette";
 import { useHashRoute } from "./useHashRoute";
 
 export type WorkbenchLayoutProps = {
@@ -33,6 +35,7 @@ export function WorkbenchLayout({
   dslintReport,
 }: WorkbenchLayoutProps) {
   const [route, navigate] = useHashRoute();
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   const getEntry = (id: string) => playgroundEntries.find((e) => e.id === id);
 
@@ -82,7 +85,18 @@ export function WorkbenchLayout({
 
   return (
     <div className="flex h-screen min-h-0 bg-white">
-      <Sidebar entries={playgroundEntries} route={route} onNavigate={navigate} />
+      <WorkbenchCommandPalette
+        entries={playgroundEntries}
+        onNavigate={navigate}
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+      />
+      <Sidebar
+        entries={playgroundEntries}
+        route={route}
+        onNavigate={navigate}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+      />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col ml-[240px]">{main}</div>
     </div>
   );

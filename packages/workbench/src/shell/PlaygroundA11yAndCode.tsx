@@ -17,6 +17,8 @@ import {
 import { controlsToApiRows } from "./controlApiTable";
 import { PlaygroundControlField } from "./PlaygroundControlField";
 import { PlaygroundUsageCode } from "./PlaygroundUsageCode";
+import { EmptyCard } from "./EmptyCard";
+import { cn } from "../lib/utils";
 
 const sectionTitleClass = "text-lg font-semibold tracking-tight text-gray-900";
 const sectionDescClass = "mt-1 text-sm text-gray-600";
@@ -54,11 +56,6 @@ export function PlaygroundTokenStyleSection({
   return (
     <section id="design-tokens" className="scroll-mt-20">
       <h2 className={sectionTitleClass}>Design tokens and colors</h2>
-      <p className={sectionDescClass}>
-        Token findings update when{" "}
-        <span className="font-mono">dslint-report.json</span> is available (same
-        fetch as Governance).
-      </p>
       {reportReady && findings.length > 0 ? (
         <Table className="mt-4">
           <TableHeader>
@@ -81,16 +78,16 @@ export function PlaygroundTokenStyleSection({
           </TableBody>
         </Table>
       ) : reportReady && findings.length === 0 ? (
-        <p className="mt-4 text-sm text-gray-500">
+        <EmptyCard className="mt-2">
           No hardcoded or arbitrary token color findings on this file in the
           current report.
-        </p>
+        </EmptyCard>
       ) : (
-        <p className="mt-4 text-sm text-gray-500">
+        <EmptyCard className="mt-2">
           Token findings update when{" "}
           <span className="font-mono">dslint-report.json</span> is available
           (same fetch as Governance).
-        </p>
+        </EmptyCard>
       )}
     </section>
   );
@@ -138,20 +135,16 @@ export function PlaygroundCodeScoreSection({
             </TableBody>
           </Table>
         </>
+      ) : reportReady && findings.length === 0 ? (
+        <EmptyCard className="mt-2">
+          No quality findings on this file in the current report.
+        </EmptyCard>
       ) : (
-        <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 flex-1 text-xs leading-snug text-gray-500">
-            {reportReady && findings.length === 0 ? (
-              <>No quality findings on this file in the current report.</>
-            ) : (
-              <>
-                Code score updates when{" "}
-                <span className="font-mono">dslint-report.json</span> is
-                available (same fetch as Governance).
-              </>
-            )}
-          </p>
-        </div>
+        <EmptyCard className="mt-2">
+          Code score updates when{" "}
+          <span className="font-mono">dslint-report.json</span> is available
+          (same fetch as Governance).
+        </EmptyCard>
       )}
     </section>
   );
@@ -191,18 +184,16 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
             ))}
           </ul>
         </>
+      ) : reportReady && a11y.issueCount === 0 ? (
+        <EmptyCard className="mt-2">
+          No accessibility findings on this file in the current report.
+        </EmptyCard>
       ) : (
-        <p className="min-w-0 flex-1 text-sm leading-snug text-gray-500 mt-1">
-          {reportReady && a11y.issueCount === 0 ? (
-            <>No accessibility findings on this file in the current report.</>
-          ) : (
-            <>
-              A11y score updates when{" "}
-              <span className="font-mono">dslint-report.json</span> is available
-              (same fetch as Governance).
-            </>
-          )}
-        </p>
+        <EmptyCard className="mt-2">
+          A11y score updates when{" "}
+          <span className="font-mono">dslint-report.json</span> is available
+          (same fetch as Governance).
+        </EmptyCard>
       )}
     </section>
   );
@@ -241,7 +232,7 @@ export function PlaygroundApiReference({
   onChange,
   onReset,
   reportUsage,
-  declaredPropsFromScan = [],
+  declaredPropsFromScan: _declaredPropsFromScan = [],
   governanceReportLoaded: _governanceReportLoaded = false,
 }: ApiProps) {
   if (controls.length === 0) return null;
@@ -297,13 +288,36 @@ export function PlaygroundApiReference({
               <TableRow key={r.prop}>
                 <TableCell>{r.prop}</TableCell>
                 <TableCell>
-                  {r.unionLiterals ? (
+                  {c.type === "select" ? (
                     <div className="flex flex-wrap items-center gap-1">
-                      {r.unionLiterals.map((lit) => (
-                        <Badge key={lit} variant="outline" size="sm">
-                          {lit}
-                        </Badge>
-                      ))}
+                      {c.options.map((o) => {
+                        const current = String(
+                          values[c.key] ?? c.default ?? "",
+                        );
+                        const selected = current === o.value;
+                        return (
+                          <Badge
+                            key={o.value}
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className={cn(
+                              selected &&
+                                "border-transparent bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300",
+                            )}
+                          >
+                            <button
+                              type="button"
+                              className="cursor-pointer"
+                              onClick={() => patch(c.key, o.value)}
+                              aria-pressed={selected}
+                              aria-label={`Set ${c.label} to ${o.label}`}
+                            >
+                              {o.value}
+                            </button>
+                          </Badge>
+                        );
+                      })}
                     </div>
                   ) : (
                     <span className="font-mono">{r.type}</span>
