@@ -10,6 +10,7 @@ import {
 import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
 import { shortPath } from "./paths";
+import { EmptyCard } from "../shell/EmptyCard";
 
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";
@@ -44,19 +45,14 @@ export function ComponentUsageDetails({
 
   if (!report) {
     return (
-      <div className="rounded-lg border  bg-white p-4 text-sm text-gray-500">
+      <EmptyCard className="rounded-lg border  bg-white p-4 text-sm text-gray-500">
         Load <span className="font-mono">dslint-report.json</span> to see where
         this component is referenced in the workspace.
-      </div>
+      </EmptyCard>
     );
-  }
-
-  if (!usage) {
+  } else if (!usage) {
     return (
-      <div className="rounded-lg border  bg-white p-4 text-sm text-gray-500">
-        No scanned JSX references found for{" "}
-        <span className="font-mono text-gray-800">{componentId}</span>.
-      </div>
+      <EmptyCard>No scanned usage locations found for {componentId}.</EmptyCard>
     );
   }
 

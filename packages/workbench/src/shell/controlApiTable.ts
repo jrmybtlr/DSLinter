@@ -3,7 +3,7 @@ import type { PlaygroundControl } from "../types/controls";
 export type ApiTableRow = {
   prop: string;
   type: string;
-  /** Select option values as JSON literals; Type column renders these as badges instead of a `|` string. */
+  /** Select option values; Type column renders these as badges instead of a `|` string. */
   unionLiterals: string[] | null;
   default: string;
 };
@@ -17,7 +17,7 @@ function formatDefault(c: PlaygroundControl): string {
     case "string":
       return c.default === "" ? "—" : JSON.stringify(c.default);
     case "select":
-      return JSON.stringify(c.default);
+      return c.default === "" ? "—" : c.default;
     default:
       return "—";
   }
@@ -40,7 +40,7 @@ function formatType(c: PlaygroundControl): string {
 
 function unionLiteralsForControl(c: PlaygroundControl): string[] | null {
   if (c.type !== "select") return null;
-  return c.options.map((o) => JSON.stringify(o.value));
+  return c.options.map((o) => o.value);
 }
 
 export function controlsToApiRows(controls: PlaygroundControl[]): ApiTableRow[] {
