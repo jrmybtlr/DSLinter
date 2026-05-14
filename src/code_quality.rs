@@ -11,17 +11,10 @@ use oxc_ast::visit::walk;
 use oxc_ast::Visit;
 use regex::Regex;
 
+use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{LintFinding, Severity};
 
 const LARGE_FILE_LINES: usize = 400;
-
-fn offset_line(source: &str, offset: u32) -> u32 {
-    let offset = offset as usize;
-    if offset >= source.len() {
-        return source.lines().count().max(1) as u32;
-    }
-    1 + source[..offset].bytes().filter(|&b| b == b'\n').count() as u32
-}
 
 fn push_quality_finding(
     out: &mut Vec<LintFinding>,
@@ -59,26 +52,34 @@ pub fn collect_ast_code_quality(
     source: &str,
     program: &Program<'_>,
 ) -> Vec<LintFinding> {
+    let newlines = newline_offsets(source);
     let mut v = CodeQualityVisitor {
         report_path: report_path.to_path_buf(),
-        source,
+        newlines: &newlines,
         findings: Vec::new(),
     };
     v.visit_program(program);
     v.findings
 }
 
-struct CodeQualityVisitor<'src> {
+struct CodeQualityVisitor<'nl> {
     report_path: PathBuf,
-    source: &'src str,
+    /// Precomputed newline offsets for O(log n) line-number lookup.
+    newlines: &'nl [usize],
     findings: Vec<LintFinding>,
 }
 
-impl<'src, 'a> Visit<'a> for CodeQualityVisitor<'src> {
+impl<'nl> CodeQualityVisitor<'nl> {
+    fn line(&self, offset: u32) -> u32 {
+        line_of_offset(self.newlines, offset as usize)
+    }
+}
+
+impl<'nl, 'a> Visit<'a> for CodeQualityVisitor<'nl> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
         if let Some(method) = console_debug_method(&expr.callee) {
             if method == "error" {
-                let line = offset_line(self.source, expr.span.start);
+                let line = self.line(expr.span.start);
                 push_quality_finding(
                     &mut self.findings,
                     &self.report_path,
@@ -91,7 +92,7 @@ impl<'src, 'a> Visit<'a> for CodeQualityVisitor<'src> {
                 method,
                 "log" | "debug" | "info" | "warn" | "trace" | "dir" | "table" | "assert"
             ) {
-                let line = offset_line(self.source, expr.span.start);
+                let line = self.line(expr.span.start);
                 push_quality_finding(
                     &mut self.findings,
                     &self.report_path,
@@ -108,7 +109,7 @@ impl<'src, 'a> Visit<'a> for CodeQualityVisitor<'src> {
     }
 
     fn visit_debugger_statement(&mut self, stmt: &DebuggerStatement) {
-        let line = offset_line(self.source, stmt.span.start);
+        let line = self.line(stmt.span.start);
         push_quality_finding(
             &mut self.findings,
             &self.report_path,
@@ -123,7 +124,7 @@ impl<'src, 'a> Visit<'a> for CodeQualityVisitor<'src> {
     fn visit_try_statement(&mut self, stmt: &TryStatement<'a>) {
         if let Some(handler) = &stmt.handler {
             if handler.body.body.is_empty() {
-                let line = offset_line(self.source, handler.span.start);
+                let line = self.line(handler.span.start);
                 push_quality_finding(
                     &mut self.findings,
                     &self.report_path,
@@ -145,7 +146,7 @@ impl<'src, 'a> Visit<'a> for CodeQualityVisitor<'src> {
         if id.name.as_str() == "style"
             && matches!(attr.value, Some(JSXAttributeValue::ExpressionContainer(_)))
         {
-            let line = offset_line(self.source, attr.span.start);
+            let line = self.line(attr.span.start);
             push_quality_finding(
                 &mut self.findings,
                 &self.report_path,
@@ -166,7 +167,7 @@ impl<'src, 'a> Visit<'a> for CodeQualityVisitor<'src> {
                 JSXChild::Element(_) | JSXChild::Fragment(_) | JSXChild::ExpressionContainer(_)
             );
             if redundant {
-                let line = offset_line(self.source, frag.span.start);
+                let line = self.line(frag.span.start);
                 push_quality_finding(
                     &mut self.findings,
                     &self.report_path,
@@ -199,11 +200,14 @@ pub fn collect_text_code_quality(report_path: &Path, source: &str) -> Vec<LintFi
         );
     }
 
+    // Precompute newline positions once so the regex loops run in O(log n) per match.
+    let newlines = newline_offsets(source);
+
     let suppression =
         Regex::new(r"(?m)//.*\beslint-disable\b|@ts-ignore\b|@ts-expect-error\b|@ts-nocheck\b")
             .expect("suppression regex");
     for m in suppression.find_iter(source) {
-        let line = offset_line(source, m.start() as u32);
+        let line = line_of_offset(&newlines, m.start());
         push_quality_finding(
             &mut out,
             report_path,
@@ -217,7 +221,7 @@ pub fn collect_text_code_quality(report_path: &Path, source: &str) -> Vec<LintFi
     let todo =
         Regex::new(r"(?m)//\s*(TODO|FIXME|HACK)\b|/\*\s*(TODO|FIXME|HACK)\b").expect("todo regex");
     for m in todo.find_iter(source) {
-        let line = offset_line(source, m.start() as u32);
+        let line = line_of_offset(&newlines, m.start());
         push_quality_finding(
             &mut out,
             report_path,

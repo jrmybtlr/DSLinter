@@ -16,6 +16,7 @@ use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
 use oxc_syntax::scope::ScopeFlags;
 
+use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{
     ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity,
 };
@@ -54,9 +55,10 @@ pub fn analyze_ecma_for_paths(
     }
 
     let ts_prop_shapes = crate::ts_shape_map::collect_ts_prop_shape_map(&program);
+    let newlines = newline_offsets(source);
     let mut v = ExtractVisitor {
         path: report_path.to_path_buf(),
-        source,
+        newlines: &newlines,
         definitions: Vec::new(),
         usages: Vec::new(),
         findings: Vec::new(),
@@ -90,14 +92,6 @@ pub fn analyze_ecma_for_paths(
 
 pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
     analyze_ecma_for_paths(path, path, source, true)
-}
-
-fn offset_line(source: &str, offset: u32) -> u32 {
-    let offset = offset as usize;
-    if offset >= source.len() {
-        return source.lines().count().max(1) as u32;
-    }
-    1 + source[..offset].bytes().filter(|&b| b == b'\n').count() as u32
 }
 
 fn binding_name(id: &oxc_ast::ast::BindingIdentifier<'_>) -> String {
@@ -405,9 +399,10 @@ fn button_has_accessible_name(attrs: &[JSXAttributeItem<'_>], children: &[JSXChi
     jsx_children_have_visible_text(children)
 }
 
-struct ExtractVisitor<'src> {
+struct ExtractVisitor<'nl> {
     path: PathBuf,
-    source: &'src str,
+    /// Precomputed newline offsets for O(log n) line-number lookup.
+    newlines: &'nl [usize],
     definitions: Vec<ComponentDefinition>,
     usages: Vec<JsxUsage>,
     findings: Vec<LintFinding>,
@@ -418,6 +413,10 @@ struct ExtractVisitor<'src> {
 }
 
 impl ExtractVisitor<'_> {
+    fn line(&self, offset: u32) -> u32 {
+        line_of_offset(self.newlines, offset as usize)
+    }
+
     fn push_a11y(&mut self, line: u32, severity: Severity, rule_id: &str, message: &str) {
         self.findings.push(LintFinding {
             rule_id: rule_id.to_string(),
@@ -435,7 +434,7 @@ impl ExtractVisitor<'_> {
         let Some(tag) = jsx_intrinsic_tag(&el.name) else {
             return;
         };
-        let line = offset_line(self.source, el.span.start);
+        let line = self.line(el.span.start);
         match tag {
             "img" => {
                 if !has_named_attribute(&el.attributes, "alt") {
@@ -495,7 +494,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     self.definitions.push(ComponentDefinition {
                         name,
                         kind: DefinitionKind::Function,
-                        line: offset_line(self.source, func.span.start),
+                        line: self.line(func.span.start),
                         declared_props,
                     });
                 }
@@ -519,7 +518,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     self.definitions.push(ComponentDefinition {
                         name,
                         kind: DefinitionKind::Function,
-                        line: offset_line(self.source, func.span.start),
+                        line: self.line(func.span.start),
                         declared_props,
                     });
                 }
@@ -546,7 +545,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     self.definitions.push(ComponentDefinition {
                         name,
                         kind: DefinitionKind::Class,
-                        line: offset_line(self.source, class.span.start),
+                        line: self.line(class.span.start),
                         declared_props: Vec::new(),
                     });
                 }
@@ -574,7 +573,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     self.definitions.push(ComponentDefinition {
                         name: DEFAULT_EXPORT.to_string(),
                         kind: DefinitionKind::ExportDefaultAnonymous,
-                        line: offset_line(self.source, decl.span.start),
+                        line: self.line(decl.span.start),
                         declared_props,
                     });
                 }
@@ -585,7 +584,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                 self.definitions.push(ComponentDefinition {
                     name: DEFAULT_EXPORT.to_string(),
                     kind: DefinitionKind::ExportDefaultAnonymous,
-                    line: offset_line(self.source, decl.span.start),
+                    line: self.line(decl.span.start),
                     declared_props,
                 });
             }
@@ -595,7 +594,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                 self.definitions.push(ComponentDefinition {
                     name: DEFAULT_EXPORT.to_string(),
                     kind: DefinitionKind::ExportDefaultAnonymous,
-                    line: offset_line(self.source, decl.span.start),
+                    line: self.line(decl.span.start),
                     declared_props,
                 });
             }
@@ -604,7 +603,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                 self.definitions.push(ComponentDefinition {
                     name,
                     kind: DefinitionKind::ExportDefault,
-                    line: offset_line(self.source, decl.span.start),
+                    line: self.line(decl.span.start),
                     declared_props: Vec::new(),
                 });
             }
@@ -618,7 +617,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
             if !has_spread_attribute(&el.opening_element.attributes)
                 && !button_has_accessible_name(&el.opening_element.attributes, &el.children)
             {
-                let line = offset_line(self.source, el.opening_element.span.start);
+                let line = self.line(el.opening_element.span.start);
                 self.push_a11y(
                     line,
                     Severity::Warning,
@@ -642,7 +641,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
             let prop_values = prop_values_from_attributes(&el.attributes);
             self.usages.push(JsxUsage {
                 component,
-                line: offset_line(self.source, el.span.start),
+                line: self.line(el.span.start),
                 props,
                 prop_values,
             });
@@ -687,7 +686,7 @@ impl ExtractVisitor<'_> {
         self.definitions.push(ComponentDefinition {
             name,
             kind,
-            line: offset_line(self.source, decl.span.start),
+            line: self.line(decl.span.start),
             declared_props,
         });
     }

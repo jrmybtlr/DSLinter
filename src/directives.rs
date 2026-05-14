@@ -5,13 +5,6 @@ use std::path::Path;
 
 use crate::model::LintFinding;
 
-fn line_1_indexed(source: &str, line: u32) -> Option<&str> {
-    if line == 0 {
-        return None;
-    }
-    source.lines().nth((line - 1) as usize)
-}
-
 fn parse_ignore_comment(line: &str) -> Option<Vec<String>> {
     let trimmed = line.trim();
     let prefix = "// dslint-ignore-next-line";
@@ -52,24 +45,34 @@ fn rule_suppressed_by_patterns(rule_id: &str, patterns: &[String]) -> bool {
 }
 
 /// Drops findings whose preceding source line requests suppression.
+///
+/// Precomputes a `Vec<&str>` of lines for each source file so that each
+/// per-finding lookup is O(1) rather than O(source_len).
 pub fn apply_inline_suppressions(
     findings: Vec<LintFinding>,
     sources: &HashMap<std::path::PathBuf, String>,
 ) -> Vec<LintFinding> {
+    // Precompute line vectors once per source file (O(n) build, O(1) lookup).
+    let line_cache: HashMap<&std::path::PathBuf, Vec<&str>> = sources
+        .iter()
+        .map(|(k, v)| (k, v.lines().collect()))
+        .collect();
+
     findings
         .into_iter()
         .filter(|f| {
             let Some(ln) = f.line else {
                 return true;
             };
-            let Some(text) = sources.get(&f.path) else {
+            let Some(lines) = line_cache.get(&f.path) else {
                 return true;
             };
             let prev_line = ln.saturating_sub(1);
             if prev_line == 0 {
                 return true;
             }
-            let Some(prev) = line_1_indexed(text, prev_line) else {
+            // Line numbers are 1-indexed; prev_line is already (ln - 1).
+            let Some(prev) = lines.get((prev_line - 1) as usize) else {
                 return true;
             };
             let Some(patterns) = parse_ignore_comment(prev) else {

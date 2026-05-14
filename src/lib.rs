@@ -1,15 +1,16 @@
 //! DSLint — design-system component inventory and governance signals (MVP).
 
+pub mod code_quality;
 pub mod config;
 pub mod directives;
 pub mod ecma;
 pub mod gitignore;
+pub mod lines;
 pub mod model;
 pub mod playground_emit;
 pub mod report;
 pub mod rules;
 pub mod scan;
-pub mod code_quality;
 mod ts_shape_map;
 pub mod vue;
 
@@ -43,10 +44,18 @@ pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
     let paths = scan::collect_component_files(root, &config)?;
     let mut files: Vec<FileScan> = paths
         .into_iter()
-        .filter_map(|p| {
-            std::fs::read_to_string(&p)
-                .ok()
-                .map(|src| scan_file(&p, &src))
+        .map(|p| match std::fs::read_to_string(&p) {
+            Ok(src) => scan_file(&p, &src),
+            Err(e) => FileScan {
+                parse_errors: vec![format!(
+                    "dslint: could not read `{}`: {e}",
+                    p.display()
+                )],
+                path: p,
+                definitions: Vec::new(),
+                usages: Vec::new(),
+                findings: Vec::new(),
+            },
         })
         .collect();
     files.sort_by(|a, b| a.path.cmp(&b.path));
@@ -64,10 +73,18 @@ pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
     let paths = scan::collect_component_files(root, &config)?;
     let mut files: Vec<FileScan> = paths
         .par_iter()
-        .filter_map(|p| {
-            std::fs::read_to_string(p)
-                .ok()
-                .map(|src| scan_file(p, &src))
+        .map(|p| match std::fs::read_to_string(p) {
+            Ok(src) => scan_file(p, &src),
+            Err(e) => FileScan {
+                parse_errors: vec![format!(
+                    "dslint: could not read `{}`: {e}",
+                    p.display()
+                )],
+                path: p.clone(),
+                definitions: Vec::new(),
+                usages: Vec::new(),
+                findings: Vec::new(),
+            },
         })
         .collect();
     files.sort_by(|a, b| a.path.cmp(&b.path));

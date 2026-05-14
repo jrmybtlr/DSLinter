@@ -63,7 +63,14 @@ pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Re
             continue;
         };
         let ext = ext.to_ascii_lowercase();
-        if matches!(ext.as_str(), "tsx" | "jsx" | "vue") {
+        // Collect every extension the parser understands (see `scan_file` in lib.rs).
+        // Plain `.ts` / `.js` files are included so that components written without
+        // JSX syntax (e.g. render-function components, re-export barrels) are also
+        // inventoried.  Use `exclude_globs` in `.dslint.json` to narrow this set.
+        if matches!(
+            ext.as_str(),
+            "tsx" | "jsx" | "vue" | "ts" | "js" | "mts" | "cts"
+        ) {
             out.push(path);
         }
     }
