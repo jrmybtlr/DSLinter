@@ -11,12 +11,21 @@
 //!   server.  Each `/events` client gets its own thread that sleeps in a tight
 //!   100 ms loop, writing `data: updated\n\n` whenever the version counter
 //!   advances.
+//!
+//! ## Security notes
+//! - `TcpStream` read and write timeouts are set on every accepted connection to
+//!   prevent a slow-client from holding a thread indefinitely.
+//! - The number of concurrent SSE connections is capped at `MAX_SSE_CLIENTS`.
+//!   New connections beyond this limit receive a `503` response immediately.
+//! - Atomic file writes use a temp file name that includes the process ID so
+//!   that concurrent `dslint` processes writing the same output path do not
+//!   overwrite each other's temp file.
 
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime};
 use std::{fs, thread};
@@ -25,6 +34,16 @@ use anyhow::Context;
 
 /// How often to poll the filesystem for mtime changes.
 const POLL_MS: u64 = 150;
+
+/// Maximum number of concurrent SSE (`/events`) connections.
+/// Connections beyond this cap receive `503 Service Unavailable`.
+const MAX_SSE_CLIENTS: usize = 64;
+
+/// Timeout for reading the HTTP request from each accepted connection.
+const READ_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Timeout for individual write operations on each accepted connection.
+const WRITE_TIMEOUT: Duration = Duration::from_secs(30);
 
 // ── Public entry point ───────────────────────────────────────────────────────
 
@@ -42,10 +61,18 @@ pub fn run_watch(
         use rayon::prelude::*;
         let mut v: Vec<_> = paths
             .par_iter()
-            .filter_map(|p| {
-                fs::read_to_string(p)
-                    .ok()
-                    .map(|src| dslint::scan_file(p, &src))
+            .map(|p| match fs::read_to_string(p) {
+                Ok(src) => dslint::scan_file(p, &src),
+                Err(e) => dslint::model::FileScan {
+                    parse_errors: vec![format!(
+                        "dslint: could not read `{}`: {e}",
+                        p.display()
+                    )],
+                    path: p.clone(),
+                    definitions: Vec::new(),
+                    usages: Vec::new(),
+                    findings: Vec::new(),
+                },
             })
             .collect();
         v.sort_by(|a, b| a.path.cmp(&b.path));
@@ -53,10 +80,18 @@ pub fn run_watch(
     } else {
         let mut v: Vec<_> = paths
             .iter()
-            .filter_map(|p| {
-                fs::read_to_string(p)
-                    .ok()
-                    .map(|src| dslint::scan_file(p, &src))
+            .map(|p| match fs::read_to_string(p) {
+                Ok(src) => dslint::scan_file(p, &src),
+                Err(e) => dslint::model::FileScan {
+                    parse_errors: vec![format!(
+                        "dslint: could not read `{}`: {e}",
+                        p.display()
+                    )],
+                    path: p.clone(),
+                    definitions: Vec::new(),
+                    usages: Vec::new(),
+                    findings: Vec::new(),
+                },
             })
             .collect();
         v.sort_by(|a, b| a.path.cmp(&b.path));
@@ -197,8 +232,16 @@ pub fn run_watch(
 
 // ── Atomic file write ────────────────────────────────────────────────────────
 
+/// Write `content` atomically by first writing to a PID-qualified temp file in
+/// the same directory as `path`, then renaming it over the destination.
+///
+/// Including the process ID in the temp-file name prevents concurrent `dslint`
+/// processes from colliding on the same temp file.
 fn write_atomic(path: &Path, content: &str) -> anyhow::Result<()> {
-    let tmp = path.with_extension("json.tmp");
+    let pid = std::process::id();
+    let tmp = path.with_file_name(format!(
+        ".dslint-{pid}.tmp",
+    ));
     fs::write(&tmp, content).with_context(|| format!("write {}", tmp.display()))?;
 
     #[cfg(windows)]
@@ -227,12 +270,14 @@ fn run_http_server(
 ) -> anyhow::Result<()> {
     let listener = TcpListener::bind(format!("127.0.0.1:{port}"))
         .with_context(|| format!("bind 127.0.0.1:{port}"))?;
+    let sse_count = Arc::new(AtomicUsize::new(0));
     for stream in listener.incoming() {
         match stream {
             Ok(s) => {
                 let json = Arc::clone(&json);
                 let version = Arc::clone(&version);
-                thread::spawn(move || handle_connection(s, json, version));
+                let sse_count = Arc::clone(&sse_count);
+                thread::spawn(move || handle_connection(s, json, version, sse_count));
             }
             Err(_) => continue,
         }
@@ -244,7 +289,13 @@ fn handle_connection(
     mut stream: TcpStream,
     json: Arc<RwLock<String>>,
     version: Arc<AtomicU64>,
+    sse_count: Arc<AtomicUsize>,
 ) {
+    // Apply timeouts to prevent slow-client threads from being held open
+    // indefinitely (defence against accidental or intentional slow-loris).
+    let _ = stream.set_read_timeout(Some(READ_TIMEOUT));
+    let _ = stream.set_write_timeout(Some(WRITE_TIMEOUT));
+
     // Read the HTTP request line + headers (we only need the path).
     let mut buf = [0u8; 4096];
     let n = match stream.read(&mut buf) {
@@ -281,6 +332,16 @@ Content-Length: {}\r\n\r\n{}",
             let _ = stream.write_all(response.as_bytes());
         }
         "/events" => {
+            // Enforce a cap on concurrent SSE connections to bound resource use.
+            if sse_count.fetch_add(1, Ordering::Relaxed) >= MAX_SSE_CLIENTS {
+                sse_count.fetch_sub(1, Ordering::Relaxed);
+                let _ = stream.write_all(
+                    b"HTTP/1.1 503 Service Unavailable\r\n\
+Content-Length: 0\r\n\r\n",
+                );
+                return;
+            }
+
             // Server-Sent Events stream.
             let headers = b"HTTP/1.1 200 OK\r\n\
 Content-Type: text/event-stream\r\n\
@@ -288,6 +349,7 @@ Cache-Control: no-cache\r\n\
 Access-Control-Allow-Origin: *\r\n\
 Connection: keep-alive\r\n\r\n";
             if stream.write_all(headers).is_err() {
+                sse_count.fetch_sub(1, Ordering::Relaxed);
                 return;
             }
             // Send an initial heartbeat comment so the browser connects immediately.
@@ -313,6 +375,8 @@ Connection: keep-alive\r\n\r\n";
                     idle_ticks = 0;
                 }
             }
+
+            sse_count.fetch_sub(1, Ordering::Relaxed);
         }
         _ => {
             let _ = stream.write_all(

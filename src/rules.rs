@@ -8,6 +8,7 @@ use regex::Regex;
 
 use crate::config::DslintConfig;
 use crate::directives::{apply_inline_suppressions, collect_workspace_sources};
+use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{
     DuplicateComponent, FileScan, GovernanceScores, LintFinding, OwnershipSummary, Severity,
     UsageLocation, UsageSummary, WorkspaceReport,
@@ -312,15 +313,14 @@ fn tailwind_arbitrary_tokens(
         let Some(text) = sources.get(&file.path) else {
             continue;
         };
+        // Precompute newline positions so each offset → line lookup is O(log n)
+        // instead of O(n) for every regex match.
+        let newlines = newline_offsets(text);
         for m in re.find_iter(text) {
-            let start = m.start();
-            let line = 1 + text[..start].bytes().filter(|&b| b == b'\n').count() as u32;
+            let line = line_of_offset(&newlines, m.start());
             out.push(LintFinding {
                 rule_id: "token-tailwind-arbitrary".into(),
-                message: format!(
-                    "Tailwind arbitrary value `{}`",
-                    m.as_str()
-                ),
+                message: format!("Tailwind arbitrary value `{}`", m.as_str()),
                 path: file.path.clone(),
                 line: Some(line),
                 severity: Severity::Info,
@@ -387,15 +387,14 @@ fn hardcoded_hex_colors(
         let Some(text) = sources.get(&file.path) else {
             continue;
         };
+        // Precompute newline positions so each offset → line lookup is O(log n)
+        // instead of O(n) for every regex match.
+        let newlines = newline_offsets(text);
         for m in re.find_iter(text) {
-            let start = m.start();
-            let line = 1 + text[..start].bytes().filter(|&b| b == b'\n').count() as u32;
+            let line = line_of_offset(&newlines, m.start());
             out.push(LintFinding {
                 rule_id: "token-hardcoded-color".into(),
-                message: format!(
-                    "Hardcoded color `{}`",
-                    m.as_str()
-                ),
+                message: format!("Hardcoded color `{}`", m.as_str()),
                 path: file.path.clone(),
                 line: Some(line),
                 severity: Severity::Info,

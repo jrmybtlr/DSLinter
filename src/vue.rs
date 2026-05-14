@@ -5,9 +5,10 @@ use std::sync::OnceLock;
 
 use regex::Regex;
 
-use crate::ecma::analyze_ecma_for_paths;
-use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity};
 use crate::code_quality;
+use crate::ecma::analyze_ecma_for_paths;
+use crate::lines::offset_line;
+use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity};
 
 // ── Static regex helpers (compiled once) ────────────────────────────────────
 
@@ -95,13 +96,6 @@ fn lang_is_ts(attrs: &str) -> bool {
         || attrs.contains("lang='tsx'")
 }
 
-fn line_at(full_source: &str, byte_offset: usize) -> u32 {
-    1 + full_source[..byte_offset.min(full_source.len())]
-        .bytes()
-        .filter(|&b| b == b'\n')
-        .count() as u32
-}
-
 // ── Prop extraction from Vue script source ───────────────────────────────────
 
 /// Extract prop names from a Vue `<script>` block by matching `defineProps` or
@@ -175,7 +169,7 @@ fn vue_template_a11y_findings(
             message: "`<img>` must include an `alt` attribute (empty string is OK for decorative images)."
                 .into(),
             path: path.to_path_buf(),
-            line: Some(line_at(full_source, pos)),
+            line: Some(offset_line(full_source, pos)),
             severity: Severity::Warning,
         });
     }
@@ -184,7 +178,7 @@ fn vue_template_a11y_findings(
         let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         let lower = attrs.to_ascii_lowercase();
         let pos = template_inner_start + cap.get(0).unwrap().start();
-        let line = line_at(full_source, pos);
+        let line = offset_line(full_source, pos);
 
         if !lower.contains("href=") {
             out.push(LintFinding {
@@ -233,7 +227,7 @@ fn vue_template_a11y_findings(
             message: "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label>`)."
                 .into(),
             path: path.to_path_buf(),
-            line: Some(line_at(full_source, pos)),
+            line: Some(offset_line(full_source, pos)),
             severity: Severity::Info,
         });
     }
@@ -367,14 +361,15 @@ fn merge_template_usages(
     template_inner_start: usize,
     usages: &mut Vec<JsxUsage>,
 ) {
+    use crate::lines::newline_offsets;
+    use crate::lines::line_of_offset;
+    // Precompute newlines once for the full source so offset→line is O(log n).
+    let newlines = newline_offsets(full_source);
+
     for cap in template_pascal_re().captures_iter(template) {
         let component = cap.get(1).unwrap().as_str().to_string();
         let rel_start = cap.get(0).unwrap().start();
-        let line_offset = template_inner_start + rel_start;
-        let line = 1 + full_source[..line_offset.min(full_source.len())]
-            .bytes()
-            .filter(|&b| b == b'\n')
-            .count() as u32;
+        let line = line_of_offset(&newlines, template_inner_start + rel_start);
         usages.push(JsxUsage {
             component,
             line,
@@ -387,11 +382,7 @@ fn merge_template_usages(
         let raw = cap.get(1).unwrap().as_str();
         let component = kebab_to_pascal(raw);
         let rel_start = cap.get(0).unwrap().start();
-        let line_offset = template_inner_start + rel_start;
-        let line = 1 + full_source[..line_offset.min(full_source.len())]
-            .bytes()
-            .filter(|&b| b == b'\n')
-            .count() as u32;
+        let line = line_of_offset(&newlines, template_inner_start + rel_start);
         usages.push(JsxUsage {
             component,
             line,
