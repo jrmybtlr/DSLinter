@@ -177,7 +177,9 @@ function getDemoCheckerProgram(demoRootDir) {
   }
   const program = ts.createProgram({
     rootNames: parsed.fileNames,
-    options: parsed.options,
+    // Demo tsconfig uses `noCheck` so CLI/IDE ignores intentional playground errors; this
+    // script still needs a real checker for `declared_prop_kinds`.
+    options: { ...parsed.options, noCheck: false },
   });
   cachedCheckerProgram = {
     program,

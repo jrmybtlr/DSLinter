@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent,
   type ReactNode,
 } from "react";
 import { detectBreakpoint, detectContainerBreakpoint } from "usemods";
@@ -27,7 +28,6 @@ import {
 import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
 import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
 import { Section } from "./Section";
-import { EmptyCard } from "./EmptyCard";
 
 type Props = {
   entry: PlaygroundEntry;
@@ -59,7 +59,7 @@ function nextPreviewWidthForResize(
 }
 
 function TocLink({ href, children }: { href: string; children: ReactNode }) {
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     // Modifier keys / non-primary clicks → fall back to default browser behaviour.
     if (
       e.defaultPrevented ||

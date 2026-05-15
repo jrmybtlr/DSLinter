@@ -1,20 +1,14 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["../packages/workbench/src/*"]
     },
     "target": "ES2022",
-    "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
+    "useDefineForClassFields": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": true,
+    "noCheck": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true

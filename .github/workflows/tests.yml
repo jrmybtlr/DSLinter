@@ -54,6 +54,6 @@ jobs:
       - name: Run TypeScript lint
         run: npm run lint
 
-      - name: Build demo (tsc + vite)
+      - name: Build demo
         run: npm run build
         working-directory: demo
