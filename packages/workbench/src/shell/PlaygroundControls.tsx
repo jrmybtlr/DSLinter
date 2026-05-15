@@ -59,7 +59,7 @@ export function PlaygroundControls({
   }
 
   return (
-    <div className="mx-auto mb-6 max-w-5xl rounded-ds-lg border border-border bg-card p-4 text-card-foreground shadow-xs">
+    <div className="mb-6 w-full rounded-ds-lg border border-border bg-card p-4 text-card-foreground shadow-xs">
       {inner}
     </div>
   );

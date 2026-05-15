@@ -15,7 +15,12 @@ import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 type Filter = "all" | Severity;
 
 function isFilter(value: string): value is Filter {
-  return value === "all" || value === "error" || value === "warning" || value === "info";
+  return (
+    value === "all" ||
+    value === "error" ||
+    value === "warning" ||
+    value === "info"
+  );
 }
 
 export function FindingsList({
@@ -62,67 +67,85 @@ export function FindingsList({
           aria-label="Filter findings by severity"
           className="contents"
         >
-          <ToggleGroupItem value="all" className="rounded-full px-2.5 text-xs font-medium">
+          <ToggleGroupItem
+            value="all"
+            className="rounded-full px-2.5 text-xs font-medium"
+          >
             All
-            <span className="ml-1 tabular-nums text-muted-foreground">{findings.length}</span>
+            <span className="ml-1 tabular-nums text-muted-foreground">
+              {findings.length}
+            </span>
           </ToggleGroupItem>
-          <ToggleGroupItem value="warning" className="rounded-full px-2.5 text-xs font-medium">
+          <ToggleGroupItem
+            value="warning"
+            className="rounded-full px-2.5 text-xs font-medium"
+          >
             Warnings
-            <span className="ml-1 tabular-nums text-muted-foreground">{counts.warning}</span>
+            <span className="ml-1 tabular-nums text-muted-foreground">
+              {counts.warning}
+            </span>
           </ToggleGroupItem>
-          <ToggleGroupItem value="error" className="rounded-full px-2.5 text-xs font-medium">
+          <ToggleGroupItem
+            value="error"
+            className="rounded-full px-2.5 text-xs font-medium"
+          >
             Errors
-            <span className="ml-1 tabular-nums text-muted-foreground">{counts.error}</span>
+            <span className="ml-1 tabular-nums text-muted-foreground">
+              {counts.error}
+            </span>
           </ToggleGroupItem>
-          <ToggleGroupItem value="info" className="rounded-full px-2.5 text-xs font-medium">
+          <ToggleGroupItem
+            value="info"
+            className="rounded-full px-2.5 text-xs font-medium"
+          >
             Info
-            <span className="ml-1 tabular-nums text-muted-foreground">{counts.info}</span>
+            <span className="ml-1 tabular-nums text-muted-foreground">
+              {counts.info}
+            </span>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead scope="col">Severity</TableHead>
-              <TableHead scope="col">Rule</TableHead>
-              <TableHead scope="col">Message</TableHead>
-              <TableHead scope="col">File</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead scope="col">Severity</TableHead>
+            <TableHead scope="col">Rule</TableHead>
+            <TableHead scope="col">Message</TableHead>
+            <TableHead scope="col">File</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="align-top text-foreground">
+          {filtered.map((f, i) => (
+            <TableRow
+              key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
+              className="border-border hover:bg-transparent"
+            >
+              <TableCell className="px-3 py-2">
+                <Badge
+                  variant={
+                    f.severity === "error"
+                      ? "destructive"
+                      : f.severity === "warning"
+                        ? "secondary"
+                        : "outline"
+                  }
+                >
+                  {f.severity}
+                </Badge>
+              </TableCell>
+              <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
+                {f.rule_id}
+              </TableCell>
+              <TableCell className="whitespace-normal px-3 py-2 text-sm">
+                {f.message}
+              </TableCell>
+              <TableCell className="whitespace-normal px-3 py-2 font-mono text-xs text-muted-foreground">
+                {shortPath(root, f.path)}:{f.line != null ? f.line : "—"}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody className="align-top text-foreground">
-            {filtered.map((f, i) => (
-              <TableRow
-                key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
-                className="border-border hover:bg-transparent"
-              >
-                <TableCell className="px-3 py-2">
-                  <Badge
-                    variant={
-                      f.severity === "error"
-                        ? "destructive"
-                        : f.severity === "warning"
-                          ? "secondary"
-                          : "outline"
-                    }
-                  >
-                    {f.severity}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
-                  {f.rule_id}
-                </TableCell>
-                <TableCell className="whitespace-normal px-3 py-2 text-sm">
-                  {f.message}
-                </TableCell>
-                <TableCell className="whitespace-normal px-3 py-2 font-mono text-xs text-muted-foreground">
-                  {shortPath(root, f.path)}:{f.line != null ? f.line : "—"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

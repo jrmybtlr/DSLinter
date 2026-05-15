@@ -3,10 +3,11 @@ import "@shikijs/twoslash/style-rich.css";
 import { renderPlaygroundUsageHtml } from "./playgroundUsageHighlight";
 
 const shellClass =
-  "playground-usage-shiki mt-4 overflow-x-auto rounded-lg border  bg-gray-950 p-4 text-sm leading-relaxed shadow-xs " +
+  "playground-usage-shiki mt-4 overflow-x-auto rounded-lg border bg-gray-900 p-4 text-sm leading-relaxed shadow-xs " +
   "[&_.shiki]:!bg-transparent [&_pre.shiki]:!m-0 [&_pre.shiki]:!bg-transparent [&_pre.shiki]:!p-0";
 
-const plainPreClass = "m-0 whitespace-pre font-mono text-sm leading-relaxed text-gray-100";
+const plainPreClass =
+  "m-0 whitespace-pre font-mono text-sm leading-relaxed text-gray-100";
 
 type Props = {
   source: string;
@@ -37,7 +38,9 @@ export function PlaygroundUsageCode({ source }: Props) {
   }, [source]);
 
   if (html) {
-    return <div className={shellClass} dangerouslySetInnerHTML={{ __html: html }} />;
+    return (
+      <div className={shellClass} dangerouslySetInnerHTML={{ __html: html }} />
+    );
   }
 
   return (

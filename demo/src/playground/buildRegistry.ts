@@ -69,8 +69,8 @@ function controlsFromDeclaredProps(
         key: "children",
         label: "children",
         type: "string",
-        default: "Preview",
-        placeholder: "Text content",
+        default: "",
+        placeholder: "Preview if empty",
       });
       continue;
     }
@@ -109,8 +109,8 @@ const controlOverrides: Record<string, PlaygroundControl[]> = {
       key: "children",
       label: "children",
       type: "string",
-      default: "Preview",
-      placeholder: "Text content",
+      default: "",
+      placeholder: "Preview if empty",
     },
     {
       key: "variant",
@@ -144,8 +144,8 @@ const controlOverrides: Record<string, PlaygroundControl[]> = {
       key: "children",
       label: "children",
       type: "string",
-      default: "Preview",
-      placeholder: "Text content",
+      default: "",
+      placeholder: "Preview if empty",
     },
     {
       key: "variant",

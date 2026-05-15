@@ -36,14 +36,20 @@ export function SmellyInput(): JSX.Element {
   const tailwindArbitraryDemo = "shadow-[0_0_0_1px] ring-[12px]";
 
   return (
-    <div className={`space-y-3 rounded border border-dashed border-amber-400 p-3 text-xs ${tailwindArbitraryDemo}`}>
+    <div
+      className={`space-y-3 rounded border border-dashed text-[#000000] border-amber-400 p-3 text-xs ${tailwindArbitraryDemo}`}
+    >
       {/* smell-redundant-fragment — wraps a single element */}
       <>
         <div className="space-y-2">
-          <p className="font-medium text-amber-900">Smelly input (governance demo)</p>
+          <p className="font-medium text-amber-900">
+            Smelly input (governance demo)
+          </p>
 
           {/* smell-inline-style */}
-          <span style={{ display: "block" }}>Inline style (prefer tokens / utilities)</span>
+          <span style={{ display: "block" }}>
+            Inline style (prefer tokens / utilities)
+          </span>
 
           {/* deprecated-component */}
           <LegacyButton variant="ghost" size="sm">
@@ -71,7 +77,11 @@ export function SmellyInput(): JSX.Element {
           />
 
           {/* a11y-input-label */}
-          <input type="text" placeholder="Unlabeled field" className="w-full rounded border px-2 py-1" />
+          <input
+            type="text"
+            placeholder="Unlabeled field"
+            className="w-full rounded border px-2 py-1"
+          />
 
           {/* a11y-button-name */}
           <button type="button" className="h-8 w-8 rounded bg-slate-200" />

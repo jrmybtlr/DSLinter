@@ -9,7 +9,7 @@ export function ScoreStrip({ scores }: { scores: GovernanceScores }) {
   ];
 
   return (
-    <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <section className="grid bg-black/1 p-1 border border-black/5 rounded-xl grid-cols-2 gap-1 md:grid-cols-4">
       {items.map(({ label, value }) => (
         <div
           key={label}

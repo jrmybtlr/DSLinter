@@ -26,6 +26,8 @@ import {
 } from "./PlaygroundA11yAndCode";
 import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
 import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
+import { Section } from "./Section";
+import { EmptyCard } from "./EmptyCard";
 
 type Props = {
   entry: PlaygroundEntry;
@@ -328,7 +330,7 @@ export function ComponentPlaygroundPane({
           </div>
         </section>
 
-        <div className="mx-auto max-w-6xl px-6 py-10 lg:px-12">
+        <div className="min-w-0 w-full px-6 py-10 lg:px-12">
           <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-14">
             <div className="min-w-0 space-y-14">
               {hasControls ? (
@@ -349,29 +351,42 @@ export function ComponentPlaygroundPane({
 
               <PlaygroundUsageSection entry={entry} values={values} />
 
-              <section id="repo-usage" className="scroll-mt-20">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
-                  Repo usage
-                </h2>
-                <div className="mt-4">
-                  <ComponentUsageDetails
-                    report={reportReady ? workspaceReport : null}
-                    componentId={entry.id}
-                  />
-                </div>
-              </section>
+              <Section id="repo-usage" title="Repo usage" description="">
+                <ComponentUsageDetails
+                  report={reportReady ? workspaceReport : null}
+                  componentId={entry.id}
+                />
+              </Section>
 
-              <PlaygroundTokenStyleSection
-                findings={tokenStyleFindings}
-                reportReady={reportReady}
-              />
+              <Section
+                id="design-tokens"
+                title="Design tokens and colors"
+                description="Hardcoded colors and non-token styling flagged by dslint for this module's source file."
+              >
+                <PlaygroundTokenStyleSection
+                  findings={tokenStyleFindings}
+                  reportReady={reportReady}
+                />
+              </Section>
 
-              <PlaygroundCodeScoreSection
-                codeScore={codeScore}
-                reportReady={reportReady}
-              />
+              <Section
+                id="code-score"
+                title={`Code score: ${reportReady ? codeScore.score : "—"}/100`}
+                description="Static quality rules and findings from the workspace dslint report scoped to this file."
+              >
+                <PlaygroundCodeScoreSection
+                  codeScore={codeScore}
+                  reportReady={reportReady}
+                />
+              </Section>
 
-              <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
+              <Section
+                id="accessibility"
+                title={`Accessibility: ${reportReady ? a11y.score : "—"}/100`}
+                description="Accessibility checks and findings from the workspace dslint report scoped to this file."
+              >
+                <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
+              </Section>
             </div>
 
             <aside className="mt-12 hidden self-start sticky top-8 xl:mt-0 xl:block">
@@ -403,7 +418,7 @@ export function ComponentPlaygroundPane({
             id="variants"
             className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t  pt-10 pb-12"
           >
-            <div className="mx-auto max-w-6xl px-6 lg:px-12">
+            <div className="min-w-0 w-full px-6 lg:px-12">
               <h2 className="text-xl bg-white w-fit font-semibold tracking-tight text-gray-900">
                 All variants
               </h2>

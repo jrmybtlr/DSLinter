@@ -19,9 +19,7 @@ import { PlaygroundControlField } from "./PlaygroundControlField";
 import { PlaygroundUsageCode } from "./PlaygroundUsageCode";
 import { EmptyCard } from "./EmptyCard";
 import { cn } from "../lib/utils";
-
-const sectionTitleClass = "text-lg font-semibold tracking-tight text-gray-900";
-const sectionDescClass = "mt-1 text-sm text-gray-600";
+import { Section } from "./Section";
 
 type UsageProps = {
   entry: PlaygroundEntry;
@@ -34,13 +32,13 @@ export function PlaygroundUsageSection({ entry, values }: UsageProps) {
     `// Pass usageSnippet on this PlaygroundEntry, or derive snippets from dslint controls.\n<${entry.id} />`;
 
   return (
-    <section id="usage" className="scroll-mt-20">
-      <h2 className={sectionTitleClass}>Usage</h2>
-      <p className={sectionDescClass}>
-        Example import-style usage for the current playground values.
-      </p>
+    <Section
+      id="usage"
+      title="Usage"
+      description="Example usage for the current playground values."
+    >
       <PlaygroundUsageCode source={usage} />
-    </section>
+    </Section>
   );
 }
 
@@ -54,10 +52,9 @@ export function PlaygroundTokenStyleSection({
   reportReady,
 }: TokenStyleProps) {
   return (
-    <section id="design-tokens" className="scroll-mt-20">
-      <h2 className={sectionTitleClass}>Design tokens and colors</h2>
+    <>
       {reportReady && findings.length > 0 ? (
-        <Table className="mt-4">
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Rule</TableHead>
@@ -69,27 +66,35 @@ export function PlaygroundTokenStyleSection({
           <TableBody>
             {findings.map((f, i) => (
               <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${i}`}>
-                <TableCell>{f.rule_id}</TableCell>
-                <TableCell>{f.line ?? "—"}</TableCell>
-                <TableCell>{f.severity}</TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {f.rule_id}
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {f.line ?? "—"}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary" size="sm">
+                    {f.severity}
+                  </Badge>
+                </TableCell>
                 <TableCell>{f.message}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       ) : reportReady && findings.length === 0 ? (
-        <EmptyCard className="mt-2">
+        <EmptyCard>
           No hardcoded or arbitrary token color findings on this file in the
           current report.
         </EmptyCard>
       ) : (
-        <EmptyCard className="mt-2">
+        <EmptyCard>
           Token findings update when{" "}
           <span className="font-mono">dslint-report.json</span> is available
           (same fetch as Governance).
         </EmptyCard>
       )}
-    </section>
+    </>
   );
 }
 
@@ -107,11 +112,7 @@ export function PlaygroundCodeScoreSection({
   const hasFindingRows = reportReady && findings.length > 0;
 
   return (
-    <section id="code-score" className="scroll-mt-20">
-      <h2 className={sectionTitleClass}>
-        Code score: {reportReady ? codeScore.score : "—"}/100
-      </h2>
-
+    <>
       {hasFindingRows ? (
         <>
           <Table>
@@ -136,17 +137,17 @@ export function PlaygroundCodeScoreSection({
           </Table>
         </>
       ) : reportReady && findings.length === 0 ? (
-        <EmptyCard className="mt-2">
+        <EmptyCard>
           No quality findings on this file in the current report.
         </EmptyCard>
       ) : (
-        <EmptyCard className="mt-2">
+        <EmptyCard>
           Code score updates when{" "}
           <span className="font-mono">dslint-report.json</span> is available
           (same fetch as Governance).
         </EmptyCard>
       )}
-    </section>
+    </>
   );
 }
 
@@ -159,43 +160,40 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
   const hasFindingRows = reportReady && a11y.findings.length > 0;
 
   return (
-    <section id="accessibility" className="scroll-mt-20">
-      <h2 className={sectionTitleClass}>
-        Accessibility: {reportReady ? a11y.score : "—"}/100
-      </h2>
+    <>
       {hasFindingRows ? (
-        <>
-          <ul className="mt-3 max-h-48 divide-y divide-gray-100 overflow-y-auto rounded-md border border-gray-100 bg-gray-50 text-xs">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Rule</TableHead>
+              <TableHead>Line</TableHead>
+              <TableHead>Severity</TableHead>
+              <TableHead>Message</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {a11y.findings.map((f, i) => (
-              <li
-                key={`${f.rule_id}-${i}`}
-                className="flex flex-col gap-0.5 px-2 py-2 sm:flex-row sm:justify-between"
-              >
-                <span className="font-mono text-xs text-gray-600">
-                  {f.rule_id}
-                </span>
-                <span className="text-gray-800">{f.message}</span>
-                {f.line != null ? (
-                  <span className="shrink-0 font-mono text-xs text-gray-400">
-                    :{f.line}
-                  </span>
-                ) : null}
-              </li>
+              <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${i}`}>
+                <TableCell>{f.rule_id}</TableCell>
+                <TableCell>{f.line ?? "—"}</TableCell>
+                <TableCell>{f.severity}</TableCell>
+                <TableCell>{f.message}</TableCell>
+              </TableRow>
             ))}
-          </ul>
-        </>
+          </TableBody>
+        </Table>
       ) : reportReady && a11y.issueCount === 0 ? (
-        <EmptyCard className="mt-2">
+        <EmptyCard>
           No accessibility findings on this file in the current report.
         </EmptyCard>
       ) : (
-        <EmptyCard className="mt-2">
+        <EmptyCard>
           A11y score updates when{" "}
           <span className="font-mono">dslint-report.json</span> is available
           (same fetch as Governance).
         </EmptyCard>
       )}
-    </section>
+    </>
   );
 }
 
@@ -256,19 +254,20 @@ export function PlaygroundApiReference({
     : [];
 
   return (
-    <section id="api-reference" className="scroll-mt-20 grid gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className={sectionTitleClass}>API reference</h2>
+    <Section
+      id="api-reference"
+      title="API reference"
+      actions={
         <Button type="button" variant="outline" size="sm" onClick={onReset}>
           Reset defaults
         </Button>
-      </div>
-      <Table className="border-collapse text-left">
+      }
+    >
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Prop</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Default</TableHead>
             <TableHead>Value</TableHead>
             {showRepo ? (
               <>
@@ -286,7 +285,7 @@ export function PlaygroundApiReference({
             const valueChips = formatRepoLiteralChips(valueFreqs[r.prop]);
             return (
               <TableRow key={r.prop}>
-                <TableCell>{r.prop}</TableCell>
+                <TableCell className="font-medium">{r.prop}</TableCell>
                 <TableCell>
                   {c.type === "select" ? (
                     <div className="flex flex-wrap items-center gap-1">
@@ -320,10 +319,16 @@ export function PlaygroundApiReference({
                       })}
                     </div>
                   ) : (
-                    <span className="font-mono">{r.type}</span>
+                    <span className="font-mono text-xs flex items-center gap-1">
+                      {r.type}
+                      {r.default !== "—" ? (
+                        <Badge variant="secondary" size="sm">
+                          {r.default}
+                        </Badge>
+                      ) : null}
+                    </span>
                   )}
                 </TableCell>
-                <TableCell>{r.default}</TableCell>
                 <TableCell>
                   <PlaygroundControlField
                     control={c}
@@ -376,6 +381,6 @@ export function PlaygroundApiReference({
           </Table>
         </div>
       ) : null}
-    </section>
+    </Section>
   );
 }

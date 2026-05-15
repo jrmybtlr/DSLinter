@@ -2,6 +2,13 @@
   "root": "/Users/jeremy/Development/DSLint/demo",
   "files": [
     {
+      "path": "/Users/jeremy/Development/DSLint/demo/postcss.config.js",
+      "definitions": [],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
       "path": "/Users/jeremy/Development/DSLint/demo/src/App.tsx",
       "definitions": [
         {
@@ -577,7 +584,7 @@
       "usages": [
         {
           "component": "LegacyButton",
-          "line": 49,
+          "line": 55,
           "props": [
             "size",
             "variant"
@@ -589,7 +596,7 @@
         },
         {
           "component": "KitchenSinkModal",
-          "line": 54,
+          "line": 60,
           "props": [
             "analyticsId",
             "bannerTone",
@@ -634,35 +641,35 @@
           "rule_id": "a11y-input-label",
           "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 74,
+          "line": 80,
           "severity": "info"
         },
         {
           "rule_id": "a11y-button-name",
           "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 77,
+          "line": 87,
           "severity": "warning"
         },
         {
           "rule_id": "a11y-img-alt",
           "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 80,
+          "line": 90,
           "severity": "warning"
         },
         {
           "rule_id": "a11y-anchor-href",
           "message": "`<a>` must have a meaningful `href` for navigation.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 88,
+          "line": 98,
           "severity": "warning"
         },
         {
           "rule_id": "a11y-anchor-placeholder-href",
           "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 91,
+          "line": 101,
           "severity": "warning"
         },
         {
@@ -697,7 +704,7 @@
           "rule_id": "code-inline-style",
           "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 46,
+          "line": 50,
           "severity": "info"
         },
         {
@@ -883,185 +890,6 @@
       "findings": []
     },
     {
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "definitions": [
-        {
-          "name": "CodeScoreDemoInput",
-          "kind": "function",
-          "line": 6
-        }
-      ],
-      "usages": [
-        {
-          "component": "LegacyButton",
-          "line": 52,
-          "props": [
-            "size",
-            "variant"
-          ],
-          "prop_values": {
-            "size": "sm",
-            "variant": "ghost"
-          }
-        },
-        {
-          "component": "KitchenSinkModal",
-          "line": 57,
-          "props": [
-            "analyticsId",
-            "bannerTone",
-            "cancelLabel",
-            "confirmLabel",
-            "dismissible",
-            "footerAlign",
-            "icon",
-            "initialFocus",
-            "overlayBlur",
-            "portal",
-            "role",
-            "scrollLock",
-            "subtitle",
-            "testId",
-            "title",
-            "width"
-          ],
-          "prop_values": {
-            "analyticsId": "code-score-demo-input",
-            "bannerTone": "warning",
-            "cancelLabel": "Cancel",
-            "confirmLabel": "OK",
-            "dismissible": "true",
-            "footerAlign": "end",
-            "icon": "⚠️",
-            "initialFocus": "confirm",
-            "overlayBlur": "true",
-            "portal": "true",
-            "role": "dialog",
-            "scrollLock": "true",
-            "subtitle": "Kitchen sink",
-            "testId": "code-score-demo-modal",
-            "title": "Demo modal",
-            "width": "max-w-md"
-          }
-        }
-      ],
-      "parse_errors": [],
-      "findings": [
-        {
-          "rule_id": "a11y-input-label",
-          "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 77,
-          "severity": "info"
-        },
-        {
-          "rule_id": "a11y-button-name",
-          "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 84,
-          "severity": "warning"
-        },
-        {
-          "rule_id": "a11y-img-alt",
-          "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 87,
-          "severity": "warning"
-        },
-        {
-          "rule_id": "a11y-anchor-href",
-          "message": "`<a>` must have a meaningful `href` for navigation.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 95,
-          "severity": "warning"
-        },
-        {
-          "rule_id": "a11y-anchor-placeholder-href",
-          "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 98,
-          "severity": "warning"
-        },
-        {
-          "rule_id": "code-console",
-          "message": "`console.warn(...)` left in source — remove before shipping or gate behind dev-only checks.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 13,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-console-error",
-          "message": "`console.error(...)` left in source — remove or route through logging.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 14,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-empty-catch",
-          "message": "Empty `catch` block swallows errors — log, rethrow, or handle intentionally.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 17,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-debugger",
-          "message": "`debugger` statement should not ship to production.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 23,
-          "severity": "warning"
-        },
-        {
-          "rule_id": "code-inline-style",
-          "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 49,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-suppression-comment",
-          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 12,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-suppression-comment",
-          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 20,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-suppression-comment",
-          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 22,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-suppression-comment",
-          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 30,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-todo-marker",
-          "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 34,
-          "severity": "info"
-        },
-        {
-          "rule_id": "code-todo-marker",
-          "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 36,
-          "severity": "info"
-        }
-      ]
-    },
-    {
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/duplicate/DuplicateCardA.tsx",
       "definitions": [
         {
@@ -1102,6 +930,55 @@
           "props": []
         }
       ],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/playground/buildRegistry.ts",
+      "definitions": [],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/playground/demoAssets.ts",
+      "definitions": [],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/playground/playgroundDefaults.ts",
+      "definitions": [],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/shims/use-sync-external-store-shim.ts",
+      "definitions": [],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "definitions": [],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/src/vite-env.d.ts",
+      "definitions": [],
+      "usages": [],
+      "parse_errors": [],
+      "findings": []
+    },
+    {
+      "path": "/Users/jeremy/Development/DSLint/demo/vite.config.ts",
+      "definitions": [],
+      "usages": [],
       "parse_errors": [],
       "findings": []
     }
@@ -1160,35 +1037,35 @@
       "rule_id": "a11y-input-label",
       "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 74,
+      "line": 80,
       "severity": "info"
     },
     {
       "rule_id": "a11y-button-name",
       "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 77,
+      "line": 87,
       "severity": "warning"
     },
     {
       "rule_id": "a11y-img-alt",
       "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 80,
+      "line": 90,
       "severity": "warning"
     },
     {
       "rule_id": "a11y-anchor-href",
       "message": "`<a>` must have a meaningful `href` for navigation.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 88,
+      "line": 98,
       "severity": "warning"
     },
     {
       "rule_id": "a11y-anchor-placeholder-href",
       "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 91,
+      "line": 101,
       "severity": "warning"
     },
     {
@@ -1223,7 +1100,7 @@
       "rule_id": "code-inline-style",
       "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 46,
+      "line": 50,
       "severity": "info"
     },
     {
@@ -1252,118 +1129,6 @@
       "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
       "line": 35,
-      "severity": "info"
-    },
-    {
-      "rule_id": "a11y-input-label",
-      "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 77,
-      "severity": "info"
-    },
-    {
-      "rule_id": "a11y-button-name",
-      "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 84,
-      "severity": "warning"
-    },
-    {
-      "rule_id": "a11y-img-alt",
-      "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 87,
-      "severity": "warning"
-    },
-    {
-      "rule_id": "a11y-anchor-href",
-      "message": "`<a>` must have a meaningful `href` for navigation.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 95,
-      "severity": "warning"
-    },
-    {
-      "rule_id": "a11y-anchor-placeholder-href",
-      "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 98,
-      "severity": "warning"
-    },
-    {
-      "rule_id": "code-console",
-      "message": "`console.warn(...)` left in source — remove before shipping or gate behind dev-only checks.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 13,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-console-error",
-      "message": "`console.error(...)` left in source — remove or route through logging.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 14,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-empty-catch",
-      "message": "Empty `catch` block swallows errors — log, rethrow, or handle intentionally.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 17,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-debugger",
-      "message": "`debugger` statement should not ship to production.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 23,
-      "severity": "warning"
-    },
-    {
-      "rule_id": "code-inline-style",
-      "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 49,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-suppression-comment",
-      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 12,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-suppression-comment",
-      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 20,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-suppression-comment",
-      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 22,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-suppression-comment",
-      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 30,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-todo-marker",
-      "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 34,
-      "severity": "info"
-    },
-    {
-      "rule_id": "code-todo-marker",
-      "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 36,
       "severity": "info"
     },
     {
@@ -1452,9 +1217,58 @@
     },
     {
       "rule_id": "token-hardcoded-color",
-      "message": "Hardcoded color `#ff00ff`",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 8,
+      "message": "Hardcoded color `#2563eb`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 15,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#ffffff`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 16,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#93c5fd`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 17,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#f8fafc`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 18,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#ffffff`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 19,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#e2e8f0`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 20,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#dc2626`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 21,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-hardcoded-color",
+      "message": "Hardcoded color `#fef2f2`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/tokenCatalog.ts",
+      "line": 22,
       "severity": "info"
     },
     {
@@ -1543,6 +1357,13 @@
     },
     {
       "rule_id": "token-tailwind-arbitrary",
+      "message": "Tailwind arbitrary value `[#000000]`",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
+      "line": 40,
+      "severity": "info"
+    },
+    {
+      "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[3px]`",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/Spinner.tsx",
       "line": 12,
@@ -1619,24 +1440,10 @@
       "severity": "info"
     },
     {
-      "rule_id": "token-tailwind-arbitrary",
-      "message": "Tailwind arbitrary value `[12px]`",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 37,
-      "severity": "info"
-    },
-    {
       "rule_id": "deprecated-component",
       "message": "Deprecated component `LegacyButton` is still referenced.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 49,
-      "severity": "warning"
-    },
-    {
-      "rule_id": "deprecated-component",
-      "message": "Deprecated component `LegacyButton` is still referenced.",
-      "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-      "line": 52,
+      "line": 55,
       "severity": "warning"
     },
     {
@@ -1665,89 +1472,122 @@
   ],
   "usage_by_component": [
     {
-      "component": "KitchenSinkModal",
+      "component": "TouchTarget",
       "reference_count": 2,
-      "file_count": 2,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx"
+      ],
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+          "line": 228,
+          "props": []
+        },
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
+          "line": 244,
+          "props": []
+        }
+      ]
+    },
+    {
+      "component": "App",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 0,
+      "files": [
+        "/Users/jeremy/Development/DSLint/demo/src/main.tsx"
+      ],
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/main.tsx",
+          "line": 8,
+          "props": []
+        }
+      ]
+    },
+    {
+      "component": "KitchenSinkModal",
+      "reference_count": 1,
+      "file_count": 1,
       "max_props_on_single_use": 16,
       "files": [
-        "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-        "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx"
       ],
       "prop_frequencies": {
-        "analyticsId": 2,
-        "bannerTone": 2,
-        "cancelLabel": 2,
-        "confirmLabel": 2,
-        "dismissible": 2,
-        "footerAlign": 2,
-        "icon": 2,
-        "initialFocus": 2,
-        "overlayBlur": 2,
-        "portal": 2,
-        "role": 2,
-        "scrollLock": 2,
-        "subtitle": 2,
-        "testId": 2,
-        "title": 2,
-        "width": 2
+        "analyticsId": 1,
+        "bannerTone": 1,
+        "cancelLabel": 1,
+        "confirmLabel": 1,
+        "dismissible": 1,
+        "footerAlign": 1,
+        "icon": 1,
+        "initialFocus": 1,
+        "overlayBlur": 1,
+        "portal": 1,
+        "role": 1,
+        "scrollLock": 1,
+        "subtitle": 1,
+        "testId": 1,
+        "title": 1,
+        "width": 1
       },
       "prop_value_frequencies": {
         "analyticsId": {
-          "code-score-demo-input": 1,
           "smelly-input": 1
         },
         "bannerTone": {
-          "warning": 2
+          "warning": 1
         },
         "cancelLabel": {
-          "Cancel": 2
+          "Cancel": 1
         },
         "confirmLabel": {
-          "OK": 2
+          "OK": 1
         },
         "dismissible": {
-          "true": 2
+          "true": 1
         },
         "footerAlign": {
-          "end": 2
+          "end": 1
         },
         "icon": {
-          "⚠️": 2
+          "⚠️": 1
         },
         "initialFocus": {
-          "confirm": 2
+          "confirm": 1
         },
         "overlayBlur": {
-          "true": 2
+          "true": 1
         },
         "portal": {
-          "true": 2
+          "true": 1
         },
         "role": {
-          "dialog": 2
+          "dialog": 1
         },
         "scrollLock": {
-          "true": 2
+          "true": 1
         },
         "subtitle": {
-          "Kitchen sink": 2
+          "Kitchen sink": 1
         },
         "testId": {
-          "code-score-demo-modal": 1,
           "smelly-modal": 1
         },
         "title": {
-          "Demo modal": 1,
           "Smell": 1
         },
         "width": {
-          "max-w-md": 2
+          "max-w-md": 1
         }
       },
       "usage_locations": [
         {
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 54,
+          "line": 60,
           "props": [
             "analyticsId",
             "bannerTone",
@@ -1784,74 +1624,33 @@
             "title": "Smell",
             "width": "max-w-md"
           }
-        },
-        {
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 57,
-          "props": [
-            "analyticsId",
-            "bannerTone",
-            "cancelLabel",
-            "confirmLabel",
-            "dismissible",
-            "footerAlign",
-            "icon",
-            "initialFocus",
-            "overlayBlur",
-            "portal",
-            "role",
-            "scrollLock",
-            "subtitle",
-            "testId",
-            "title",
-            "width"
-          ],
-          "prop_values": {
-            "analyticsId": "code-score-demo-input",
-            "bannerTone": "warning",
-            "cancelLabel": "Cancel",
-            "confirmLabel": "OK",
-            "dismissible": "true",
-            "footerAlign": "end",
-            "icon": "⚠️",
-            "initialFocus": "confirm",
-            "overlayBlur": "true",
-            "portal": "true",
-            "role": "dialog",
-            "scrollLock": "true",
-            "subtitle": "Kitchen sink",
-            "testId": "code-score-demo-modal",
-            "title": "Demo modal",
-            "width": "max-w-md"
-          }
         }
       ]
     },
     {
       "component": "LegacyButton",
-      "reference_count": 2,
-      "file_count": 2,
+      "reference_count": 1,
+      "file_count": 1,
       "max_props_on_single_use": 2,
       "files": [
-        "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-        "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx"
+        "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx"
       ],
       "prop_frequencies": {
-        "size": 2,
-        "variant": 2
+        "size": 1,
+        "variant": 1
       },
       "prop_value_frequencies": {
         "size": {
-          "sm": 2
+          "sm": 1
         },
         "variant": {
-          "ghost": 2
+          "ghost": 1
         }
       },
       "usage_locations": [
         {
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 49,
+          "line": 55,
           "props": [
             "size",
             "variant"
@@ -1860,55 +1659,6 @@
             "size": "sm",
             "variant": "ghost"
           }
-        },
-        {
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/code-score-demo-input.tsx",
-          "line": 52,
-          "props": [
-            "size",
-            "variant"
-          ],
-          "prop_values": {
-            "size": "sm",
-            "variant": "ghost"
-          }
-        }
-      ]
-    },
-    {
-      "component": "TouchTarget",
-      "reference_count": 2,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx"
-      ],
-      "usage_locations": [
-        {
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
-          "line": 228,
-          "props": []
-        },
-        {
-          "path": "/Users/jeremy/Development/DSLint/demo/src/components/Button.tsx",
-          "line": 244,
-          "props": []
-        }
-      ]
-    },
-    {
-      "component": "App",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 0,
-      "files": [
-        "/Users/jeremy/Development/DSLint/demo/src/main.tsx"
-      ],
-      "usage_locations": [
-        {
-          "path": "/Users/jeremy/Development/DSLint/demo/src/main.tsx",
-          "line": 8,
-          "props": []
         }
       ]
     },
@@ -1985,20 +1735,20 @@
   "ownership": [
     {
       "owner": "design-system",
-      "files": 37,
-      "definitions": 39
+      "files": 36,
+      "definitions": 38
     },
     {
       "owner": "unowned",
-      "files": 2,
+      "files": 10,
       "definitions": 1
     }
   ],
   "scores": {
-    "design_system_health": 55,
-    "ux_consistency": 70,
-    "accessibility": 56,
-    "maintainability": 50
+    "design_system_health": 66,
+    "ux_consistency": 82,
+    "accessibility": 74,
+    "maintainability": 68
   },
   "playgrounds": [
     {
@@ -2344,11 +2094,6 @@
         "src",
         "name"
       ]
-    },
-    {
-      "id": "code-score-demo-input",
-      "export_name": "CodeScoreDemoInput",
-      "rel_path": "src/components/code-score-demo-input.tsx"
     },
     {
       "id": "DuplicateCardA",

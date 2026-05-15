@@ -1,3 +1,4 @@
+import { Section } from "../shell/Section";
 import {
   Table,
   TableBody,
@@ -24,16 +25,11 @@ export function DashboardBody({ report }: { report: WorkspaceReport }) {
       ) : null}
 
       {report.ownership.length > 0 ? (
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-900">
-              Ownership
-            </h2>
-            <p className="text-xs text-neutral-500">
-              Prefix match from <span className="font-mono">.dslint.json</span>{" "}
-              — useful for adoption rollups.
-            </p>
-          </div>
+        <Section
+          id="ownership"
+          title="Ownership"
+          description="Prefix match from <span className='font-mono'>.dslint.json</span> — useful for adoption rollups."
+        >
           <Table>
             <TableHeader>
               <TableRow>
@@ -52,37 +48,24 @@ export function DashboardBody({ report }: { report: WorkspaceReport }) {
               ))}
             </TableBody>
           </Table>
-        </section>
+        </Section>
       ) : null}
 
-      <section className="space-y-3">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-900">
-              Components
-            </h2>
-            <p className="text-xs text-neutral-500">
-              Definitions and JSX usage from the latest snapshot.
-            </p>
-          </div>
-          <span className="text-xs text-neutral-400">
-            {report.files.length} files scanned
-          </span>
-        </div>
+      <Section
+        id="components"
+        title="Components"
+        description="Definitions and JSX usage from the latest snapshot."
+      >
         <ComponentCatalog report={report} />
-      </section>
+      </Section>
 
-      <section className="space-y-3">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-900">Issues</h2>
-          </div>
-          <span className="text-xs text-neutral-400">
-            {report.findings.length} total
-          </span>
-        </div>
+      <Section
+        id="issues"
+        title="Issues"
+        description="Findings from the workspace dslint report scoped to this file."
+      >
         <FindingsList findings={report.findings} root={report.root} />
-      </section>
+      </Section>
     </div>
   );
 }

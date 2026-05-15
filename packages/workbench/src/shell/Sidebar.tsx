@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SearchIcon } from "lucide-react";
+import { IconSearch } from "@/components/icons";
 
 import type { PlaygroundEntry } from "../types/playground";
 import type { HashRoute } from "./hashRoute";
@@ -105,7 +105,7 @@ export function Sidebar({
             className="flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
             aria-label="Search components and views"
           >
-            <SearchIcon className="size-4 shrink-0" aria-hidden />
+            <IconSearch className="size-4 shrink-0" aria-hidden />
             <SearchShortcutBadge />
           </button>
         </div>
@@ -119,6 +119,13 @@ export function Sidebar({
           className={navButtonClass(governanceActive)}
         >
           Governance
+        </button>
+        <button
+          type="button"
+          onClick={() => onNavigate({ view: "tokens" })}
+          className={navButtonClass(tokensActive)}
+        >
+          Design tokens
         </button>
 
         {sectionLabel("Components")}
@@ -146,15 +153,6 @@ export function Sidebar({
             );
           })}
         </div>
-
-        {sectionLabel("System")}
-        <button
-          type="button"
-          onClick={() => onNavigate({ view: "tokens" })}
-          className={navButtonClass(tokensActive)}
-        >
-          Design tokens
-        </button>
       </nav>
     </aside>
   );

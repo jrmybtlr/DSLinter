@@ -23,10 +23,14 @@ export function GovernancePane({
       <div className="min-h-0 flex-1 overflow-auto bg-gray-50">
         {landing}
         <header className="border-b  bg-white px-8 py-6">
-          <h1 className="text-lg font-semibold tracking-tight text-gray-900">Governance</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-gray-900">
+            Governance
+          </h1>
         </header>
         <div className="mx-auto max-w-lg px-8 py-16 text-center">
-          <p className="text-sm font-medium text-gray-900">Could not load DSLint report</p>
+          <p className="text-sm font-medium text-gray-900">
+            Could not load DSLint report
+          </p>
           <p className="mt-2 text-xs text-gray-500">{error}</p>
           <p className="mt-6 text-xs text-gray-500">
             Regenerate the JSON, then refresh. Example:{" "}
@@ -43,7 +47,7 @@ export function GovernancePane({
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-gray-50">
         {landing}
-        <div className="flex min-h-[12rem] flex-1 items-center justify-center text-sm text-gray-500">
+        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
           Loading inventory…
         </div>
       </div>
@@ -54,13 +58,18 @@ export function GovernancePane({
     <div className="min-h-0 flex-1 overflow-auto bg-gray-50">
       {landing}
       <header className="border-b bg-white px-8 py-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Inventory</p>
-        <h1 className="mt-1 text-lg font-semibold tracking-tight text-gray-900">Governance</h1>
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Inventory
+        </p>
+        <h1 className="mt-1 text-lg font-semibold tracking-tight text-gray-900">
+          Governance
+        </h1>
         <p className="text-sm text-gray-600">
-          Scores, component catalog, token wall, and findings from the latest DSLint snapshot
+          Scores, component catalog, token wall, and findings from the latest
+          DSLint snapshot
         </p>
       </header>
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="min-w-0 w-full px-6 py-8">
         <DashboardBody report={report} />
       </div>
     </div>

@@ -1,12 +1,37 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const DSLINT_SERVE_PORT = 7878;
+const demoDir = path.dirname(fileURLToPath(import.meta.url));
+const workbenchSrc = path.resolve(demoDir, "../packages/workbench/src");
+/** One React instance for demo + linked workbench (avoids invalid hook call). */
+const reactRoot = path.resolve(demoDir, "node_modules/react");
+const reactDomRoot = path.resolve(demoDir, "node_modules/react-dom");
+const useSyncExternalStoreShim = path.resolve(
+  demoDir,
+  "src/shims/use-sync-external-store-shim.ts",
+);
 
 export default defineConfig(({ mode }) => ({
   plugins: [tailwindcss(), react()],
+  resolve: {
+    dedupe: ["react", "react-dom"],
+    alias: {
+      "@": workbenchSrc,
+      react: reactRoot,
+      "react-dom": reactDomRoot,
+      /** ESM re-export from `react` — avoids CJS `use-sync-external-store/shim` under `@fs`. */
+      "use-sync-external-store/shim": useSyncExternalStoreShim,
+    },
+  },
   optimizeDeps: {
+    /**
+     * Pre-bundle Radix hook so it pulls `use-sync-external-store/shim` through our alias (ESM re-export from `react`).
+     */
+    include: ["react", "react-dom", "@radix-ui/react-use-is-hydrated"],
     /** Linked workspace package: transpile from source so edits hot-reload like npm would after publish. */
     exclude: ["@dslint/workbench"],
   },

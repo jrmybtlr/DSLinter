@@ -11,6 +11,7 @@ import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
 import { shortPath } from "./paths";
 import { EmptyCard } from "../shell/EmptyCard";
+import { InlineCode } from "@/components/InlineCode";
 
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";
@@ -45,71 +46,64 @@ export function ComponentUsageDetails({
 
   if (!report) {
     return (
-      <EmptyCard className="rounded-lg border  bg-white p-4 text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Load <span className="font-mono">dslint-report.json</span> to see where
-        this component is referenced in the workspace.
-      </EmptyCard>
+        this component is used in the workspace.
+      </p>
     );
-  } else if (!usage) {
+  }
+
+  if (!usage) {
     return (
-      <EmptyCard>No scanned usage locations found for {componentId}.</EmptyCard>
+      <EmptyCard>
+        No found usage for <InlineCode>{componentId}</InlineCode>.
+      </EmptyCard>
     );
   }
 
   const rows = sortedLocations(usage.usage_locations);
-  const hasSites = rows.length > 0;
+
+  if (rows.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Usage totals exist but individual call sites were not recorded in this
+        report.
+      </p>
+    );
+  }
 
   return (
-    <div className="rounded-lg border  bg-white p-4 shadow-xs">
-      <p className="text-sm text-gray-600">
-        <span className="font-mono text-gray-900">
-          ×{usage.reference_count}
-        </span>{" "}
-        <span className="text-gray-400">references</span> across{" "}
-        <span className="font-mono text-gray-900">{usage.file_count}</span>{" "}
-        <span className="text-gray-400">
-          {usage.file_count === 1 ? "file" : "files"}
-        </span>
-        {usage.max_props_on_single_use > 0 ? (
-          <>
-            . Busiest call site passes up to{" "}
-            <span className="font-mono text-gray-900">
-              {usage.max_props_on_single_use}
-            </span>{" "}
-            <span className="text-gray-400">props</span>.
-          </>
-        ) : (
-          <> (no props recorded on any tag — self-closing or spread-only).</>
-        )}
-      </p>
-
-      {hasSites ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>File</TableHead>
-              <TableHead>Line</TableHead>
-              <TableHead>Props at this call site</TableHead>
+    <Table className="[&>table]:table-fixed [&>table]:w-full">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[40%]">File</TableHead>
+          <TableHead className="w-14 whitespace-nowrap">Line</TableHead>
+          <TableHead className="min-w-0">Props at this call site</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((loc, i) => {
+          const propsText = formatCallSiteProps(loc);
+          return (
+            <TableRow key={`${loc.path}-${loc.line}-${i}`}>
+              <TableCell className="font-mono text-xs text-foreground">
+                {shortPath(report.root, loc.path)}
+              </TableCell>
+              <TableCell className="tabular-nums text-muted-foreground">
+                {loc.line}
+              </TableCell>
+              <TableCell className="min-w-0">
+                <span
+                  className="block truncate font-mono text-xs text-foreground"
+                  title={propsText}
+                >
+                  {propsText}
+                </span>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((loc, i) => (
-              <TableRow key={`${loc.path}-${loc.line}-${i}`}>
-                <TableCell>{shortPath(report.root, loc.path)}</TableCell>
-                <TableCell>{loc.line}</TableCell>
-                <TableCell>{formatCallSiteProps(loc)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : (
-        <p className="mt-3 text-sm text-gray-500">
-          Usage counts are present but individual call sites were not recorded
-          in this report. Regenerate with a current{" "}
-          <span className="font-mono">dslint</span> build if you expect a site
-          list.
-        </p>
-      )}
-    </div>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
