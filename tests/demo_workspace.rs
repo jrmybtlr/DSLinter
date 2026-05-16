@@ -3,7 +3,7 @@ use std::path::PathBuf;
 #[test]
 fn demo_workspace_has_inventory_and_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo");
-    let report = dslint::scan_workspace(&root).expect("scan demo");
+    let report = dslinter::scan_workspace(&root).expect("scan demo");
     assert!(
         !report.files.is_empty(),
         "expected demo sources under {}",

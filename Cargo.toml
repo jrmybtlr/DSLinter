@@ -1,5 +1,5 @@
 [package]
-name = "dslint"
+name = "dslinter"
 version = "0.1.0"
 edition = "2021"
 description = "Design system linting: JSX/Vue component inventory, usage analytics, and governance signals"

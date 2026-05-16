@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-use dslint::model::Severity;
+use dslinter::model::Severity;
 
 mod watch;
 
@@ -63,15 +63,15 @@ fn main() -> anyhow::Result<()> {
     }
 
     let report = if cli.parallel {
-        dslint::scan_workspace_parallel(&root)?
+        dslinter::scan_workspace_parallel(&root)?
     } else {
-        dslint::scan_workspace(&root)?
+        dslinter::scan_workspace(&root)?
     };
 
     if cli.json {
         println!("{}", serde_json::to_string_pretty(&report)?);
     } else {
-        dslint::report::print_human(&report);
+        dslinter::report::print_human(&report);
     }
 
     let warn_count = report

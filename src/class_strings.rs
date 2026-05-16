@@ -3,8 +3,8 @@
 use std::sync::OnceLock;
 
 use oxc_ast::ast::{
-    Argument, CallExpression, Expression, JSXAttribute, JSXAttributeName, JSXAttributeValue, Program,
-    TemplateElementValue,
+    Argument, CallExpression, Expression, JSXAttribute, JSXAttributeName, JSXAttributeValue,
+    JSXExpression, Program,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
@@ -91,16 +91,21 @@ impl<'nl> ExtractVisitor<'nl> {
 
     fn extract_class_helper_args(&mut self, line: u32, args: &[Argument<'_>]) {
         for arg in args {
-            match &arg.value {
-                Expression::StringLiteral(lit) => {
+            match arg {
+                Argument::SpreadElement(_) => {}
+                Argument::StringLiteral(lit) => {
                     self.push_class(line, lit.value.to_string(), ClassStringKind::ClassHelper);
                 }
-                Expression::TemplateLiteral(tpl) => {
+                Argument::TemplateLiteral(tpl) => {
                     for quasi in &tpl.quasis {
-                        let TemplateElementValue::String(s) = &quasi.value.raw else {
-                            continue;
-                        };
-                        self.push_class(line, s.to_string(), ClassStringKind::ClassHelper);
+                        let text = quasi.value.raw.as_str();
+                        if !text.is_empty() {
+                            self.push_class(
+                                line,
+                                text.to_string(),
+                                ClassStringKind::ClassHelper,
+                            );
+                        }
                     }
                 }
                 _ => {}
@@ -146,7 +151,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                 self.push_class(line, lit.value.to_string(), ClassStringKind::JsxAttr);
             }
             Some(JSXAttributeValue::ExpressionContainer(container)) => {
-                if let Expression::CallExpression(call) = &container.expression {
+                if let JSXExpression::CallExpression(call) = &container.expression {
                     if let Expression::Identifier(callee) = &call.callee {
                         if is_class_helper_name(callee.name.as_str()) {
                             self.extract_class_helper_args(line, &call.arguments);
@@ -198,11 +203,11 @@ mod tests {
 
     #[test]
     fn hex_in_string_literal_not_in_comment() {
-        let src = r#"
+        let src = r##"
 // #ffffff in comment should not count
 const c = "#ff00aa";
 export function X() { return null; }
-"#;
+"##;
         let ex = parse_extract(src);
         assert!(
             ex.string_literals

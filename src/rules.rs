@@ -866,12 +866,12 @@ export function Box() {
     #[test]
     fn hex_in_string_literal_reported_via_ast() {
         let path = Path::new("token_ast_literal.tsx");
-        let src = r#"
+        let src = r##"
 export function Box() {
   const c = "#ff00aa";
   return null;
 }
-"#;
+"##;
         let file = analyze_ecma_file(path, src);
         let mut sources = HashMap::new();
         sources.insert(path.to_path_buf(), src.to_string());

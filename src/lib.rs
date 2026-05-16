@@ -33,7 +33,7 @@ pub fn scan_file(path: &Path, source: &str) -> FileScan {
             path: path.to_path_buf(),
             definitions: Vec::new(),
             usages: Vec::new(),
-            parse_errors: vec![format!("dslint: unsupported extension `{ext}`")],
+            parse_errors: vec![format!("dslinter: unsupported extension `{ext}`")],
             findings: Vec::new(),
             ast_extracts: Default::default(),
         },
@@ -50,7 +50,7 @@ pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
             Ok(src) => scan_file(&p, &src),
             Err(e) => FileScan {
                 parse_errors: vec![format!(
-                    "dslint: could not read `{}`: {e}",
+                    "dslinter: could not read `{}`: {e}",
                     p.display()
                 )],
                 path: p,
@@ -80,7 +80,7 @@ pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
             Ok(src) => scan_file(p, &src),
             Err(e) => FileScan {
                 parse_errors: vec![format!(
-                    "dslint: could not read `{}`: {e}",
+                    "dslinter: could not read `{}`: {e}",
                     p.display()
                 )],
                 path: p.clone(),
