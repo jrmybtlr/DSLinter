@@ -1,23 +1,27 @@
 # DSLint
 
-Rust CLI that inventories **JSX / TSX / Vue** components in a local repository, rolls up **usage frequency** (Storybook-style visibility without story files), and emits **governance signals** for design-system quality.
+A Rust CLI that scans a repo for **JSX, TSX, and Vue** components, counts **how often each is used** (Storybook-style visibility without story files), and reports **design-system health** signals you can use in the terminal, CI, or a dashboard.
 
-## Usage
+## Quick start
 
 ```bash
 cargo build --release
-./target/release/dslint /path/to/repo               # human summary
-./target/release/dslint /path/to/repo --json       # machine-readable report
+./target/release/dslint /path/to/repo               # summary for humans
+./target/release/dslint /path/to/repo --json       # JSON for tools / CI
 ./target/release/dslint -p /path/to/repo           # parallel scan (large trees)
 ./target/release/dslint /path/to/repo --fail-on-warnings
 ./target/release/dslint /path/to/repo --max-warnings 10
 ```
 
-Scans honor `.gitignore` and `.dslintignore` at the repo root (glob semantics via `globset`, **last matching rule wins**, including `!` negation and `\!` to match a literal leading `!`), plus `exclude_globs` from config. On the line above a violation, `// dslint-ignore-next-line rule-id` (comma-separated; `*` or `prefix*`) suppresses matching findings on the next line.
+## What gets scanned
 
-Overlapping **`token-hardcoded-color`** and **`token-tailwind-arbitrary`** on the same source line are collapsed to the Tailwind rule only.
+- **Respects ignores:** `.gitignore` and `.dslintignore` at the repo root (globset semantics; **last matching rule wins**, including `!` negation; use `\!` for a literal `!`). Optional `exclude_globs` in config apply too.
+- **Inline suppressions:** On the line above a finding, use `// dslint-ignore-next-line rule-id` (comma-separated rules; `*` or `prefix*` allowed). That line only suppresses the **next** source line.
+- **Overlap:** If **`token-hardcoded-color`** and **`token-tailwind-arbitrary`** both hit the same line, only the Tailwind rule is reported.
 
-Optional config (repository root): `.dslint.json` or `dslint.json`:
+## Config (optional)
+
+Put `.dslint.json` or `dslint.json` at the repository root:
 
 ```json
 {
@@ -35,31 +39,35 @@ Optional config (repository root): `.dslint.json` or `dslint.json`:
 }
 ```
 
-`check_dark_mode_contrast` is heuristic and currently scans static class strings (`class`/`className`) plus quoted literals passed to `cn(...)`, `clsx(...)`, or `classnames(...)`.
+`check_dark_mode_contrast` is **heuristic**: it looks at static `class` / `className` strings and quoted literals inside `cn(...)`, `clsx(...)`, and `classnames(...)`.
 
-## Demo
+## Demo app
 
-See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with a flat `src/components/` showcase plus `demo/.dslint.json`. The demo UI is a **dashboard** from the [`packages/dashboard`](packages/dashboard/) npm package (`@dslinter/dashboard`): component previews are listed from **`playgrounds`** in `dslint-report.json` (built by the Rust scanner from source + `playground_groups` in config), joined to modules via `import.meta.glob` — no per-file `playgroundMeta` exports required.
+The [`demo/`](demo/) folder is a **Vite + React + TypeScript + Tailwind** sample with a flat `src/components/` layout and [`demo/.dslint.json`](demo/.dslint.json).
 
 ```bash
 cd demo && npm install && npm run dev
 ```
 
-`npm run dev` auto-detects whether `cargo` is on `PATH`:
+The UI comes from [`packages/dashboard`](packages/dashboard/) (`@dslinter/dashboard`). Component previews are driven by **`playgrounds`** in `dslint-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
 
-- **Rust installed** — runs Vite **and** `dslint --serve` together, so the dashboard refreshes over SSE whenever a `.tsx` under `demo/src/` changes (no manual report regeneration). The dslint binary is built on first run with `cargo run --release` (~30s).
-- **Rust missing** — falls back to Vite alone with a warning. The dashboard reads the committed `demo/public/dslint-report.json` and won't auto-update. Install Rust at <https://rustup.rs> to enable live updates.
+`npm run dev` picks a mode based on whether **`cargo`** is on your `PATH`:
 
-Force a flavor explicitly with `npm run dev:serve` (SSE), `npm run dev:watch` (5s polling), or `npm run dev:vite-only`.
+| Situation | Behavior |
+|-----------|----------|
+| Rust available | Vite and `dslint --serve` run together; the dashboard updates over **SSE** when `.tsx` files under `demo/src/` change. First run builds the binary with `cargo run --release` (~30s). |
+| Rust missing | Vite only, with a warning. The app uses the committed `demo/public/dslint-report.json` and does not auto-refresh. Install Rust from [rustup.rs](https://rustup.rs) for live scanning. |
 
-## MVP scope
+Explicit scripts: `npm run dev:serve` (SSE), `npm run dev:watch` (5s polling), `npm run dev:vite-only`.
 
-- Component definitions (functions, classes, `const` arrows, `forwardRef` / `memo`, exports)
-- PascalCase JSX / Vue template usage with prop lists (variant-surface hint)
-- Accessibility: `<img>` alt, meaningful `<a href>`, `<button>` accessible names, `<input>` accessible names (JSX AST + Vue `<template>`); governance score weights all `a11y-*` rules
-- Code quality heuristics (`smell-*` rule ids): console/debugger noise, suppressions, TODO markers, oversized files, inline JSX `style`, empty `catch`, redundant fragments; lightly lowers maintainability score
-- Duplicate definition detection, deprecation usage, hardcoded hex colors, Tailwind arbitrary bracket values (`token-tailwind-arbitrary`)
-- Ownership rollup in `--json` / dashboard when `ownership` paths are configured
-- Heuristic governance scores (design-system health omits token pillar until `known_tokens` is set) and `--json` output for dashboards / CI
+## What the CLI covers today
 
-Roadmap aligns with phased governance (tokens, a11y depth, drift, AI compliance) described in project docs.
+- **Definitions:** functions, classes, `const` arrows, `forwardRef` / `memo`, exports
+- **Usage:** PascalCase JSX and Vue template usage, with prop lists (variant hints)
+- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` and `<input>` accessible names (JSX AST + Vue `<template>`); governance scoring weights all `a11y-*` rules
+- **Smells (`smell-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
+- **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`)
+- **Ownership:** rollups in `--json` and the dashboard when `ownership` is set
+- **Scores:** heuristic governance scores (the token pillar is omitted until `known_tokens` is set); `--json` for dashboards and CI
+
+Roadmap follows phased governance (tokens, deeper a11y, drift, AI compliance) described elsewhere in the project docs.
