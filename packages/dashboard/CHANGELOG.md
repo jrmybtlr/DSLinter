@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.6
+
+[compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.5...v0.0.6)
+
 ## Unreleased
 
 ### Breaking changes
