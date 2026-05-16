@@ -1,12 +1,12 @@
-import type { TokenCatalog } from "@dslinter/dashboard";
+import type { TokenCatalog } from "dslinter";
 import {
   defaultTailwindFontFamilies,
   defaultTailwindFontSizes,
   defaultTailwindFontWeights,
-} from "@dslinter/dashboard";
+} from "dslinter";
 
 /**
- * Mirrors `@theme` in `src/index.css` + `@dslinter/dashboard/theme.css` for the dashboard token wall.
+ * Mirrors `@theme` in `src/index.css` + `dslinter/theme.css` for the dashboard token wall.
  * Keep colors/spacing/radius in sync when you change design tokens.
  * Typography stacks should match `--font-sans`, `--font-serif`, `--font-mono` when you override them.
  */

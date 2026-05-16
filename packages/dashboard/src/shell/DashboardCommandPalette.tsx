@@ -7,7 +7,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "../components/ui/command";
+} from "@/components/ui/command";
 
 import type { PlaygroundEntry } from "../types/playground";
 import type { HashRoute } from "./hashRoute";

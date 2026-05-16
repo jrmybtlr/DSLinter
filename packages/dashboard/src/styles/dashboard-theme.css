@@ -1,6 +1,6 @@
 /**
  * DSLinter dashboard design tokens + shadcn/ui theme.
- * Host apps import once: `@import "@dslinter/dashboard/theme.css";` after `@import "tailwindcss"` and `@source` for this package.
+ * Host apps import once: `@import "dslinter/theme.css";` after `@import "tailwindcss"` and `@source` for this package.
  */
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";

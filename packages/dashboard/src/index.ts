@@ -1,6 +1,6 @@
 /**
  * DSLinter dashboard — React UI for playgrounds, tokens, and governance.
- * Host apps should import styles once: `@import "@dslinter/dashboard/theme.css";` (after Tailwind + `@source` for this package).
+ * Host apps should import styles once: `@import "dslinter/theme.css";` (after Tailwind + `@source` for this package).
  */
 export type { PlaygroundEntry, PlaygroundMeta } from "./types/playground";
 export type {

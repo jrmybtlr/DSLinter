@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { IconMoon, IconSearch, IconSun } from "../components/icons";
-import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
+import { IconMoon, IconSearch, IconSun } from "@/components/icons";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import type { PlaygroundEntry } from "../types/playground";
 import type { HashRoute } from "./hashRoute";

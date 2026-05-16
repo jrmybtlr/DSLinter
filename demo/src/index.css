@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @source "../../packages/dashboard/src";
-@import "@dslinter/dashboard/theme.css";
+@import "dslinter/theme.css";
 
 :root {
   /* Override Tailwind default gray palette with Neutral Gray from Tailwind 3.x (v3-neutral) */

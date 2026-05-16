@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- **npm:** package renamed from `@dslinter/dashboard` to **`dslinter`**. Replace the dependency, imports (`dslinter`), and theme import (`dslinter/theme.css`).
+- **CLI:** add **`dslinter`** binary that forwards arguments to **`dslint`** on `PATH` (Rust scanner not bundled).
 
 ## v0.0.5
 

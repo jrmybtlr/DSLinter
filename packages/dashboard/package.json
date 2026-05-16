@@ -1,5 +1,5 @@
 {
-  "name": "@dslinter/dashboard",
+  "name": "dslinter",
   "version": "0.0.5",
   "description": "DSLinter dashboard UI: playground shell, token wall, and governance panels (consumes dslint-report.json).",
   "license": "Apache-2.0",
@@ -27,6 +27,9 @@
   "engines": {
     "node": ">=20"
   },
+  "bin": {
+    "dslinter": "bin/dslinter.mjs"
+  },
   "scripts": {
     "test": "vitest run",
     "prepublishOnly": "vitest run"
@@ -46,6 +49,7 @@
   },
   "types": "./src/index.ts",
   "files": [
+    "bin",
     "src",
     "components.json",
     "README.md",

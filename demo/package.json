@@ -17,7 +17,7 @@
     "dslint:print-cmd": "node scripts/run-dslint.mjs --print-cmd . --serve 7878 --output public/dslint-report.json"
   },
   "dependencies": {
-    "@dslinter/dashboard": "file:../packages/dashboard",
+    "dslinter": "file:../packages/dashboard",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

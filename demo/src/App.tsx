@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useWorkspaceReport, DashboardLayout } from "@dslinter/dashboard";
+import { useWorkspaceReport, DashboardLayout } from "dslinter";
 import { buildPlaygroundEntries } from "./playground/buildRegistry";
 import { tokenCatalog } from "./tokenCatalog";
 

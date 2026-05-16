@@ -2,25 +2,25 @@
 
 This folder is a **small design-system sandbox**: ten components follow theme tokens and common UX conventions; ten illustrate drift (hardcoded colors, missing `alt`, duplicate `Card` definitions, oversized prop surfaces, deprecated names).
 
-Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `packages/dashboard/src`, and pulls in **`@import "@dslinter/dashboard/theme.css"`** (shadcn/ui tokens + DSLinter layout tokens from the package). There is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
+Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `packages/dashboard/src`, and pulls in **`@import "dslinter/theme.css"`** (shadcn/ui tokens + DSLinter layout tokens from the package). There is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
 
-This repo uses **workspace linking** at the repo root so every dependency declared by `@dslinter/dashboard` is installed once and TypeScript can resolve it from `demo/`:
+This repo uses **workspace linking** at the repo root so every dependency declared by `dslinter` is installed once and TypeScript can resolve it from `demo/`:
 
 - **npm:** `package.json` at the repo root has `"workspaces": ["demo", "packages/dashboard"]`.
 - **pnpm:** `pnpm-workspace.yaml` lists the same packages. `demo` links the dashboard with **`"file:../packages/dashboard"`** (a bare `"*"` would hit the public npm registry and 404).
 
-## `@dslinter/dashboard` package
+## `dslinter` package
 
 The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in [`../packages/dashboard/`](../packages/dashboard/) and is consumed like a published library:
 
-- **Local:** `demo/package.json` uses `"@dslinter/dashboard": "file:../packages/dashboard"`. Vite is configured with `optimizeDeps.exclude: ["@dslinter/dashboard"]` so edits under `packages/dashboard/src/` hot-reload with `npm run dev` / `pnpm dev` in `demo/`.
-- **After publish:** depend on `"@dslinter/dashboard": "^0.0.1"` (or your registry scope) and keep the same **`@import "@dslinter/dashboard/theme.css"`** line after Tailwind in your app CSS.
+- **Local:** `demo/package.json` uses `"dslinter": "file:../packages/dashboard"`. Vite is configured with `optimizeDeps.exclude: ["dslinter"]` so edits under `packages/dashboard/src/` hot-reload with `npm run dev` / `pnpm dev` in `demo/`.
+- **After publish:** depend on `"dslinter": "^0.0.1"` (or your registry scope) and keep the same **`@import "dslinter/theme.css"`** line after Tailwind in your app CSS.
 
 The demo app wires **data** as follows:
 
 - **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("@/components/**/*.tsx")` to resolve live previews (no `definePlayground` in each component file).
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
-- **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `@dslinter/dashboard/theme.css`).
+- **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `dslinter/theme.css`).
 - **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslinterReport` into `DashboardLayout`.
 
 ## Run the UI
@@ -69,7 +69,7 @@ The dev app is a single **dashboard**: a left sidebar lists isolated component p
 
 The `dslint` scanner emits a **`playgrounds`** array on the workspace report. Each entry includes **`id`** (file stem), **`export_name`**, **`rel_path`**, **`declared_props`**, and optional **`group`** from **`playground_groups`** in [`.dslint.json`](./.dslint.json) (prefix map — longest prefix wins).
 
-The demo joins those rows to Vite modules under `src/components/**` and builds controls from **`declared_props`** (string / boolean heuristics). Optional **`@dslinter/dashboard` `definePlayground`** remains for edge cases, but normal components stay free of dashboard package imports.
+The demo joins those rows to Vite modules under `src/components/**` and builds controls from **`declared_props`** (string / boolean heuristics). Optional **`definePlayground()`** from **dslinter** remains for edge cases, but normal components stay free of dashboard package imports.
 
 ### Workspace report (`dslint-report.json`)
 

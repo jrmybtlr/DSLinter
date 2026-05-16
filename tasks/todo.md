@@ -41,23 +41,23 @@
 
 - [ ] Notes, screenshots, or caveats
 
-## Done — shadcn/ui contained in `@dslinter/dashboard`
+## Done — shadcn/ui contained in `dslinter`
 
-- [x] **`packages/dashboard/src/styles/dashboard-theme.css`** — `@import "tw-animate-css"` + `shadcn/tailwind.css`, shadcn `@theme inline` / `:root` / `.dark` / `@layer base`, plus DSLinter layout tokens (`--color-surface`, `rounded-ds-*`, progress keyframes). Exported as **`@dslinter/dashboard/theme.css`** (`package.json` `exports`).
-- [x] **`demo/src/index.css`** — only Tailwind + `@source` + `@import "@dslinter/dashboard/theme.css"` (no duplicate token maintenance in the demo).
+- [x] **`packages/dashboard/src/styles/dashboard-theme.css`** — `@import "tw-animate-css"` + `shadcn/tailwind.css`, shadcn `@theme inline` / `:root` / `.dark` / `@layer base`, plus DSLinter layout tokens (`--color-surface`, `rounded-ds-*`, progress keyframes). Exported as **`dslinter/theme.css`** (`package.json` `exports`).
+- [x] **`demo/src/index.css`** — only Tailwind + `@source` + `@import "dslinter/theme.css"` (no duplicate token maintenance in the demo).
 - [x] **`packages/dashboard/src/components/ui/`** — `button`, `input`, `label`, `select`, `checkbox` (new-york style, `../../lib/utils` imports so consumers need no path aliases).
 - [x] **`packages/dashboard/src/lib/utils.ts`** — `cn()` helper; **`packages/dashboard/components.json`** for future `shadcn add`.
 - [x] **Root `package.json` workspaces** — `["demo", "packages/dashboard"]` so all dashboard `dependencies` (Radix, shiki, shadcn stack, etc.) hoist to one `node_modules` and `demo`’s `tsc` resolves imports into the dashboard package.
 - [x] **`PlaygroundControls`** — uses shadcn `Button`, `Input`, `Label`, `Checkbox`, `Select`.
 - [x] **Shiki** — declared on dashboard `package.json` (was missing; surfaced once workspace typecheck included all dashboard files).
 
-**Consumers:** after `npm install @dslinter/dashboard`, add to app CSS (after `@import "tailwindcss"` and `@source` for `…/node_modules/@dslinter/dashboard/src` or your linked path): `@import "@dslinter/dashboard/theme.css";`
+**Consumers:** after `npm install dslinter`, add to app CSS (after `@import "tailwindcss"` and `@source` for `…/node_modules/dslinter/src` or your linked path): `@import "dslinter/theme.css";`
 
 **Optional next:** dashboard `FindingsList` / `ComponentCatalog` tabs + `dropdown-menu`.
 
 ## Review (shadcn)
 
-- **npm:** `npm install` from repo root or `demo/` (npm finds parent `workspaces`). Use `"@dslinter/dashboard": "file:../packages/dashboard"` in `demo` — not `"*"` (registry 404).
+- **npm:** `npm install` from repo root or `demo/` (npm finds parent `workspaces`). Use `"dslinter": "file:../packages/dashboard"` in `demo` — not `"*"` (registry 404).
 - **pnpm:** repo root has `pnpm-workspace.yaml`; run **`pnpm install` from the repo root** so `demo` is in the workspace and the `file:` link resolves. Same `file:` dependency as npm.
 
 ## Done — Shiki + Twoslash (`PlaygroundA11yAndCode` usage panel)

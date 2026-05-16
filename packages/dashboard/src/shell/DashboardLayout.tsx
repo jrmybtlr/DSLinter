@@ -10,7 +10,7 @@ import {
 import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "../lib/utils";
 import { ComponentPlaygroundPane } from "./ComponentPlaygroundPane";
 import { GovernancePane } from "./GovernancePane";
@@ -109,7 +109,9 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
 export function useDashboardTheme(): DashboardThemeContextValue {
   const ctx = useContext(DashboardThemeContext);
   if (!ctx) {
-    throw new Error("useDashboardTheme must be used within DashboardThemeProvider");
+    throw new Error(
+      "useDashboardTheme must be used within DashboardThemeProvider",
+    );
   }
   return ctx;
 }
@@ -163,9 +165,14 @@ function DashboardLayoutInner({
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-muted/40 px-8 text-center">
           <p className="text-sm font-medium text-foreground">Unknown preview</p>
           <p className="max-w-md text-xs text-muted-foreground">
-            No playground registered for <span className="font-mono">{route.componentId}</span>.
+            No playground registered for{" "}
+            <span className="font-mono">{route.componentId}</span>.
           </p>
-          <Button type="button" size="sm" onClick={() => navigate({ view: "governance" })}>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => navigate({ view: "governance" })}
+          >
             Back to governance
           </Button>
         </div>
@@ -207,7 +214,9 @@ function DashboardLayoutInner({
         theme={theme}
         onThemeChange={setTheme}
       />
-      <div className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">{main}</div>
+      <div className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">
+        {main}
+      </div>
     </div>
   );
 }

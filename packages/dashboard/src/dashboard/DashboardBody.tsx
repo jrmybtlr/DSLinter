@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
+} from "@/components/ui/table";
 import type { WorkspaceReport } from "../types/report";
 import { ComponentCatalog } from "./ComponentCatalog";
 import { FindingsList } from "./FindingsList";

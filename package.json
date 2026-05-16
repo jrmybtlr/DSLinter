@@ -10,10 +10,10 @@
     "fmt:check": "oxfmt --check demo packages/dashboard",
     "lint": "oxlint --ignore-pattern \"**/dist/**\" demo packages/dashboard",
     "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" demo packages/dashboard",
-    "test": "cargo test && pnpm run lint && pnpm --filter @dslinter/dashboard test && pnpm --filter dslint-demo run build",
-    "release:major": "pnpm run test && pnpm exec changelogen --release --major --dir packages/dashboard && pnpm --filter @dslinter/dashboard publish",
-    "release:minor": "pnpm run test && pnpm exec changelogen --release --minor --dir packages/dashboard && pnpm --filter @dslinter/dashboard publish",
-    "release:patch": "pnpm run test && pnpm exec changelogen --release --patch --dir packages/dashboard && pnpm --filter @dslinter/dashboard publish"
+    "test": "cargo test && pnpm run lint && pnpm --filter dslinter test && pnpm --filter dslint-demo run build",
+    "release:major": "pnpm run test && pnpm exec changelogen --release --major --dir packages/dashboard && pnpm --filter dslinter publish",
+    "release:minor": "pnpm run test && pnpm exec changelogen --release --minor --dir packages/dashboard && pnpm --filter dslinter publish",
+    "release:patch": "pnpm run test && pnpm exec changelogen --release --patch --dir packages/dashboard && pnpm --filter dslinter publish"
   },
   "devDependencies": {
     "changelogen": "^0.6.2",

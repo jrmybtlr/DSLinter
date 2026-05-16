@@ -8,11 +8,11 @@ import type {
   PlaygroundPreviewComponent,
   PlaygroundSpec,
   WorkspaceReport,
-} from "@dslinter/dashboard";
+} from "dslinter";
 
 import { playgroundStaticDefaults } from "./playgroundDefaults";
 
-const modules = import.meta.glob("../components/**/*.tsx", {
+const modules = import.meta.glob("@/components/**/*.tsx", {
   eager: true,
 }) as Record<string, Record<string, unknown>>;
 

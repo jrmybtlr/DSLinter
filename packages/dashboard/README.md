@@ -1,6 +1,8 @@
-# @dslinter/dashboard
+# dslinter
 
 React UI for the **DSLinter dashboard**: component playground shell, token wall, and governance panels. It expects a **`dslint-report.json`** file produced by the **`dslint`** CLI (Rust scanner in this repo).
+
+**Previously published as `@dslinter/dashboard`.** Migrate with `npm install dslinter` and replace imports `@dslinter/dashboard` → `dslinter`, and `@dslinter/dashboard/theme.css` → `dslinter/theme.css`.
 
 ## Peer dependencies
 
@@ -10,28 +12,36 @@ React UI for the **DSLinter dashboard**: component playground shell, token wall,
 ## Install
 
 ```bash
-npm install @dslinter/dashboard
+npm install dslinter
 ```
 
 This package is **source-first**: entry points resolve to TypeScript/TSX under `src/`. Use a bundler that transpiles dependencies from `node_modules` (for example Vite).
 
-## Generating reports (Rust CLI)
+## CLI (`npx dslinter`)
 
-This npm package **does not embed the scanner**. Install the CLI separately so you can scan a repo and emit JSON:
+This package exposes a **`dslinter` binary** that **forwards every argument to `dslint` on your PATH** (same flags as the Rust CLI: `--json`, `-o`, `--serve`, etc.). It does **not** bundle the Rust scanner.
+
+```bash
+npx dslinter /path/to/repo --json -o dslint-report.json
+```
+
+If `dslint` is not installed, you’ll get a short error with install hints (`cargo install dslint` once published, or build from this repo).
 
 | Distribution | How users get `dslint` |
 |--------------|-------------------------|
 | **GitHub Releases** | Attach `dslint` (or `dslint.exe`) per OS/arch to each release; document download + `PATH`. |
 | **crates.io** | Publish the crate as `dslint`; users run `cargo install dslint` (Rust toolchain required). |
-| **npm binary wrapper** | Add a small package (e.g. `@dslinter/cli`) that uses [napi-rs](https://github.com/napi-rs/napi-rs), [prebuildify](https://github.com/prebuild/prebuildify), or a **postinstall script** that downloads the correct release asset for `process.platform` / `arch`. OptionalDependencies per platform is a common pattern. |
+| **npm** | `npx dslinter …` after `dslint` is on `PATH`, or a future dedicated wrapper with prebuilds. |
 
-**Suggested path for this repo:** ship official binaries via **GitHub Releases** (CI builds with `cargo build --release` on `ubuntu`, `macos`, `windows`) and optionally add `@dslinter/cli` later that only downloads or shells out to that binary.
+**Suggested path for this repo:** ship official binaries via **GitHub Releases** (CI builds with `cargo build --release` on `ubuntu`, `macos`, `windows`).
 
 Typical usage after the CLI is on `PATH`:
 
 ```bash
 dslint /path/to/repo --json -o dslint-report.json
 # or --serve for live reload while developing a dashboard
+# or equivalently:
+dslinter /path/to/repo --json -o dslint-report.json
 ```
 
 ## Styles (Tailwind v4)
@@ -40,13 +50,13 @@ dslint /path/to/repo --json -o dslint-report.json
 
    ```css
    @import "tailwindcss";
-   @source "../node_modules/@dslinter/dashboard/src";
+   @source "../node_modules/dslinter/src";
    ```
 
 2. Import the theme (tokens + shadcn layer):
 
    ```css
-   @import "@dslinter/dashboard/theme.css";
+   @import "dslinter/theme.css";
    ```
 
 ## Wiring the layout
@@ -62,7 +72,7 @@ import { useMemo } from "react";
 import {
   useWorkspaceReport,
   DashboardLayout,
-} from "@dslinter/dashboard";
+} from "dslinter";
 import { buildPlaygroundEntries } from "./playground/buildRegistry";
 import { tokenCatalog } from "./tokenCatalog";
 

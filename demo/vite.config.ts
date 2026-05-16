@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react";
 
 const DSLINT_SERVE_PORT = 7878;
 const demoDir = path.dirname(fileURLToPath(import.meta.url));
+const dashboardSrc = path.resolve(demoDir, "../packages/dashboard/src");
 /** One React instance for demo + linked dashboard (avoids invalid hook call). */
 const reactRoot = path.resolve(demoDir, "node_modules/react");
 const reactDomRoot = path.resolve(demoDir, "node_modules/react-dom");
@@ -19,6 +20,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
+      /** Matches dashboard `components.json` / shadcn `@/*` imports and `import.meta.glob("@/…")`. */
+      "@": dashboardSrc,
       react: reactRoot,
       "react-dom": reactDomRoot,
       /** ESM re-export from `react` — avoids CJS `use-sync-external-store/shim` under `@fs`. */
@@ -31,7 +34,7 @@ export default defineConfig(({ mode }) => ({
      */
     include: ["react", "react-dom", "@radix-ui/react-use-is-hydrated"],
     /** Linked workspace package: transpile from source so edits hot-reload like npm would after publish. */
-    exclude: ["@dslinter/dashboard"],
+    exclude: ["dslinter"],
   },
   server: {
     proxy:

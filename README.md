@@ -49,7 +49,7 @@ The [`demo/`](demo/) folder is a **Vite + React + TypeScript + Tailwind** sample
 cd demo && npm install && npm run dev
 ```
 
-The UI comes from [`packages/dashboard`](packages/dashboard/) (`@dslinter/dashboard`). Component previews are driven by **`playgrounds`** in `dslint-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
+The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on npm). Component previews are driven by **`playgrounds`** in `dslint-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
 
 `npm run dev` picks a mode based on whether **`cargo`** is on your `PATH`:
 
