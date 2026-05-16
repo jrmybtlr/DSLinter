@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.15
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.12...v0.0.15)
+
+### 🚀 Enhancements
+
+- Update release workflow and versioning ([5e28f64](https://github.com/jrmybtlr/DSLinter/commit/5e28f64))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.12
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.11...v0.0.12)
