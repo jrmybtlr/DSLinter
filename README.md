@@ -30,9 +30,12 @@ Optional config (repository root): `.dslint.json` or `dslint.json`:
   "smell": {
     "disabled_rules": ["smell-todo-marker"],
     "report_console_error": true
-  }
+  },
+  "check_dark_mode_contrast": false
 }
 ```
+
+`check_dark_mode_contrast` is heuristic and currently scans static class strings (`class`/`className`) plus quoted literals passed to `cn(...)`, `clsx(...)`, or `classnames(...)`.
 
 ## Demo
 
