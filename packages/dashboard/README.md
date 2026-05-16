@@ -35,7 +35,7 @@ Environment variables:
 | `DSLINT_RELEASE_TAG` | Override release tag (default `v` + `dslinter` version from `package.json`). |
 | `DSLINT_GITHUB_REPO` | Override `owner/repo` for downloads (default from `package.json` → `jrmybtlr/DSLinter`). |
 | `DSLINT_VERBOSE=1` | Log which GitHub releases/assets were tried when downloading. |
-| `GITHUB_TOKEN` / `GH_TOKEN` | Optional token for private repos or higher API rate limits. |
+| `GITHUB_TOKEN` / `GH_TOKEN` | **Required for private repos** (`jrmybtlr/DSLinter`). Token needs read access to releases. |
 
 ### How this differs from `oxlint`
 

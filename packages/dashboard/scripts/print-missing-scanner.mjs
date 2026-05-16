@@ -1,27 +1,32 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { githubRepoFromPackage } from "./resolve-dslint-binary.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const version = JSON.parse(
   readFileSync(join(packageRoot, "package.json"), "utf8"),
 ).version;
+const repo = githubRepoFromPackage(packageRoot);
 
 process.stderr.write(`dslinter: scanner binary not available.
 
-This npm package is NOT the same as \`cargo install dslint\` on crates.io (that is a
-different "design file" linter and will crash or misbehave).
+Do NOT run:  cargo install dslint
+  That installs a different package on crates.io (design-file linter).
 
-To run the design-system scanner:
+Install the design-system scanner from this repo instead:
 
-  1. Re-run after a GitHub release exists for v${version} (prebuilt download), or
-  2. Build from this repo and point at it:
-       cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked
-       export DSLINT_BIN="$(command -v dslinter)"
-       npx dslinter ...
-  3. Or set DSLINT_BIN to your local target/release/dslinter
+  cargo install --git https://github.com/${repo} dslinter --locked
+  export DSLINT_BIN="$(command -v dslinter)"
+  npx dslinter ...
 
-Releases: https://github.com/jrmybtlr/DSLinter/releases
+If releases exist at https://github.com/${repo}/releases/tag/v${version} but
+download failed, the repo may be private — set a GitHub token then retry:
 
-Tip: re-run with DSLINT_VERBOSE=1 to see which GitHub releases/assets were tried.
+  export GITHUB_TOKEN=ghp_...   # needs read access to ${repo}
+  npx dslinter
+
+Or point at a local build:  DSLINT_BIN=/path/to/dslinter
+
+Tip: DSLINT_VERBOSE=1 shows each download URL tried.
 `);

@@ -8,15 +8,26 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attach binaries to (e.g. v0.0.12)"
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+env:
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
 jobs:
   build-linux-x64:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin dslinter
       - run: strip target/release/dslinter || true
@@ -30,6 +41,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin dslinter
       - run: cp target/release/dslinter dslinter-aarch64-unknown-linux-gnu
@@ -42,6 +55,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin dslinter
       - run: cp target/release/dslinter dslinter-aarch64-apple-darwin
@@ -54,6 +69,8 @@ jobs:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin dslinter
       - run: cp target/release/dslinter dslinter-x86_64-apple-darwin
@@ -66,6 +83,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bin dslinter
       - run: Copy-Item target/release/dslinter.exe dslinter-x86_64-pc-windows-msvc.exe
@@ -92,8 +111,9 @@ jobs:
           path: assets
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
           files: assets/*
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

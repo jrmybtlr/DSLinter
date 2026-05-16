@@ -1,7 +1,9 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  directAssetUrl,
   pickReleaseAsset,
+  releaseTagsToTry,
 } from "../scripts/github-release.mjs";
 import {
   CLI_BINARY_NAME,
@@ -34,6 +36,30 @@ describe("parseGitHubRepo", () => {
 
   it("defaults constant points at DSLinter", () => {
     expect(DEFAULT_GITHUB_REPO).toBe("jrmybtlr/DSLinter");
+  });
+});
+
+describe("directAssetUrl", () => {
+  it("uses releases/latest/download for latest tag", () => {
+    expect(
+      directAssetUrl("jrmybtlr/DSLinter", "latest", "dslinter-aarch64-apple-darwin"),
+    ).toBe(
+      "https://github.com/jrmybtlr/DSLinter/releases/latest/download/dslinter-aarch64-apple-darwin",
+    );
+  });
+
+  it("uses releases/download for version tags", () => {
+    expect(
+      directAssetUrl("jrmybtlr/DSLinter", "v0.0.12", "dslinter-aarch64-apple-darwin"),
+    ).toBe(
+      "https://github.com/jrmybtlr/DSLinter/releases/download/v0.0.12/dslinter-aarch64-apple-darwin",
+    );
+  });
+});
+
+describe("releaseTagsToTry", () => {
+  it("tries v-prefixed tag first", () => {
+    expect(releaseTagsToTry("0.0.12")).toEqual(["v0.0.12", "0.0.12", "latest"]);
   });
 });
 
