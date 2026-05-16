@@ -17,8 +17,9 @@ export function SmellyInput(): JSX.Element {
     } catch {
       // smell-empty-catch
     }
+    // eslint-disable-next-line no-constant-condition -- demo: dead branch; dslint still scans the body
     if (false) {
-      // smell-debugger (never runs; still scanned)
+      // eslint-disable-next-line no-debugger -- demo: smell-debugger (never runs at runtime)
       debugger;
     }
   }, []);

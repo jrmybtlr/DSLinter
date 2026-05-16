@@ -584,7 +584,7 @@
       "usages": [
         {
           "component": "LegacyButton",
-          "line": 55,
+          "line": 56,
           "props": [
             "size",
             "variant"
@@ -596,7 +596,7 @@
         },
         {
           "component": "KitchenSinkModal",
-          "line": 60,
+          "line": 61,
           "props": [
             "analyticsId",
             "bannerTone",
@@ -641,35 +641,35 @@
           "rule_id": "a11y-input-label",
           "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 80,
+          "line": 81,
           "severity": "info"
         },
         {
           "rule_id": "a11y-button-name",
           "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 87,
+          "line": 88,
           "severity": "warning"
         },
         {
           "rule_id": "a11y-img-alt",
           "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 90,
+          "line": 91,
           "severity": "warning"
         },
         {
           "rule_id": "a11y-anchor-href",
           "message": "`<a>` must have a meaningful `href` for navigation.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 98,
+          "line": 99,
           "severity": "warning"
         },
         {
           "rule_id": "a11y-anchor-placeholder-href",
           "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 101,
+          "line": 102,
           "severity": "warning"
         },
         {
@@ -697,14 +697,14 @@
           "rule_id": "code-debugger",
           "message": "`debugger` statement should not ship to production.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 22,
+          "line": 23,
           "severity": "warning"
         },
         {
           "rule_id": "code-inline-style",
           "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 50,
+          "line": 51,
           "severity": "info"
         },
         {
@@ -718,21 +718,35 @@
           "rule_id": "code-suppression-comment",
           "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 29,
+          "line": 20,
+          "severity": "info"
+        },
+        {
+          "rule_id": "code-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
+          "line": 22,
+          "severity": "info"
+        },
+        {
+          "rule_id": "code-suppression-comment",
+          "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+          "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
+          "line": 30,
           "severity": "info"
         },
         {
           "rule_id": "code-todo-marker",
           "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 33,
+          "line": 34,
           "severity": "info"
         },
         {
           "rule_id": "code-todo-marker",
           "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 35,
+          "line": 36,
           "severity": "info"
         }
       ]
@@ -1037,35 +1051,35 @@
       "rule_id": "a11y-input-label",
       "message": "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 80,
+      "line": 81,
       "severity": "info"
     },
     {
       "rule_id": "a11y-button-name",
       "message": "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 87,
+      "line": 88,
       "severity": "warning"
     },
     {
       "rule_id": "a11y-img-alt",
       "message": "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 90,
+      "line": 91,
       "severity": "warning"
     },
     {
       "rule_id": "a11y-anchor-href",
       "message": "`<a>` must have a meaningful `href` for navigation.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 98,
+      "line": 99,
       "severity": "warning"
     },
     {
       "rule_id": "a11y-anchor-placeholder-href",
       "message": "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 101,
+      "line": 102,
       "severity": "warning"
     },
     {
@@ -1093,14 +1107,14 @@
       "rule_id": "code-debugger",
       "message": "`debugger` statement should not ship to production.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 22,
+      "line": 23,
       "severity": "warning"
     },
     {
       "rule_id": "code-inline-style",
       "message": "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 50,
+      "line": 51,
       "severity": "info"
     },
     {
@@ -1114,21 +1128,35 @@
       "rule_id": "code-suppression-comment",
       "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 29,
+      "line": 20,
+      "severity": "info"
+    },
+    {
+      "rule_id": "code-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
+      "line": 22,
+      "severity": "info"
+    },
+    {
+      "rule_id": "code-suppression-comment",
+      "message": "Lint or TypeScript suppression comment — ensure it is justified and temporary.",
+      "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
+      "line": 30,
       "severity": "info"
     },
     {
       "rule_id": "code-todo-marker",
       "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 33,
+      "line": 34,
       "severity": "info"
     },
     {
       "rule_id": "code-todo-marker",
       "message": "TODO/FIXME/HACK marker — track in your issue system or resolve before release.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 35,
+      "line": 36,
       "severity": "info"
     },
     {
@@ -1352,14 +1380,14 @@
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[12px]`",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 36,
+      "line": 37,
       "severity": "info"
     },
     {
       "rule_id": "token-tailwind-arbitrary",
       "message": "Tailwind arbitrary value `[#000000]`",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 40,
+      "line": 41,
       "severity": "info"
     },
     {
@@ -1443,7 +1471,7 @@
       "rule_id": "deprecated-component",
       "message": "Deprecated component `LegacyButton` is still referenced.",
       "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-      "line": 55,
+      "line": 56,
       "severity": "warning"
     },
     {
@@ -1624,7 +1652,7 @@
       "usage_locations": [
         {
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 60,
+          "line": 61,
           "props": [
             "analyticsId",
             "bannerTone",
@@ -1687,7 +1715,7 @@
       "usage_locations": [
         {
           "path": "/Users/jeremy/Development/DSLint/demo/src/components/SmellyInput.tsx",
-          "line": 55,
+          "line": 56,
           "props": [
             "size",
             "variant"
