@@ -3,15 +3,20 @@
   "private": true,
   "workspaces": [
     "demo",
-    "packages/workbench"
+    "packages/dashboard"
   ],
   "scripts": {
-    "fmt": "oxfmt demo packages/workbench",
-    "fmt:check": "oxfmt --check demo packages/workbench",
-    "lint": "oxlint --ignore-pattern \"**/dist/**\" demo packages/workbench",
-    "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" demo packages/workbench"
+    "fmt": "oxfmt demo packages/dashboard",
+    "fmt:check": "oxfmt --check demo packages/dashboard",
+    "lint": "oxlint --ignore-pattern \"**/dist/**\" demo packages/dashboard",
+    "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" demo packages/dashboard",
+    "test": "cargo test && pnpm run lint && pnpm --filter @dslinter/dashboard test && pnpm --filter dslint-demo run build",
+    "release:major": "pnpm run test && pnpm exec changelogen --release --major --dir packages/dashboard && pnpm --filter @dslinter/dashboard publish",
+    "release:minor": "pnpm run test && pnpm exec changelogen --release --minor --dir packages/dashboard && pnpm --filter @dslinter/dashboard publish",
+    "release:patch": "pnpm run test && pnpm exec changelogen --release --patch --dir packages/dashboard && pnpm --filter @dslinter/dashboard publish"
   },
   "devDependencies": {
+    "changelogen": "^0.6.2",
     "oxfmt": "^0.16.0",
     "oxlint": "^1.64.0"
   },

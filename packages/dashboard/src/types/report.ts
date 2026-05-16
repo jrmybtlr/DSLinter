@@ -86,11 +86,11 @@ export interface OwnershipSummary {
 
 /**
  * Simplified prop kind from TypeScript (e.g. demo `merge-playgrounds.mjs`).
- * Workbench falls back to name heuristics when a key is missing or kind is `unknown`.
+ * Dashboard falls back to name heuristics when a key is missing or kind is `unknown`.
  */
 export type DeclaredPropKind = "boolean" | "string" | "number" | "unknown";
 
-/** Emitted by dslint for workbench playgrounds (no per-component TS registration). */
+/** Emitted by dslint for dashboard playgrounds (no per-component TS registration). */
 export interface PlaygroundSpec {
   id: string;
   export_name: string;

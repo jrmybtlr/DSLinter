@@ -1,6 +1,6 @@
 /**
- * DSLint workbench design tokens + shadcn/ui theme.
- * Host apps import once: `@import "@dslint/workbench/theme.css";` after `@import "tailwindcss"` and `@source` for this package.
+ * DSLinter dashboard design tokens + shadcn/ui theme.
+ * Host apps import once: `@import "@dslinter/dashboard/theme.css";` after `@import "tailwindcss"` and `@source` for this package.
  */
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -66,15 +66,16 @@
   --spacing-layout-lg: 2rem;
   --radius-ds: 0.5rem;
   --radius-ds-lg: 0.75rem;
-  --animate-progress-indeterminate: progress-indeterminate 1.2s ease-in-out infinite;
+  --animate-progress-indeterminate: progress-indeterminate 1.2s ease-in-out
+    infinite;
 
   --font-sans:
-    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-    "Noto Color Emoji";
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-    monospace;
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 }
 
 @keyframes progress-indeterminate {
@@ -95,7 +96,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  /* Match legacy DSLint demo primary (blue-600) */
+  /* Match legacy DSLinter demo primary (blue-600) */
   --primary: oklch(0.488 0.243 264.376);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
@@ -178,6 +179,10 @@
   }
 
   .dark .ds-playground-dot-surface {
-    background-image: radial-gradient(circle, rgb(148 163 184 / 0.22) 1px, transparent 1px);
+    background-image: radial-gradient(
+      circle,
+      rgb(148 163 184 / 0.22) 1px,
+      transparent 1px
+    );
   }
 }

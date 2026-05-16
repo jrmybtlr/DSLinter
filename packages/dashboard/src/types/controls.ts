@@ -1,4 +1,4 @@
-/** Values passed from the workbench control panel into `PlaygroundPreview`. */
+/** Values passed from the dashboard control panel into `PlaygroundPreview`. */
 export type PlaygroundArgs = Record<string, string | number | boolean>;
 
 export type PlaygroundBooleanControl = {

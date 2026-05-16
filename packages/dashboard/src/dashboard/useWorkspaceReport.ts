@@ -9,7 +9,7 @@ async function loadReport(url: string): Promise<WorkspaceReport> {
   return res.json() as Promise<WorkspaceReport>;
 }
 
-export type DslintReportState = {
+export type DslinterReportState = {
   report: WorkspaceReport | null;
   error: string | null;
   loading: boolean;
@@ -34,7 +34,7 @@ export type UseWorkspaceReportOptions = {
 
 export function useWorkspaceReport(
   reportUrlOrOptions: string | UseWorkspaceReportOptions = "/dslint-report.json",
-): DslintReportState {
+): DslinterReportState {
   // Accept either the legacy string overload or the options object.
   const {
     reportUrl = "/dslint-report.json",

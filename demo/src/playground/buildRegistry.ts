@@ -8,7 +8,7 @@ import type {
   PlaygroundPreviewComponent,
   PlaygroundSpec,
   WorkspaceReport,
-} from "@dslint/workbench";
+} from "@dslinter/dashboard";
 
 import { playgroundStaticDefaults } from "./playgroundDefaults";
 

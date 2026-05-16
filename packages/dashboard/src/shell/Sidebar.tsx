@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { IconMoon, IconSearch, IconSun } from "@/components/icons";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { IconMoon, IconSearch, IconSun } from "../components/icons";
+import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 
 import type { PlaygroundEntry } from "../types/playground";
 import type { HashRoute } from "./hashRoute";
-import type { WorkbenchThemePreference } from "./WorkbenchLayout";
+import type { DashboardThemePreference } from "./DashboardLayout";
 
 type Props = {
   entries: PlaygroundEntry[];
   route: HashRoute;
   onNavigate: (next: HashRoute) => void;
   onOpenCommandPalette: () => void;
-  theme: WorkbenchThemePreference;
-  onThemeChange: (next: WorkbenchThemePreference) => void;
+  theme: DashboardThemePreference;
+  onThemeChange: (next: DashboardThemePreference) => void;
 };
 
 function SearchShortcutBadge() {

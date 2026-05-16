@@ -7,7 +7,7 @@
  * and when `declared_props` is empty, infers binding names from the TSX file via TypeScript.
  *
  * When `tsconfig.json` resolves, also fills `declared_prop_kinds` using the TypeScript checker
- * (`boolean` | `string` | `number`) so the workbench does not rely on name heuristics alone.
+ * (`boolean` | `string` | `number`) so the dashboard does not rely on name heuristics alone.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

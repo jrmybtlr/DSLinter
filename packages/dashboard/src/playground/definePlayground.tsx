@@ -61,9 +61,9 @@ function resolveMeta(
 }
 
 /**
- * Optional escape hatch: declare workbench playground exports manually. Prefer driving
+ * Optional escape hatch: declare dashboard playground exports manually. Prefer driving
  * playgrounds from `dslint-report.json` (`playgrounds`) so component files stay free of
- * workbench imports.
+ * dashboard package imports.
  */
 export function definePlayground<P extends Record<string, unknown>>(
   component: ComponentType<P>,

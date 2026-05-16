@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useWorkspaceReport, WorkbenchLayout } from "@dslint/workbench";
+import { useWorkspaceReport, DashboardLayout } from "@dslinter/dashboard";
 import { buildPlaygroundEntries } from "./playground/buildRegistry";
 import { tokenCatalog } from "./tokenCatalog";
 
@@ -8,7 +8,7 @@ import { tokenCatalog } from "./tokenCatalog";
 const IS_SERVE_MODE = import.meta.env.MODE === "serve";
 
 export default function App() {
-  const dslintReport = useWorkspaceReport({
+  const dslinterReport = useWorkspaceReport({
     reportUrl: "/dslint-report.json",
     // In serve mode subscribe to the SSE stream from `dslint --serve 7878`.
     watchUrl: IS_SERVE_MODE ? "/events" : undefined,
@@ -18,16 +18,16 @@ export default function App() {
   });
 
   const playgroundEntries = useMemo(
-    () => buildPlaygroundEntries(dslintReport.report),
-    [dslintReport.report],
+    () => buildPlaygroundEntries(dslinterReport.report),
+    [dslinterReport.report],
   );
 
   return (
-    <WorkbenchLayout
+    <DashboardLayout
       playgroundEntries={playgroundEntries}
       tokenCatalog={tokenCatalog}
-      dslintReport={dslintReport}
-      dslintReportHint="npm run dslint:report (from demo/)"
+      dslinterReport={dslinterReport}
+      dslinterReportHint="npm run dslint:report (from demo/)"
       formatModulePath={(modulePath) => `demo/${modulePath.replace(/^\.\.\//, "")}`}
     />
   );

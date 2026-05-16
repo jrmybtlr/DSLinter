@@ -1,22 +1,22 @@
 import type { ReactNode } from "react";
 import { DashboardBody } from "../dashboard/DashboardBody";
-import type { DslintReportState } from "../dashboard/useWorkspaceReport";
+import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 
 type Props = {
   /** Intro / landing copy shown above the governance inventory. */
   landing?: ReactNode;
   reportUrl?: string;
-  dslintReportHint?: string;
-  dslintReport: DslintReportState;
+  dslinterReportHint?: string;
+  dslinterReport: DslinterReportState;
 };
 
 export function GovernancePane({
   landing,
   reportUrl: _reportUrl = "/dslint-report.json",
-  dslintReportHint = "npm run dslint:report",
-  dslintReport,
+  dslinterReportHint = "npm run dslint:report",
+  dslinterReport,
 }: Props) {
-  const { report, error, loading } = dslintReport;
+  const { report, error, loading } = dslinterReport;
 
   if (error) {
     return (
@@ -29,13 +29,13 @@ export function GovernancePane({
         </header>
         <div className="mx-auto max-w-lg px-8 py-16 text-center">
           <p className="text-sm font-medium text-foreground">
-            Could not load DSLint report
+            Could not load DSLinter report
           </p>
           <p className="mt-2 text-xs text-muted-foreground">{error}</p>
           <p className="mt-6 text-xs text-muted-foreground">
             Regenerate the JSON, then refresh. Example:{" "}
             <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">
-              {dslintReportHint}
+              {dslinterReportHint}
             </code>
           </p>
         </div>
@@ -66,7 +66,7 @@ export function GovernancePane({
         </h1>
         <p className="text-sm text-muted-foreground">
           Scores, component catalog, token wall, and findings from the latest
-          DSLint snapshot
+          DSLinter snapshot
         </p>
       </header>
       <div className="min-w-0 w-full px-6 py-8">

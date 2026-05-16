@@ -9,25 +9,33 @@ import {
 } from "react";
 import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
-import type { DslintReportState } from "../dashboard/useWorkspaceReport";
+import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import { ComponentPlaygroundPane } from "./ComponentPlaygroundPane";
 import { GovernancePane } from "./GovernancePane";
 import { Sidebar } from "./Sidebar";
 import { TokensPane } from "./TokensPane";
-import { WorkbenchCommandPalette } from "./WorkbenchCommandPalette";
+import { DashboardCommandPalette } from "./DashboardCommandPalette";
 import { useHashRoute } from "./useHashRoute";
 
-const STORAGE_KEY = "dslint-workbench-theme";
+const STORAGE_KEY = "dslinter-dashboard-theme";
 
-export type WorkbenchThemePreference = "light" | "dark";
-export type WorkbenchResolvedTheme = WorkbenchThemePreference;
+export type DashboardThemePreference = "light" | "dark";
+export type DashboardResolvedTheme = DashboardThemePreference;
 
-function readStored(): WorkbenchThemePreference | null {
+function readStored(): DashboardThemePreference | null {
   if (typeof window === "undefined") return null;
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
+    const LEGACY_KEY = "dslinter-workbench-theme";
+    let v = localStorage.getItem(STORAGE_KEY);
+    if (v == null) {
+      v = localStorage.getItem(LEGACY_KEY);
+      if (v === "light" || v === "dark") {
+        localStorage.setItem(STORAGE_KEY, v);
+        localStorage.removeItem(LEGACY_KEY);
+      }
+    }
     if (v === "light" || v === "dark") return v;
     /** Migrate legacy `system` (and any unknown) to an explicit mode. */
     if (v === "system") {
@@ -43,27 +51,27 @@ function readStored(): WorkbenchThemePreference | null {
   return null;
 }
 
-function readInitialTheme(): WorkbenchThemePreference {
+function readInitialTheme(): DashboardThemePreference {
   return readStored() ?? "light";
 }
 
-type WorkbenchThemeContextValue = {
-  theme: WorkbenchThemePreference;
-  setTheme: (next: WorkbenchThemePreference) => void;
+type DashboardThemeContextValue = {
+  theme: DashboardThemePreference;
+  setTheme: (next: DashboardThemePreference) => void;
   /** Same as `theme`; kept for callers that already used `resolvedTheme`. */
-  resolvedTheme: WorkbenchResolvedTheme;
+  resolvedTheme: DashboardResolvedTheme;
 };
 
-const WorkbenchThemeContext = createContext<WorkbenchThemeContextValue | null>(
+const DashboardThemeContext = createContext<DashboardThemeContextValue | null>(
   null,
 );
 
-export function WorkbenchThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<WorkbenchThemePreference>(() =>
+export function DashboardThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<DashboardThemePreference>(() =>
     readInitialTheme(),
   );
 
-  const setTheme = useCallback((next: WorkbenchThemePreference) => {
+  const setTheme = useCallback((next: DashboardThemePreference) => {
     setThemeState(next);
   }, []);
 
@@ -92,21 +100,21 @@ export function WorkbenchThemeProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <WorkbenchThemeContext.Provider value={value}>
+    <DashboardThemeContext.Provider value={value}>
       {children}
-    </WorkbenchThemeContext.Provider>
+    </DashboardThemeContext.Provider>
   );
 }
 
-export function useWorkbenchTheme(): WorkbenchThemeContextValue {
-  const ctx = useContext(WorkbenchThemeContext);
+export function useDashboardTheme(): DashboardThemeContextValue {
+  const ctx = useContext(DashboardThemeContext);
   if (!ctx) {
-    throw new Error("useWorkbenchTheme must be used within WorkbenchThemeProvider");
+    throw new Error("useDashboardTheme must be used within DashboardThemeProvider");
   }
   return ctx;
 }
 
-export type WorkbenchLayoutProps = {
+export type DashboardLayoutProps = {
   playgroundEntries: PlaygroundEntry[];
   tokenCatalog: TokenCatalog;
   /** Custom intro shown above the governance inventory on `#!/governance`; defaults to package copy. */
@@ -114,25 +122,25 @@ export type WorkbenchLayoutProps = {
   /** Fetch URL for `dslint --json` output. */
   reportUrl?: string;
   /** Shown next to the governance refresh hint. */
-  dslintReportHint?: string;
+  dslinterReportHint?: string;
   /** Maps Vite `import.meta.glob` path to a label in the component header. */
   formatModulePath?: (modulePath: string) => string;
-  /** DSLint JSON fetch state (shared by governance + component a11y). */
-  dslintReport: DslintReportState;
+  /** Workspace report fetch state (shared by governance + component a11y). */
+  dslinterReport: DslinterReportState;
 };
 
-function WorkbenchLayoutInner({
+function DashboardLayoutInner({
   playgroundEntries,
   tokenCatalog,
   overview,
   reportUrl,
-  dslintReportHint,
+  dslinterReportHint,
   formatModulePath,
-  dslintReport,
-}: WorkbenchLayoutProps) {
+  dslinterReport,
+}: DashboardLayoutProps) {
   const [route, navigate] = useHashRoute();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const { theme, setTheme, resolvedTheme } = useWorkbenchTheme();
+  const { theme, setTheme, resolvedTheme } = useDashboardTheme();
 
   const getEntry = (id: string) => playgroundEntries.find((e) => e.id === id);
 
@@ -144,8 +152,8 @@ function WorkbenchLayoutInner({
       <GovernancePane
         landing={overview}
         reportUrl={reportUrl}
-        dslintReportHint={dslintReportHint}
-        dslintReport={dslintReport}
+        dslinterReportHint={dslinterReportHint}
+        dslinterReport={dslinterReport}
       />
     );
   } else {
@@ -167,9 +175,11 @@ function WorkbenchLayoutInner({
         <ComponentPlaygroundPane
           entry={entry}
           formatModulePath={formatModulePath}
-          workspaceReport={dslintReport.report}
+          workspaceReport={dslinterReport.report}
           reportReady={
-            !dslintReport.loading && dslintReport.error == null && dslintReport.report != null
+            !dslinterReport.loading &&
+            dslinterReport.error == null &&
+            dslinterReport.report != null
           }
         />
       );
@@ -183,7 +193,7 @@ function WorkbenchLayoutInner({
         resolvedTheme === "dark" && "dark",
       )}
     >
-      <WorkbenchCommandPalette
+      <DashboardCommandPalette
         entries={playgroundEntries}
         onNavigate={navigate}
         open={commandPaletteOpen}
@@ -202,10 +212,10 @@ function WorkbenchLayoutInner({
   );
 }
 
-export function WorkbenchLayout(props: WorkbenchLayoutProps) {
+export function DashboardLayout(props: DashboardLayoutProps) {
   return (
-    <WorkbenchThemeProvider>
-      <WorkbenchLayoutInner {...props} />
-    </WorkbenchThemeProvider>
+    <DashboardThemeProvider>
+      <DashboardLayoutInner {...props} />
+    </DashboardThemeProvider>
   );
 }

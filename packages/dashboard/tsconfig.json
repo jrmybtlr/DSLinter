@@ -3,9 +3,6 @@
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "noUnusedLocals": true,

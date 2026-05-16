@@ -361,7 +361,7 @@ export function ComponentPlaygroundPane({
               <Section
                 id="design-tokens"
                 title="Design tokens and colors"
-                description="Hardcoded colors and non-token styling flagged by dslint for this module's source file."
+                description="Hardcoded colors and non-token styling flagged by DSLinter for this module's source file."
               >
                 <PlaygroundTokenStyleSection
                   findings={tokenStyleFindings}
@@ -372,7 +372,7 @@ export function ComponentPlaygroundPane({
               <Section
                 id="code-score"
                 title={`Code score: ${reportReady ? codeScore.score : "—"}/100`}
-                description="Static quality rules and findings from the workspace dslint report scoped to this file."
+                description="Static quality rules and findings from the workspace DSLinter report scoped to this file."
               >
                 <PlaygroundCodeScoreSection
                   codeScore={codeScore}
@@ -383,7 +383,7 @@ export function ComponentPlaygroundPane({
               <Section
                 id="accessibility"
                 title={`Accessibility: ${reportReady ? a11y.score : "—"}/100`}
-                description="Accessibility checks and findings from the workspace dslint report scoped to this file."
+                description="Accessibility checks and findings from the workspace DSLinter report scoped to this file."
               >
                 <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
               </Section>

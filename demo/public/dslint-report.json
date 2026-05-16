@@ -19,17 +19,17 @@
       ],
       "usages": [
         {
-          "component": "WorkbenchLayout",
+          "component": "DashboardLayout",
           "line": 26,
           "props": [
-            "dslintReport",
-            "dslintReportHint",
+            "dslinterReport",
+            "dslinterReportHint",
             "formatModulePath",
             "playgroundEntries",
             "tokenCatalog"
           ],
           "prop_values": {
-            "dslintReportHint": "npm run dslint:report (from demo/)"
+            "dslinterReportHint": "npm run dslint:report (from demo/)"
           }
         }
       ],
@@ -1509,6 +1509,43 @@
       ]
     },
     {
+      "component": "DashboardLayout",
+      "reference_count": 1,
+      "file_count": 1,
+      "max_props_on_single_use": 5,
+      "files": [
+        "/Users/jeremy/Development/DSLint/demo/src/App.tsx"
+      ],
+      "prop_frequencies": {
+        "dslinterReport": 1,
+        "dslinterReportHint": 1,
+        "formatModulePath": 1,
+        "playgroundEntries": 1,
+        "tokenCatalog": 1
+      },
+      "prop_value_frequencies": {
+        "dslinterReportHint": {
+          "npm run dslint:report (from demo/)": 1
+        }
+      },
+      "usage_locations": [
+        {
+          "path": "/Users/jeremy/Development/DSLint/demo/src/App.tsx",
+          "line": 26,
+          "props": [
+            "dslinterReport",
+            "dslinterReportHint",
+            "formatModulePath",
+            "playgroundEntries",
+            "tokenCatalog"
+          ],
+          "prop_values": {
+            "dslinterReportHint": "npm run dslint:report (from demo/)"
+          }
+        }
+      ]
+    },
+    {
       "component": "KitchenSinkModal",
       "reference_count": 1,
       "file_count": 1,
@@ -1691,43 +1728,6 @@
           "path": "/Users/jeremy/Development/DSLint/demo/src/main.tsx",
           "line": 7,
           "props": []
-        }
-      ]
-    },
-    {
-      "component": "WorkbenchLayout",
-      "reference_count": 1,
-      "file_count": 1,
-      "max_props_on_single_use": 5,
-      "files": [
-        "/Users/jeremy/Development/DSLint/demo/src/App.tsx"
-      ],
-      "prop_frequencies": {
-        "dslintReport": 1,
-        "dslintReportHint": 1,
-        "formatModulePath": 1,
-        "playgroundEntries": 1,
-        "tokenCatalog": 1
-      },
-      "prop_value_frequencies": {
-        "dslintReportHint": {
-          "npm run dslint:report (from demo/)": 1
-        }
-      },
-      "usage_locations": [
-        {
-          "path": "/Users/jeremy/Development/DSLint/demo/src/App.tsx",
-          "line": 26,
-          "props": [
-            "dslintReport",
-            "dslintReportHint",
-            "formatModulePath",
-            "playgroundEntries",
-            "tokenCatalog"
-          ],
-          "prop_values": {
-            "dslintReportHint": "npm run dslint:report (from demo/)"
-          }
         }
       ]
     }

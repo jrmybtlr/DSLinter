@@ -1,6 +1,6 @@
 /**
- * DSLint workbench — React UI for playgrounds, tokens, and governance.
- * Host apps should import styles once: `@import "@dslint/workbench/theme.css";` (after Tailwind + `@source` for this package).
+ * DSLinter dashboard — React UI for playgrounds, tokens, and governance.
+ * Host apps should import styles once: `@import "@dslinter/dashboard/theme.css";` (after Tailwind + `@source` for this package).
  */
 export type { PlaygroundEntry, PlaygroundMeta } from "./types/playground";
 export type {
@@ -43,17 +43,17 @@ export {
 } from "./types/defaultTailwindTypography";
 
 export {
-  WorkbenchLayout,
-  WorkbenchThemeProvider,
-  useWorkbenchTheme,
-} from "./shell/WorkbenchLayout";
+  DashboardLayout,
+  DashboardThemeProvider,
+  useDashboardTheme,
+} from "./shell/DashboardLayout";
 export type {
-  WorkbenchLayoutProps,
-  WorkbenchResolvedTheme,
-  WorkbenchThemePreference,
-} from "./shell/WorkbenchLayout";
+  DashboardLayoutProps,
+  DashboardResolvedTheme,
+  DashboardThemePreference,
+} from "./shell/DashboardLayout";
 export { useWorkspaceReport } from "./dashboard/useWorkspaceReport";
-export type { DslintReportState } from "./dashboard/useWorkspaceReport";
+export type { DslinterReportState } from "./dashboard/useWorkspaceReport";
 export { a11ySummaryForModule, resolveModuleSourcePath } from "./report/a11yForModule";
 export type { A11yModuleSummary } from "./report/a11yForModule";
 export { tokenStyleFindingsForModule } from "./report/tokenStyleFindingsForModule";

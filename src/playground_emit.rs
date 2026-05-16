@@ -1,4 +1,4 @@
-//! Build workbench playground rows from scanned components + config (no TS boilerplate).
+//! Build dashboard playground rows from scanned components + config (no TS boilerplate).
 
 use std::collections::BTreeMap;
 use std::path::Path;

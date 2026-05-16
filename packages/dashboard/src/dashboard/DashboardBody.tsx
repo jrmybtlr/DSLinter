@@ -62,7 +62,7 @@ export function DashboardBody({ report }: { report: WorkspaceReport }) {
       <Section
         id="issues"
         title="Issues"
-        description="Findings from the workspace dslint report scoped to this file."
+        description="Findings from the workspace DSLinter report scoped to this file."
       >
         <FindingsList findings={report.findings} root={report.root} />
       </Section>

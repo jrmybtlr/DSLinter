@@ -1,9 +1,6 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "paths": {
-      "@/*": ["../packages/workbench/src/*"]
-    },
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "useDefineForClassFields": true,

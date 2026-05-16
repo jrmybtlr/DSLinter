@@ -59,7 +59,7 @@ function chunkPlaygroundEntries(entries: PlaygroundEntry[]): ComponentChunk[] {
   return chunks;
 }
 
-export function WorkbenchCommandPalette({
+export function DashboardCommandPalette({
   entries,
   onNavigate,
   open,

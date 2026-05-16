@@ -11,7 +11,7 @@ import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
 import { shortPath } from "./paths";
 import { EmptyCard } from "../shell/EmptyCard";
-import { InlineCode } from "@/components/InlineCode";
+import { InlineCode } from "../components/InlineCode";
 
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";

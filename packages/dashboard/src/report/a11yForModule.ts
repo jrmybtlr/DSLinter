@@ -2,7 +2,7 @@ import type { LintFinding, WorkspaceReport } from "../types/report";
 import { pathsMatch, resolveModuleSourcePath } from "./modulePathMatch";
 
 export type A11yModuleSummary = {
-  /** 0–100 heuristic from DSLint `a11y-*` findings on this source file. */
+  /** 0–100 heuristic from DSLinter `a11y-*` findings on this source file. */
   score: number;
   /** Count of `a11y-*` findings on this file. */
   issueCount: number;

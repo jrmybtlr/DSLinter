@@ -6,8 +6,7 @@ import react from "@vitejs/plugin-react";
 
 const DSLINT_SERVE_PORT = 7878;
 const demoDir = path.dirname(fileURLToPath(import.meta.url));
-const workbenchSrc = path.resolve(demoDir, "../packages/workbench/src");
-/** One React instance for demo + linked workbench (avoids invalid hook call). */
+/** One React instance for demo + linked dashboard (avoids invalid hook call). */
 const reactRoot = path.resolve(demoDir, "node_modules/react");
 const reactDomRoot = path.resolve(demoDir, "node_modules/react-dom");
 const useSyncExternalStoreShim = path.resolve(
@@ -20,7 +19,6 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
-      "@": workbenchSrc,
       react: reactRoot,
       "react-dom": reactDomRoot,
       /** ESM re-export from `react` — avoids CJS `use-sync-external-store/shim` under `@fs`. */
@@ -33,7 +31,7 @@ export default defineConfig(({ mode }) => ({
      */
     include: ["react", "react-dom", "@radix-ui/react-use-is-hydrated"],
     /** Linked workspace package: transpile from source so edits hot-reload like npm would after publish. */
-    exclude: ["@dslint/workbench"],
+    exclude: ["@dslinter/dashboard"],
   },
   server: {
     proxy:

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 import { cn } from "../../lib/utils"
-import { IconSearch } from "@/components/icons"
+import { IconSearch } from "../icons"
 import {
   Dialog,
   DialogContent,
