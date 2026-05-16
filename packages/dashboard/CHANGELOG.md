@@ -1,9 +1,5 @@
 # Changelog
 
-## v0.0.9
-
-[compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.8...v0.0.9)
-
 ## v0.0.8
 
 [compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.7...v0.0.8)
@@ -57,7 +53,6 @@
 
 ## v0.0.2
 
-
 ### 🚀 Enhancements
 
 - Add DSLint MVP — JSX/Vue scan, usage rollup, governance rules ([4d64b76](https://github.com/jrmybtlr/DSLint/commit/4d64b76))
@@ -97,4 +92,3 @@
 
 - Jeremy Butler <jeremy.butler@laravel.com>
 - Cursor Agent ([@cursoragent](https://github.com/cursoragent))
-
