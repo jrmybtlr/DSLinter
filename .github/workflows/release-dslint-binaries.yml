@@ -1,8 +1,7 @@
 name: Release dslinter binaries
 
-# Publishes prebuilt `dslinter` executables to the GitHub Release for tag `v*`
-# (same tag as the npm `dslinter` version). The npm package downloads the matching
-# asset so users do not need Rust/cargo (and must NOT use crates.io `dslint`).
+# Uploads prebuilt `dslinter` CLI binaries to the GitHub Release for tag `v*`.
+# Keep this workflow on main before tagging; npm `dslinter` downloads these assets.
 
 on:
   push:
@@ -11,104 +10,81 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to attach binaries to (e.g. v0.0.12)"
+        description: "Release tag (e.g. v0.0.16)"
         required: true
         type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-dslinter-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: true
+
 env:
   RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
 jobs:
-  build-linux-x64:
-    runs-on: ubuntu-latest
+  build:
+    name: build-${{ matrix.asset }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            asset: dslinter-x86_64-unknown-linux-gnu
+            ext: ""
+          - runner: macos-latest
+            asset: dslinter-aarch64-apple-darwin
+            ext: ""
+          - runner: windows-latest
+            asset: dslinter-x86_64-pc-windows-msvc.exe
+            ext: .exe
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_TAG }}
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release --bin dslinter
-      - run: strip target/release/dslinter || true
-      - run: cp target/release/dslinter dslinter-x86_64-unknown-linux-gnu
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dslinter-x86_64-unknown-linux-gnu
-          path: dslinter-x86_64-unknown-linux-gnu
 
-  build-linux-arm64:
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release --bin dslinter
-      - run: cp target/release/dslinter dslinter-aarch64-unknown-linux-gnu
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dslinter-aarch64-unknown-linux-gnu
-          path: dslinter-aarch64-unknown-linux-gnu
 
-  build-macos-arm64:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_TAG }}
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release --bin dslinter
-      - run: cp target/release/dslinter dslinter-aarch64-apple-darwin
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dslinter-aarch64-apple-darwin
-          path: dslinter-aarch64-apple-darwin
+      - name: Build dslinter
+        run: cargo build --release --bin dslinter
 
-  build-macos-x64:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_TAG }}
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release --bin dslinter
-      - run: cp target/release/dslinter dslinter-x86_64-apple-darwin
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dslinter-x86_64-apple-darwin
-          path: dslinter-x86_64-apple-darwin
+      - name: Package binary
+        shell: bash
+        run: |
+          if [ -n "${{ matrix.ext }}" ]; then
+            cp "target/release/dslinter${{ matrix.ext }}" "${{ matrix.asset }}"
+          else
+            cp target/release/dslinter "${{ matrix.asset }}"
+            strip "${{ matrix.asset }}" || true
+          fi
+          ls -la "${{ matrix.asset }}"
 
-  build-windows-x64:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_TAG }}
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release --bin dslinter
-      - run: Copy-Item target/release/dslinter.exe dslinter-x86_64-pc-windows-msvc.exe
-        shell: pwsh
       - uses: actions/upload-artifact@v4
         with:
-          name: dslinter-x86_64-pc-windows-msvc.exe
-          path: dslinter-x86_64-pc-windows-msvc.exe
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
 
   release:
-    needs:
-      - build-linux-x64
-      - build-linux-arm64
-      - build-macos-arm64
-      - build-macos-x64
-      - build-windows-x64
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: dslinter-*
-          merge-multiple: true
           path: assets
+          merge-multiple: false
+
+      - name: Flatten artifact paths
+        run: |
+          find assets -type f -exec mv {} assets/ \;
+          find assets -type d -empty -delete 2>/dev/null || true
+          ls -la assets/
+          count=$(find assets -maxdepth 1 -type f | wc -l)
+          test "$count" -ge 1
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}

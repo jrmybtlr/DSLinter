@@ -20,11 +20,9 @@ Install the design-system scanner from this repo instead:
   export DSLINT_BIN="$(command -v dslinter)"
   npx dslinter ...
 
-If releases exist at https://github.com/${repo}/releases/tag/v${version} but
-download failed, the repo may be private — set a GitHub token then retry:
-
-  export GITHUB_TOKEN=ghp_...   # needs read access to ${repo}
-  npx dslinter
+If the release page exists but has no files, GitHub Actions may still be queued or failed:
+  Actions → "Release dslinter binaries" → Run workflow (tag v${version})
+  Or upload from this repo:  node scripts/upload-release-binary.mjs v${version}
 
 Or point at a local build:  DSLINT_BIN=/path/to/dslinter
 

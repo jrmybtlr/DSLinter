@@ -11,9 +11,9 @@
     "lint": "oxlint --ignore-pattern \"**/dist/**\" demo packages/dashboard",
     "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" demo packages/dashboard",
     "test": "cargo test && pnpm run lint && pnpm --filter dslinter test && pnpm --filter dslint-demo run build",
-    "release:major": "pnpm run test && pnpm exec changelogen --release --major --dir packages/dashboard && pnpm --filter dslinter publish",
-    "release:minor": "pnpm run test && pnpm exec changelogen --release --minor --dir packages/dashboard && pnpm --filter dslinter publish",
-    "release:patch": "pnpm run test && pnpm exec changelogen --release --patch --dir packages/dashboard && pnpm --filter dslinter publish"
+    "release:major": "node scripts/release.mjs --major",
+    "release:minor": "node scripts/release.mjs --minor",
+    "release:patch": "node scripts/release.mjs --patch"
   },
   "devDependencies": {
     "changelogen": "^0.6.2",

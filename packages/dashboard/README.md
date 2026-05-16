@@ -25,7 +25,21 @@ The **`dslinter` binary** runs the **`dslint`** scanner with the same flags as t
 
 On **`npm install dslinter`**, a **`postinstall`** script tries to download a **prebuilt `dslint`** for your OS/arch from this repo’s **GitHub Releases**, using the **same tag as the npm version** (for example npm `dslinter@0.0.6` → release **`v0.0.6`** and assets like `dslint-x86_64-unknown-linux-gnu`). The binary is stored under `node_modules/dslinter/vendor/` and `dslinter` / `npx dslinter` prefer it over `PATH`.
 
-**Release workflow:** push git tag `v*` (after bumping the npm version) so [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLinter/blob/main/.github/workflows/release-dslint-binaries.yml) uploads the platform binaries, **then** publish `dslinter` to npm (or publish after the workflow finishes so installs resolve the assets).
+**Release workflow** (from repo root):
+
+```bash
+pnpm run release:patch   # test → version bump → git push --tags → wait for CI assets → npm publish
+```
+
+CI uploads Linux x64, macOS arm64, and Windows x64 binaries via [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLinter/blob/main/.github/workflows/release-dslint-binaries.yml).
+
+If Actions jobs stay **queued**, cancel old runs in GitHub Actions, then **Re-run** the release workflow (`workflow_dispatch`, tag `vX.Y.Z`).
+
+**Emergency upload** (one platform, requires `gh auth login` + Rust):
+
+```bash
+node scripts/upload-release-binary.mjs v0.0.16
+```
 
 Environment variables:
 
