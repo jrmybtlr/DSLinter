@@ -1,16 +1,18 @@
 /**
- * Best-effort download of the prebuilt `dslint` CLI for this platform.
- * Runs on `npm install dslinter` (postinstall). Exits 0 even when the binary
- * is missing (no release yet / offline) so installs never fail.
+ * Best-effort download of the prebuilt `dslinter` CLI for this platform.
+ * Used by postinstall and on first `dslinter` / `npx dslinter` invocation.
  */
 import { readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { chmod, mkdir, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { releaseAssetBaseName, vendorBinaryPath } from "./resolve-dslint-binary.mjs";
+import {
+  releaseAssetBaseName,
+  vendorBinaryPath,
+} from "./resolve-dslint-binary.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const packageRoot = join(__dirname, "..");
+const defaultPackageRoot = join(__dirname, "..");
 
 async function pathExists(p) {
   try {
@@ -21,8 +23,10 @@ async function pathExists(p) {
   }
 }
 
-function readPackageVersion() {
-  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
+function readPackageVersion(packageRoot) {
+  const pkg = JSON.parse(
+    readFileSync(join(packageRoot, "package.json"), "utf8"),
+  );
   return pkg.version;
 }
 
@@ -32,65 +36,99 @@ function releaseTag(version) {
   return `v${version}`;
 }
 
-async function main() {
-  if (process.env.DSLINT_SKIP_DOWNLOAD === "1") return;
+function releaseRepo() {
+  return process.env.DSLINT_GITHUB_REPO?.trim() || "jrmybtlr/DSLint";
+}
+
+function assetUrl(tag, asset) {
+  return `https://github.com/${releaseRepo()}/releases/download/${tag}/${asset}`;
+}
+
+/**
+ * @param {string} packageRoot
+ * @param {{ quiet?: boolean }} [opts]
+ * @returns {Promise<boolean>} true if vendored binary exists after this call
+ */
+export async function ensureDslintBinary(packageRoot = defaultPackageRoot, opts = {}) {
+  const { quiet = false } = opts;
+  const log = quiet ? () => {} : console.warn.bind(console);
+
+  if (process.env.DSLINT_SKIP_DOWNLOAD === "1") {
+    return pathExists(vendorBinaryPath(packageRoot));
+  }
 
   const dest = vendorBinaryPath(packageRoot);
-  if (await pathExists(dest)) return;
+  if (await pathExists(dest)) return true;
 
   const asset = releaseAssetBaseName();
   if (!asset) {
-    console.warn(
-      `[dslinter] No prebuilt dslint for ${process.platform}-${process.arch}. Install Rust and put dslint on PATH, or set DSLINT_SKIP_DOWNLOAD=1.`,
+    log(
+      `[dslinter] No prebuilt scanner for ${process.platform}-${process.arch}.`,
     );
-    return;
+    return false;
   }
 
-  const version = readPackageVersion();
-  const tag = releaseTag(version);
-  const repo = process.env.DSLINT_GITHUB_REPO?.trim() || "jrmybtlr/DSLint";
-  const url = `https://github.com/${repo}/releases/download/${tag}/${asset}`;
+  const version = readPackageVersion(packageRoot);
+  const tagsToTry = [releaseTag(version)];
+  if (process.env.DSLINT_USE_LATEST_RELEASE !== "0") {
+    tagsToTry.push("latest");
+  }
 
   const vendorDir = join(packageRoot, "vendor");
   await mkdir(vendorDir, { recursive: true });
-
   const tmp = `${dest}.part`;
 
-  try {
-    const res = await fetch(url, { redirect: "follow" });
-    if (res.status === 404) {
-      console.warn(
-        `[dslinter] No GitHub release asset at ${url}\n` +
-          `  Create release ${tag} with ${asset} (see .github/workflows/release-dslint-binaries.yml), or install dslint via cargo / PATH.`,
+  for (const tag of tagsToTry) {
+    const url = assetUrl(tag, asset);
+    try {
+      const res = await fetch(url, { redirect: "follow" });
+      if (res.status === 404) continue;
+      if (!res.ok) {
+        log(`[dslinter] Download failed (${res.status}): ${url}`);
+        continue;
+      }
+
+      const buf = Buffer.from(await res.arrayBuffer());
+      writeFileSync(tmp, buf);
+      try {
+        if (await pathExists(dest)) unlinkSync(dest);
+      } catch {
+        /* ignore */
+      }
+      renameSync(tmp, dest);
+      if (process.platform !== "win32") {
+        await chmod(dest, 0o755);
+      }
+      if (tag === "latest" && !quiet) {
+        log(
+          `[dslinter] Installed scanner from latest GitHub release (no asset for npm v${version}).`,
+        );
+      }
+      return true;
+    } catch (err) {
+      log(
+        `[dslinter] Could not download: ${err instanceof Error ? err.message : err}`,
       );
-      return;
-    }
-    if (!res.ok) {
-      console.warn(`[dslinter] Download failed (${res.status}): ${url}`);
-      return;
-    }
-
-    const buf = Buffer.from(await res.arrayBuffer());
-    writeFileSync(tmp, buf);
-
-    try {
-      if (await pathExists(dest)) unlinkSync(dest);
-    } catch {
-      /* ignore */
-    }
-    renameSync(tmp, dest);
-
-    if (process.platform !== "win32") {
-      await chmod(dest, 0o755);
-    }
-  } catch (err) {
-    console.warn(`[dslinter] Could not download dslint: ${err instanceof Error ? err.message : err}`);
-    try {
-      unlinkSync(tmp);
-    } catch {
-      /* ignore */
+      try {
+        unlinkSync(tmp);
+      } catch {
+        /* ignore */
+      }
     }
   }
+
+  log(
+    `[dslinter] No GitHub release with asset "${asset}" (tried ${tagsToTry.join(", ")}).\n` +
+      `  Publish tag ${releaseTag(version)} with workflow release-dslint-binaries.yml, or set DSLINT_BIN to a local build.`,
+  );
+  return false;
 }
 
-await main();
+const isMain =
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMain) {
+  const ok = await ensureDslintBinary();
+  process.exit(ok ? 0 : 0);
+}

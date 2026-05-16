@@ -1,4 +1,4 @@
-import { Section } from "../shell/Section";
+import { Section } from "../components/Section";
 import {
   Table,
   TableBody,

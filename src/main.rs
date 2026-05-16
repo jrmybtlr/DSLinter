@@ -8,7 +8,7 @@ mod watch;
 
 #[derive(Parser)]
 #[command(
-    name = "dslint",
+    name = "dslinter",
     version,
     about = "DSLint — design system linting & component governance (MVP)"
 )]

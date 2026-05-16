@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  CLI_BINARY_NAME,
   releaseAssetBaseName,
   vendorBinaryPath,
 } from "../scripts/resolve-dslint-binary.mjs";
@@ -12,19 +13,19 @@ function proc(platform: string, arch: string): NodeJS.Process {
 describe("releaseAssetBaseName", () => {
   it("maps darwin arm64", () => {
     expect(releaseAssetBaseName(proc("darwin", "arm64"))).toBe(
-      "dslint-aarch64-apple-darwin",
+      "dslinter-aarch64-apple-darwin",
     );
   });
 
   it("maps linux x64", () => {
     expect(releaseAssetBaseName(proc("linux", "x64"))).toBe(
-      "dslint-x86_64-unknown-linux-gnu",
+      "dslinter-x86_64-unknown-linux-gnu",
     );
   });
 
   it("maps win32 x64", () => {
     expect(releaseAssetBaseName(proc("win32", "x64"))).toBe(
-      "dslint-x86_64-pc-windows-msvc.exe",
+      "dslinter-x86_64-pc-windows-msvc.exe",
     );
   });
 
@@ -34,15 +35,15 @@ describe("releaseAssetBaseName", () => {
 });
 
 describe("vendorBinaryPath", () => {
-  it("uses dslint.exe on Windows", () => {
+  it("uses dslinter.exe on Windows", () => {
     expect(vendorBinaryPath(join("/", "pkg"), proc("win32", "x64"))).toBe(
-      join("/", "pkg", "vendor", "dslint.exe"),
+      join("/", "pkg", "vendor", `${CLI_BINARY_NAME}.exe`),
     );
   });
 
-  it("uses dslint on Unix", () => {
+  it("uses dslinter on Unix", () => {
     expect(vendorBinaryPath(join("/", "pkg"), proc("linux", "x64"))).toBe(
-      join("/", "pkg", "vendor", "dslint"),
+      join("/", "pkg", "vendor", CLI_BINARY_NAME),
     );
   });
 });

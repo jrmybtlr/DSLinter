@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/command";
 
 import type { PlaygroundEntry } from "../types/playground";
-import type { HashRoute } from "./hashRoute";
+import type { HashRoute } from "../shell/hashRoute";
 
 type Props = {
   entries: PlaygroundEntry[];

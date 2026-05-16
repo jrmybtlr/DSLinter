@@ -12,11 +12,11 @@ import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 import { Button } from "@/components/ui/button";
 import { cn } from "../lib/utils";
-import { ComponentPlaygroundPane } from "./ComponentPlaygroundPane";
-import { GovernancePane } from "./GovernancePane";
-import { Sidebar } from "./Sidebar";
-import { TokensPane } from "./TokensPane";
-import { DashboardCommandPalette } from "./DashboardCommandPalette";
+import { ComponentPlaygroundPane } from "../components/ComponentPlaygroundPane";
+import { GovernancePane } from "../components/GovernancePane";
+import { Sidebar } from "../components/Sidebar";
+import { TokensPane } from "../components/TokensPane";
+import { DashboardCommandPalette } from "../components/DashboardCommandPalette";
 import { useHashRoute } from "./useHashRoute";
 
 const STORAGE_KEY = "dslinter-dashboard-theme";

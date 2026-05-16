@@ -3,8 +3,8 @@ import { IconMoon, IconSearch, IconSun } from "@/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import type { PlaygroundEntry } from "../types/playground";
-import type { HashRoute } from "./hashRoute";
-import type { DashboardThemePreference } from "./DashboardLayout";
+import type { HashRoute } from "../shell/hashRoute";
+import type { DashboardThemePreference } from "../shell/DashboardLayout";
 
 type Props = {
   entries: PlaygroundEntry[];

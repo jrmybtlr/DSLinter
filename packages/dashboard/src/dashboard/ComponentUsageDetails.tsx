@@ -10,7 +10,7 @@ import {
 import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
 import { shortPath } from "./paths";
-import { EmptyCard } from "../shell/EmptyCard";
+import { EmptyCard } from "../components/EmptyCard";
 import { InlineCode } from "@/components/InlineCode";
 
 function formatCallSiteProps(loc: UsageLocation): string {

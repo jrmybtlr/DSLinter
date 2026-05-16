@@ -1,8 +1,8 @@
-name: Release dslint binaries
+name: Release dslinter binaries
 
-# Publishes prebuilt `dslint` executables to the GitHub Release for tag `v*`
-# (same tag as the npm `dslinter` version). The `dslinter` package postinstall
-# downloads the matching asset so users do not need Rust/cargo.
+# Publishes prebuilt `dslinter` executables to the GitHub Release for tag `v*`
+# (same tag as the npm `dslinter` version). The npm package downloads the matching
+# asset so users do not need Rust/cargo (and must NOT use crates.io `dslint`).
 
 on:
   push:
@@ -18,62 +18,62 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release
-      - run: strip target/release/dslint || true
-      - run: cp target/release/dslint dslint-x86_64-unknown-linux-gnu
+      - run: cargo build --release --bin dslinter
+      - run: strip target/release/dslinter || true
+      - run: cp target/release/dslinter dslinter-x86_64-unknown-linux-gnu
       - uses: actions/upload-artifact@v4
         with:
-          name: dslint-x86_64-unknown-linux-gnu
-          path: dslint-x86_64-unknown-linux-gnu
+          name: dslinter-x86_64-unknown-linux-gnu
+          path: dslinter-x86_64-unknown-linux-gnu
 
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release
-      - run: cp target/release/dslint dslint-aarch64-unknown-linux-gnu
+      - run: cargo build --release --bin dslinter
+      - run: cp target/release/dslinter dslinter-aarch64-unknown-linux-gnu
       - uses: actions/upload-artifact@v4
         with:
-          name: dslint-aarch64-unknown-linux-gnu
-          path: dslint-aarch64-unknown-linux-gnu
+          name: dslinter-aarch64-unknown-linux-gnu
+          path: dslinter-aarch64-unknown-linux-gnu
 
   build-macos-arm64:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release
-      - run: cp target/release/dslint dslint-aarch64-apple-darwin
+      - run: cargo build --release --bin dslinter
+      - run: cp target/release/dslinter dslinter-aarch64-apple-darwin
       - uses: actions/upload-artifact@v4
         with:
-          name: dslint-aarch64-apple-darwin
-          path: dslint-aarch64-apple-darwin
+          name: dslinter-aarch64-apple-darwin
+          path: dslinter-aarch64-apple-darwin
 
   build-macos-x64:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release
-      - run: cp target/release/dslint dslint-x86_64-apple-darwin
+      - run: cargo build --release --bin dslinter
+      - run: cp target/release/dslinter dslinter-x86_64-apple-darwin
       - uses: actions/upload-artifact@v4
         with:
-          name: dslint-x86_64-apple-darwin
-          path: dslint-x86_64-apple-darwin
+          name: dslinter-x86_64-apple-darwin
+          path: dslinter-x86_64-apple-darwin
 
   build-windows-x64:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release
-      - run: Copy-Item target/release/dslint.exe dslint-x86_64-pc-windows-msvc.exe
+      - run: cargo build --release --bin dslinter
+      - run: Copy-Item target/release/dslinter.exe dslinter-x86_64-pc-windows-msvc.exe
         shell: pwsh
       - uses: actions/upload-artifact@v4
         with:
-          name: dslint-x86_64-pc-windows-msvc.exe
-          path: dslint-x86_64-pc-windows-msvc.exe
+          name: dslinter-x86_64-pc-windows-msvc.exe
+          path: dslinter-x86_64-pc-windows-msvc.exe
 
   release:
     needs:
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          pattern: dslint-*
+          pattern: dslinter-*
           merge-multiple: true
           path: assets
       - uses: softprops/action-gh-release@v2

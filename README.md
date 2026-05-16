@@ -6,11 +6,11 @@ A Rust CLI that scans a repo for **JSX, TSX, and Vue** components, counts **how 
 
 ```bash
 cargo build --release
-./target/release/dslint /path/to/repo               # summary for humans
-./target/release/dslint /path/to/repo --json       # JSON for tools / CI
-./target/release/dslint -p /path/to/repo           # parallel scan (large trees)
-./target/release/dslint /path/to/repo --fail-on-warnings
-./target/release/dslint /path/to/repo --max-warnings 10
+./target/release/dslinter /path/to/repo               # summary for humans
+./target/release/dslinter /path/to/repo --json       # JSON for tools / CI
+./target/release/dslinter -p /path/to/repo           # parallel scan (large trees)
+./target/release/dslinter /path/to/repo --fail-on-warnings
+./target/release/dslinter /path/to/repo --max-warnings 10
 ```
 
 ## What gets scanned
@@ -55,7 +55,7 @@ The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on
 
 | Situation | Behavior |
 |-----------|----------|
-| Rust available | Vite and `dslint --serve` run together; the dashboard updates over **SSE** when `.tsx` files under `demo/src/` change. First run builds the binary with `cargo run --release` (~30s). |
+| Rust available | Vite and `dslinter --serve` run together; the dashboard updates over **SSE** when `.tsx` files under `demo/src/` change. First run builds the binary with `cargo run --release --bin dslinter` (~30s). |
 | Rust missing | Vite only, with a warning. The app uses the committed `demo/public/dslint-report.json` and does not auto-refresh. Install Rust from [rustup.rs](https://rustup.rs) for live scanning. |
 
 Explicit scripts: `npm run dev:serve` (SSE), `npm run dev:watch` (5s polling), `npm run dev:vite-only`.

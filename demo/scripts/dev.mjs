@@ -3,7 +3,7 @@
  * `npm run dev` entry point.
  *
  * Picks the right dev flavor for the current machine:
- *   - `dslint` or `cargo` on PATH -> `npm run dev:serve` (dslint --serve first; Vite waits for
+ *   - `dslinter` or `cargo` on PATH -> `npm run dev:serve` (dslinter --serve first; Vite waits for
  *     tcp:127.0.0.1:7878 so the proxy does not log ECONNREFUSED while Rust builds)
  *   - neither                   -> `npm run dev:vite-only` with a warning
  *
@@ -13,21 +13,32 @@ import { spawn, spawnSync } from "node:child_process";
 
 const cargoOk =
   spawnSync("cargo", ["--version"], { stdio: "ignore" }).status === 0;
-const dslintOk =
-  spawnSync("dslint", ["--version"], { stdio: "ignore" }).status === 0;
 
-const targetScript = cargoOk || dslintOk ? "dev:serve" : "dev:vite-only";
+function scannerOnPath() {
+  const fromEnv = process.env.DSLINT_BIN?.trim();
+  if (fromEnv) {
+    const r = spawnSync(fromEnv, ["--help"], { encoding: "utf8" });
+    if (`${r.stdout ?? ""}`.includes("design system linting")) return true;
+  }
+  const r = spawnSync("dslinter", ["--help"], { encoding: "utf8" });
+  return r.status === 0 && `${r.stdout ?? ""}`.includes("design system linting");
+}
 
-if (!cargoOk && !dslintOk) {
+const dslinterOk = scannerOnPath();
+
+const targetScript = cargoOk || dslinterOk ? "dev:serve" : "dev:vite-only";
+
+if (!cargoOk && !dslinterOk) {
   process.stdout.write(
     [
       "",
       "[dev] No DSLint runner found — falling back to `vite` only.",
-      "      Looked for either `dslint` (prebuilt binary) or `cargo` (Rust toolchain).",
+      "      Looked for `dslinter` (design-system scanner) or `cargo` (Rust toolchain).",
+      "      Do not use `cargo install dslint` — that is a different crates.io package.",
       "      The dashboard will read the committed public/dslint-report.json",
       "      and won't auto-update when source files change.",
       "      Install Rust to enable live updates: https://rustup.rs",
-      "      or install a prebuilt `dslint` binary so `dslint --version` works.",
+      "      or install a prebuilt `dslinter` binary so `dslinter --help` shows the design-system scanner.",
       "      (You can also run `npm run dev:serve` / `dev:watch` directly.)",
       "",
       "",
