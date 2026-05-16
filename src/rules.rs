@@ -34,7 +34,10 @@ fn tw_arbitrary_re() -> &'static Regex {
 fn class_attr_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?:class|className)\s*=\s*["']([^"']+)["']"#).expect("class attr regex")
+        Regex::new(
+            r#"(?:class|className)\s*=\s*((?:"[^"]+"|'[^']+'|\{\s*(?:"[^"]+"|'[^']+'|`[^`]+`|(?:cn|clsx|classnames)\([^)]*\))\s*\}))"#,
+        )
+        .expect("class attr regex")
     })
 }
 
