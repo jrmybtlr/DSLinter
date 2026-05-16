@@ -1,6 +1,6 @@
 {
   "name": "dslinter",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "DSLinter dashboard UI: playground shell, token wall, and governance panels (consumes dslint-report.json).",
   "license": "Apache-2.0",
   "type": "module",

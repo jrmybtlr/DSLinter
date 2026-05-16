@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.10
+
+[compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.9...v0.0.10)
+
+### 💅 Refactors
+
+- Rename dslint to dslinter and update related configurations ([9f15898](https://github.com/jrmybtlr/DSLint/commit/9f15898))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.8
 
 [compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.7...v0.0.8)
