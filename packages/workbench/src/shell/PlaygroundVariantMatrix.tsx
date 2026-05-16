@@ -28,7 +28,7 @@ export function PlaygroundVariantMatrix({
   return (
     <>
       {capped ? (
-        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+        <p className="rounded-md border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
           Showing {combinations.length} of {totalCount} combinations (limit {PLAYGROUND_VARIANT_MATRIX_CAP}).
           Reduce select options or split controls to preview more here.
         </p>
@@ -37,7 +37,7 @@ export function PlaygroundVariantMatrix({
           {combinations.map((combo) => (
             <div
               key={finiteAxisKeys.map((k) => `${k}:${formatValue(combo[k] ?? "")}`).join("|")}
-              className="flex min-w-0 flex-col overflow-hidden rounded-lg border  bg-white shadow-xs"
+              className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-xs"
             >
               <div className="flex flex-wrap gap-1 border-b p-2">
                 {finiteAxisKeys.map((k) => {
@@ -49,7 +49,7 @@ export function PlaygroundVariantMatrix({
                   );
                 })}
               </div>
-              <div className="min-w-0 bg-white p-3">
+              <div className="min-w-0 bg-card p-3">
                 <Preview values={combo} />
               </div>
             </div>

@@ -260,12 +260,45 @@ function jsxTextOrStringifyExpression(text: string): string {
   return `{JSON.stringify(${JSON.stringify(text)})}`;
 }
 
-function genericUsageSnippet(exportName: string, values: PlaygroundArgs): string {
+/** When the live value matches the playground control default, omit it from the usage string. */
+function valueMatchesPlaygroundDefault(
+  control: PlaygroundControl,
+  value: string | number | boolean | undefined,
+): boolean {
+  switch (control.type) {
+    case "boolean":
+      return Boolean(value) === control.default;
+    case "number": {
+      const n = typeof value === "number" ? value : Number(value);
+      return Number.isFinite(n) && n === control.default;
+    }
+    case "string":
+    case "select":
+      return String(value ?? "") === String(control.default);
+    default:
+      return false;
+  }
+}
+
+function genericUsageSnippet(
+  exportName: string,
+  values: PlaygroundArgs,
+  controls: PlaygroundControl[],
+): string {
+  const controlByKey = new Map(controls.map((c) => [c.key, c] as const));
+
+  const emitPropKey = (key: string): boolean => {
+    const c = controlByKey.get(key);
+    if (!c) return true;
+    return !valueMatchesPlaygroundDefault(c, values[key]);
+  };
+
   const hasChildrenKey = Object.prototype.hasOwnProperty.call(values, "children");
   const childVal = hasChildrenKey ? values.children : undefined;
 
   const propKeys = Object.keys(values)
     .filter((k) => k !== "children")
+    .filter(emitPropKey)
     .sort((a, b) => a.localeCompare(b));
   const propsStr = propKeys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
 
@@ -276,7 +309,7 @@ function genericUsageSnippet(exportName: string, values: PlaygroundArgs): string
   }
 
   if (typeof childVal === "boolean") {
-    const allKeys = Object.keys(values).sort((a, b) => a.localeCompare(b));
+    const allKeys = Object.keys(values).filter(emitPropKey).sort((a, b) => a.localeCompare(b));
     const allProps = allKeys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
     return allKeys.length === 0 ? `<${exportName} />` : `<${exportName} ${allProps} />`;
   }
@@ -330,7 +363,7 @@ export function buildPlaygroundEntries(
       meta,
       modulePath: globKey,
       controls,
-      usageSnippet: (values) => genericUsageSnippet(spec.export_name, values),
+      usageSnippet: (values) => genericUsageSnippet(spec.export_name, values, controls),
       Preview: Preview as PlaygroundPreviewComponent,
     });
   }

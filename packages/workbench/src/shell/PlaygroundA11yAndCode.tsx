@@ -257,6 +257,7 @@ export function PlaygroundApiReference({
     <Section
       id="api-reference"
       title="API reference"
+      description=""
       actions={
         <Button type="button" variant="outline" size="sm" onClick={onReset}>
           Reset defaults
@@ -302,7 +303,7 @@ export function PlaygroundApiReference({
                             asChild
                             className={cn(
                               selected &&
-                                "border-transparent bg-neutral-900 text-neutral-50 hover:bg-neutral-800 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300",
+                                "border-transparent bg-primary text-primary-foreground hover:bg-primary/90",
                             )}
                           >
                             <button
@@ -352,10 +353,10 @@ export function PlaygroundApiReference({
 
       {showRepo && extraRepoProps.length > 0 ? (
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-gray-800">
+          <h3 className="text-sm font-semibold text-foreground">
             Also seen in repo (not in playground)
           </h3>
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1 text-xs text-muted-foreground">
             These prop names appear in scanned JSX but are not wired as
             playground controls on this page.
           </p>

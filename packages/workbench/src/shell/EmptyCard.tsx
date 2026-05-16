@@ -11,7 +11,7 @@ export function EmptyCard({
   return (
     <div
       className={cn(
-        "rounded-lg text-sm text-muted-foreground border bg-muted/50  px-4 py-3",
+        "rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground",
         className,
       )}
     >

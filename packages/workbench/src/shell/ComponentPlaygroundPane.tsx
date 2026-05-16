@@ -85,7 +85,7 @@ function TocLink({ href, children }: { href: string; children: ReactNode }) {
     <a
       href={href}
       onClick={handleClick}
-      className="block rounded-md py-1 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+      className="block rounded-md py-1 text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
     >
       {children}
     </a>
@@ -243,17 +243,17 @@ export function ComponentPlaygroundPane({
         variantEnumeration.totalCount === 0));
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <div className="min-h-0 flex-1 overflow-auto">
-        <header id="source" className="scroll-mt-20 border-b  bg-white p-6">
+        <header id="source" className="scroll-mt-20 border-b border-border bg-card p-6">
           <div className="mx-auto">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-sm font-medium text-muted-foreground">
                   {entry.meta.group ? (
                     <>
-                      Components <span className="text-gray-300">/</span>{" "}
-                      <span className="capitalize text-gray-700">
+                      Components <span className="text-muted-foreground/40">/</span>{" "}
+                      <span className="capitalize text-foreground/80">
                         {entry.meta.group}
                       </span>
                     </>
@@ -261,11 +261,11 @@ export function ComponentPlaygroundPane({
                     "Components"
                   )}
                 </p>
-                <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                   {entry.meta.title}
                 </h1>
                 <p
-                  className="mt-1 truncate font-mono text-xs text-gray-500"
+                  className="mt-1 truncate font-mono text-xs text-muted-foreground"
                   title={rel}
                 >
                   {rel}
@@ -283,38 +283,38 @@ export function ComponentPlaygroundPane({
             <div className="flex justify-center">
               <div
                 ref={previewFrameRef}
-                className="relative min-w-0 shrink-0 select-none rounded-lg border  bg-gray-50/80 shadow-xs"
+                className="relative min-w-0 shrink-0 select-none rounded-lg border border-border bg-muted/50 shadow-xs"
                 style={{ width: previewWidthPx }}
               >
                 <button
                   type="button"
-                  className="absolute left-0 top-0 bottom-0 z-10 flex w-4 -translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-gray-100 p-0 shadow-xs ring-1 ring-gray-200/80 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+                  className="absolute left-0 top-0 bottom-0 z-10 flex w-4 -translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-muted p-0 shadow-xs ring-1 ring-border hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Resize preview from center (drag left or right)"
                   onPointerDown={attachSymmetricWidthDrag("left")}
                 >
                   <span
-                    className="h-10 w-px rounded-full bg-gray-400/90"
+                    className="h-10 w-px rounded-full bg-muted-foreground/40"
                     aria-hidden
                   />
                 </button>
                 <button
                   type="button"
-                  className="absolute right-0 top-0 bottom-0 z-10 flex w-4 translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-gray-100 p-0 shadow-xs ring-1 ring-gray-200/80 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+                  className="absolute right-0 top-0 bottom-0 z-10 flex w-4 translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-muted p-0 shadow-xs ring-1 ring-border hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Resize preview from center (drag left or right)"
                   onPointerDown={attachSymmetricWidthDrag("right")}
                 >
                   <span
-                    className="h-10 w-px rounded-full bg-gray-400/90"
+                    className="h-10 w-px rounded-full bg-muted-foreground/40"
                     aria-hidden
                   />
                 </button>
-                <div className="min-w-0 bg-white p-8">
+                <div className="min-w-0 bg-card p-8">
                   <Preview values={values} />
                 </div>
               </div>
             </div>
             {maxOuterPx > 0 ? (
-              <div className="mt-4 divide-x h-6 overflow-hidden items-center mx-auto flex w-fit bg-white text-center text-xs/none tabular-nums font-mono border rounded-sm text-muted-foreground">
+              <div className="mt-4 divide-x divide-border h-6 overflow-hidden items-center mx-auto flex w-fit border border-border bg-card text-center text-xs/none tabular-nums font-mono rounded-sm text-muted-foreground">
                 <span className="p-2.5">{Math.round(previewWidthPx)}px</span>
                 <span className=" p-2.5" title="usemods detectBreakpoint">
                   Screen: {windowBreakpoint ?? "—"}
@@ -392,9 +392,9 @@ export function ComponentPlaygroundPane({
             <aside className="mt-12 hidden self-start sticky top-8 xl:mt-0 xl:block">
               <nav
                 aria-label="On this page"
-                className="space-y-0.5 border-l  pl-4 text-sm"
+                className="space-y-0.5 border-l border-border pl-4 text-sm"
               >
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   On this page
                 </p>
                 {hasControls ? (
@@ -419,7 +419,7 @@ export function ComponentPlaygroundPane({
             className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t  pt-10 pb-12"
           >
             <div className="min-w-0 w-full px-6 lg:px-12">
-              <h2 className="text-xl bg-white w-fit font-semibold tracking-tight text-gray-900">
+              <h2 className="w-fit bg-card text-xl font-semibold tracking-tight text-foreground">
                 All variants
               </h2>
               <PlaygroundVariantMatrix

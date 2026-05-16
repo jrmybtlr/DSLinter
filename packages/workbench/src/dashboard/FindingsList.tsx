@@ -47,7 +47,7 @@ export function FindingsList({
 
   if (findings.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-neutral-200 bg-white px-4 py-8 text-center text-sm text-neutral-500">
+      <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
         No findings — rules are quiet on this snapshot.
       </p>
     );

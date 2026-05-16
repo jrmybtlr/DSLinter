@@ -20,21 +20,21 @@ export function GovernancePane({
 
   if (error) {
     return (
-      <div className="min-h-0 flex-1 overflow-auto bg-gray-50">
+      <div className="min-h-0 flex-1 overflow-auto bg-muted/40">
         {landing}
-        <header className="border-b  bg-white px-8 py-6">
-          <h1 className="text-lg font-semibold tracking-tight text-gray-900">
+        <header className="border-b border-border bg-card px-8 py-6">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
             Governance
           </h1>
         </header>
         <div className="mx-auto max-w-lg px-8 py-16 text-center">
-          <p className="text-sm font-medium text-gray-900">
+          <p className="text-sm font-medium text-foreground">
             Could not load DSLint report
           </p>
-          <p className="mt-2 text-xs text-gray-500">{error}</p>
-          <p className="mt-6 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-muted-foreground">{error}</p>
+          <p className="mt-6 text-xs text-muted-foreground">
             Regenerate the JSON, then refresh. Example:{" "}
-            <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-gray-700">
+            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">
               {dslintReportHint}
             </code>
           </p>
@@ -45,7 +45,7 @@ export function GovernancePane({
 
   if (loading || !report) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-gray-50">
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-muted/40">
         {landing}
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
           Loading inventory…
@@ -55,16 +55,16 @@ export function GovernancePane({
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto bg-gray-50">
+    <div className="min-h-0 flex-1 overflow-auto bg-muted/40">
       {landing}
-      <header className="border-b bg-white px-8 py-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <header className="border-b border-border bg-card px-8 py-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Inventory
         </p>
-        <h1 className="mt-1 text-lg font-semibold tracking-tight text-gray-900">
+        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
           Governance
         </h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Scores, component catalog, token wall, and findings from the latest
           DSLint snapshot
         </p>

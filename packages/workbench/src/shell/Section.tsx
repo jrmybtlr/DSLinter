@@ -15,7 +15,7 @@ export function Section({
     <section id={id} className="scroll-mt-20">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-lg/none font-semibold tracking-tight text-gray-900">
+          <h2 className="text-lg/none font-semibold tracking-tight text-foreground">
             {title}
           </h2>
           {description ? (

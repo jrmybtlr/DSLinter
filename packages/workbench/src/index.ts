@@ -42,8 +42,16 @@ export {
   defaultTailwindFontWeights,
 } from "./types/defaultTailwindTypography";
 
-export { WorkbenchLayout } from "./shell/WorkbenchLayout";
-export type { WorkbenchLayoutProps } from "./shell/WorkbenchLayout";
+export {
+  WorkbenchLayout,
+  WorkbenchThemeProvider,
+  useWorkbenchTheme,
+} from "./shell/WorkbenchLayout";
+export type {
+  WorkbenchLayoutProps,
+  WorkbenchResolvedTheme,
+  WorkbenchThemePreference,
+} from "./shell/WorkbenchLayout";
 export { useWorkspaceReport } from "./dashboard/useWorkspaceReport";
 export type { DslintReportState } from "./dashboard/useWorkspaceReport";
 export { a11ySummaryForModule, resolveModuleSourcePath } from "./report/a11yForModule";

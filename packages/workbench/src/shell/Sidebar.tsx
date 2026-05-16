@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
-import { IconSearch } from "@/components/icons";
+import { IconMoon, IconSearch, IconSun } from "@/components/icons";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import type { PlaygroundEntry } from "../types/playground";
 import type { HashRoute } from "./hashRoute";
+import type { WorkbenchThemePreference } from "./WorkbenchLayout";
 
 type Props = {
   entries: PlaygroundEntry[];
   route: HashRoute;
   onNavigate: (next: HashRoute) => void;
   onOpenCommandPalette: () => void;
+  theme: WorkbenchThemePreference;
+  onThemeChange: (next: WorkbenchThemePreference) => void;
 };
 
 function SearchShortcutBadge() {
@@ -18,7 +22,7 @@ function SearchShortcutBadge() {
     setLabel(mac ? "⌘K" : "Ctrl+K");
   }, []);
   return (
-    <kbd className="pointer-events-none select-none rounded border border-gray-200 bg-gray-50 px-1 py-px font-mono text-[10px] font-medium leading-tight text-gray-500 tabular-nums">
+    <kbd className="pointer-events-none select-none rounded border border-sidebar-border bg-sidebar-accent px-1 py-px font-mono text-[10px] font-medium leading-tight text-sidebar-foreground/80 tabular-nums">
       {label}
     </kbd>
   );
@@ -27,14 +31,14 @@ function SearchShortcutBadge() {
 function navButtonClass(active: boolean) {
   return `w-full rounded-md px-2.5 py-1.5 text-left text-sm transition ${
     active
-      ? "bg-gray-900 text-white shadow-xs"
-      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-xs"
+      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
   }`;
 }
 
 function sectionLabel(text: string) {
   return (
-    <p className="mb-1.5 mt-4 px-2.5 text-xs font-semibold uppercase tracking-wider text-gray-400 first:mt-0">
+    <p className="mb-1.5 mt-4 px-2.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 first:mt-0">
       {text}
     </p>
   );
@@ -45,15 +49,22 @@ export function Sidebar({
   route,
   onNavigate,
   onOpenCommandPalette,
+  theme,
+  onThemeChange,
 }: Props) {
   const tokensActive = route.view === "tokens";
   const governanceActive = route.view === "governance";
 
+  const onThemeValueChange = (value: string) => {
+    if (value !== "light" && value !== "dark") return;
+    onThemeChange(value);
+  };
+
   return (
-    <aside className="fixed h-full w-[240px] overflow-y-auto shrink-0 flex-col border-r ">
-      <div className="border-b  px-6 py-4 sticky top-0 bg-white">
+    <aside className="fixed flex h-full w-[240px] shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <div className="sticky top-0 z-10 shrink-0 border-b border-sidebar-border bg-sidebar px-6 py-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center text-neutral-900">
+          <div className="flex items-center text-sidebar-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -102,7 +113,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={onOpenCommandPalette}
-            className="flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+            className="flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             aria-label="Search components and views"
           >
             <IconSearch className="size-4 shrink-0" aria-hidden />
@@ -111,7 +122,7 @@ export function Sidebar({
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-3">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {sectionLabel("Explore")}
         <button
           type="button"
@@ -154,6 +165,39 @@ export function Sidebar({
           })}
         </div>
       </nav>
+
+      <div className="shrink-0 border-t border-sidebar-border px-3 py-3">
+        <p className="mb-2 px-2.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+          Appearance
+        </p>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          spacing={0}
+          className="w-full"
+          value={theme}
+          onValueChange={onThemeValueChange}
+          aria-label="Color theme"
+        >
+          <ToggleGroupItem
+            value="light"
+            className="flex-1"
+            aria-label="Light theme"
+            title="Light"
+          >
+            <IconSun className="size-4" aria-hidden />
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="dark"
+            className="flex-1"
+            aria-label="Dark theme"
+            title="Dark"
+          >
+            <IconMoon className="size-4" aria-hidden />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
     </aside>
   );
 }
