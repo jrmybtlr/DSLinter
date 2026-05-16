@@ -35,6 +35,8 @@ Optional config (repository root): `.dslint.json` or `dslint.json`:
 }
 ```
 
+`check_dark_mode_contrast` is heuristic and currently scans static class strings (`class`/`className`) plus quoted literals passed to `cn(...)`, `clsx(...)`, or `classnames(...)`.
+
 ## Demo
 
 See [`demo/`](demo/) for a **Vite + React + TypeScript + Tailwind** app with a flat `src/components/` showcase plus `demo/.dslint.json`. The demo UI is a **workbench** from the [`packages/workbench`](packages/workbench/) npm package (`@dslint/workbench`): component previews are listed from **`playgrounds`** in `dslint-report.json` (built by the Rust scanner from source + `playground_groups` in config), joined to modules via `import.meta.glob` — no per-file `playgroundMeta` exports required.
