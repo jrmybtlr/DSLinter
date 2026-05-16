@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.11
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.10...v0.0.11)
+
+### 🩹 Fixes
+
+- Update repository references from DSLint to DSLinter ([2dbae8d](https://github.com/jrmybtlr/DSLinter/commit/2dbae8d))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.10
 
 [compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.9...v0.0.10)
