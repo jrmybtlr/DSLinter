@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.7
+
+[compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.6...v0.0.7)
+
+### 🚀 Enhancements
+
+- Implement postinstall script to download prebuilt dslint binaries ([dae3072](https://github.com/jrmybtlr/DSLint/commit/dae3072))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.6
 
 [compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.5...v0.0.6)
