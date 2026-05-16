@@ -32,7 +32,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "prepublishOnly": "vitest run"
+    "prepublishOnly": "vitest run",
+    "postinstall": "node ./scripts/ensure-dslint.mjs"
   },
   "publishConfig": {
     "access": "public"
@@ -50,6 +51,7 @@
   "types": "./src/index.ts",
   "files": [
     "bin",
+    "scripts",
     "src",
     "components.json",
     "README.md",

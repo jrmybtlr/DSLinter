@@ -11,6 +11,10 @@
 - **npm:** package renamed from `@dslinter/dashboard` to **`dslinter`**. Replace the dependency, imports (`dslinter`), and theme import (`dslinter/theme.css`).
 - **CLI:** add **`dslinter`** binary that forwards arguments to **`dslint`** on `PATH` (Rust scanner not bundled).
 
+### Enhancements
+
+- **`postinstall`** attempts to download a **prebuilt `dslint`** for the current platform from **GitHub Releases** (tag `v` + package version). CI: `.github/workflows/release-dslint-binaries.yml`. Opt out with `DSLINT_SKIP_DOWNLOAD=1`.
+
 ## v0.0.5
 
 [compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.4...v0.0.5)

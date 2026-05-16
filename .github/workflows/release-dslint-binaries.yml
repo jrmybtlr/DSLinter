@@ -1,0 +1,99 @@
+name: Release dslint binaries
+
+# Publishes prebuilt `dslint` executables to the GitHub Release for tag `v*`
+# (same tag as the npm `dslinter` version). The `dslinter` package postinstall
+# downloads the matching asset so users do not need Rust/cargo.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: strip target/release/dslint || true
+      - run: cp target/release/dslint dslint-x86_64-unknown-linux-gnu
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dslint-x86_64-unknown-linux-gnu
+          path: dslint-x86_64-unknown-linux-gnu
+
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: cp target/release/dslint dslint-aarch64-unknown-linux-gnu
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dslint-aarch64-unknown-linux-gnu
+          path: dslint-aarch64-unknown-linux-gnu
+
+  build-macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: cp target/release/dslint dslint-aarch64-apple-darwin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dslint-aarch64-apple-darwin
+          path: dslint-aarch64-apple-darwin
+
+  build-macos-x64:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: cp target/release/dslint dslint-x86_64-apple-darwin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dslint-x86_64-apple-darwin
+          path: dslint-x86_64-apple-darwin
+
+  build-windows-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: Copy-Item target/release/dslint.exe dslint-x86_64-pc-windows-msvc.exe
+        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dslint-x86_64-pc-windows-msvc.exe
+          path: dslint-x86_64-pc-windows-msvc.exe
+
+  release:
+    needs:
+      - build-linux-x64
+      - build-linux-arm64
+      - build-macos-arm64
+      - build-macos-x64
+      - build-windows-x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dslint-*
+          merge-multiple: true
+          path: assets
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

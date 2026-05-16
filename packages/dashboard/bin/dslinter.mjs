@@ -1,26 +1,36 @@
 #!/usr/bin/env node
 /**
- * Forwards to the `dslint` Rust CLI on PATH. The published `dslinter` package is
- * primarily the React dashboard; report generation stays in `dslint`.
+ * Runs the `dslint` scanner: prefers a vendored binary from postinstall, else `dslint` on PATH.
  */
 import { spawnSync } from "node:child_process";
-import process from "node:process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { vendorBinaryPath } from "../scripts/resolve-dslint-binary.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageRoot = join(__dirname, "..");
 
 const args = process.argv.slice(2);
-const child = spawnSync("dslint", args, { stdio: "inherit" });
+
+const vendored = vendorBinaryPath(packageRoot);
+const cmd = vendored && existsSync(vendored) ? vendored : "dslint";
+const child = spawnSync(cmd, args, { stdio: "inherit" });
 
 if (child.error && "code" in child.error && child.error.code === "ENOENT") {
   process.stderr.write(`dslint: command not found.
 
-The dslinter package ships the dashboard UI. JSON reports and scans are produced by the dslint CLI (Rust).
+The dslinter package can download a prebuilt dslint on npm install when a matching
+GitHub release exists (same tag as this package version, e.g. v0.0.6). See:
+https://github.com/jrmybtlr/DSLint/releases
 
-Install dslint, then run dslinter again (this command forwards to dslint):
+Otherwise install dslint on PATH:
 
   cargo install dslint
-  # or build from the DSLint repo:
+  # or from this repo:
   cargo install --path .
 
-More: https://github.com/jrmybtlr/DSLint
+Skip auto-download (air-gapped): DSLINT_SKIP_DOWNLOAD=1
 `);
   process.exit(127);
 }

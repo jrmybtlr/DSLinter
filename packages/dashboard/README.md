@@ -19,28 +19,48 @@ This package is **source-first**: entry points resolve to TypeScript/TSX under `
 
 ## CLI (`npx dslinter`)
 
-This package exposes a **`dslinter` binary** that **forwards every argument to `dslint` on your PATH** (same flags as the Rust CLI: `--json`, `-o`, `--serve`, etc.). It does **not** bundle the Rust scanner.
+The **`dslinter` binary** runs the **`dslint`** scanner with the same flags as the Rust CLI (`--json`, `-o`, `--serve`, etc.).
+
+### Without installing Rust
+
+On **`npm install dslinter`**, a **`postinstall`** script tries to download a **prebuilt `dslint`** for your OS/arch from this repo’s **GitHub Releases**, using the **same tag as the npm version** (for example npm `dslinter@0.0.6` → release **`v0.0.6`** and assets like `dslint-x86_64-unknown-linux-gnu`). The binary is stored under `node_modules/dslinter/vendor/` and `dslinter` / `npx dslinter` prefer it over `PATH`.
+
+**Release workflow:** push git tag `v*` (after bumping the npm version) so [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLint/blob/main/.github/workflows/release-dslint-binaries.yml) uploads the platform binaries, **then** publish `dslinter` to npm (or publish after the workflow finishes so installs resolve the assets).
+
+Environment variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `DSLINT_SKIP_DOWNLOAD=1` | Skip postinstall download (air-gapped / you only use `PATH`). |
+| `DSLINT_RELEASE_TAG` | Override release tag (default `v` + `dslinter` version from `package.json`). |
+| `DSLINT_GITHUB_REPO` | Override `owner/repo` for downloads (default `jrmybtlr/DSLint`). |
+
+### How this differs from `oxlint`
+
+**`oxlint`** on npm ships **Node native addons** as **`optionalDependencies`** (`@oxlint/binding-darwin-arm64`, …) built with **napi-rs** — each package is a small prebuilt library loaded by Node.
+
+**`dslint`** is a **standalone executable**. The practical pattern here is **download on install** from **GitHub Releases** (similar in spirit to tools that pull a platform binary once), instead of publishing dozens of `@dslinter/binding-*` packages.
+
+### If there is no matching release asset yet
+
+You’ll see a **warning** during install (install still succeeds) and **`dslinter`** falls back to **`dslint` on your PATH**, or prints install hints if missing:
 
 ```bash
 npx dslinter /path/to/repo --json -o dslint-report.json
 ```
 
-If `dslint` is not installed, you’ll get a short error with install hints (`cargo install dslint` once published, or build from this repo).
-
 | Distribution | How users get `dslint` |
 |--------------|-------------------------|
-| **GitHub Releases** | Attach `dslint` (or `dslint.exe`) per OS/arch to each release; document download + `PATH`. |
-| **crates.io** | Publish the crate as `dslint`; users run `cargo install dslint` (Rust toolchain required). |
-| **npm** | `npx dslinter …` after `dslint` is on `PATH`, or a future dedicated wrapper with prebuilds. |
+| **npm + GitHub Releases** | Default: postinstall download when release `vX.Y.Z` includes your platform asset. |
+| **GitHub Releases** | Manual download of `dslint-*` from the release; add to `PATH`. |
+| **crates.io** | `cargo install dslint` once published. |
 
-**Suggested path for this repo:** ship official binaries via **GitHub Releases** (CI builds with `cargo build --release` on `ubuntu`, `macos`, `windows`).
-
-Typical usage after the CLI is on `PATH`:
+Typical usage:
 
 ```bash
 dslint /path/to/repo --json -o dslint-report.json
 # or --serve for live reload while developing a dashboard
-# or equivalently:
+# or equivalently (vendored or PATH):
 dslinter /path/to/repo --json -o dslint-report.json
 ```
 
