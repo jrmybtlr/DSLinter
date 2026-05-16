@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.0.17
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.16...v0.0.17)
+
+### 🚀 Enhancements
+
+- Refactor release process and update workflows ([20af684](https://github.com/jrmybtlr/DSLinter/commit/20af684))
+- Add contributing guidelines and enhance documentation ([ac14afc](https://github.com/jrmybtlr/DSLinter/commit/ac14afc))
+
+### 🏡 Chore
+
+- Update Node version and GitHub Actions workflows ([612a9b0](https://github.com/jrmybtlr/DSLinter/commit/612a9b0))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.16
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.15...v0.0.16)
