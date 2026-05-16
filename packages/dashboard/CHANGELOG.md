@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.5
+
+[compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.4...v0.0.5)
+
+### 🏡 Chore
+
+- Remove .npmrc file and update package versions ([615aa28](https://github.com/jrmybtlr/DSLint/commit/615aa28))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.4
 
 [compare changes](https://github.com/jrmybtlr/DSLint/compare/v0.0.3...v0.0.4)
