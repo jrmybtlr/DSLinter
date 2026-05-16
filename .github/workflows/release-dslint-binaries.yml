@@ -1,7 +1,7 @@
 name: Release dslinter binaries
 
 # Uploads prebuilt `dslinter` CLI binaries to the GitHub Release for tag `v*`.
-# Keep this workflow on main before tagging; npm `dslinter` downloads these assets.
+# Uses Actions v5 (Node 24 runtime) — not the deprecated Node 20 action runtime.
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
             ext: .exe
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.RELEASE_TAG }}
 
@@ -62,7 +62,7 @@ jobs:
           fi
           ls -la "${{ matrix.asset }}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}
@@ -72,18 +72,31 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: assets
-          merge-multiple: false
+          merge-multiple: true
 
-      - name: Flatten artifact paths
+      # download-artifact lays out one subfolder per artifact name; hoist files to assets/
+      - name: Prepare release assets
+        shell: bash
         run: |
-          find assets -type f -exec mv {} assets/ \;
-          find assets -type d -empty -delete 2>/dev/null || true
+          shopt -s nullglob
+          for dir in assets/dslinter-*/; do
+            [ -d "$dir" ] || continue
+            name=$(basename "$dir")
+            if [ -f "$dir/$name" ]; then
+              mv "$dir/$name" "assets/$name"
+            else
+              file=$(find "$dir" -type f | head -1)
+              [ -n "$file" ] && mv "$file" "assets/$name"
+            fi
+            rm -rf "$dir"
+          done
           ls -la assets/
-          count=$(find assets -maxdepth 1 -type f | wc -l)
-          test "$count" -ge 1
+          test -f assets/dslinter-x86_64-unknown-linux-gnu
+          test -f assets/dslinter-aarch64-apple-darwin
+          test -f assets/dslinter-x86_64-pc-windows-msvc.exe
 
       - uses: softprops/action-gh-release@v2
         with:
