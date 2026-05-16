@@ -2,6 +2,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CLI_BINARY_NAME,
+  DEFAULT_GITHUB_REPO,
+  parseGitHubRepo,
   releaseAssetBaseName,
   vendorBinaryPath,
 } from "../scripts/resolve-dslint-binary.mjs";
@@ -9,6 +11,27 @@ import {
 function proc(platform: string, arch: string): NodeJS.Process {
   return { platform, arch } as NodeJS.Process;
 }
+
+describe("parseGitHubRepo", () => {
+  it("parses https repository url", () => {
+    expect(
+      parseGitHubRepo("https://github.com/jrmybtlr/DSLinter.git"),
+    ).toBe("jrmybtlr/DSLinter");
+  });
+
+  it("parses repository object", () => {
+    expect(
+      parseGitHubRepo({
+        type: "git",
+        url: "git+https://github.com/jrmybtlr/DSLinter.git",
+      }),
+    ).toBe("jrmybtlr/DSLinter");
+  });
+
+  it("defaults constant points at DSLinter", () => {
+    expect(DEFAULT_GITHUB_REPO).toBe("jrmybtlr/DSLinter");
+  });
+});
 
 describe("releaseAssetBaseName", () => {
   it("maps darwin arm64", () => {

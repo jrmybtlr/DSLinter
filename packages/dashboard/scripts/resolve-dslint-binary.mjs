@@ -1,7 +1,37 @@
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /** CLI binary name (avoids collision with unrelated `dslint` on crates.io). */
 export const CLI_BINARY_NAME = "dslinter";
+
+/** Fallback when package.json has no parseable `repository` field. */
+export const DEFAULT_GITHUB_REPO = "jrmybtlr/DSLinter";
+
+/**
+ * @param {string | { type?: string; url?: string } | undefined} repository
+ * @returns {string | null} `owner/repo`
+ */
+export function parseGitHubRepo(repository) {
+  if (!repository) return null;
+  const url = typeof repository === "string" ? repository : repository.url;
+  if (!url) return null;
+  const m = String(url).match(/github\.com[/:]([^/]+)\/([^/.]+?)(?:\.git)?\/?$/i);
+  return m ? `${m[1]}/${m[2]}` : null;
+}
+
+/**
+ * @param {string} packageRoot
+ */
+export function githubRepoFromPackage(packageRoot) {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(join(packageRoot, "package.json"), "utf8"),
+    );
+    return parseGitHubRepo(pkg.repository) ?? DEFAULT_GITHUB_REPO;
+  } catch {
+    return DEFAULT_GITHUB_REPO;
+  }
+}
 
 /**
  * Maps the current OS/arch to the GitHub release asset basename (must match CI upload names).

@@ -90,7 +90,7 @@ if (!resolved) {
       "        Do not use: cargo install dslint  (different crates.io project)",
       "",
       "        Options:",
-      "          - cargo install --git https://github.com/jrmybtlr/DSLint dslinter --locked",
+      "          - cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked",
       "          - DSLINT_BIN=/path/to/dslinter",
       "          - Install Rust and run from this repo (cargo run --bin dslinter)",
       "",

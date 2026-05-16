@@ -7,6 +7,7 @@ import { chmod, mkdir, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  githubRepoFromPackage,
   releaseAssetBaseName,
   vendorBinaryPath,
 } from "./resolve-dslint-binary.mjs";
@@ -36,12 +37,14 @@ function releaseTag(version) {
   return `v${version}`;
 }
 
-function releaseRepo() {
-  return process.env.DSLINT_GITHUB_REPO?.trim() || "jrmybtlr/DSLint";
+function releaseRepo(packageRoot) {
+  const override = process.env.DSLINT_GITHUB_REPO?.trim();
+  if (override) return override;
+  return githubRepoFromPackage(packageRoot);
 }
 
-function assetUrl(tag, asset) {
-  return `https://github.com/${releaseRepo()}/releases/download/${tag}/${asset}`;
+function assetUrl(packageRoot, tag, asset) {
+  return `https://github.com/${releaseRepo(packageRoot)}/releases/download/${tag}/${asset}`;
 }
 
 /**
@@ -79,7 +82,7 @@ export async function ensureDslintBinary(packageRoot = defaultPackageRoot, opts 
   const tmp = `${dest}.part`;
 
   for (const tag of tagsToTry) {
-    const url = assetUrl(tag, asset);
+    const url = assetUrl(packageRoot, tag, asset);
     try {
       const res = await fetch(url, { redirect: "follow" });
       if (res.status === 404) continue;

@@ -6,13 +6,13 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jrmybtlr/DSLint.git",
+    "url": "https://github.com/jrmybtlr/DSLinter.git",
     "directory": "packages/dashboard"
   },
   "bugs": {
-    "url": "https://github.com/jrmybtlr/DSLint/issues"
+    "url": "https://github.com/jrmybtlr/DSLinter/issues"
   },
-  "homepage": "https://github.com/jrmybtlr/DSLint#readme",
+  "homepage": "https://github.com/jrmybtlr/DSLinter#readme",
   "keywords": [
     "dslinter",
     "design-system",

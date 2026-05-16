@@ -3,7 +3,7 @@ name = "dslint"
 version = "0.1.0"
 edition = "2021"
 description = "Design system linting: JSX/Vue component inventory, usage analytics, and governance signals"
-repository = "https://github.com/jrmybtlr/DSLint"
+repository = "https://github.com/jrmybtlr/DSLinter"
 license = "Apache-2.0"
 autobins = false
 

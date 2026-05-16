@@ -16,10 +16,10 @@ To run the design-system scanner:
 
   1. Re-run after a GitHub release exists for v${version} (prebuilt download), or
   2. Build from this repo and point at it:
-       cargo install --git https://github.com/jrmybtlr/DSLint dslinter --locked
+       cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked
        export DSLINT_BIN="$(command -v dslinter)"
        npx dslinter ...
   3. Or set DSLINT_BIN to your local target/release/dslinter
 
-Releases: https://github.com/jrmybtlr/DSLint/releases
+Releases: https://github.com/jrmybtlr/DSLinter/releases
 `);

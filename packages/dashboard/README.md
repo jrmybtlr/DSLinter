@@ -25,7 +25,7 @@ The **`dslinter` binary** runs the **`dslint`** scanner with the same flags as t
 
 On **`npm install dslinter`**, a **`postinstall`** script tries to download a **prebuilt `dslint`** for your OS/arch from this repo’s **GitHub Releases**, using the **same tag as the npm version** (for example npm `dslinter@0.0.6` → release **`v0.0.6`** and assets like `dslint-x86_64-unknown-linux-gnu`). The binary is stored under `node_modules/dslinter/vendor/` and `dslinter` / `npx dslinter` prefer it over `PATH`.
 
-**Release workflow:** push git tag `v*` (after bumping the npm version) so [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLint/blob/main/.github/workflows/release-dslint-binaries.yml) uploads the platform binaries, **then** publish `dslinter` to npm (or publish after the workflow finishes so installs resolve the assets).
+**Release workflow:** push git tag `v*` (after bumping the npm version) so [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLinter/blob/main/.github/workflows/release-dslint-binaries.yml) uploads the platform binaries, **then** publish `dslinter` to npm (or publish after the workflow finishes so installs resolve the assets).
 
 Environment variables:
 
@@ -33,7 +33,7 @@ Environment variables:
 |----------|---------|
 | `DSLINT_SKIP_DOWNLOAD=1` | Skip postinstall download (air-gapped / you only use `PATH`). |
 | `DSLINT_RELEASE_TAG` | Override release tag (default `v` + `dslinter` version from `package.json`). |
-| `DSLINT_GITHUB_REPO` | Override `owner/repo` for downloads (default `jrmybtlr/DSLint`). |
+| `DSLINT_GITHUB_REPO` | Override `owner/repo` for downloads (default `jrmybtlr/DSLinter`). |
 
 ### How this differs from `oxlint`
 
@@ -45,7 +45,7 @@ Environment variables:
 
 The crates.io crate **`dslint`** (v0.0.x) is a **different project** (design-file linting). It is **not** this design-system scanner. Installing it will break `npx dslinter` if it ends up on your `PATH`.
 
-Use **`cargo install --git https://github.com/jrmybtlr/DSLint dslinter --locked`** or set **`DSLINT_BIN`** to a local `target/release/dslinter` build.
+Use **`cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked`** or set **`DSLINT_BIN`** to a local `target/release/dslinter` build.
 
 ### If there is no matching release asset yet
 
@@ -59,7 +59,7 @@ npx dslinter /path/to/repo --json -o dslint-report.json
 |--------------|-------------------------|
 | **npm + GitHub Releases** | Default: download when release `vX.Y.Z` includes your platform asset. |
 | **GitHub Releases** | Manual download of `dslinter-*` from the release; run directly or set `DSLINT_BIN`. |
-| **From source** | `cargo install --git https://github.com/jrmybtlr/DSLint dslinter --locked` (not `cargo install dslint`). |
+| **From source** | `cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked` (not `cargo install dslint`). |
 
 Typical usage:
 
