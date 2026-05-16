@@ -1,5 +1,5 @@
 {
-  "name": "dslint",
+  "name": "dslinter",
   "private": true,
   "workspaces": [
     "demo",
@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "changelogen": "^0.6.2",
-    "oxfmt": "^0.16.0",
-    "oxlint": "^1.64.0"
+    "oxfmt": "^0.50.0",
+    "oxlint": "^1.65.0"
   },
   "pnpm": {
     "overrides": {
