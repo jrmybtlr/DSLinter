@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.12
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.11...v0.0.12)
+
+### 🚀 Enhancements
+
+- Enhance GitHub release asset handling and logging ([4a62b9f](https://github.com/jrmybtlr/DSLinter/commit/4a62b9f))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.11
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.10...v0.0.11)
