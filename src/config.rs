@@ -44,6 +44,10 @@ pub struct DslintConfig {
     /// When true, emit `unused-prop` findings for declared props with no call-site usage.
     #[serde(default)]
     pub check_unused_props: bool,
+    /// When true, emit `a11y-dark-mode-contrast` findings where class tokens imply text/background
+    /// colors but no explicit `dark:` color variant is present.
+    #[serde(default)]
+    pub check_dark_mode_contrast: bool,
 }
 
 impl DslintConfig {

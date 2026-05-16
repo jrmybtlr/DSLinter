@@ -31,6 +31,13 @@ fn tw_arbitrary_re() -> &'static Regex {
     })
 }
 
+fn class_attr_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"(?:class|className)\s*=\s*["']([^"']+)["']"#).expect("class attr regex")
+    })
+}
+
 pub fn evaluate_workspace(
     root: PathBuf,
     files: Vec<FileScan>,
@@ -46,6 +53,7 @@ pub fn evaluate_workspace(
     }
     findings.extend(hardcoded_hex_colors(&files, &sources));
     findings.extend(tailwind_arbitrary_tokens(&files, &sources));
+    findings.extend(dark_mode_contrast_findings(&files, &sources, config));
     dedupe_token_color_overlap(&mut findings);
     findings.extend(deprecated_usage(&files, config));
 
@@ -404,6 +412,142 @@ fn hardcoded_hex_colors(
     out
 }
 
+fn is_probable_color_utility(rest: &str, non_color_words: &[&str]) -> bool {
+    if rest.is_empty() {
+        return false;
+    }
+    if rest.starts_with('[') {
+        // Arbitrary Tailwind values can include colors (`text-[#fff]`, `bg-[var(--x)]`).
+        return true;
+    }
+    if non_color_words.contains(&rest) {
+        return false;
+    }
+    true
+}
+
+fn is_probable_text_color_class(token: &str) -> bool {
+    let Some(rest) = token.strip_prefix("text-") else {
+        return false;
+    };
+    const NON_COLOR_TEXT: &[&str] = &[
+        "xs",
+        "sm",
+        "base",
+        "lg",
+        "xl",
+        "2xl",
+        "3xl",
+        "4xl",
+        "5xl",
+        "6xl",
+        "7xl",
+        "8xl",
+        "9xl",
+        "left",
+        "center",
+        "right",
+        "justify",
+        "start",
+        "end",
+        "ellipsis",
+        "clip",
+        "balance",
+        "pretty",
+        "wrap",
+        "nowrap",
+    ];
+    is_probable_color_utility(rest, NON_COLOR_TEXT)
+}
+
+fn is_probable_bg_color_class(token: &str) -> bool {
+    let Some(rest) = token.strip_prefix("bg-") else {
+        return false;
+    };
+    const NON_COLOR_BG_PREFIXES: &[&str] = &[
+        "clip-",
+        "origin-",
+        "blend-",
+        "gradient-",
+        "repeat",
+        "no-repeat",
+        "fixed",
+        "local",
+        "scroll",
+        "center",
+        "top",
+        "bottom",
+        "left",
+        "right",
+        "cover",
+        "contain",
+        "none",
+        "auto",
+    ];
+    if NON_COLOR_BG_PREFIXES
+        .iter()
+        .any(|prefix| rest.starts_with(prefix))
+    {
+        return false;
+    }
+    is_probable_color_utility(rest, &[])
+}
+
+fn dark_mode_contrast_findings(
+    files: &[FileScan],
+    sources: &HashMap<PathBuf, String>,
+    config: &DslintConfig,
+) -> Vec<LintFinding> {
+    if !config.check_dark_mode_contrast {
+        return Vec::new();
+    }
+
+    let mut out = Vec::new();
+    let re = class_attr_re();
+    for file in files {
+        let Some(text) = sources.get(&file.path) else {
+            continue;
+        };
+        let newlines = newline_offsets(text);
+        for caps in re.captures_iter(text) {
+            let Some(full) = caps.get(0) else {
+                continue;
+            };
+            let classes = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+
+            let mut has_text_color = false;
+            let mut has_bg_color = false;
+            let mut has_dark_color_variant = false;
+
+            for token in classes.split_whitespace() {
+                if let Some(inner) = token.strip_prefix("dark:") {
+                    if is_probable_text_color_class(inner) || is_probable_bg_color_class(inner) {
+                        has_dark_color_variant = true;
+                    }
+                    continue;
+                }
+                if is_probable_text_color_class(token) {
+                    has_text_color = true;
+                }
+                if is_probable_bg_color_class(token) {
+                    has_bg_color = true;
+                }
+            }
+
+            if has_text_color && has_bg_color && !has_dark_color_variant {
+                out.push(LintFinding {
+                    rule_id: "a11y-dark-mode-contrast".into(),
+                    message: "Class tokens set text/background colors without an explicit `dark:` color variant; verify dark-mode contrast or disable this check in `.dslint.json`.".into(),
+                    path: file.path.clone(),
+                    line: Some(line_of_offset(&newlines, full.start())),
+                    severity: Severity::Info,
+                });
+            }
+        }
+    }
+    out
+}
+
 fn a11y_penalty(findings: &[LintFinding]) -> i32 {
     findings
         .iter()
@@ -735,5 +879,72 @@ mod prop_tests {
         // children/className/style are skipped; only `extra` should fire.
         assert_eq!(findings.len(), 1, "{findings:?}");
         assert!(findings[0].message.contains("extra"));
+    }
+}
+
+#[cfg(test)]
+mod dark_mode_contrast_tests {
+    use super::*;
+    use crate::model::FileScan;
+    use std::path::PathBuf;
+
+    fn file(path: &str) -> FileScan {
+        FileScan {
+            path: PathBuf::from(path),
+            definitions: Vec::new(),
+            usages: Vec::new(),
+            parse_errors: Vec::new(),
+            findings: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn dark_mode_contrast_off_by_default() {
+        let files = vec![file("x.tsx")];
+        let mut sources = HashMap::new();
+        sources.insert(
+            PathBuf::from("x.tsx"),
+            r#"<div className="bg-slate-100 text-slate-900" />"#.to_string(),
+        );
+        let config = DslintConfig::default();
+        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        assert!(findings.is_empty(), "{findings:?}");
+    }
+
+    #[test]
+    fn dark_mode_contrast_flags_missing_dark_variant() {
+        let files = vec![file("x.tsx")];
+        let mut sources = HashMap::new();
+        sources.insert(
+            PathBuf::from("x.tsx"),
+            r#"<div className="bg-slate-100 text-slate-900" />"#.to_string(),
+        );
+        let config = DslintConfig {
+            check_dark_mode_contrast: true,
+            ..Default::default()
+        };
+        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-dark-mode-contrast"),
+            "{findings:?}"
+        );
+    }
+
+    #[test]
+    fn dark_mode_contrast_skips_when_dark_variant_present() {
+        let files = vec![file("x.tsx")];
+        let mut sources = HashMap::new();
+        sources.insert(
+            PathBuf::from("x.tsx"),
+            r#"<div className="bg-slate-100 text-slate-900 dark:bg-slate-900" />"#.to_string(),
+        );
+        let config = DslintConfig {
+            check_dark_mode_contrast: true,
+            ..Default::default()
+        };
+        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        assert!(findings.is_empty(), "{findings:?}");
     }
 }

@@ -30,7 +30,8 @@ Optional config (repository root): `.dslint.json` or `dslint.json`:
   "smell": {
     "disabled_rules": ["smell-todo-marker"],
     "report_console_error": true
-  }
+  },
+  "check_dark_mode_contrast": false
 }
 ```
 
