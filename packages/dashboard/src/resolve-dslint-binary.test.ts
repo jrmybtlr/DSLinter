@@ -1,10 +1,14 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  pickReleaseAsset,
+} from "../scripts/github-release.mjs";
+import {
   CLI_BINARY_NAME,
   DEFAULT_GITHUB_REPO,
   parseGitHubRepo,
   releaseAssetBaseName,
+  releaseAssetCandidateNames,
   vendorBinaryPath,
 } from "../scripts/resolve-dslint-binary.mjs";
 
@@ -30,6 +34,31 @@ describe("parseGitHubRepo", () => {
 
   it("defaults constant points at DSLinter", () => {
     expect(DEFAULT_GITHUB_REPO).toBe("jrmybtlr/DSLinter");
+  });
+});
+
+describe("releaseAssetCandidateNames", () => {
+  it("includes legacy dslint asset name", () => {
+    expect(releaseAssetCandidateNames(proc("darwin", "arm64"))).toEqual([
+      "dslinter-aarch64-apple-darwin",
+      "dslint-aarch64-apple-darwin",
+    ]);
+  });
+});
+
+describe("pickReleaseAsset", () => {
+  it("prefers primary name then legacy", () => {
+    const release = {
+      assets: [
+        {
+          name: "dslint-aarch64-apple-darwin",
+          browser_download_url: "https://example.com/legacy",
+        },
+      ],
+    };
+    expect(
+      pickReleaseAsset(release, releaseAssetCandidateNames(proc("darwin", "arm64"))),
+    ).toMatchObject({ name: "dslint-aarch64-apple-darwin" });
   });
 });
 

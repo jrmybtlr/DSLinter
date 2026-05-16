@@ -33,7 +33,9 @@ Environment variables:
 |----------|---------|
 | `DSLINT_SKIP_DOWNLOAD=1` | Skip postinstall download (air-gapped / you only use `PATH`). |
 | `DSLINT_RELEASE_TAG` | Override release tag (default `v` + `dslinter` version from `package.json`). |
-| `DSLINT_GITHUB_REPO` | Override `owner/repo` for downloads (default `jrmybtlr/DSLinter`). |
+| `DSLINT_GITHUB_REPO` | Override `owner/repo` for downloads (default from `package.json` → `jrmybtlr/DSLinter`). |
+| `DSLINT_VERBOSE=1` | Log which GitHub releases/assets were tried when downloading. |
+| `GITHUB_TOKEN` / `GH_TOKEN` | Optional token for private repos or higher API rate limits. |
 
 ### How this differs from `oxlint`
 

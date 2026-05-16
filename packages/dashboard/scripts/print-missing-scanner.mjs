@@ -22,4 +22,6 @@ To run the design-system scanner:
   3. Or set DSLINT_BIN to your local target/release/dslinter
 
 Releases: https://github.com/jrmybtlr/DSLinter/releases
+
+Tip: re-run with DSLINT_VERBOSE=1 to see which GitHub releases/assets were tried.
 `);

@@ -58,6 +58,14 @@ export function releaseAssetBaseName(proc = process) {
   return null;
 }
 
+/** Primary GitHub asset name plus legacy `dslint-*` names from older releases. */
+export function releaseAssetCandidateNames(proc = process) {
+  const primary = releaseAssetBaseName(proc);
+  if (!primary) return [];
+  const legacy = primary.replace(/^dslinter/, "dslint");
+  return legacy === primary ? [primary] : [primary, legacy];
+}
+
 /**
  * @param {string} packageRoot — directory containing package.json
  * @param {NodeJS.Process} [proc]

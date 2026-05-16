@@ -43,7 +43,7 @@ async function resolveCommand() {
 
   const vendored = vendorBinaryPath(packageRoot);
   if (!existsSync(vendored)) {
-    await ensureDslintBinary(packageRoot, { quiet: true });
+    await ensureDslintBinary(packageRoot, { quiet: false });
   }
   if (existsSync(vendored)) {
     return vendored;
