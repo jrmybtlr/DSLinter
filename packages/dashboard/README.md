@@ -1,6 +1,6 @@
 # dslinter
 
-React UI for the **DSLinter dashboard**: component playground shell, token wall, and governance panels. It expects a **`dslint-report.json`** file produced by the **`dslint`** CLI (Rust scanner in this repo).
+React UI for the **DSLinter dashboard**: component playground shell, token wall, and governance panels. It expects a **`dslint-report.json`** file produced by the **`dslinter`** CLI (Rust scanner powered by [Oxc](https://oxc.rs) in this repo).
 
 **Previously published as `@dslinter/dashboard`.** Migrate with `npm install dslinter` and replace imports `@dslinter/dashboard` → `dslinter`, and `@dslinter/dashboard/theme.css` → `dslinter/theme.css`.
 
@@ -31,7 +31,7 @@ On **`npm install dslinter`**, a **`postinstall`** script tries to download a **
 pnpm run release:patch   # test → version bump → git push --tags → wait for CI assets → npm publish
 ```
 
-CI uploads Linux x64, macOS arm64, and Windows x64 binaries via [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLinter/blob/main/.github/workflows/release-dslint-binaries.yml).
+CI uploads Linux x64/arm64, macOS arm64/x64, and Windows x64 binaries via [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLinter/blob/main/.github/workflows/release-dslint-binaries.yml).
 
 If Actions jobs stay **queued**, cancel old runs in GitHub Actions, then **Re-run** the release workflow (`workflow_dispatch`, tag `vX.Y.Z`).
 
@@ -55,7 +55,7 @@ Environment variables:
 
 **`oxlint`** on npm ships **Node native addons** as **`optionalDependencies`** (`@oxlint/binding-darwin-arm64`, …) built with **napi-rs** — each package is a small prebuilt library loaded by Node.
 
-**`dslinter`** is a **standalone executable**. The practical pattern here is **download on install** from **GitHub Releases** (similar in spirit to tools that pull a platform binary once), instead of publishing dozens of `@dslinter/binding-*` packages.
+**`dslinter`** is a **standalone executable**. The practical pattern here is **download on install** from **GitHub Releases** (similar in spirit to tools that pull a platform binary once), instead of publishing dozens of `@dslinter/binding-*` packages. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for a future **optionalDependencies** platform-package evaluation.
 
 ### Do not `cargo install dslint`
 

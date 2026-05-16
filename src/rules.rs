@@ -246,17 +246,35 @@ fn duplicate_definitions(files: &[FileScan]) -> Vec<DuplicateComponent> {
     out
 }
 
+fn is_code_quality_rule(rule_id: &str) -> bool {
+    rule_id.starts_with("code-") || rule_id.starts_with("smell-")
+}
+
+/// `smell-*` config entries also match `code-*` rule ids (and vice versa).
+fn code_rule_aliases(rule_id: &str) -> Vec<String> {
+    if let Some(suffix) = rule_id.strip_prefix("code-") {
+        vec![rule_id.to_string(), format!("smell-{suffix}")]
+    } else if let Some(suffix) = rule_id.strip_prefix("smell-") {
+        vec![rule_id.to_string(), format!("code-{suffix}")]
+    } else {
+        vec![rule_id.to_string()]
+    }
+}
+
 fn filter_smell_config(mut findings: Vec<LintFinding>, config: &DslintConfig) -> Vec<LintFinding> {
     findings.retain(|f| {
-        if f.rule_id == "smell-console-error" && !config.smell.report_console_error {
+        if (f.rule_id == "code-console-error" || f.rule_id == "smell-console-error")
+            && !config.smell.report_console_error
+        {
             return false;
         }
-        if f.rule_id.starts_with("smell-") {
+        if is_code_quality_rule(&f.rule_id) {
+            let aliases = code_rule_aliases(&f.rule_id);
             return !config
                 .smell
                 .disabled_rules
                 .iter()
-                .any(|pat| rule_pattern_matches(pat, &f.rule_id));
+                .any(|pat| aliases.iter().any(|id| rule_pattern_matches(pat, id)));
         }
         true
     });
@@ -324,28 +342,52 @@ fn compute_ownership(
     out
 }
 
+fn tailwind_arbitrary_in_text(path: &Path, line: u32, text: &str) -> Vec<LintFinding> {
+    let re = tw_arbitrary_re();
+    let mut out = Vec::new();
+    for m in re.find_iter(text) {
+        out.push(LintFinding {
+            rule_id: "token-tailwind-arbitrary".into(),
+            message: format!("Tailwind arbitrary value `{}`", m.as_str()),
+            path: path.to_path_buf(),
+            line: Some(line),
+            severity: Severity::Info,
+        });
+    }
+    out
+}
+
 fn tailwind_arbitrary_tokens(
     files: &[FileScan],
     sources: &HashMap<PathBuf, String>,
 ) -> Vec<LintFinding> {
-    let re = tw_arbitrary_re();
     let mut out = Vec::new();
     for file in files {
-        let Some(text) = sources.get(&file.path) else {
-            continue;
-        };
-        // Precompute newline positions so each offset → line lookup is O(log n)
-        // instead of O(n) for every regex match.
-        let newlines = newline_offsets(text);
-        for m in re.find_iter(text) {
-            let line = line_of_offset(&newlines, m.start());
-            out.push(LintFinding {
-                rule_id: "token-tailwind-arbitrary".into(),
-                message: format!("Tailwind arbitrary value `{}`", m.as_str()),
-                path: file.path.clone(),
-                line: Some(line),
-                severity: Severity::Info,
-            });
+        if !file.ast_extracts.is_empty() {
+            for lit in &file.ast_extracts.string_literals {
+                out.extend(tailwind_arbitrary_in_text(
+                    &file.path,
+                    lit.line,
+                    &lit.value,
+                ));
+            }
+            for cls in &file.ast_extracts.class_strings {
+                out.extend(tailwind_arbitrary_in_text(
+                    &file.path,
+                    cls.line,
+                    &cls.text,
+                ));
+            }
+        } else if let Some(text) = sources.get(&file.path) {
+            let newlines = newline_offsets(text);
+            for m in tw_arbitrary_re().find_iter(text) {
+                let line = line_of_offset(&newlines, m.start());
+                out.extend(tailwind_arbitrary_in_text(
+                    &file.path,
+                    line,
+                    m.as_str(),
+                ));
+            }
         }
     }
     out
@@ -398,28 +440,52 @@ fn deprecated_usage(files: &[FileScan], config: &DslintConfig) -> Vec<LintFindin
     out
 }
 
+fn hex_color_findings_in_text(path: &Path, line: u32, text: &str) -> Vec<LintFinding> {
+    let re = hex_re();
+    let mut out = Vec::new();
+    for m in re.find_iter(text) {
+        out.push(LintFinding {
+            rule_id: "token-hardcoded-color".into(),
+            message: format!("Hardcoded color `{}`", m.as_str()),
+            path: path.to_path_buf(),
+            line: Some(line),
+            severity: Severity::Info,
+        });
+    }
+    out
+}
+
 fn hardcoded_hex_colors(
     files: &[FileScan],
     sources: &HashMap<PathBuf, String>,
 ) -> Vec<LintFinding> {
-    let re = hex_re();
     let mut out = Vec::new();
     for file in files {
-        let Some(text) = sources.get(&file.path) else {
-            continue;
-        };
-        // Precompute newline positions so each offset → line lookup is O(log n)
-        // instead of O(n) for every regex match.
-        let newlines = newline_offsets(text);
-        for m in re.find_iter(text) {
-            let line = line_of_offset(&newlines, m.start());
-            out.push(LintFinding {
-                rule_id: "token-hardcoded-color".into(),
-                message: format!("Hardcoded color `{}`", m.as_str()),
-                path: file.path.clone(),
-                line: Some(line),
-                severity: Severity::Info,
-            });
+        if !file.ast_extracts.is_empty() {
+            for lit in &file.ast_extracts.string_literals {
+                out.extend(hex_color_findings_in_text(
+                    &file.path,
+                    lit.line,
+                    &lit.value,
+                ));
+            }
+            for cls in &file.ast_extracts.class_strings {
+                out.extend(hex_color_findings_in_text(
+                    &file.path,
+                    cls.line,
+                    &cls.text,
+                ));
+            }
+        } else if let Some(text) = sources.get(&file.path) {
+            let newlines = newline_offsets(text);
+            for m in hex_re().find_iter(text) {
+                let line = line_of_offset(&newlines, m.start());
+                out.extend(hex_color_findings_in_text(
+                    &file.path,
+                    line,
+                    m.as_str(),
+                ));
+            }
         }
     }
     out
@@ -537,6 +603,20 @@ fn has_dark_mode_contrast_issue(classes: &str) -> bool {
     has_text_color && has_bg_color && !has_dark_color_variant
 }
 
+fn dark_mode_contrast_message() -> &'static str {
+    "Class tokens set text/background colors without an explicit `dark:` color variant; verify dark-mode contrast or disable this check in `.dslint.json`."
+}
+
+fn push_dark_mode_finding(out: &mut Vec<LintFinding>, path: &Path, line: u32) {
+    out.push(LintFinding {
+        rule_id: "a11y-dark-mode-contrast".into(),
+        message: dark_mode_contrast_message().into(),
+        path: path.to_path_buf(),
+        line: Some(line),
+        severity: Severity::Info,
+    });
+}
+
 fn dark_mode_contrast_findings(
     files: &[FileScan],
     sources: &HashMap<PathBuf, String>,
@@ -547,13 +627,22 @@ fn dark_mode_contrast_findings(
     }
 
     let mut out = Vec::new();
-    let static_class_re = class_attr_re();
-    let helper_re = class_helper_attr_re();
-    let literal_re = quoted_literal_re();
     for file in files {
+        if !file.ast_extracts.class_strings.is_empty() {
+            for cls in &file.ast_extracts.class_strings {
+                if has_dark_mode_contrast_issue(&cls.text) {
+                    push_dark_mode_finding(&mut out, &file.path, cls.line);
+                }
+            }
+            continue;
+        }
+
         let Some(text) = sources.get(&file.path) else {
             continue;
         };
+        let static_class_re = class_attr_re();
+        let helper_re = class_helper_attr_re();
+        let literal_re = quoted_literal_re();
         let newlines = newline_offsets(text);
         for caps in static_class_re.captures_iter(text) {
             let Some(full) = caps.get(0) else {
@@ -563,13 +652,11 @@ fn dark_mode_contrast_findings(
             if !has_dark_mode_contrast_issue(classes) {
                 continue;
             }
-            out.push(LintFinding {
-                rule_id: "a11y-dark-mode-contrast".into(),
-                message: "Class tokens set text/background colors without an explicit `dark:` color variant; verify dark-mode contrast or disable this check in `.dslint.json`.".into(),
-                path: file.path.clone(),
-                line: Some(line_of_offset(&newlines, full.start())),
-                severity: Severity::Info,
-            });
+            push_dark_mode_finding(
+                &mut out,
+                &file.path,
+                line_of_offset(&newlines, full.start()),
+            );
         }
 
         for caps in helper_re.captures_iter(text) {
@@ -589,13 +676,11 @@ fn dark_mode_contrast_findings(
             if all_classes.is_empty() || !has_dark_mode_contrast_issue(&all_classes) {
                 continue;
             }
-            out.push(LintFinding {
-                rule_id: "a11y-dark-mode-contrast".into(),
-                message: "Class tokens set text/background colors without an explicit `dark:` color variant; verify dark-mode contrast or disable this check in `.dslint.json`.".into(),
-                path: file.path.clone(),
-                line: Some(line_of_offset(&newlines, full.start())),
-                severity: Severity::Info,
-            });
+            push_dark_mode_finding(
+                &mut out,
+                &file.path,
+                line_of_offset(&newlines, full.start()),
+            );
         }
     }
     out
@@ -616,7 +701,7 @@ fn a11y_penalty(findings: &[LintFinding]) -> i32 {
 fn smell_penalty(findings: &[LintFinding]) -> i32 {
     findings
         .iter()
-        .filter(|f| f.rule_id.starts_with("smell-"))
+        .filter(|f| is_code_quality_rule(&f.rule_id))
         .count()
         .min(25) as i32
 }
@@ -753,6 +838,53 @@ fn unused_props_findings(
 }
 
 #[cfg(test)]
+mod token_ast_tests {
+    use super::*;
+    use crate::ecma::analyze_ecma_file;
+    use std::path::Path;
+
+    #[test]
+    fn hex_in_comment_not_reported_via_ast() {
+        let path = Path::new("token_ast_comment.tsx");
+        let src = r#"
+// #ffffff should not be a finding
+export function Box() {
+  return <div className="ok">x</motion.div>;
+}
+"#;
+        let file = analyze_ecma_file(path, src);
+        let mut sources = HashMap::new();
+        sources.insert(path.to_path_buf(), src.to_string());
+        let findings = hardcoded_hex_colors(std::slice::from_ref(&file), &sources);
+        assert!(
+            findings.is_empty(),
+            "comment hex should not appear in AST literals: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn hex_in_string_literal_reported_via_ast() {
+        let path = Path::new("token_ast_literal.tsx");
+        let src = r#"
+export function Box() {
+  const c = "#ff00aa";
+  return null;
+}
+"#;
+        let file = analyze_ecma_file(path, src);
+        let mut sources = HashMap::new();
+        sources.insert(path.to_path_buf(), src.to_string());
+        let findings = hardcoded_hex_colors(std::slice::from_ref(&file), &sources);
+        assert!(
+            findings.iter().any(|f| f.message.contains("#ff00aa")),
+            "expected hex in string literal: {:?}",
+            findings
+        );
+    }
+}
+
+#[cfg(test)]
 mod dedupe_tests {
     use super::*;
     use std::path::PathBuf;
@@ -832,6 +964,7 @@ mod prop_tests {
                 .collect(),
             parse_errors: Vec::new(),
             findings: Vec::new(),
+            ast_extracts: Default::default(),
         }
     }
 
@@ -948,6 +1081,7 @@ mod dark_mode_contrast_tests {
             usages: Vec::new(),
             parse_errors: Vec::new(),
             findings: Vec::new(),
+            ast_extracts: Default::default(),
         }
     }
 

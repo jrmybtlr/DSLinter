@@ -1,5 +1,6 @@
 //! DSLint — design-system component inventory and governance signals (MVP).
 
+pub mod class_strings;
 pub mod code_quality;
 pub mod config;
 pub mod directives;
@@ -34,6 +35,7 @@ pub fn scan_file(path: &Path, source: &str) -> FileScan {
             usages: Vec::new(),
             parse_errors: vec![format!("dslint: unsupported extension `{ext}`")],
             findings: Vec::new(),
+            ast_extracts: Default::default(),
         },
     }
 }
@@ -55,6 +57,7 @@ pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
                 definitions: Vec::new(),
                 usages: Vec::new(),
                 findings: Vec::new(),
+                ast_extracts: Default::default(),
             },
         })
         .collect();
@@ -84,6 +87,7 @@ pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
                 definitions: Vec::new(),
                 usages: Vec::new(),
                 findings: Vec::new(),
+                ast_extracts: Default::default(),
             },
         })
         .collect();

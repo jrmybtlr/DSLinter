@@ -72,6 +72,7 @@ pub fn run_watch(
                     definitions: Vec::new(),
                     usages: Vec::new(),
                     findings: Vec::new(),
+                    ast_extracts: Default::default(),
                 },
             })
             .collect();
@@ -91,6 +92,7 @@ pub fn run_watch(
                     definitions: Vec::new(),
                     usages: Vec::new(),
                     findings: Vec::new(),
+                    ast_extracts: Default::default(),
                 },
             })
             .collect();

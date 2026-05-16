@@ -217,6 +217,7 @@ mod tests {
             usages: vec![],
             parse_errors: vec![],
             findings: vec![],
+            ast_extracts: Default::default(),
         }];
         let specs = build_playground_specs(&root, &files, &config);
         assert!(specs.is_empty());

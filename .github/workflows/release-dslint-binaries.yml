@@ -34,8 +34,14 @@ jobs:
           - runner: ubuntu-latest
             asset: dslinter-x86_64-unknown-linux-gnu
             ext: ""
+          - runner: ubuntu-24.04-arm
+            asset: dslinter-aarch64-unknown-linux-gnu
+            ext: ""
           - runner: macos-latest
             asset: dslinter-aarch64-apple-darwin
+            ext: ""
+          - runner: macos-13
+            asset: dslinter-x86_64-apple-darwin
             ext: ""
           - runner: windows-latest
             asset: dslinter-x86_64-pc-windows-msvc.exe
@@ -95,7 +101,9 @@ jobs:
           done
           ls -la assets/
           test -f assets/dslinter-x86_64-unknown-linux-gnu
+          test -f assets/dslinter-aarch64-unknown-linux-gnu
           test -f assets/dslinter-aarch64-apple-darwin
+          test -f assets/dslinter-x86_64-apple-darwin
           test -f assets/dslinter-x86_64-pc-windows-msvc.exe
 
       - uses: softprops/action-gh-release@v2

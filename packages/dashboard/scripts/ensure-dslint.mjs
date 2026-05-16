@@ -165,7 +165,8 @@ export async function ensureDslintBinary(packageRoot = defaultPackageRoot, opts 
         `  Create a fine-grained or classic token with repo read access, then:\n` +
         `    export GITHUB_TOKEN=ghp_...\n` +
         `    npx dslinter\n` +
-        `  Or install from source: cargo install --git https://github.com/${repo} dslinter --locked`,
+        `  Or: npm rebuild dslinter\n` +
+        `  Contributors: cargo build --release --bin dslinter (clone https://github.com/${repo})`,
     );
     return false;
   }

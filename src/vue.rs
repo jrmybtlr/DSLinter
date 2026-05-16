@@ -240,6 +240,7 @@ fn merge_file_scan(into: &mut FileScan, mut part: FileScan) {
     into.usages.append(&mut part.usages);
     into.findings.append(&mut part.findings);
     into.parse_errors.append(&mut part.parse_errors);
+    into.ast_extracts.merge_from(part.ast_extracts);
 }
 
 fn kebab_to_pascal(raw: &str) -> String {
@@ -268,6 +269,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         usages: Vec::new(),
         parse_errors: Vec::new(),
         findings: Vec::new(),
+        ast_extracts: Default::default(),
     };
 
     // Collect all script content for prop extraction.
@@ -313,6 +315,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
                     *ln += line_offset;
                 }
             }
+            crate::class_strings::offset_ast_extracts(&mut part.ast_extracts, line_offset);
             merge_file_scan(&mut scan, part);
         }
     }
@@ -347,9 +350,18 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         let inner = cap.get(1).expect("template inner group");
         let tpl = inner.as_str();
         let tpl_start = inner.start();
+        let tpl_line_offset = source[..tpl_start]
+            .bytes()
+            .filter(|&b| b == b'\n')
+            .count() as u32;
         merge_template_usages(source, tpl, tpl_start, &mut scan.usages);
         scan.findings
             .extend(vue_template_a11y_findings(path, source, tpl, tpl_start));
+        crate::class_strings::extend_template_class_extracts(
+            &mut scan.ast_extracts,
+            tpl,
+            tpl_line_offset,
+        );
     }
 
     scan

@@ -18,7 +18,7 @@ use oxc_syntax::scope::ScopeFlags;
 
 use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{
-    ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity,
+    AstExtracts, ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity,
 };
 
 const DEFAULT_EXPORT: &str = "default";
@@ -51,6 +51,7 @@ pub fn analyze_ecma_for_paths(
             usages: Vec::new(),
             parse_errors,
             findings: Vec::new(),
+            ast_extracts: AstExtracts::default(),
         };
     }
 
@@ -81,12 +82,15 @@ pub fn analyze_ecma_for_paths(
         ));
     }
 
+    let ast_extracts = crate::class_strings::collect_ast_extracts(source, &program);
+
     FileScan {
         path: report_path.to_path_buf(),
         definitions: v.definitions,
         usages: v.usages,
         parse_errors,
         findings,
+        ast_extracts,
     }
 }
 

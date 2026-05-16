@@ -16,7 +16,7 @@ import { spawn, spawnSync } from "node:child_process";
 import process from "node:process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { accessSync, constants as fsConstants } from "node:fs";
+import { accessSync, constants as fsConstants, existsSync } from "node:fs";
 
 const SCANNER_MARKER = "design system linting";
 
@@ -29,11 +29,24 @@ function isOurScanner(cmd) {
   return `${r.stdout ?? ""}`.includes(SCANNER_MARKER);
 }
 
+function vendoredDslinter() {
+  const __filename = fileURLToPath(import.meta.url);
+  const demoRoot = path.resolve(path.dirname(__filename), "..");
+  const base = path.join(demoRoot, "node_modules", "dslinter", "vendor", "dslinter");
+  if (process.platform === "win32") {
+    const win = `${base}.exe`;
+    return existsSync(win) ? win : null;
+  }
+  return existsSync(base) ? base : null;
+}
+
 function findScannerBin() {
   const fromEnv = process.env.DSLINT_BIN?.trim();
   if (fromEnv && cmdOk(fromEnv, ["--help"]) && isOurScanner(fromEnv)) {
     return fromEnv;
   }
+  const vendored = vendoredDslinter();
+  if (vendored && isOurScanner(vendored)) return vendored;
   if (cmdOk("dslinter") && isOurScanner("dslinter")) return "dslinter";
   return null;
 }
@@ -90,9 +103,9 @@ if (!resolved) {
       "        Do not use: cargo install dslint  (different crates.io project)",
       "",
       "        Options:",
-      "          - cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked",
+      "          - npm install (downloads prebuilt dslinter when available)",
       "          - DSLINT_BIN=/path/to/dslinter",
-      "          - Install Rust and run from this repo (cargo run --bin dslinter)",
+      "          - Contributors: cargo build --release --bin dslinter (repo root)",
       "",
     ].join("\n"),
   );

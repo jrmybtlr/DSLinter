@@ -35,17 +35,18 @@ npm install && cd demo && npm run dev
 pnpm install && cd demo && pnpm dev
 ```
 
-`npm run dev` is a small wrapper ([scripts/dev.mjs](./scripts/dev.mjs)) that auto-detects whether `cargo` is on `PATH`:
+`npm run dev` is a small wrapper ([scripts/dev.mjs](./scripts/dev.mjs)) that auto-detects a **dslinter** scanner (vendor binary from `npm install`, `DSLINT_BIN`, or PATH) and falls back to **`cargo`** for contributors:
 
-- **Rust installed** — delegates to `npm run dev:serve`: **Vite** (in `--mode serve`) and **`dslint --serve 7878`** concurrently. Vite proxies `/dslint-report.json` and `/events` to the Rust server (see [vite.config.ts](./vite.config.ts)), so the dashboard receives SSE updates the moment a `.tsx` under `src/components/` changes — no manual `npm run dslint:report` step. First boot compiles the dslint binary in release mode (~30s); subsequent runs are instant.
-- **Rust missing** — delegates to `npm run dev:vite-only` with a warning. Vite serves the dashboard against the committed `public/dslint-report.json`; that file won't refresh on source changes. Install Rust at <https://rustup.rs> to enable live updates.
+- **Scanner available** — delegates to `npm run dev:serve`: **Vite** (in `--mode serve`) and **`dslinter --serve 7878`** concurrently. Vite proxies `/dslint-report.json` and `/events` to the scanner (see [vite.config.ts](./vite.config.ts)), so the dashboard receives SSE updates when source files change.
+- **Neither scanner nor cargo** — delegates to `npm run dev:vite-only` with a warning. Vite serves the committed `public/dslint-report.json`; run `npm install` to fetch a prebuilt binary, or build from source (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 | Script                  | When to use                                                                                                                        |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`           | Default — auto-detects cargo and picks the right flavor                                                                            |
-| `npm run dev:serve`     | Force SSE flavor (errors if cargo isn't installed)                                                                                 |
-| `npm run dev:watch`     | Polling fallback — Vite hot-reloads when the JSON file is rewritten on a 5s tick (still requires cargo)                            |
-| `npm run dev:vite-only` | Vite alone, no Rust toolchain needed; dashboard reads the committed `public/dslint-report.json` and won't update on source changes |
+| `npm run dev`           | Default — prefers prebuilt `dslinter`, then `cargo`                                                                                |
+| `npm run dev:serve`     | Force SSE flavor (via [run-dslint.mjs](./scripts/run-dslint.mjs))                                                                 |
+| `npm run dev:watch`     | Polling fallback — rewrites JSON on a 5s tick                                                                                        |
+| `npm run dev:vite-only` | Vite alone; static committed report                                                                                                  |
+| `npm run dslint:print-cmd` | Print the resolved scanner command (debug CI/dev)                                                                               |
 
 **pnpm:** Prefer **`pnpm install` from the repo root** (predictable, one lockfile). Running `pnpm install` from `demo/` still picks up the parent `pnpm-workspace.yaml` and scopes all workspace packages, but pnpm may **prompt** to wipe and reinstall `node_modules` (non-interactive shells can appear to hang — use root installs or `CI=true pnpm install` in CI).
 
@@ -79,7 +80,7 @@ Governance and the component sidebar read `public/dslint-report.json`. `npm run 
 npm run dslint:report
 ```
 
-(requires Rust toolchain at repo root — runs `cargo run --release -- demo -p --json`, then `merge-playgrounds` so `playgrounds` is always present.)
+(uses [run-dslint.mjs](./scripts/run-dslint.mjs) — prebuilt `dslinter` or `cargo run` for contributors — then `merge-playgrounds` so `playgrounds` is always present.)
 
 If you only have an older JSON file without `playgrounds`, run:
 
@@ -91,13 +92,15 @@ Then open **Governance** in the browser (or use `#!/governance`). You’ll see g
 
 ## Run `dslint` against this demo
 
-From the repository root (Rust crate):
+From the repository root:
 
 ```bash
-cargo run --release -- demo --json > demo-report.json
+npx dslinter demo --json > demo-report.json
 # or parallel:
-cargo run --release -- -p demo
+npx dslinter -p demo
 ```
+
+Contributors without npm can use `cargo run --release --bin dslinter -- demo --json`.
 
 Configuration for this tree lives in `demo/.dslint.json` (deprecated component names, token substring hints for adoption scoring, **`playground_groups`** for the dashboard sidebar).
 
@@ -107,7 +110,7 @@ Configuration for this tree lives in `demo/.dslint.json` (deprecated component n
 - **deprecated-component** — `LegacyButton`, `DeprecatedChip` referenced while listed as deprecated.
 - **token-hardcoded-color** — hex values in `FlashBanner`, `InlinePaint`, `LegacyButton`, etc.
 - **a11y-img-alt**, **a11y-anchor-href**, **a11y-anchor-placeholder-href**, **a11y-button-name**, **a11y-input-label** — JSX via AST; Vue `<template>` scanned for img / anchor / input (e.g. `MysteryImage`, `<a>` without `href` inside `FlashBanner`).
-- **`smell-*` (code quality / maintainability signals)** — `console.log` / etc. (`smell-console`), `console.error` (`smell-console-error`), debugger, lint/ts suppressions, TODO markers, huge files, inline JSX `style={{}}`, empty `catch`, redundant fragments.
+- **`code-*` (code quality / maintainability signals)** — `console.log` / etc. (`code-console`), `console.error` (`code-console-error`), debugger, lint/ts suppressions, TODO markers, huge files, inline JSX `style={{}}`, empty `catch`, redundant fragments.
 - **variant-explosion** — `KitchenSinkModal`’s `PlaygroundPreview` passes many props for the demo.
 - **usage rollup** — imports such as `PrimaryButton`, `ContentCard`, `KitchenSinkModal` appear in JSON output.
 

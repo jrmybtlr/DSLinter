@@ -1,17 +1,23 @@
 # DSLint
 
-A Rust CLI that scans a repo for **JSX, TSX, and Vue** components, counts **how often each is used** (Storybook-style visibility without story files), and reports **design-system health** signals you can use in the terminal, CI, or a dashboard.
+A design-system linter that scans repos for **JSX, TSX, and Vue** components, counts **how often each is used** (Storybook-style visibility without story files), and reports **design-system health** signals for the terminal, CI, or a dashboard.
+
+**Powered by [Oxc](https://oxc.rs)** for fast JavaScript, TypeScript, and JSX parsing. Vue support uses Oxc on `<script>` blocks plus template heuristics (not the Vue compiler).
+
+Prebuilt native binaries ship with the **`dslinter`** npm package — you do not need Rust or Cargo unless you are contributing to the scanner itself.
 
 ## Quick start
 
 ```bash
-cargo build --release
-./target/release/dslinter /path/to/repo               # summary for humans
-./target/release/dslinter /path/to/repo --json       # JSON for tools / CI
-./target/release/dslinter -p /path/to/repo           # parallel scan (large trees)
-./target/release/dslinter /path/to/repo --fail-on-warnings
-./target/release/dslinter /path/to/repo --max-warnings 10
+npm install -D dslinter
+npx dslinter /path/to/repo
+npx dslinter /path/to/repo --json
+npx dslinter -p /path/to/repo
+npx dslinter /path/to/repo --fail-on-warnings
+npx dslinter demo --serve 4141 -o demo/public/dslint-report.json
 ```
+
+The CLI binary is named **`dslinter`** (not `dslint`) to avoid collision with an unrelated [crates.io `dslint`](https://crates.io/crates/dslint) package.
 
 ## What gets scanned
 
@@ -32,14 +38,14 @@ Put `.dslint.json` or `dslint.json` at the repository root:
   },
   "exclude_globs": ["fixtures/**", "*.generated.tsx"],
   "smell": {
-    "disabled_rules": ["smell-todo-marker"],
+    "disabled_rules": ["code-todo-marker"],
     "report_console_error": true
   },
   "check_dark_mode_contrast": false
 }
 ```
 
-`check_dark_mode_contrast` is **heuristic**: it looks at static `class` / `className` strings and quoted literals inside `cn(...)`, `clsx(...)`, and `classnames(...)`.
+`smell.disabled_rules` accepts `code-*` rule ids (and legacy `smell-*` aliases). `check_dark_mode_contrast` is **heuristic**: it inspects static `class` / `className` strings and string arguments to `cn(...)`, `clsx(...)`, and `classnames(...)` extracted from the AST where possible.
 
 ## Demo app
 
@@ -51,23 +57,44 @@ cd demo && npm install && npm run dev
 
 The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on npm). Component previews are driven by **`playgrounds`** in `dslint-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
 
-`npm run dev` picks a mode based on whether **`cargo`** is on your `PATH`:
+`npm run dev` picks a mode based on whether a **dslinter** scanner is available (vendor binary from `npm install`, `DSLINT_BIN`, or `dslinter` on PATH):
 
 | Situation | Behavior |
 |-----------|----------|
-| Rust available | Vite and `dslinter --serve` run together; the dashboard updates over **SSE** when `.tsx` files under `demo/src/` change. First run builds the binary with `cargo run --release --bin dslinter` (~30s). |
-| Rust missing | Vite only, with a warning. The app uses the committed `demo/public/dslint-report.json` and does not auto-refresh. Install Rust from [rustup.rs](https://rustup.rs) for live scanning. |
+| Scanner available | Vite and `dslinter --serve` run together; the dashboard updates over **SSE** when source files change. |
+| Scanner missing | Vite only, with a warning. The app uses the committed `demo/public/dslint-report.json` and does not auto-refresh. Run `npm install` (postinstall downloads the binary) or set `DSLINT_BIN`. |
 
 Explicit scripts: `npm run dev:serve` (SSE), `npm run dev:watch` (5s polling), `npm run dev:vite-only`.
+
+For a one-off report without the dev server:
+
+```bash
+cd demo && npm run dslint:report
+```
 
 ## What the CLI covers today
 
 - **Definitions:** functions, classes, `const` arrows, `forwardRef` / `memo`, exports
 - **Usage:** PascalCase JSX and Vue template usage, with prop lists (variant hints)
-- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` and `<input>` accessible names (JSX AST + Vue `<template>`); governance scoring weights all `a11y-*` rules
-- **Smells (`smell-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
+- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` and `<input>` accessible names (JSX AST + Vue `<template>` heuristics); governance scoring weights all `a11y-*` rules
+- **Code quality (`code-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
 - **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`)
 - **Ownership:** rollups in `--json` and the dashboard when `ownership` is set
 - **Scores:** heuristic governance scores (the token pillar is omitted until `known_tokens` is set); `--json` for dashboards and CI
 
 Roadmap follows phased governance (tokens, deeper a11y, drift, AI compliance) described elsewhere in the project docs.
+
+## Contributing (Rust scanner)
+
+From the repository root:
+
+```bash
+cargo build --release
+cargo test
+./target/release/dslinter demo --json
+cargo run --release --bin dslinter -- demo -p --json
+```
+
+Release binaries for npm are built by [`.github/workflows/release-dslint-binaries.yml`](.github/workflows/release-dslint-binaries.yml). Maintainers publish with `pnpm run release:patch` (see [`packages/dashboard/README.md`](packages/dashboard/README.md)).
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for distribution notes and development workflow.

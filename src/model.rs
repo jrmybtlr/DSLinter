@@ -59,6 +59,35 @@ pub enum Severity {
     Info,
 }
 
+/// Source of a extracted Tailwind/class string.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClassStringKind {
+    JsxAttr,
+    ClassHelper,
+    VueTemplate,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ClassStringFragment {
+    pub line: u32,
+    pub text: String,
+    pub kind: ClassStringKind,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StringLiteralFragment {
+    pub line: u32,
+    pub value: String,
+}
+
+/// AST-derived fragments for token/class rules (not emitted in JSON reports).
+#[derive(Debug, Clone, Default)]
+pub struct AstExtracts {
+    pub class_strings: Vec<ClassStringFragment>,
+    pub string_literals: Vec<StringLiteralFragment>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct FileScan {
     pub path: PathBuf,
@@ -68,6 +97,9 @@ pub struct FileScan {
     /// Rule violations detected in this file (e.g. accessibility).
     #[serde(default)]
     pub findings: Vec<LintFinding>,
+    /// Class strings and literals from Oxc (and Vue template heuristics); workspace rules only.
+    #[serde(skip)]
+    pub ast_extracts: AstExtracts,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
