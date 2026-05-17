@@ -13,6 +13,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const repo = process.env.GITHUB_REPOSITORY ?? "jrmybtlr/DSLinter";
 
 const bump = process.argv.find((a) => ["--patch", "--minor", "--major"].includes(a));
 if (!bump) {
@@ -46,17 +47,33 @@ process.stdout.write(
 run("git", ["push", "origin", "HEAD"]);
 run("git", ["push", "origin", tag]);
 
+const actionsUrl = `https://github.com/${repo}/actions/workflows/release-napi-bindings.yml`;
+
 process.stdout.write(
-  "\nWaiting for GitHub Actions to publish @dslinter/binding-* and dslinter to npm…\n",
+  `\nWaiting for GitHub Actions to publish @dslinter/binding-* and dslinter to npm…\n` +
+    `  Workflow: ${actionsUrl}\n`,
 );
+
+const ghAuth = spawnSync("gh", ["auth", "status"], { encoding: "utf8" });
+if (ghAuth.status !== 0) {
+  process.stderr.write(
+    "\ngh CLI is not authenticated — cannot watch the workflow from here.\n" +
+      "  Run: gh auth login\n" +
+      `  Or open: ${actionsUrl}\n` +
+      "\nTag and commit were pushed successfully; CI should still run.\n",
+  );
+  process.exit(0);
+}
+
 const watch = spawnSync(
   "gh",
-  ["run", "watch", "--repo", "jrmybtlr/DSLinter", "--exit-status"],
+  ["run", "watch", "--repo", repo, "--exit-status", "-w", "Release NAPI bindings"],
   { stdio: "inherit" },
 );
 if (watch.status !== 0) {
   process.stderr.write(
-    "\nWorkflow did not complete successfully. Check Actions, or publish manually after CI finishes.\n",
+    "\nWorkflow did not complete successfully. Check Actions, or re-run the workflow after fixing CI.\n" +
+      `  ${actionsUrl}\n`,
   );
   process.exit(watch.status ?? 1);
 }

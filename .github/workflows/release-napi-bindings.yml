@@ -65,7 +65,7 @@ jobs:
         with:
           cache-targets: "true"
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --no-optional
 
       - name: Build native binding
         shell: bash
@@ -107,7 +107,7 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --no-optional
 
       - name: Generate index.cjs loader
         run: pnpm run build:napi
@@ -136,6 +136,13 @@ jobs:
           done
           ls -la packages/dashboard/*.node
           pnpm exec napi artifacts \
+            --cwd . \
+            --package-json-path packages/dashboard/package.json \
+            --npm-dir npm
+
+      - name: Sync optionalDependencies for dslinter
+        run: |
+          pnpm exec napi prepublish \
             --cwd . \
             --package-json-path packages/dashboard/package.json \
             --npm-dir npm

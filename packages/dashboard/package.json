@@ -52,13 +52,6 @@
       "napi"
     ]
   },
-  "optionalDependencies": {
-    "@dslinter/binding-darwin-arm64": "0.0.19",
-    "@dslinter/binding-darwin-x64": "0.0.19",
-    "@dslinter/binding-linux-arm64-gnu": "0.0.19",
-    "@dslinter/binding-linux-x64-gnu": "0.0.19",
-    "@dslinter/binding-win32-x64-msvc": "0.0.19"
-  },
   "publishConfig": {
     "access": "public"
   },
