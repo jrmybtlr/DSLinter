@@ -30,7 +30,8 @@ jobs:
         include:
           - host: macos-latest
             target: aarch64-apple-darwin
-          - host: macos-13
+          # Build x86_64 on Apple Silicon runners (macos-13 is deprecated/unavailable).
+          - host: macos-latest
             target: x86_64-apple-darwin
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
