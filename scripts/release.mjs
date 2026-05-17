@@ -65,9 +65,46 @@ if (ghAuth.status !== 0) {
   process.exit(0);
 }
 
+function ghJson(args) {
+  const r = spawnSync("gh", args, { encoding: "utf8" });
+  if (r.status !== 0) {
+    process.stderr.write(r.stderr || "gh command failed\n");
+    process.exit(r.status ?? 1);
+  }
+  return JSON.parse(r.stdout);
+}
+
+function waitForWorkflowRunId() {
+  const deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    const runs = ghJson([
+      "run",
+      "list",
+      "--repo",
+      repo,
+      "-w",
+      "release-napi-bindings.yml",
+      "--branch",
+      tag,
+      "--limit",
+      "5",
+      "--json",
+      "databaseId,status,headBranch",
+    ]);
+    const run = runs.find((r) => r.headBranch === tag);
+    if (run) return run.databaseId;
+    spawnSync("sleep", ["3"], { stdio: "ignore" });
+  }
+  process.stderr.write(
+    `\nTimed out waiting for workflow run for ${tag}.\n` + `  ${actionsUrl}\n`,
+  );
+  process.exit(1);
+}
+
+const runId = waitForWorkflowRunId();
 const watch = spawnSync(
   "gh",
-  ["run", "watch", "--repo", repo, "--exit-status", "-w", "Release NAPI bindings"],
+  ["run", "watch", String(runId), "--repo", repo, "--exit-status"],
   { stdio: "inherit" },
 );
 if (watch.status !== 0) {

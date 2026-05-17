@@ -65,7 +65,7 @@ jobs:
         with:
           cache-targets: "true"
 
-      - run: pnpm install --frozen-lockfile --no-optional
+      - run: pnpm install --frozen-lockfile --no-optional --ignore-scripts
 
       - name: Build native binding
         shell: bash
@@ -107,7 +107,10 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      - run: pnpm install --frozen-lockfile --no-optional
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run package tests before publish
+        run: pnpm --filter dslinter test
 
       - name: Generate index.cjs loader
         run: pnpm run build:napi
@@ -156,4 +159,4 @@ jobs:
             [ -d "$dir" ] || continue
             (cd "$dir" && npm publish --access public)
           done
-          pnpm --filter dslinter publish --access public --no-git-checks
+          pnpm --filter dslinter publish --access public --no-git-checks --ignore-scripts
