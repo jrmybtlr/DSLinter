@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.25
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.24...v0.0.25)
+
+### 🩹 Fixes
+
+- **ci:** Single macos job + mold on publish ([b2a193d](https://github.com/jrmybtlr/DSLinter/commit/b2a193d))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.24
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.23...v0.0.24)
