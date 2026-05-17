@@ -1,6 +1,6 @@
 {
   "name": "dslinter",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "DSLinter dashboard UI: playground shell, token wall, and governance panels (consumes dslint-report.json).",
   "license": "Apache-2.0",
   "type": "module",
@@ -25,15 +25,39 @@
     "shadcn"
   ],
   "engines": {
-    "node": ">=22"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "bin": {
     "dslinter": "bin/dslinter.mjs"
   },
   "scripts": {
+    "build:napi": "napi build --platform --release --cwd ../.. --output-dir packages/dashboard --package-json-path packages/dashboard/package.json --js-package-name @dslinter/binding --js index.cjs --no-default-features --features napi",
+    "artifacts": "napi artifacts --cwd ../.. --package-json-path packages/dashboard/package.json --js-package-name @dslinter/binding",
     "test": "vitest run",
-    "prepublishOnly": "vitest run",
-    "postinstall": "node ./scripts/ensure-dslint.mjs"
+    "prepublishOnly": "vitest run"
+  },
+  "napi": {
+    "binaryName": "dslinter",
+    "packageName": "@dslinter/binding",
+    "targets": [
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc"
+    ],
+    "flags": [
+      "--no-default-features",
+      "--features",
+      "napi"
+    ]
+  },
+  "optionalDependencies": {
+    "@dslinter/binding-darwin-arm64": "0.0.19",
+    "@dslinter/binding-darwin-x64": "0.0.19",
+    "@dslinter/binding-linux-arm64-gnu": "0.0.19",
+    "@dslinter/binding-linux-x64-gnu": "0.0.19",
+    "@dslinter/binding-win32-x64-msvc": "0.0.19"
   },
   "publishConfig": {
     "access": "public"
@@ -51,7 +75,9 @@
   "types": "./src/index.ts",
   "files": [
     "bin",
-    "scripts",
+    "index.cjs",
+    "index.d.ts",
+    "*.node",
     "src",
     "components.json",
     "README.md",
