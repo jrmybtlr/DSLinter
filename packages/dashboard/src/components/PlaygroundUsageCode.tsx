@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import "@shikijs/twoslash/style-rich.css";
 import { renderPlaygroundUsageHtml } from "./playgroundUsageHighlight";
 
 const shellClass =
