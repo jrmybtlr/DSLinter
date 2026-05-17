@@ -54,7 +54,18 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install mold linker (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y mold clang
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: "true"
+
       - name: Build dslinter
+        env:
+          CARGO_INCREMENTAL: 0
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
         run: cargo build --release --bin dslinter
 
       - name: Package binary
