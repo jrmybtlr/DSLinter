@@ -18,43 +18,33 @@ Do **not** publish or document `cargo install dslint` — that name on crates.io
 
 The dashboard + CLI wrapper is [`packages/dashboard`](packages/dashboard/). Published as **`dslinter`** on npm.
 
-### Current distribution: postinstall download
+### Distribution: NAPI bindings (oxlint-style)
 
-On `npm install dslinter`, [`packages/dashboard/scripts/ensure-dslint.mjs`](packages/dashboard/scripts/ensure-dslint.mjs) downloads a platform binary from GitHub Releases (`v` + package version) into `node_modules/dslinter/vendor/`.
+`npm install dslinter` installs the matching **`@dslinter/binding-*`** optional dependency for your platform (linux/mac/windows, x64/arm64). The `dslinter` CLI loads a **napi-rs** native addon and runs the Rust CLI in-process (`runCli`).
 
-Supported release triples (see [`resolve-dslint-binary.mjs`](packages/dashboard/scripts/resolve-dslint-binary.mjs)):
+Platform packages (published from CI):
 
-- `dslinter-x86_64-unknown-linux-gnu`
-- `dslinter-aarch64-unknown-linux-gnu`
-- `dslinter-x86_64-apple-darwin`
-- `dslinter-aarch64-apple-darwin`
-- `dslinter-x86_64-pc-windows-msvc.exe`
+- `@dslinter/binding-darwin-arm64`
+- `@dslinter/binding-darwin-x64`
+- `@dslinter/binding-linux-arm64-gnu`
+- `@dslinter/binding-linux-x64-gnu`
+- `@dslinter/binding-win32-x64-msvc`
 
-CI builds these in [`.github/workflows/release-dslint-binaries.yml`](.github/workflows/release-dslint-binaries.yml).
-
-Emergency single-platform upload:
+Local development (current platform only):
 
 ```bash
-node scripts/upload-release-binary.mjs v0.0.16
+pnpm run build:napi
+node packages/dashboard/bin/dslinter.mjs --version
 ```
 
-### Future distribution: optionalDependencies platform packages
-
-We may later adopt an **oxlint-style** model: separate npm packages per OS/arch (`@dslinter/darwin-arm64`, etc.) wired through `optionalDependencies`, with small native addons loaded by Node.
-
-| Approach | Pros | Cons |
-|----------|------|------|
-| Postinstall download (today) | One npm package; simple release tagging | Needs GitHub Releases API; private repos need `GITHUB_TOKEN` |
-| optionalDependencies (future) | Works offline from npm registry mirrors; no release API at install | Many packages per release; more publish automation |
-
-No decision to migrate yet — evaluate when enterprise/offline installs become a top request.
+Override with a cargo-built binary: `DSLINT_BIN=/path/to/target/release/dslinter`.
 
 ## Release workflow
 
-From repo root (maintainers):
+From repo root (maintainers). Requires `NPM_TOKEN` in GitHub Actions secrets.
 
 ```bash
-pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → wait for CI → npm publish
+pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → CI publishes npm
 ```
 
-npm `dslinter@X.Y.Z` must match GitHub tag `vX.Y.Z` with attached `dslinter-*` assets.
+CI workflow: [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml) builds all platform bindings and publishes `@dslinter/binding-*` plus `dslinter`.

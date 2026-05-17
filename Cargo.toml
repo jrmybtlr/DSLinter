@@ -12,8 +12,22 @@ autobins = false
 [[bin]]
 name = "dslinter"
 path = "src/main.rs"
+required-features = ["cli-bin"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["cli-bin"]
+cli-bin = []
+napi = ["dep:napi", "dep:napi-derive"]
+
+[build-dependencies]
+napi-build = "2.3"
 
 [dependencies]
+napi = { version = "3", default-features = false, features = ["napi8"], optional = true }
+napi-derive = { version = "3", optional = true }
 anyhow = "1.0.102"
 clap = { version = "=4.5.23", features = ["derive"] }
 globset = "=0.4.14"

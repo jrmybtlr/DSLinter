@@ -14,6 +14,12 @@ pub mod rules;
 pub mod scan;
 mod ts_shape_map;
 pub mod vue;
+pub mod watch;
+
+pub mod cli;
+
+#[cfg(feature = "napi")]
+mod napi;
 
 use std::path::Path;
 

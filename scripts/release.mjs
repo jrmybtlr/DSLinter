@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 /**
- * Release flow: test → changelogen bump → push commit + single tag → wait for CI → npm publish.
+ * Release flow: test → changelogen bump → push commit + tag → wait for NAPI publish CI → done.
+ *
+ * npm packages are published by `.github/workflows/release-napi-bindings.yml` (not locally).
+ * Requires NPM_TOKEN secret on the repo for the publish job.
  *
  * Usage: node scripts/release.mjs --patch|--minor|--major
  */
@@ -38,18 +41,24 @@ const version = readPackageVersion();
 const tag = `v${version}`;
 
 process.stdout.write(
-  `\nPushing commit and tag ${tag} (triggers Release dslinter binaries workflow)…\n`,
+  `\nPushing commit and tag ${tag} (triggers Release NAPI bindings workflow)…\n`,
 );
 run("git", ["push", "origin", "HEAD"]);
 run("git", ["push", "origin", tag]);
 
 process.stdout.write(
-  "\nWaiting for GitHub Actions to attach platform binaries to the release…\n" +
-    "  (Cancel any stuck queued runs in Actions first if this times out.)\n",
+  "\nWaiting for GitHub Actions to publish @dslinter/binding-* and dslinter to npm…\n",
 );
-run("node", ["scripts/wait-for-release-assets.mjs", version]);
+const watch = spawnSync(
+  "gh",
+  ["run", "watch", "--repo", "jrmybtlr/DSLinter", "--exit-status"],
+  { stdio: "inherit" },
+);
+if (watch.status !== 0) {
+  process.stderr.write(
+    "\nWorkflow did not complete successfully. Check Actions, or publish manually after CI finishes.\n",
+  );
+  process.exit(watch.status ?? 1);
+}
 
-process.stdout.write("\nPublishing dslinter to npm…\n");
-run("pnpm", ["--filter", "dslinter", "publish"]);
-
-process.stdout.write("\nDone.\n");
+process.stdout.write("\nDone. Verify dslinter@" + version + " on npm.\n");

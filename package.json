@@ -10,12 +10,14 @@
     "fmt:check": "oxfmt --check demo packages/dashboard",
     "lint": "oxlint --ignore-pattern \"**/dist/**\" demo packages/dashboard",
     "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" demo packages/dashboard",
-    "test": "cargo test && pnpm run lint && pnpm --filter dslinter test && pnpm --filter dslint-demo run build",
+    "build:napi": "pnpm --filter dslinter run build:napi",
+    "test": "cargo test && pnpm run lint && pnpm --filter dslinter test && node packages/dashboard/bin/dslinter.mjs --version && pnpm --filter dslint-demo run build",
     "release:major": "node scripts/release.mjs --major",
     "release:minor": "node scripts/release.mjs --minor",
     "release:patch": "node scripts/release.mjs --patch"
   },
   "devDependencies": {
+    "@napi-rs/cli": "^3.6.0",
     "changelogen": "^0.6.2",
     "oxfmt": "^0.50.0",
     "oxlint": "^1.65.0"

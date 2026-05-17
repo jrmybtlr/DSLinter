@@ -54,16 +54,16 @@ pub fn run_watch(
     serve_port: Option<u16>,
 ) -> anyhow::Result<()> {
     // Initial full scan.
-    let config = dslinter::config::DslintConfig::load_from_root(root)?;
-    let paths = dslinter::scan::collect_component_files(root, &config)?;
+    let config = crate::config::DslintConfig::load_from_root(root)?;
+    let paths = crate::scan::collect_component_files(root, &config)?;
 
-    let mut files: Vec<dslinter::model::FileScan> = if parallel {
+    let mut files: Vec<crate::model::FileScan> = if parallel {
         use rayon::prelude::*;
         let mut v: Vec<_> = paths
             .par_iter()
             .map(|p| match fs::read_to_string(p) {
-                Ok(src) => dslinter::scan_file(p, &src),
-                Err(e) => dslinter::model::FileScan {
+                Ok(src) => crate::scan_file(p, &src),
+                Err(e) => crate::model::FileScan {
                     parse_errors: vec![format!(
                         "dslint: could not read `{}`: {e}",
                         p.display()
@@ -82,8 +82,8 @@ pub fn run_watch(
         let mut v: Vec<_> = paths
             .iter()
             .map(|p| match fs::read_to_string(p) {
-                Ok(src) => dslinter::scan_file(p, &src),
-                Err(e) => dslinter::model::FileScan {
+                Ok(src) => crate::scan_file(p, &src),
+                Err(e) => crate::model::FileScan {
                     parse_errors: vec![format!(
                         "dslint: could not read `{}`: {e}",
                         p.display()
@@ -100,7 +100,7 @@ pub fn run_watch(
         v
     };
 
-    let report = dslinter::rules::evaluate_workspace(root.to_path_buf(), files.clone(), &config);
+    let report = crate::rules::evaluate_workspace(root.to_path_buf(), files.clone(), &config);
     let json = serde_json::to_string_pretty(&report)?;
 
     // Ensure output directory exists.
@@ -139,7 +139,7 @@ pub fn run_watch(
         thread::sleep(Duration::from_millis(POLL_MS));
 
         // Re-collect the file list to detect new/deleted files.
-        let current_paths = match dslinter::scan::collect_component_files(root, &config) {
+        let current_paths = match crate::scan::collect_component_files(root, &config) {
             Ok(p) => p,
             Err(_) => continue,
         };
@@ -184,7 +184,7 @@ pub fn run_watch(
         for path in &changed {
             match fs::read_to_string(path) {
                 Ok(src) => {
-                    let new_scan = dslinter::scan_file(path, &src);
+                    let new_scan = crate::scan_file(path, &src);
                     if let Some(existing) = files.iter_mut().find(|f| f.path == *path) {
                         *existing = new_scan;
                     } else {
@@ -200,7 +200,7 @@ pub fn run_watch(
         files.sort_by(|a, b| a.path.cmp(&b.path));
 
         // Rebuild workspace report.
-        let new_report = dslinter::rules::evaluate_workspace(
+        let new_report = crate::rules::evaluate_workspace(
             root.to_path_buf(),
             files.clone(),
             &config,

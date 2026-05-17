@@ -19,70 +19,27 @@ This package is **source-first**: entry points resolve to TypeScript/TSX under `
 
 ## CLI (`npx dslinter`)
 
-The **`dslinter` binary** runs the **`dslint`** scanner with the same flags as the Rust CLI (`--json`, `-o`, `--serve`, etc.).
+The **`dslinter`** command runs the design-system scanner with the same flags as the Rust CLI (`--json`, `-o`, `--serve`, etc.) via a **napi-rs** native binding (same distribution model as **`oxlint`**).
 
 ### Without installing Rust
 
-On **`npm install dslinter`**, a **`postinstall`** script tries to download a **prebuilt `dslint`** for your OS/arch from this repo’s **GitHub Releases**, using the **same tag as the npm version** (for example npm `dslinter@0.0.6` → release **`v0.0.6`** and assets like `dslint-x86_64-unknown-linux-gnu`). The binary is stored under `node_modules/dslinter/vendor/` and `dslinter` / `npx dslinter` prefer it over `PATH`.
-
-**Release workflow** (from repo root):
-
-```bash
-pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → wait for CI assets → npm publish
-```
-
-CI uploads Linux x64/arm64, macOS arm64/x64, and Windows x64 binaries via [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLinter/blob/main/.github/workflows/release-dslint-binaries.yml).
-
-If Actions jobs stay **queued**, cancel old runs in GitHub Actions, then **Re-run** the release workflow (`workflow_dispatch`, tag `vX.Y.Z`).
-
-**Emergency upload** (one platform, requires `gh auth login` + Rust):
-
-```bash
-node scripts/upload-release-binary.mjs v0.0.16
-```
-
-Environment variables:
+On **`npm install dslinter`**, npm installs the platform **`@dslinter/binding-*`** optional dependency (darwin/linux/windows). No postinstall download or GitHub Releases API is required.
 
 | Variable | Purpose |
 |----------|---------|
-| `DSLINT_SKIP_DOWNLOAD=1` | Skip postinstall download (air-gapped / you only use `PATH`). |
-| `DSLINT_RELEASE_TAG` | Override release tag (default `v` + `dslinter` version from `package.json`). |
-| `DSLINT_GITHUB_REPO` | Override `owner/repo` for downloads (default from `package.json` → `jrmybtlr/DSLinter`). |
-| `DSLINT_VERBOSE=1` | Log which GitHub releases/assets were tried when downloading. |
-| `GITHUB_TOKEN` / `GH_TOKEN` | **Required for private repos** (`jrmybtlr/DSLinter`). Token needs read access to releases. |
-
-### How this differs from `oxlint`
-
-**`oxlint`** on npm ships **Node native addons** as **`optionalDependencies`** (`@oxlint/binding-darwin-arm64`, …) built with **napi-rs** — each package is a small prebuilt library loaded by Node.
-
-**`dslinter`** is a **standalone executable**. The practical pattern here is **download on install** from **GitHub Releases** (similar in spirit to tools that pull a platform binary once), instead of publishing dozens of `@dslinter/binding-*` packages. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for a future **optionalDependencies** platform-package evaluation.
+| `DSLINT_BIN` | Use a cargo-built `dslinter` binary instead of the NAPI binding. |
+| `DSLINT_ALLOW_PATH=1` | Allow `dslinter` on `PATH` when the binding is missing. |
+| `NAPI_RS_NATIVE_LIBRARY_PATH` | Point at a specific `.node` file (napi-rs escape hatch). |
 
 ### Do not `cargo install dslint`
 
-The crates.io crate **`dslint`** (v0.0.x) is a **different project** (design-file linting). It is **not** this design-system scanner. Installing it will break `npx dslinter` if it ends up on your `PATH`.
-
-Use **`cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked`** or set **`DSLINT_BIN`** to a local `target/release/dslinter` build.
-
-### If there is no matching release asset yet
-
-You’ll see a **warning** during install (install still succeeds). **`dslinter`** will try to download on first run; if no GitHub release exists yet, you get a clear error (not a silent fallback to the wrong `dslint` on crates.io):
-
-```bash
-npx dslinter /path/to/repo --json -o dslint-report.json
-```
-
-| Distribution | How users get the scanner |
-|--------------|-------------------------|
-| **npm + GitHub Releases** | Default: download when release `vX.Y.Z` includes your platform asset. |
-| **GitHub Releases** | Manual download of `dslinter-*` from the release; run directly or set `DSLINT_BIN`. |
-| **From source** | `cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked` (not `cargo install dslint`). |
+The crates.io crate **`dslint`** is a **different project**. Use **`cargo install --git https://github.com/jrmybtlr/DSLinter dslinter --locked`** or **`DSLINT_BIN`** for local Rust builds.
 
 Typical usage:
 
 ```bash
 dslinter /path/to/repo --json -o dslint-report.json
 # or --serve for live reload while developing a dashboard
-# (npm `npx dslinter` runs the same binary)
 ```
 
 ## Styles (Tailwind v4)

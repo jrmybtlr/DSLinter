@@ -1,0 +1,152 @@
+name: Release NAPI bindings
+
+# Builds @dslinter/binding-* platform packages and publishes dslinter to npm on tag v*.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  APP_NAME: dslinter
+  MACOSX_DEPLOYMENT_TARGET: "11.0"
+  CARGO_INCREMENTAL: "0"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: release-napi-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: macos-latest
+            target: aarch64-apple-darwin
+          - host: macos-13
+            target: x86_64-apple-darwin
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            build_flags: --use-napi-cross
+          - host: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            build_flags: --use-napi-cross
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.host }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install mold linker (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y mold clang
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: "true"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build native binding
+        shell: bash
+        run: |
+          pnpm exec napi build \
+            --platform \
+            --release \
+            --target "${{ matrix.target }}" \
+            --cwd . \
+            --output-dir packages/dashboard \
+            --package-json-path packages/dashboard/package.json \
+            --js-package-name @dslinter/binding \
+            --js index.cjs \
+            --no-default-features \
+            --features napi \
+            ${{ matrix.build_flags }}
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: bindings-${{ matrix.target }}
+          path: |
+            packages/dashboard/${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
+
+  publish:
+    name: Publish npm packages
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate index.cjs loader
+        run: pnpm run build:napi
+
+      - name: Create per-platform npm package directories
+        run: |
+          pnpm exec napi create-npm-dirs \
+            --cwd . \
+            --package-json-path packages/dashboard/package.json \
+            --npm-dir npm
+
+      - uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Place bindings into npm dirs
+        shell: bash
+        run: |
+          shopt -s nullglob
+          for f in artifacts/${{ env.APP_NAME }}.*.node; do
+            cp "$f" packages/dashboard/
+          done
+          for f in artifacts/*/${{ env.APP_NAME }}.*.node; do
+            cp "$f" packages/dashboard/
+          done
+          ls -la packages/dashboard/*.node
+          pnpm exec napi artifacts \
+            --cwd . \
+            --package-json-path packages/dashboard/package.json \
+            --npm-dir npm
+
+      - name: Publish platform bindings and dslinter
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm config set provenance true
+          for dir in npm/*; do
+            [ -d "$dir" ] || continue
+            (cd "$dir" && npm publish --access public)
+          done
+          pnpm --filter dslinter publish --access public --no-git-checks

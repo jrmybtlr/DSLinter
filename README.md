@@ -57,12 +57,12 @@ cd demo && npm install && npm run dev
 
 The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on npm). Component previews are driven by **`playgrounds`** in `dslint-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
 
-`npm run dev` picks a mode based on whether a **dslinter** scanner is available (vendor binary from `npm install`, `DSLINT_BIN`, or `dslinter` on PATH):
+`npm run dev` picks a mode based on whether a **dslinter** scanner is available (NAPI binding from `npm install`, `DSLINT_BIN`, or `dslinter` on PATH):
 
 | Situation | Behavior |
 |-----------|----------|
 | Scanner available | Vite and `dslinter --serve` run together; the dashboard updates over **SSE** when source files change. |
-| Scanner missing | Vite only, with a warning. The app uses the committed `demo/public/dslint-report.json` and does not auto-refresh. Run `npm install` (postinstall downloads the binary) or set `DSLINT_BIN`. |
+| Scanner missing | Vite only, with a warning. The app uses the committed `demo/public/dslint-report.json` and does not auto-refresh. Run `pnpm run build:napi` (contributors) or set `DSLINT_BIN`. |
 
 Explicit scripts: `npm run dev:serve` (SSE), `npm run dev:watch` (5s polling), `npm run dev:vite-only`.
 
@@ -95,6 +95,6 @@ cargo test
 cargo run --release --bin dslinter -- demo -p --json
 ```
 
-Release binaries for npm are built by [`.github/workflows/release-dslint-binaries.yml`](.github/workflows/release-dslint-binaries.yml). Maintainers publish with `pnpm run release:patch` (see [`packages/dashboard/README.md`](packages/dashboard/README.md)).
+NAPI bindings for npm are built and published by [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml). Maintainers publish with `pnpm run release:patch` (see [`packages/dashboard/README.md`](packages/dashboard/README.md)).
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for distribution notes and development workflow.

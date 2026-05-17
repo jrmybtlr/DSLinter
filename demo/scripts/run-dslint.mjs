@@ -1,16 +1,11 @@
 #!/usr/bin/env node
 /**
  * Run DSLint using either:
- *  - a `dslinter` binary on PATH or DSLINT_BIN (preferred)
+ *  - the `dslinter` npm CLI (NAPI binding from node_modules/dslinter)
+ *  - `DSLINT_BIN` / PATH `dslinter` (cargo-built binary)
  *  - `cargo run --bin dslinter` from this repo (Rust development)
  *
  * Does not use crates.io `dslint` (different project).
- *
- * Selection:
- *  - `DSLINT_DEV_FLAVOR=bin|cargo|auto` (default: auto)
- *
- * Extras:
- *  - `--print-cmd` prints the resolved command and exits 0 (useful for CI/dev envs).
  */
 import { spawn, spawnSync } from "node:child_process";
 import process from "node:process";
@@ -26,28 +21,38 @@ function cmdOk(cmd, args = ["--version"]) {
 
 function isOurScanner(cmd) {
   const r = spawnSync(cmd, ["--help"], { encoding: "utf8" });
-  return `${r.stdout ?? ""}`.includes(SCANNER_MARKER);
+  return `${r.stdout ?? ""}${r.stderr ?? ""}`.includes(SCANNER_MARKER);
 }
 
-function vendoredDslinter() {
+function npmDslinterBin() {
   const __filename = fileURLToPath(import.meta.url);
   const demoRoot = path.resolve(path.dirname(__filename), "..");
-  const base = path.join(demoRoot, "node_modules", "dslinter", "vendor", "dslinter");
-  if (process.platform === "win32") {
-    const win = `${base}.exe`;
-    return existsSync(win) ? win : null;
-  }
-  return existsSync(base) ? base : null;
+  const bin = path.join(demoRoot, "node_modules", "dslinter", "bin", "dslinter.mjs");
+  return existsSync(bin) ? process.execPath : null;
 }
 
 function findScannerBin() {
   const fromEnv = process.env.DSLINT_BIN?.trim();
   if (fromEnv && cmdOk(fromEnv, ["--help"]) && isOurScanner(fromEnv)) {
-    return fromEnv;
+    return { kind: "bin", cmd: fromEnv };
   }
-  const vendored = vendoredDslinter();
-  if (vendored && isOurScanner(vendored)) return vendored;
-  if (cmdOk("dslinter") && isOurScanner("dslinter")) return "dslinter";
+  if (cmdOk("dslinter") && isOurScanner("dslinter")) {
+    return { kind: "bin", cmd: "dslinter" };
+  }
+  const npmBin = npmDslinterBin();
+  if (npmBin) {
+    const script = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "..",
+      "node_modules",
+      "dslinter",
+      "bin",
+      "dslinter.mjs",
+    );
+    if (existsSync(script)) {
+      return { kind: "node", cmd: npmBin, script };
+    }
+  }
   return null;
 }
 
@@ -74,20 +79,22 @@ if (shouldPrintCmd) argv.splice(printCmdIdx, 1);
 const flavor =
   (process.env.DSLINT_DEV_FLAVOR ?? "auto").toLowerCase() ?? "auto";
 
-const scannerBin = findScannerBin();
+const scanner = findScannerBin();
 const cargoOk = cmdOk("cargo");
 const manifestPath = cargoManifestPath();
 
-/** @type {"bin" | "cargo" | null} */
+/** @type {"napi" | "bin" | "cargo" | null} */
 let resolved = null;
 
 if (flavor === "bin") {
-  resolved = scannerBin ? "bin" : null;
+  resolved = scanner ? (scanner.kind === "node" ? "napi" : "bin") : null;
 } else if (flavor === "cargo") {
   resolved = cargoOk && manifestExists(manifestPath) ? "cargo" : null;
 } else {
-  resolved = scannerBin
-    ? "bin"
+  resolved = scanner
+    ? scanner.kind === "node"
+      ? "napi"
+      : "bin"
     : cargoOk && manifestExists(manifestPath)
       ? "cargo"
       : null;
@@ -103,31 +110,35 @@ if (!resolved) {
       "        Do not use: cargo install dslint  (different crates.io project)",
       "",
       "        Options:",
-      "          - npm install (downloads prebuilt dslinter when available)",
+      "          - npm install dslinter (installs platform NAPI binding)",
       "          - DSLINT_BIN=/path/to/dslinter",
       "          - Contributors: cargo build --release --bin dslinter (repo root)",
+      "          - Contributors: pnpm run build:napi && node packages/dashboard/bin/dslinter.mjs",
       "",
     ].join("\n"),
   );
   process.exit(1);
 }
 
+/** @type {[string, string[]]} */
 const resolvedCmd =
-  resolved === "bin"
-    ? [scannerBin, argv]
-    : [
-        "cargo",
-        [
-          "run",
-          "--manifest-path",
-          manifestPath,
-          "--release",
-          "--bin",
-          "dslinter",
-          "--",
-          ...argv,
-        ],
-      ];
+  resolved === "napi"
+    ? [scanner.cmd, [scanner.script, ...argv]]
+    : resolved === "bin"
+      ? [scanner.cmd, argv]
+      : [
+          "cargo",
+          [
+            "run",
+            "--manifest-path",
+            manifestPath,
+            "--release",
+            "--bin",
+            "dslinter",
+            "--",
+            ...argv,
+          ],
+        ];
 
 if (shouldPrintCmd) {
   process.stdout.write(`${resolvedCmd[0]} ${resolvedCmd[1].join(" ")}\n`);

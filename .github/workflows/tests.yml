@@ -41,19 +41,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install mold linker (Linux)
+        run: sudo apt-get update && sudo apt-get install -y mold clang
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install workspace dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build NAPI binding (linux x64)
+        run: pnpm run build:napi
 
       - name: Run TypeScript lint
-        run: npm run lint
+        run: pnpm run lint
+
+      - name: Run dashboard tests
+        run: pnpm --filter dslinter test
+
+      - name: Smoke-test dslinter CLI via NAPI
+        run: node packages/dashboard/bin/dslinter.mjs --version
 
       - name: Build demo
-        run: npm run build
-        working-directory: demo
+        run: pnpm --filter dslint-demo run build
