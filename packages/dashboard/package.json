@@ -1,6 +1,6 @@
 {
   "name": "dslinter",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "DSLinter dashboard UI: playground shell, token wall, and governance panels (consumes dslint-report.json).",
   "license": "Apache-2.0",
   "type": "module",
@@ -70,7 +70,6 @@
     "bin",
     "index.cjs",
     "index.d.ts",
-    "*.node",
     "src",
     "components.json",
     "README.md",
