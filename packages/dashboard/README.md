@@ -28,7 +28,7 @@ On **`npm install dslinter`**, a **`postinstall`** script tries to download a **
 **Release workflow** (from repo root):
 
 ```bash
-pnpm run release:patch   # test → version bump → git push --tags → wait for CI assets → npm publish
+pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → wait for CI assets → npm publish
 ```
 
 CI uploads Linux x64/arm64, macOS arm64/x64, and Windows x64 binaries via [.github/workflows/release-dslint-binaries.yml](https://github.com/jrmybtlr/DSLinter/blob/main/.github/workflows/release-dslint-binaries.yml).

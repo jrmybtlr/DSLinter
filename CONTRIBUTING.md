@@ -54,7 +54,7 @@ No decision to migrate yet — evaluate when enterprise/offline installs become 
 From repo root (maintainers):
 
 ```bash
-pnpm run release:patch   # test → version bump → git push --tags → wait for CI → npm publish
+pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → wait for CI → npm publish
 ```
 
 npm `dslinter@X.Y.Z` must match GitHub tag `vX.Y.Z` with attached `dslinter-*` assets.
