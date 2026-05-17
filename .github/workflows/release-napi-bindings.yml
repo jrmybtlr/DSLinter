@@ -161,7 +161,8 @@ jobs:
             --cwd . \
             --package-json-path packages/dashboard/package.json \
             --npm-dir npm \
-            --no-gh-release
+            --no-gh-release \
+            --skip-optional-publish
 
       - name: Publish platform bindings and dslinter
         env:
