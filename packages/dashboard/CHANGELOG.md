@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.22
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.21...v0.0.22)
+
 ## v0.0.21
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.19...v0.0.21)
