@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.26
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.25...v0.0.26)
+
+### 🩹 Fixes
+
+- **ci:** Skip gh-release in napi prepublish ([cdcda0e](https://github.com/jrmybtlr/DSLinter/commit/cdcda0e))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.25
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.24...v0.0.25)
