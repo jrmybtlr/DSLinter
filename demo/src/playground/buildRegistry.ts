@@ -12,7 +12,8 @@ import type {
 
 import { playgroundStaticDefaults } from "./playgroundDefaults";
 
-const modules = import.meta.glob("@/components/**/*.tsx", {
+/** Relative to this file — not `@/` (Vite aliases `@` to the dashboard package for shadcn). */
+const modules = import.meta.glob("../components/**/*.tsx", {
   eager: true,
 }) as Record<string, Record<string, unknown>>;
 

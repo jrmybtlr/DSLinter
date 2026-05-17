@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
-      /** Matches dashboard `components.json` / shadcn `@/*` imports and `import.meta.glob("@/…")`. */
+      /** Matches dashboard `components.json` / shadcn `@/*` imports from linked package source. */
       "@": dashboardSrc,
       react: reactRoot,
       "react-dom": reactDomRoot,

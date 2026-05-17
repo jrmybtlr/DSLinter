@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type MouseEvent,
+  type PointerEvent,
   type ReactNode,
 } from "react";
 import { detectBreakpoint, detectContainerBreakpoint } from "usemods";
@@ -203,7 +204,7 @@ export function ComponentPlaygroundPane({
   }, [syncUsemodsBreakpoints]);
 
   const attachSymmetricWidthDrag = useCallback((side: "left" | "right") => {
-    return (e: React.PointerEvent<HTMLButtonElement>) => {
+    return (e: PointerEvent<HTMLButtonElement>) => {
       if (e.button !== 0) return;
       e.preventDefault();
       const target = e.currentTarget;

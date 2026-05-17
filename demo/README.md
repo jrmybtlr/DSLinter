@@ -18,7 +18,7 @@ The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in
 
 The demo app wires **data** as follows:
 
-- **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("@/components/**/*.tsx")` to resolve live previews (no `definePlayground` in each component file).
+- **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.tsx")` to resolve live previews (no `definePlayground` in each component file).
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
 - **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `dslinter/theme.css`).
 - **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslinterReport` into `DashboardLayout`.

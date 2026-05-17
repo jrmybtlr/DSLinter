@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export function Section({
   id,
   children,
@@ -6,10 +8,10 @@ export function Section({
   actions,
 }: {
   id: string;
-  children: React.ReactNode;
+  children: ReactNode;
   title: string;
   description: string;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <section id={id} className="scroll-mt-20">
