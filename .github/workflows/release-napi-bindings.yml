@@ -160,7 +160,8 @@ jobs:
           pnpm exec napi prepublish \
             --cwd . \
             --package-json-path packages/dashboard/package.json \
-            --npm-dir npm
+            --npm-dir npm \
+            --no-gh-release
 
       - name: Publish platform bindings and dslinter
         env:
