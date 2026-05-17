@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.24
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.23...v0.0.24)
+
+### 🩹 Fixes
+
+- **ci:** Skip lifecycle scripts and install mold for Rust job ([e85d8d9](https://github.com/jrmybtlr/DSLinter/commit/e85d8d9))
+- **ci:** Build x86_64-apple-darwin on macos-latest ([bcc1af8](https://github.com/jrmybtlr/DSLinter/commit/bcc1af8))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.23
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.22...v0.0.23)
