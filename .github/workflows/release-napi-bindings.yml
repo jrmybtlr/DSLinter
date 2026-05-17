@@ -28,11 +28,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # One macOS runner, both darwin targets (macos-13 retired; avoids 2x queue).
           - host: macos-latest
-            target: aarch64-apple-darwin
-          # Build x86_64 on Apple Silicon runners (macos-13 is deprecated/unavailable).
-          - host: macos-latest
-            target: x86_64-apple-darwin
+            target: darwin
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             build_flags: --use-napi-cross
@@ -56,7 +54,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.target == 'darwin' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target }}
 
       - name: Install mold linker (Linux)
         if: runner.os == 'Linux'
@@ -71,18 +69,26 @@ jobs:
       - name: Build native binding
         shell: bash
         run: |
-          pnpm exec napi build \
-            --platform \
-            --release \
-            --target "${{ matrix.target }}" \
-            --cwd . \
-            --output-dir packages/dashboard \
-            --package-json-path packages/dashboard/package.json \
-            --js-package-name @dslinter/binding \
-            --js index.cjs \
-            --no-default-features \
-            --features napi \
-            ${{ matrix.build_flags }}
+          build_one() {
+            pnpm exec napi build \
+              --platform \
+              --release \
+              --target "$1" \
+              --cwd . \
+              --output-dir packages/dashboard \
+              --package-json-path packages/dashboard/package.json \
+              --js-package-name @dslinter/binding \
+              --js index.cjs \
+              --no-default-features \
+              --features napi \
+              "${@:2}"
+          }
+          if [ "${{ matrix.target }}" = "darwin" ]; then
+            build_one aarch64-apple-darwin
+            build_one x86_64-apple-darwin
+          else
+            build_one "${{ matrix.target }}" ${{ matrix.build_flags }}
+          fi
 
       - uses: actions/upload-artifact@v5
         with:
@@ -109,6 +115,11 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install mold linker (Linux)
+        run: sudo apt-get update && sudo apt-get install -y mold clang
 
       - name: Run package tests before publish
         run: pnpm --filter dslinter test
