@@ -28,6 +28,46 @@ function run(cmd, args, opts = {}) {
   if (r.status !== 0) process.exit(r.status ?? 1);
 }
 
+function ghJson(args) {
+  const r = spawnSync("gh", args, { encoding: "utf8" });
+  if (r.status !== 0) {
+    process.stderr.write(r.stderr ?? "");
+    process.exit(r.status ?? 1);
+  }
+  return JSON.parse(r.stdout);
+}
+
+function sleep(seconds) {
+  spawnSync("sleep", [String(seconds)]);
+}
+
+function waitForWorkflowRunId(branch, { attempts = 30, intervalSeconds = 2 } = {}) {
+  for (let i = 0; i < attempts; i += 1) {
+    const runs = ghJson([
+      "run",
+      "list",
+      "--repo",
+      repo,
+      "--workflow",
+      "release-napi-bindings.yml",
+      "--branch",
+      branch,
+      "--limit",
+      "1",
+      "--json",
+      "databaseId",
+    ]);
+    const runId = runs[0]?.databaseId;
+    if (runId) return runId;
+    sleep(intervalSeconds);
+  }
+  process.stderr.write(
+    `\nTimed out waiting for release-napi-bindings workflow run on branch ${branch}.\n` +
+      `  Check: https://github.com/${repo}/actions/workflows/release-napi-bindings.yml\n`,
+  );
+  process.exit(1);
+}
+
 function readPackageVersion() {
   const pkg = JSON.parse(
     readFileSync(join(root, "packages/dashboard/package.json"), "utf8"),
@@ -65,43 +105,9 @@ if (ghAuth.status !== 0) {
   process.exit(0);
 }
 
-function ghJson(args) {
-  const r = spawnSync("gh", args, { encoding: "utf8" });
-  if (r.status !== 0) {
-    process.stderr.write(r.stderr || "gh command failed\n");
-    process.exit(r.status ?? 1);
-  }
-  return JSON.parse(r.stdout);
-}
+const runId = waitForWorkflowRunId(tag);
+process.stdout.write(`\nWatching workflow run ${runId}…\n`);
 
-function waitForWorkflowRunId() {
-  const deadline = Date.now() + 5 * 60 * 1000;
-  while (Date.now() < deadline) {
-    const runs = ghJson([
-      "run",
-      "list",
-      "--repo",
-      repo,
-      "-w",
-      "release-napi-bindings.yml",
-      "--branch",
-      tag,
-      "--limit",
-      "5",
-      "--json",
-      "databaseId,status,headBranch",
-    ]);
-    const run = runs.find((r) => r.headBranch === tag);
-    if (run) return run.databaseId;
-    spawnSync("sleep", ["3"], { stdio: "ignore" });
-  }
-  process.stderr.write(
-    `\nTimed out waiting for workflow run for ${tag}.\n` + `  ${actionsUrl}\n`,
-  );
-  process.exit(1);
-}
-
-const runId = waitForWorkflowRunId();
 const watch = spawnSync(
   "gh",
   ["run", "watch", String(runId), "--repo", repo, "--exit-status"],
