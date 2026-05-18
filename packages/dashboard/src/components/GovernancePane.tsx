@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
 import { DashboardBody } from "../dashboard/DashboardBody";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 
@@ -8,6 +9,7 @@ type Props = {
   reportUrl?: string;
   dslinterReportHint?: string;
   dslinterReport: DslinterReportState;
+  focusName?: string;
 };
 
 export function GovernancePane({
@@ -15,8 +17,12 @@ export function GovernancePane({
   reportUrl: _reportUrl = "/dslint-report.json",
   dslinterReportHint = "npm run dslint:report",
   dslinterReport,
+  focusName,
 }: Props) {
   const { report, error, loading } = dslinterReport;
+  const componentCatalogCount = report
+    ? componentCatalogNamesFromReport(report).length
+    : 0;
 
   if (error) {
     return (
@@ -63,6 +69,10 @@ export function GovernancePane({
         </p>
         <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
           Governance
+          <span className="font-normal text-muted-foreground">
+            {" "}
+            · {componentCatalogCount} components
+          </span>
         </h1>
         <p className="text-sm text-muted-foreground">
           Scores, component catalog, token wall, and findings from the latest
@@ -70,7 +80,7 @@ export function GovernancePane({
         </p>
       </header>
       <div className="min-w-0 w-full px-6 py-8">
-        <DashboardBody report={report} />
+        <DashboardBody report={report} focusName={focusName} />
       </div>
     </div>
   );

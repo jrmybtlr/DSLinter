@@ -10,8 +10,8 @@ const HIDDEN_COMPONENTS = new Set(["App", "React.StrictMode"]);
 
 export function aggregateDefinitions(report: WorkspaceReport): Map<string, DefinitionSite[]> {
   const map = new Map<string, DefinitionSite[]>();
-  for (const file of report.files) {
-    for (const d of file.definitions) {
+  for (const file of report.files ?? []) {
+    for (const d of file.definitions ?? []) {
       if (HIDDEN_COMPONENTS.has(d.name)) continue;
       const list = map.get(d.name) ?? [];
       list.push({ kind: d.kind, path: file.path, line: d.line });
@@ -55,7 +55,7 @@ export function aggregateDeclaredProps(report: WorkspaceReport): Map<string, str
 
 export function usageMap(report: WorkspaceReport): Map<string, UsageSummary> {
   const m = new Map<string, UsageSummary>();
-  for (const row of report.usage_by_component) {
+  for (const row of report.usage_by_component ?? []) {
     if (HIDDEN_COMPONENTS.has(row.component)) continue;
     m.set(row.component, row);
   }
@@ -70,4 +70,17 @@ export function catalogComponentNames(
   for (const k of defs.keys()) names.add(k);
   for (const k of usages.keys()) names.add(k);
   return [...names].sort((a, b) => a.localeCompare(b));
+}
+
+/** Stable DOM id for a catalog table row (used for hash deep-links). */
+export function catalogRowDomId(name: string): string {
+  return `catalog-row-${encodeURIComponent(name)}`;
+}
+
+/** Unique component names for sidebar / command palette (definitions ∪ usage). */
+export function componentCatalogNamesFromReport(
+  report: WorkspaceReport | null | undefined,
+): string[] {
+  if (!report) return [];
+  return catalogComponentNames(aggregateDefinitions(report), usageMap(report));
 }

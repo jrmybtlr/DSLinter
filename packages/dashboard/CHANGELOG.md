@@ -1,5 +1,45 @@
 # Changelog
 
+## v0.0.33
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.32...v0.0.33)
+
+### 🏡 Chore
+
+- **release:** V0.0.32 ([bb07996](https://github.com/jrmybtlr/DSLinter/commit/bb07996))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
+## v0.0.32
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.31...v0.0.32)
+
+## v0.0.31
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.30...v0.0.31)
+
+## v0.0.30
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.29...v0.0.30)
+
+## v0.0.29
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.28...v0.0.29)
+
+### 💅 Refactors
+
+- Enhance dashboard directory resolution and improve dev mode output ([5670315](https://github.com/jrmybtlr/DSLinter/commit/5670315))
+
+### 🏡 Chore
+
+- Update GitHub Actions and package.json ([b9541b2](https://github.com/jrmybtlr/DSLinter/commit/b9541b2))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.28
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.27...v0.0.28)
