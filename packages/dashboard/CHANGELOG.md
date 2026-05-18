@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.28
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.27...v0.0.28)
+
+### 🏡 Chore
+
+- Update dashboard build process and CLI commands ([43c71d6](https://github.com/jrmybtlr/DSLinter/commit/43c71d6))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.27
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.26...v0.0.27)
