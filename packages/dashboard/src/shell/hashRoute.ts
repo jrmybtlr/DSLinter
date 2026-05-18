@@ -1,6 +1,6 @@
 export type HashRoute =
   | { view: "tokens" }
-  | { view: "governance" }
+  | { view: "governance"; catalog?: string }
   | { view: "component"; componentId: string };
 
 const PREFIX = "#!/";
@@ -26,6 +26,12 @@ export function parseHashRoute(hash: string): HashRoute {
   if (raw === "governance") {
     return { view: "governance" };
   }
+  if (raw.startsWith("governance/")) {
+    const catalog = decodeURIComponent(raw.slice("governance/".length));
+    if (catalog.length > 0) {
+      return { view: "governance", catalog };
+    }
+  }
   if (raw.startsWith("component/")) {
     const componentId = decodeURIComponent(raw.slice("component/".length));
     if (componentId.length > 0) {
@@ -40,7 +46,9 @@ export function formatHashRoute(route: HashRoute): string {
     case "tokens":
       return `${PREFIX}tokens`;
     case "governance":
-      return `${PREFIX}governance`;
+      return route.catalog
+        ? `${PREFIX}governance/${encodeURIComponent(route.catalog)}`
+        : `${PREFIX}governance`;
     case "component":
       return `${PREFIX}component/${encodeURIComponent(route.componentId)}`;
     default:

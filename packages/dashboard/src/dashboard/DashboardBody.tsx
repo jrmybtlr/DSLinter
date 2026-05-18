@@ -12,7 +12,13 @@ import { ComponentCatalog } from "./ComponentCatalog";
 import { FindingsList } from "./FindingsList";
 import { ScoreStrip } from "./ScoreStrip";
 
-export function DashboardBody({ report }: { report: WorkspaceReport }) {
+export function DashboardBody({
+  report,
+  focusName,
+}: {
+  report: WorkspaceReport;
+  focusName?: string;
+}) {
   return (
     <div className="space-y-10">
       <ScoreStrip scores={report.scores} />
@@ -56,7 +62,7 @@ export function DashboardBody({ report }: { report: WorkspaceReport }) {
         title="Components"
         description="Definitions and JSX usage from the latest snapshot."
       >
-        <ComponentCatalog report={report} />
+        <ComponentCatalog report={report} focusName={focusName} />
       </Section>
 
       <Section

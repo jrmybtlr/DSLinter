@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   HoverCard,
   HoverCardContent,
@@ -16,6 +16,7 @@ import {
   aggregateDeclaredProps,
   aggregateDefinitions,
   catalogComponentNames,
+  catalogRowDomId,
   usageMap,
 } from "./aggregate";
 import { shortPath } from "./paths";
@@ -146,7 +147,13 @@ function CatalogAppUsageHover({
   );
 }
 
-export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
+export function ComponentCatalog({
+  report,
+  focusName,
+}: {
+  report: WorkspaceReport;
+  focusName?: string;
+}) {
   const defs = aggregateDefinitions(report);
   const usages = usageMap(report);
   const names = catalogComponentNames(defs, usages);
@@ -155,6 +162,12 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
     () => aggregateDeclaredProps(report),
     [report],
   );
+
+  useEffect(() => {
+    if (!focusName || !names.includes(focusName)) return;
+    const el = document.getElementById(catalogRowDomId(focusName));
+    el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [focusName, names]);
 
   return (
     <Table>
@@ -174,7 +187,7 @@ export function ComponentCatalog({ report }: { report: WorkspaceReport }) {
           ).length;
 
           return (
-            <TableRow key={name}>
+            <TableRow key={name} id={catalogRowDomId(name)}>
               <TableCell>{name}</TableCell>
 
               <TableCell>

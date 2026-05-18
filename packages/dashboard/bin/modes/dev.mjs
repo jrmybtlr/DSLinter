@@ -1,11 +1,15 @@
 import { spawn, spawnSync } from "node:child_process";
+import { join } from "node:path";
 import {
   defaultReportPath,
   defaultServePort,
   findViteRoot,
+  getDashboardPackageRoot,
+  hasEmbedDashboard,
   resolveBundledDashboardDir,
   resolveViteBin,
 } from "../lib/project-root.mjs";
+import { warnIfPortBusy } from "../lib/port-check.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
 import { waitForPort } from "../lib/wait-for-port.mjs";
 
@@ -20,8 +24,16 @@ import { waitForPort } from "../lib/wait-for-port.mjs";
 export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort }) {
   const port = servePort ?? defaultServePort();
   const reportPath = defaultReportPath(scanPath, outputPath);
-  const viteRoot = findViteRoot(process.cwd());
-  const bundledDist = resolveBundledDashboardDir();
+  const consumerViteRoot = findViteRoot(process.cwd());
+  const embedRoot = getDashboardPackageRoot();
+  const embedViteBin = hasEmbedDashboard() ? resolveViteBin(embedRoot) : null;
+  /** Live embed UI from source (proxies report/SSE to the scanner port). */
+  const useEmbedViteDev =
+    embedViteBin != null &&
+    consumerViteRoot == null &&
+    process.env.DSLINTER_NO_EMBED_VITE?.trim() !== "1";
+
+  const bundledDist = useEmbedViteDev ? null : resolveBundledDashboardDir();
 
   const args = [...scannerArgs];
   const hasServe = args.some((a) => a === "--serve" || a.startsWith("--serve="));
@@ -31,8 +43,19 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
   if (!args.some((a) => a === "--output" || a.startsWith("--output="))) {
     args.push("--output", reportPath);
   }
-  if (bundledDist && !args.some((a) => a === "--dashboard-static" || a.startsWith("--dashboard-static="))) {
+
+  const hasDashboardStaticFlag = args.some(
+    (a) => a === "--dashboard-static" || a.startsWith("--dashboard-static="),
+  );
+  const attachBundledStatic =
+    bundledDist != null && !useEmbedViteDev && !hasDashboardStaticFlag;
+
+  if (attachBundledStatic) {
     args.push("--dashboard-static", bundledDist);
+  }
+
+  if (hasServe || args.some((a) => a.startsWith("--serve="))) {
+    await warnIfPortBusy(port);
   }
 
   const scanner = await spawnScanner(args);
@@ -61,61 +84,108 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
     process.exit(1);
   }
 
-  if (bundledDist) {
-    const url = `http://127.0.0.1:${port}/`;
-    const lines = [
-      "",
-      "[dslinter] Bundled dashboard at",
-      `  ${url}`,
-      `  Report: http://127.0.0.1:${port}/dslint-report.json`,
-    ];
-    if (viteRoot) {
-      lines.push(
-        "  Vite dev server also starting (use its URL for your app; proxy /dslint-report.json and /events to this port if needed).",
-      );
-    }
-    lines.push("");
-    process.stderr.write(lines.join("\n"));
-    if (!viteRoot) {
-      maybeOpenBrowser(url);
-      scanner.on("exit", (code) => process.exit(code ?? 0));
-      return;
-    }
-  }
+  const apiUrl = `http://127.0.0.1:${port}/dslint-report.json`;
 
-  if (!viteRoot) {
+  if (useEmbedViteDev) {
+    const uiPort = process.env.DSLINTER_DEV_UI_PORT?.trim() || "5175";
+    const vite = spawn(
+      process.execPath,
+      [embedViteBin, "--config", join(embedRoot, "vite.config.ts"), "--mode", "serve", "--port", uiPort],
+      {
+        cwd: embedRoot,
+        stdio: "inherit",
+        env: { ...process.env, DSLINT_SERVE_PORT: String(port) },
+      },
+    );
+    children.push(vite);
     process.stderr.write(
       [
         "",
-        "[dslinter] No vite.config.* and no bundled dashboard-dist — scanner only (watch + serve).",
-        "  Reinstall dslinter or run `pnpm --filter dslinter run build:dashboard` from the repo.",
-        "  Or add a Vite app with proxy for /dslint-report.json and /events.",
-        `  Scanner: http://127.0.0.1:${port}/dslint-report.json`,
+        "[dslinter] Dashboard UI (live source)",
+        `  http://127.0.0.1:${uiPort}/`,
+        "[dslinter] Scanner API",
+        `  ${apiUrl}`,
+        `  SSE: http://127.0.0.1:${port}/events`,
         "",
       ].join("\n"),
     );
+    vite.on("exit", (code, signal) => {
+      cleanup("SIGTERM");
+      if (signal) process.kill(process.pid, signal);
+      else process.exit(code ?? 0);
+    });
+    return;
+  }
+
+  if (consumerViteRoot) {
+    const viteBin = resolveViteBin(consumerViteRoot);
+    if (!viteBin) {
+      process.stderr.write(`dslinter: vite not installed in ${consumerViteRoot}. Run npm install.\n`);
+      cleanup("SIGTERM");
+      process.exit(1);
+    }
+
+    const bundledUrl = attachBundledStatic ? `http://127.0.0.1:${port}/` : null;
+    process.stderr.write(
+      [
+        "",
+        "[dslinter] Dashboard UI (recommended) — Vite dev server with live dslinter source:",
+        "  http://localhost:5173/  (or the port Vite prints below if 5173 is taken)",
+        bundledUrl
+          ? `[dslinter] Bundled dashboard (same build as publish) — only if port ${port} bound successfully:`
+          : `[dslinter] Scanner API only on :${port} (port may be busy — use Vite URL above):`,
+        bundledUrl ? `  ${bundledUrl}` : null,
+        `  ${apiUrl}`,
+        `  SSE: http://127.0.0.1:${port}/events`,
+        "",
+        "  Do not use `npx dslint` — that is a different npm package. Use `npm run dev` or `npx dslinter .` in demo/.",
+        "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    );
+
+    const vite = spawn(process.execPath, [viteBin, "--mode", "serve"], {
+      cwd: consumerViteRoot,
+      stdio: "inherit",
+      env: { ...process.env, DSLINT_SERVE_PORT: String(port) },
+    });
+    children.push(vite);
+
+    vite.on("exit", (code, signal) => {
+      cleanup("SIGTERM");
+      if (signal) process.kill(process.pid, signal);
+      else process.exit(code ?? 0);
+    });
+    return;
+  }
+
+  if (bundledDist) {
+    const url = `http://127.0.0.1:${port}/`;
+    process.stderr.write(
+      [
+        "",
+        "[dslinter] Bundled dashboard",
+        `  ${url}`,
+        `  Report: ${apiUrl}`,
+        "",
+      ].join("\n"),
+    );
+    maybeOpenBrowser(url);
     scanner.on("exit", (code) => process.exit(code ?? 0));
     return;
   }
 
-  const viteBin = resolveViteBin(viteRoot);
-  if (!viteBin) {
-    process.stderr.write(`dslinter: vite not installed in ${viteRoot}. Run npm install.\n`);
-    cleanup("SIGTERM");
-    process.exit(1);
-  }
-
-  const vite = spawn(process.execPath, [viteBin, "--mode", "serve"], {
-    cwd: viteRoot,
-    stdio: "inherit",
-  });
-  children.push(vite);
-
-  vite.on("exit", (code, signal) => {
-    cleanup("SIGTERM");
-    if (signal) process.kill(process.pid, signal);
-    else process.exit(code ?? 0);
-  });
+  process.stderr.write(
+    [
+      "",
+      "[dslinter] Scanner only (no dashboard UI).",
+      `  Report: ${apiUrl}`,
+      "  Run `pnpm --filter dslinter run build:dashboard` or use a Vite project with dslinter.",
+      "",
+    ].join("\n"),
+  );
+  scanner.on("exit", (code) => process.exit(code ?? 0));
 }
 
 /**

@@ -1,13 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IconMoon, IconSearch, IconSun } from "@/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-import type { PlaygroundEntry } from "../types/playground";
+import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
+import type { WorkspaceReport } from "../types/report";
 import type { HashRoute } from "../shell/hashRoute";
 import type { DashboardThemePreference } from "../shell/DashboardLayout";
 
 type Props = {
-  entries: PlaygroundEntry[];
+  report: WorkspaceReport | null;
+  playgroundIds: Set<string>;
+  reportLoading: boolean;
+  reportError: string | null;
   route: HashRoute;
   onNavigate: (next: HashRoute) => void;
   onOpenCommandPalette: () => void;
@@ -45,13 +49,20 @@ function sectionLabel(text: string) {
 }
 
 export function Sidebar({
-  entries,
+  report,
+  playgroundIds,
+  reportLoading,
+  reportError,
   route,
   onNavigate,
   onOpenCommandPalette,
   theme,
   onThemeChange,
 }: Props) {
+  const catalogNames = useMemo(
+    () => componentCatalogNamesFromReport(report),
+    [report],
+  );
   const tokensActive = route.view === "tokens";
   const governanceActive = route.view === "governance";
 
@@ -139,28 +150,44 @@ export function Sidebar({
           Design tokens
         </button>
 
-        {sectionLabel("Components")}
+        {sectionLabel(
+          catalogNames.length > 0
+            ? `Components (${catalogNames.length})`
+            : "Components",
+        )}
         <div className="space-y-0.5">
-          {entries.map((e, i) => {
+          {reportLoading && catalogNames.length === 0 ? (
+            <p className="px-2.5 py-1.5 text-sm text-sidebar-foreground/50">
+              Loading components…
+            </p>
+          ) : null}
+          {reportError && catalogNames.length === 0 ? (
+            <p className="px-2.5 py-1.5 text-sm text-sidebar-foreground/50">
+              Could not load report
+            </p>
+          ) : null}
+          {!reportLoading && !reportError && catalogNames.length === 0 ? (
+            <p className="px-2.5 py-1.5 text-sm text-sidebar-foreground/50">
+              No components in scan
+            </p>
+          ) : null}
+          {catalogNames.map((name) => {
             const active =
-              route.view === "component" && route.componentId === e.id;
-            const prev = entries[i - 1];
-            const showGroup =
-              Boolean(e.meta.group) &&
-              (!prev || prev.meta.group !== e.meta.group);
+              (route.view === "component" && route.componentId === name) ||
+              (route.view === "governance" && route.catalog === name);
             return (
-              <div key={e.id}>
-                {showGroup && e.meta.group ? sectionLabel(e.meta.group) : null}
-                <button
-                  type="button"
-                  onClick={() =>
-                    onNavigate({ view: "component", componentId: e.id })
-                  }
-                  className={navButtonClass(active)}
-                >
-                  {e.meta.title}
-                </button>
-              </div>
+              <button
+                key={name}
+                type="button"
+                onClick={() =>
+                  playgroundIds.has(name)
+                    ? onNavigate({ view: "component", componentId: name })
+                    : onNavigate({ view: "governance", catalog: name })
+                }
+                className={navButtonClass(active)}
+              >
+                {name}
+              </button>
             );
           })}
         </div>

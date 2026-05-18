@@ -17,6 +17,7 @@ import { GovernancePane } from "../components/GovernancePane";
 import { Sidebar } from "../components/Sidebar";
 import { TokensPane } from "../components/TokensPane";
 import { DashboardCommandPalette } from "../components/DashboardCommandPalette";
+import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
 import { useHashRoute } from "./useHashRoute";
 
 const STORAGE_KEY = "dslinter-dashboard-theme";
@@ -144,7 +145,27 @@ function DashboardLayoutInner({
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { theme, setTheme, resolvedTheme } = useDashboardTheme();
 
+  const catalogNames = useMemo(
+    () => componentCatalogNamesFromReport(dslinterReport.report),
+    [dslinterReport.report],
+  );
+
+  const playgroundIds = useMemo(
+    () => new Set(playgroundEntries.map((e) => e.id)),
+    [playgroundEntries],
+  );
+
+  const focusName =
+    route.view === "governance" ? route.catalog : undefined;
+
   const getEntry = (id: string) => playgroundEntries.find((e) => e.id === id);
+
+  useEffect(() => {
+    if (route.view !== "component") return;
+    if (getEntry(route.componentId)) return;
+    if (!catalogNames.includes(route.componentId)) return;
+    navigate({ view: "governance", catalog: route.componentId });
+  }, [route, catalogNames, playgroundEntries, navigate]);
 
   let main: ReactNode;
   if (route.view === "tokens") {
@@ -156,6 +177,7 @@ function DashboardLayoutInner({
         reportUrl={reportUrl}
         dslinterReportHint={dslinterReportHint}
         dslinterReport={dslinterReport}
+        focusName={focusName}
       />
     );
   } else {
@@ -201,13 +223,17 @@ function DashboardLayoutInner({
       )}
     >
       <DashboardCommandPalette
-        entries={playgroundEntries}
+        catalogNames={catalogNames}
+        playgroundIds={playgroundIds}
         onNavigate={navigate}
         open={commandPaletteOpen}
         onOpenChange={setCommandPaletteOpen}
       />
       <Sidebar
-        entries={playgroundEntries}
+        report={dslinterReport.report}
+        playgroundIds={playgroundIds}
+        reportLoading={dslinterReport.loading}
+        reportError={dslinterReport.error}
         route={route}
         onNavigate={navigate}
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}

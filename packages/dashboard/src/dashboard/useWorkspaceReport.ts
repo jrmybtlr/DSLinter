@@ -52,9 +52,16 @@ export function useWorkspaceReport(
   const etagRef = useRef<string | null>(null);
 
   // Core fetch function.
-  const fetchReport = (url: string, cancelled: { value: boolean }) => {
-    setError(null);
-    setLoading(true);
+  const fetchReport = (
+    url: string,
+    cancelled: { value: boolean },
+    options?: { showLoading?: boolean },
+  ) => {
+    const showLoading = options?.showLoading !== false;
+    if (showLoading) {
+      setError(null);
+      setLoading(true);
+    }
     loadReport(url)
       .then((r) => {
         if (!cancelled.value) setReport(r);
@@ -63,14 +70,14 @@ export function useWorkspaceReport(
         if (!cancelled.value) setError(e instanceof Error ? e.message : "Failed to load report");
       })
       .finally(() => {
-        if (!cancelled.value) setLoading(false);
+        if (!cancelled.value && showLoading) setLoading(false);
       });
   };
 
   // Initial load.
   useEffect(() => {
     const cancelled = { value: false };
-    fetchReport(reportUrl, cancelled);
+    fetchReport(reportUrl, cancelled, { showLoading: true });
     return () => {
       cancelled.value = true;
     };
@@ -86,7 +93,7 @@ export function useWorkspaceReport(
     source.onmessage = (e) => {
       if (cancelled.value) return;
       if (e.data === "updated") {
-        fetchReport(reportUrl, cancelled);
+        fetchReport(reportUrl, cancelled, { showLoading: false });
       }
     };
 
@@ -118,7 +125,7 @@ export function useWorkspaceReport(
           return;
         }
         etagRef.current = etag;
-        fetchReport(reportUrl, cancelled);
+        fetchReport(reportUrl, cancelled, { showLoading: false });
       } catch {
         // Network error during poll — ignore silently; the user will see the
         // previous state.
