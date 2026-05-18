@@ -3,7 +3,6 @@ import {
   formatDevBanner,
   LOGO,
   shortenPath,
-  stripAnsi,
   visibleLength,
 } from "./dev-banner.mjs";
 

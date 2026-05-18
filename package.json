@@ -17,7 +17,7 @@
     "release:patch": "node scripts/release.mjs --patch"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.6.0",
+    "@napi-rs/cli": "^3.6.2",
     "changelogen": "^0.6.2",
     "oxfmt": "^0.50.0",
     "oxlint": "^1.65.0"

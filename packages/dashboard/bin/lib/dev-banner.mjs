@@ -16,7 +16,8 @@ export const LOGO = [
   "█▄▀\u2003▄█\u2003█▄▄\u2003█\u2003█░▀█\u2003░█░\u2003██▄\u2003█▀▄",
 ];
 
-const ANSI_RE = /\u001b\[[0-9;]*m/g;
+const ESC = "\u001b";
+const ANSI_RE = new RegExp(`${ESC}\\[[0-9;]*m`, "g");
 
 /** @param {string} s */
 export function stripAnsi(s) {
