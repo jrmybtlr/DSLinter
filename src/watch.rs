@@ -45,6 +45,9 @@ const READ_TIMEOUT: Duration = Duration::from_secs(5);
 /// Timeout for individual write operations on each accepted connection.
 const WRITE_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// Maximum bytes read for a single static file response.
+const MAX_STATIC_FILE_BYTES: u64 = 16 * 1024 * 1024;
+
 // ── Public entry point ───────────────────────────────────────────────────────
 
 pub fn run_watch(
@@ -52,6 +55,7 @@ pub fn run_watch(
     parallel: bool,
     output: PathBuf,
     serve_port: Option<u16>,
+    dashboard_static: Option<PathBuf>,
 ) -> anyhow::Result<()> {
     // Initial full scan.
     let config = crate::config::DslintConfig::load_from_root(root)?;
@@ -119,12 +123,18 @@ pub fn run_watch(
     if let Some(port) = serve_port {
         let json_clone = Arc::clone(&json_arc);
         let version_clone = Arc::clone(&version);
+        let has_dashboard = dashboard_static.is_some();
+        let static_root = dashboard_static;
         thread::spawn(move || {
-            if let Err(e) = run_http_server(port, json_clone, version_clone) {
+            if let Err(e) = run_http_server(port, json_clone, version_clone, static_root) {
                 eprintln!("dslint: serve error: {e}");
             }
         });
-        eprintln!("dslint: serving on http://127.0.0.1:{port}");
+        if has_dashboard {
+            eprintln!("dslint: serving dashboard + API on http://127.0.0.1:{port}");
+        } else {
+            eprintln!("dslint: serving on http://127.0.0.1:{port}");
+        }
     }
 
     // Build initial mtime snapshot.
@@ -239,7 +249,7 @@ pub fn run_watch(
 ///
 /// Including the process ID in the temp-file name prevents concurrent `dslint`
 /// processes from colliding on the same temp file.
-fn write_atomic(path: &Path, content: &str) -> anyhow::Result<()> {
+pub(crate) fn write_atomic(path: &Path, content: &str) -> anyhow::Result<()> {
     let pid = std::process::id();
     let tmp = path.with_file_name(format!(
         ".dslint-{pid}.tmp",
@@ -269,7 +279,12 @@ fn run_http_server(
     port: u16,
     json: Arc<RwLock<String>>,
     version: Arc<AtomicU64>,
+    dashboard_static: Option<PathBuf>,
 ) -> anyhow::Result<()> {
+    let static_root = dashboard_static.map(|p| {
+        p.canonicalize()
+            .unwrap_or(p)
+    });
     let listener = TcpListener::bind(format!("127.0.0.1:{port}"))
         .with_context(|| format!("bind 127.0.0.1:{port}"))?;
     let sse_count = Arc::new(AtomicUsize::new(0));
@@ -279,7 +294,10 @@ fn run_http_server(
                 let json = Arc::clone(&json);
                 let version = Arc::clone(&version);
                 let sse_count = Arc::clone(&sse_count);
-                thread::spawn(move || handle_connection(s, json, version, sse_count));
+                let static_root = static_root.clone();
+                thread::spawn(move || {
+                    handle_connection(s, json, version, sse_count, static_root);
+                });
             }
             Err(_) => continue,
         }
@@ -292,6 +310,7 @@ fn handle_connection(
     json: Arc<RwLock<String>>,
     version: Arc<AtomicU64>,
     sse_count: Arc<AtomicUsize>,
+    static_root: Option<PathBuf>,
 ) {
     // Apply timeouts to prevent slow-client threads from being held open
     // indefinitely (defence against accidental or intentional slow-loris).
@@ -305,10 +324,11 @@ fn handle_connection(
         Err(_) => return,
     };
     let request = std::str::from_utf8(&buf[..n]).unwrap_or("");
+    let method = parse_request_method(request);
     let path = parse_request_path(request);
 
     // CORS pre-flight.
-    if request.starts_with("OPTIONS") {
+    if method == "OPTIONS" {
         let _ = stream.write_all(
             b"HTTP/1.1 204 No Content\r\n\
 Access-Control-Allow-Origin: *\r\n\
@@ -380,13 +400,28 @@ Connection: keep-alive\r\n\r\n";
 
             sse_count.fetch_sub(1, Ordering::Relaxed);
         }
-        _ => {
+        other => {
+            if method == "GET" {
+                if let Some(root) = &static_root {
+                    if serve_static(&mut stream, root, other) {
+                        return;
+                    }
+                }
+            }
             let _ = stream.write_all(
                 b"HTTP/1.1 404 Not Found\r\n\
-                  Content-Length: 0\r\n\r\n",
+Content-Length: 0\r\n\r\n",
             );
         }
     }
+}
+
+fn parse_request_method(request: &str) -> &str {
+    request
+        .lines()
+        .next()
+        .and_then(|line| line.split_whitespace().next())
+        .unwrap_or("GET")
 }
 
 fn parse_request_path(request: &str) -> &str {
@@ -397,4 +432,155 @@ fn parse_request_path(request: &str) -> &str {
     let path = parts.next().unwrap_or("/");
     // Strip query string.
     path.split('?').next().unwrap_or("/")
+}
+
+fn percent_decode_path(segment: &str) -> Option<String> {
+    let mut out = String::with_capacity(segment.len());
+    let bytes = segment.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' {
+            if i + 2 >= bytes.len() {
+                return None;
+            }
+            let hi = hex_digit(bytes[i + 1])?;
+            let lo = hex_digit(bytes[i + 2])?;
+            out.push(char::from((hi << 4) | lo));
+            i += 3;
+        } else if bytes[i] == b'+' {
+            out.push(' ');
+            i += 1;
+        } else {
+            out.push(bytes[i] as char);
+            i += 1;
+        }
+    }
+    Some(out)
+}
+
+fn hex_digit(b: u8) -> Option<u8> {
+    match b {
+        b'0'..=b'9' => Some(b - b'0'),
+        b'a'..=b'f' => Some(b - b'a' + 10),
+        b'A'..=b'F' => Some(b - b'A' + 10),
+        _ => None,
+    }
+}
+
+fn content_type_for_path(path: &Path) -> &'static str {
+    match path.extension().and_then(|e| e.to_str()) {
+        Some("html") => "text/html; charset=utf-8",
+        Some("js") => "application/javascript; charset=utf-8",
+        Some("css") => "text/css; charset=utf-8",
+        Some("json") => "application/json; charset=utf-8",
+        Some("svg") => "image/svg+xml",
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("gif") => "image/gif",
+        Some("webp") => "image/webp",
+        Some("ico") => "image/x-icon",
+        Some("woff") => "font/woff",
+        Some("woff2") => "font/woff2",
+        Some("map") => "application/json",
+        _ => "application/octet-stream",
+    }
+}
+
+fn path_has_static_extension(path: &str) -> bool {
+    let lower = path.to_ascii_lowercase();
+    [
+        ".js", ".css", ".map", ".json", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico",
+        ".woff", ".woff2", ".ttf", ".eot",
+    ]
+    .iter()
+    .any(|ext| lower.ends_with(ext))
+}
+
+fn resolve_static_file(root: &Path, url_path: &str) -> Option<PathBuf> {
+    let trimmed = url_path.trim_start_matches('/');
+    if trimmed.contains("..") {
+        return None;
+    }
+    let decoded = if trimmed.is_empty() {
+        String::new()
+    } else {
+        percent_decode_path(trimmed)?
+    };
+    if decoded.contains("..") || decoded.contains('\\') {
+        return None;
+    }
+
+    let rel = if decoded.is_empty() {
+        PathBuf::from("index.html")
+    } else {
+        PathBuf::from(decoded)
+    };
+
+    let candidate = root.join(&rel);
+    let canonical = candidate.canonicalize().ok()?;
+    let root_canonical = root.canonicalize().ok()?;
+    if !canonical.starts_with(&root_canonical) {
+        return None;
+    }
+
+    if canonical.is_dir() {
+        let index = canonical.join("index.html");
+        if index.is_file() {
+            return index.canonicalize().ok();
+        }
+        return None;
+    }
+
+    if canonical.is_file() {
+        return Some(canonical);
+    }
+
+    None
+}
+
+fn read_static_file_limited(path: &Path) -> Option<Vec<u8>> {
+    let meta = fs::metadata(path).ok()?;
+    if !meta.is_file() || meta.len() > MAX_STATIC_FILE_BYTES {
+        return None;
+    }
+    fs::read(path).ok()
+}
+
+/// Serve a file from `root` for `url_path`. Returns true if a response was sent.
+fn serve_static(stream: &mut TcpStream, root: &Path, url_path: &str) -> bool {
+    let file = match resolve_static_file(root, url_path) {
+        Some(f) => f,
+        None => {
+            if path_has_static_extension(url_path) {
+                return false;
+            }
+            match resolve_static_file(root, "/index.html") {
+                Some(f) => f,
+                None => return false,
+            }
+        }
+    };
+
+    let body = match read_static_file_limited(&file) {
+        Some(b) => b,
+        None => return false,
+    };
+    let content_type = content_type_for_path(&file);
+    let cache_control = if content_type.starts_with("text/html") {
+        "no-cache"
+    } else {
+        "public, max-age=31536000, immutable"
+    };
+    let response = format!(
+        "HTTP/1.1 200 OK\r\n\
+Content-Type: {content_type}\r\n\
+Access-Control-Allow-Origin: *\r\n\
+Cache-Control: {cache_control}\r\n\
+Content-Length: {}\r\n\r\n",
+        body.len()
+    );
+    if stream.write_all(response.as_bytes()).is_err() {
+        return true;
+    }
+    stream.write_all(&body).is_ok()
 }

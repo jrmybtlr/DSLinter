@@ -11,12 +11,19 @@ use crate::watch;
 #[command(
     name = "dslinter",
     version,
-    about = "DSLint — design system linting & component governance (MVP)"
+    about = "DSLint — design system linting & component governance (MVP)",
+    after_help = "Long-running dev with Vite is provided by the npm `dslinter` CLI (default locally).\n\
+Use --watch or --serve for watch + JSON file without Vite.\n\
+With --serve, optional --dashboard-static <dir> serves a built SPA from the same port (GET / + assets)."
 )]
 struct Cli {
     /// Repository root to scan.
     #[arg(default_value = ".")]
     path: PathBuf,
+
+    /// One-shot scan and report (default for the Rust binary; npm CLI uses dev unless CI).
+    #[arg(long, conflicts_with_all = ["watch", "serve"])]
+    report: bool,
 
     /// Emit JSON report (for dashboards / CI artifacts).
     #[arg(long)]
@@ -39,7 +46,7 @@ struct Cli {
     #[arg(long)]
     watch: bool,
 
-    /// Path to write the JSON report file (used with --watch / --serve).
+    /// Path to write the JSON report file.
     /// Defaults to `<root>/public/dslint-report.json`.
     #[arg(long, value_name = "PATH")]
     output: Option<PathBuf>,
@@ -49,6 +56,11 @@ struct Cli {
     /// Implies --watch.
     #[arg(long, value_name = "PORT")]
     serve: Option<u16>,
+
+    /// Directory of pre-built dashboard static files (index.html + assets).
+    /// Served from the same port as `--serve` for `GET /` and static paths.
+    #[arg(long, value_name = "PATH")]
+    dashboard_static: Option<PathBuf>,
 }
 
 /// Run the CLI with `args` (program name optional; clap skips argv[0] when missing).
@@ -73,7 +85,41 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
         let output = cli
             .output
             .unwrap_or_else(|| root.join("public").join("dslint-report.json"));
-        return match watch::run_watch(&root, cli.parallel, output, cli.serve) {
+
+        let dashboard_static = if let Some(dir) = cli.dashboard_static {
+            let canonical = std::fs::canonicalize(&dir).unwrap_or(dir);
+            if !canonical.is_dir() {
+                eprintln!(
+                    "dslint: --dashboard-static must be a directory: {}",
+                    canonical.display()
+                );
+                return 1;
+            }
+            let index = canonical.join("index.html");
+            if !index.is_file() {
+                eprintln!(
+                    "dslint: --dashboard-static missing index.html: {}",
+                    index.display()
+                );
+                return 1;
+            }
+            Some(canonical)
+        } else {
+            None
+        };
+
+        if dashboard_static.is_some() && cli.serve.is_none() {
+            eprintln!("dslint: --dashboard-static requires --serve <port>");
+            return 1;
+        }
+
+        return match watch::run_watch(
+            &root,
+            cli.parallel,
+            output,
+            cli.serve,
+            dashboard_static,
+        ) {
             Ok(()) => 0,
             Err(e) => {
                 eprintln!("{e:#}");
@@ -94,15 +140,33 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
         }
     };
 
-    if cli.json {
-        match serde_json::to_string_pretty(&report) {
-            Ok(s) => println!("{s}"),
-            Err(e) => {
+    let json_pretty = match serde_json::to_string_pretty(&report) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("{e:#}");
+            return 1;
+        }
+    };
+
+    if let Some(output_path) = &cli.output {
+        if let Some(parent) = output_path.parent() {
+            if let Err(e) = std::fs::create_dir_all(parent) {
                 eprintln!("{e:#}");
                 return 1;
             }
         }
-    } else {
+        if let Err(e) = watch::write_atomic(output_path, &json_pretty) {
+            eprintln!("{e:#}");
+            return 1;
+        }
+        if !cli.json {
+            eprintln!("dslint: wrote {}", output_path.display());
+        }
+    }
+
+    if cli.json {
+        println!("{json_pretty}");
+    } else if cli.output.is_none() {
         crate::report::print_human(&report);
     }
 

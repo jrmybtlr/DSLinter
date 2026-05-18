@@ -124,6 +124,9 @@ jobs:
       - name: Run package tests before publish
         run: pnpm --filter dslinter test
 
+      - name: Build bundled dashboard SPA
+        run: pnpm --filter dslinter run build:dashboard
+
       - name: Generate index.cjs loader
         run: pnpm run build:napi
 

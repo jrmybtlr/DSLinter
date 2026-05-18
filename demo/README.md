@@ -35,18 +35,16 @@ npm install && cd demo && npm run dev
 pnpm install && cd demo && pnpm dev
 ```
 
-`npm run dev` is a small wrapper ([scripts/dev.mjs](./scripts/dev.mjs)) that auto-detects a **dslinter** scanner (vendor binary from `npm install`, `DSLINT_BIN`, or PATH) and falls back to **`cargo`** for contributors:
+`npm run dev` runs **`dslinter`** ([scripts/dev.mjs](./scripts/dev.mjs)): watch + scanner HTTP on **7878** + Vite (`--mode serve`). Vite proxies `/dslint-report.json` and `/events` (see [vite.config.ts](./vite.config.ts)) so the dashboard updates over **SSE**.
 
-- **Scanner available** — delegates to `npm run dev:serve`: **Vite** (in `--mode serve`) and **`dslinter --serve 7878`** concurrently. Vite proxies `/dslint-report.json` and `/events` to the scanner (see [vite.config.ts](./vite.config.ts)), so the dashboard receives SSE updates when source files change.
-- **Neither scanner nor cargo** — delegates to `npm run dev:vite-only` with a warning. Vite serves the committed `public/dslint-report.json`; run `npm install` to fetch a prebuilt binary, or build from source (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
+Equivalent from `demo/`: `npx dslinter .`
 
-| Script                  | When to use                                                                                                                        |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`           | Default — prefers prebuilt `dslinter`, then `cargo`                                                                                |
-| `npm run dev:serve`     | Force SSE flavor (via [run-dslint.mjs](./scripts/run-dslint.mjs))                                                                 |
-| `npm run dev:watch`     | Polling fallback — rewrites JSON on a 5s tick                                                                                        |
-| `npm run dev:vite-only` | Vite alone; static committed report                                                                                                  |
-| `npm run dslint:print-cmd` | Print the resolved scanner command (debug CI/dev)                                                                               |
+| Script                  | When to use                                                          |
+| ----------------------- | -------------------------------------------------------------------- |
+| `npm run dev`           | Default — `dslinter` dev mode                                        |
+| `npm run dev:serve`     | Scanner only (`dslinter --serve 7878`)                               |
+| `npm run dev:watch`     | Watch JSON only (`dslinter --watch`)                                 |
+| `npm run dev:vite-only` | Vite alone; static committed report                                  |
 
 **pnpm:** Prefer **`pnpm install` from the repo root** (predictable, one lockfile). Running `pnpm install` from `demo/` still picks up the parent `pnpm-workspace.yaml` and scopes all workspace packages, but pnpm may **prompt** to wipe and reinstall `node_modules` (non-interactive shells can appear to hang — use root installs or `CI=true pnpm install` in CI).
 

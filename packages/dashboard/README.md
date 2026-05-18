@@ -19,7 +19,17 @@ This package is **source-first**: entry points resolve to TypeScript/TSX under `
 
 ## CLI (`npx dslinter`)
 
-The **`dslinter`** command runs the design-system scanner with the same flags as the Rust CLI (`--json`, `-o`, `--serve`, etc.) via a **napi-rs** native binding (same distribution model as **`oxlint`**).
+The **`dslinter`** command orchestrates the Rust scanner (via **napi-rs**, same distribution model as **`oxlint`**) and, in a Vite host app, the dashboard dev loop.
+
+| Mode | Flag | Behavior |
+|------|------|----------|
+| Dev (default locally) | _(none)_ | `--serve`, watch, write `--output`, start Vite `--mode serve` |
+| Report | `--report` | One-shot scan; human stdout or `--json`; `--output` writes JSON |
+| Watch | `--watch` | Watch + write JSON only |
+| Build | `--build` | One-shot report to `--output`, then `vite build` |
+| CI default | `CI=true` | Same as `--report` |
+
+Scanner flags: `--json`, `-p` / `--parallel`, `--fail-on-warnings`, `--max-warnings`, `--output`, `[PATH]`. Low-level: `--serve <port>` (watch + HTTP, no Vite).
 
 ### Without installing Rust
 
@@ -38,9 +48,13 @@ The crates.io crate **`dslint`** is a **different project**. Use **`cargo instal
 Typical usage:
 
 ```bash
-dslinter /path/to/repo --json -o dslint-report.json
-# or --serve for live reload while developing a dashboard
+npx dslinter                              # dev (watch + dashboard)
+npx dslinter --report /path/to/repo --json
+npx dslinter --report --output public/dslint-report.json
+npx dslinter --watch --output public/dslint-report.json
 ```
+
+Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`). Your Vite config should proxy `/dslint-report.json` and `/events` to that port in `serve` mode (see repo `demo/vite.config.ts`).
 
 ## Styles (Tailwind v4)
 

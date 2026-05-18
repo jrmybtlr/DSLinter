@@ -32,9 +32,10 @@
   },
   "scripts": {
     "build:napi": "napi build --platform --release --cwd ../.. --output-dir packages/dashboard --package-json-path packages/dashboard/package.json --js-package-name @dslinter/binding --js index.cjs --no-default-features --features napi",
+    "build:dashboard": "vite build",
     "artifacts": "napi artifacts --cwd ../.. --package-json-path packages/dashboard/package.json --js-package-name @dslinter/binding",
     "test": "vitest run",
-    "prepublishOnly": "vitest run"
+    "prepublishOnly": "vitest run && vite build"
   },
   "napi": {
     "binaryName": "dslinter",
@@ -68,6 +69,7 @@
   "types": "./src/index.ts",
   "files": [
     "bin",
+    "dashboard-dist",
     "index.cjs",
     "index.d.ts",
     "src",
@@ -101,11 +103,15 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.3.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "tailwindcss": "^4.1.0",
     "typescript": "~6.0.3",
+    "vite": "^5.4.11",
     "vitest": "^3.2.4"
   }
 }

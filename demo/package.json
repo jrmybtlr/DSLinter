@@ -6,15 +6,14 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:vite-only": "vite",
-    "dev:watch": "concurrently --names vite,dslint --prefix-colors blue,green \"vite\" \"npm run dslint:watch\"",
-    "dev:serve": "concurrently --names dslint,vite --prefix-colors green,blue \"npm run dslint:serve\" \"wait-on tcp:127.0.0.1:7878 && vite --mode serve\"",
-    "build": "tsc && vite build",
+    "dev:watch": "node ../packages/dashboard/bin/dslinter.mjs --watch --output public/dslint-report.json",
+    "dev:serve": "node ../packages/dashboard/bin/dslinter.mjs --serve 7878 --output public/dslint-report.json",
+    "build": "tsc && node ../packages/dashboard/bin/dslinter.mjs --build --output public/dslint-report.json",
     "preview": "vite preview",
     "dslint:report": "node scripts/gen-dslint-report.mjs",
     "dslint:merge-playgrounds": "node scripts/merge-playgrounds.mjs",
-    "dslint:watch": "node scripts/run-dslint.mjs . --watch --output public/dslint-report.json",
-    "dslint:serve": "node scripts/run-dslint.mjs . --serve 7878 --output public/dslint-report.json",
-    "dslint:print-cmd": "node scripts/run-dslint.mjs --print-cmd . --serve 7878 --output public/dslint-report.json"
+    "dslint:watch": "node ../packages/dashboard/bin/dslinter.mjs --watch --output public/dslint-report.json",
+    "dslint:serve": "node ../packages/dashboard/bin/dslinter.mjs --serve 7878 --output public/dslint-report.json"
   },
   "dependencies": {
     "dslinter": "file:../packages/dashboard",

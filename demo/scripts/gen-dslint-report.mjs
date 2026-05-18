@@ -1,34 +1,28 @@
 import { execSync, spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const demoRoot = join(__dirname, "..");
-const outDir = join(demoRoot, "public");
-const outFile = join(outDir, "dslint-report.json");
+const dslinterBin = join(demoRoot, "..", "packages", "dashboard", "bin", "dslinter.mjs");
 
-mkdirSync(outDir, { recursive: true });
+if (!existsSync(dslinterBin)) {
+  process.stderr.write(
+    "dslint:report failed — run `npm install` in demo/ (installs dslinter).\n",
+  );
+  process.exit(1);
+}
 
-const runDslint = join(__dirname, "run-dslint.mjs");
 const result = spawnSync(
   process.execPath,
-  [runDslint, "demo", "-p", "--json"],
-  {
-    cwd: demoRoot,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "inherit"],
-  },
+  [dslinterBin, "--report", ".", "-p", "--output", "public/dslint-report.json"],
+  { cwd: demoRoot, stdio: "inherit" },
 );
 
 if (result.status !== 0) {
-  process.stderr.write(
-    "dslint:report failed — install dslinter (`npm install`) or build from source (see CONTRIBUTING.md).\n",
-  );
   process.exit(result.status ?? 1);
 }
 
-writeFileSync(outFile, `${(result.stdout ?? "").trimEnd()}\n`);
-console.log(`Wrote ${outFile}`);
-
+console.log("Wrote public/dslint-report.json");
 execSync("node scripts/merge-playgrounds.mjs", { cwd: demoRoot, stdio: "inherit" });

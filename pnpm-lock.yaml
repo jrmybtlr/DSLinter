@@ -122,21 +122,33 @@ importers:
         specifier: ^1.16.0
         version: 1.16.0
     devDependencies:
+      '@tailwindcss/vite':
+        specifier: ^4.1.0
+        version: 4.3.0(vite@5.4.21(@types/node@25.7.0)(lightningcss@1.32.0))
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.3
+        version: 4.7.0(vite@5.4.21(@types/node@25.7.0)(lightningcss@1.32.0))
       react:
         specifier: 19.2.6
         version: 19.2.6
       react-dom:
         specifier: 19.2.6
         version: 19.2.6(react@19.2.6)
+      tailwindcss:
+        specifier: ^4.1.0
+        version: 4.3.0
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
+      vite:
+        specifier: ^5.4.11
+        version: 5.4.21(@types/node@25.7.0)(lightningcss@1.32.0)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@25.7.0)(lightningcss@1.32.0)(msw@2.14.6(@types/node@25.7.0)(typescript@6.0.3))
@@ -2751,7 +2763,7 @@ packages:
 
   dslinter@file:packages/dashboard:
     resolution: {directory: packages/dashboard, type: directory}
-    engines: {node: '>=22'}
+    engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
       react: 19.2.6
