@@ -21,7 +21,7 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
   const port = servePort ?? defaultServePort();
   const reportPath = defaultReportPath(scanPath, outputPath);
   const viteRoot = findViteRoot(process.cwd());
-  const bundledDist = viteRoot ? null : resolveBundledDashboardDir();
+  const bundledDist = resolveBundledDashboardDir();
 
   const args = [...scannerArgs];
   const hasServe = args.some((a) => a === "--serve" || a.startsWith("--serve="));
@@ -63,18 +63,24 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
 
   if (bundledDist) {
     const url = `http://127.0.0.1:${port}/`;
-    process.stderr.write(
-      [
-        "",
-        "[dslinter] Bundled dashboard at",
-        `  ${url}`,
-        `  Report: http://127.0.0.1:${port}/dslint-report.json`,
-        "",
-      ].join("\n"),
-    );
-    maybeOpenBrowser(url);
-    scanner.on("exit", (code) => process.exit(code ?? 0));
-    return;
+    const lines = [
+      "",
+      "[dslinter] Bundled dashboard at",
+      `  ${url}`,
+      `  Report: http://127.0.0.1:${port}/dslint-report.json`,
+    ];
+    if (viteRoot) {
+      lines.push(
+        "  Vite dev server also starting (use its URL for your app; proxy /dslint-report.json and /events to this port if needed).",
+      );
+    }
+    lines.push("");
+    process.stderr.write(lines.join("\n"));
+    if (!viteRoot) {
+      maybeOpenBrowser(url);
+      scanner.on("exit", (code) => process.exit(code ?? 0));
+      return;
+    }
   }
 
   if (!viteRoot) {

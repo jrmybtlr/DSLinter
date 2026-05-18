@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
-import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { dirname, isAbsolute, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -46,13 +46,40 @@ export function defaultServePort() {
 }
 
 /**
- * Pre-built dashboard SPA shipped with the npm package (`dashboard-dist/`).
- * @returns {string | null} absolute path when index.html exists
+ * @param {string} dir
+ * @returns {string | null} canonical absolute path when `index.html` exists
+ */
+function dashboardDirIfReady(dir) {
+  const indexHtml = join(dir, "index.html");
+  if (!existsSync(indexHtml)) return null;
+  try {
+    return realpathSync(dir);
+  } catch {
+    return resolve(dir);
+  }
+}
+
+/**
+ * Pre-built dashboard SPA for `--dashboard-static` (same port as `--serve`).
+ *
+ * Resolution order:
+ * 1. Skip when `DSLINTER_NO_BUNDLED_DASHBOARD=1`
+ * 2. `DSLINT_DASHBOARD_STATIC` — absolute or cwd-relative (temp/gitignored dirs ok)
+ * 3. `dashboard-dist/` next to the installed `dslinter` package
+ *
+ * @returns {string | null}
  */
 export function resolveBundledDashboardDir() {
-  const dir = join(packageRoot, "dashboard-dist");
-  if (existsSync(join(dir, "index.html"))) return dir;
-  return null;
+  const optOut = process.env.DSLINTER_NO_BUNDLED_DASHBOARD?.trim();
+  if (optOut === "1" || optOut?.toLowerCase() === "true") return null;
+
+  const fromEnv = process.env.DSLINT_DASHBOARD_STATIC?.trim();
+  if (fromEnv) {
+    const dir = isAbsolute(fromEnv) ? normalize(fromEnv) : resolve(process.cwd(), fromEnv);
+    return dashboardDirIfReady(dir);
+  }
+
+  return dashboardDirIfReady(join(packageRoot, "dashboard-dist"));
 }
 
 /**
