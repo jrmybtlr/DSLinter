@@ -167,8 +167,9 @@ jobs:
       - name: Publish platform bindings and dslinter
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Provenance + CI retry same version → TLOG_CREATE_ENTRY_ERROR (409)
+          NPM_CONFIG_PROVENANCE: "false"
         run: |
-          npm config set provenance true
           for dir in npm/*; do
             [ -d "$dir" ] || continue
             (cd "$dir" && npm publish --access public)
