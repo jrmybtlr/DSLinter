@@ -10,10 +10,13 @@ export function resolveModuleSourcePath(reportRoot: string, modulePath: string):
   return `${root}/${withSrc}`;
 }
 
+const SRC_COMPONENTS = "src/components/";
+
 /** Match finding path to source file even when `report.root` differs from machine that generated JSON. */
 function tailSrcComponents(p: string): string | null {
-  const m = norm(p).match(/(src\/components\/.+)$/);
-  return m ? m[1] : null;
+  const normalized = norm(p);
+  const idx = normalized.indexOf(SRC_COMPONENTS);
+  return idx === -1 ? null : normalized.slice(idx);
 }
 
 export function pathsMatch(reportPath: string, candidate: string): boolean {

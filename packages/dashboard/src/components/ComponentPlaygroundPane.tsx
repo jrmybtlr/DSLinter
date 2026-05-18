@@ -211,14 +211,14 @@ export function ComponentPlaygroundPane({
       target.setPointerCapture(e.pointerId);
       let lastX = e.clientX;
       const sign = side === "right" ? 1 : -1;
-      const onMove = (ev: PointerEvent) => {
+      const onMove = (ev: globalThis.PointerEvent) => {
         const dx = ev.clientX - lastX;
         lastX = ev.clientX;
         setPreviewWidthPx((w) =>
           clampPreviewWidth(w + sign * 2 * dx, maxOuterRef.current),
         );
       };
-      const onUp = (ev: PointerEvent) => {
+      const onUp = (ev: globalThis.PointerEvent) => {
         target.releasePointerCapture(ev.pointerId);
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
