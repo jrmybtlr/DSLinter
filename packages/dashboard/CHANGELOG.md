@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.0.29
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.28...v0.0.29)
+
+### 💅 Refactors
+
+- Enhance dashboard directory resolution and improve dev mode output ([5670315](https://github.com/jrmybtlr/DSLinter/commit/5670315))
+
+### 🏡 Chore
+
+- Update GitHub Actions and package.json ([b9541b2](https://github.com/jrmybtlr/DSLinter/commit/b9541b2))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.28
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.27...v0.0.28)
