@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.36
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.35...v0.0.36)
+
+### 🏡 Chore
+
+- Update native binding version checks to 0.0.34 in dashboard package ([917860a](https://github.com/jrmybtlr/DSLinter/commit/917860a))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.35
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.34...v0.0.35)
