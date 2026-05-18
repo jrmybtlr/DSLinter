@@ -104,6 +104,38 @@ export interface PlaygroundSpec {
   declared_prop_kinds?: Partial<Record<string, DeclaredPropKind>>;
 }
 
+export type CssTokenCategory =
+  | "color"
+  | "spacing"
+  | "radius"
+  | "typography"
+  | "other";
+
+export type CssTokenScope = "theme" | "root" | "selector";
+
+export interface CssTokenDefinition {
+  name: string;
+  value: string;
+  category: CssTokenCategory;
+  scope: CssTokenScope;
+  path: string;
+  line: number;
+}
+
+export interface CssTokenUsage {
+  name: string;
+  reference_count: number;
+  file_count: number;
+  files: string[];
+  usage_locations?: UsageLocation[];
+}
+
+export interface CssTokenSummary {
+  definitions: CssTokenDefinition[];
+  usage_by_token: CssTokenUsage[];
+  unused_tokens?: string[];
+}
+
 export interface WorkspaceReport {
   root: string;
   files: FileScan[];
@@ -113,4 +145,5 @@ export interface WorkspaceReport {
   ownership: OwnershipSummary[];
   scores: GovernanceScores;
   playgrounds?: PlaygroundSpec[];
+  css_tokens?: CssTokenSummary;
 }

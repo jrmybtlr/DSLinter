@@ -119,7 +119,7 @@ export function useDashboardTheme(): DashboardThemeContextValue {
 
 export type DashboardLayoutProps = {
   playgroundEntries: PlaygroundEntry[];
-  tokenCatalog: TokenCatalog;
+  tokenCatalog?: TokenCatalog;
   /** Custom intro shown above the governance inventory on `#!/governance`; defaults to package copy. */
   overview?: ReactNode;
   /** Fetch URL for `dslint --json` output. */
@@ -169,7 +169,12 @@ function DashboardLayoutInner({
 
   let main: ReactNode;
   if (route.view === "tokens") {
-    main = <TokensPane tokenCatalog={tokenCatalog} />;
+    main = (
+      <TokensPane
+        tokenCatalog={tokenCatalog}
+        dslinterReport={dslinterReport.report}
+      />
+    );
   } else if (route.view === "governance") {
     main = (
       <GovernancePane

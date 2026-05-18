@@ -20,7 +20,7 @@ The demo app wires **data** as follows:
 
 - **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.tsx")` to resolve live previews (no `definePlayground` in each component file).
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
-- **`tokenCatalog.ts`** — token wall content (keep in sync with `@theme` in `dslinter/theme.css`).
+- **`tokenCatalog.ts`** — optional Tailwind utility hints for the token wall; CSS variables are discovered automatically from `dslint-report.json` → `css_tokens`.
 - **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslinterReport` into `DashboardLayout`.
 
 ## Run the UI
@@ -62,7 +62,7 @@ The dev app is a single **dashboard**: a left sidebar lists isolated component p
 
 - `#!/governance` — default landing: package intro plus scores, catalog, tokens, and findings from `public/dslint-report.json`
 - `#!/component/PrimaryButton` — preview id matches the **file stem** listed in `dslint-report.json` → `playgrounds[].id`
-- `#!/tokens` — token wall (from `src/tokenCatalog.ts`, keep in sync with `src/index.css` `@theme`)
+- `#!/tokens` — token wall (scanned from `src/index.css` + `dslinter/theme.css`; `tokenCatalog.ts` enriches utility names when present)
 
 ### Playgrounds from the dslint CLI (no per-file registration)
 
