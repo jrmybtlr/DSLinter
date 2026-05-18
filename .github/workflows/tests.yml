@@ -62,7 +62,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile --no-optional --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build NAPI binding (linux x64)
         run: pnpm run build:napi
