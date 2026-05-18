@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.27
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.26...v0.0.27)
+
+### 🩹 Fixes
+
+- **ci:** Prepublish skip optional npm publish ([b69b368](https://github.com/jrmybtlr/DSLinter/commit/b69b368))
+- **ci:** Disable npm provenance on publish (retry-safe) ([5aaece8](https://github.com/jrmybtlr/DSLinter/commit/5aaece8))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.26
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.25...v0.0.26)
