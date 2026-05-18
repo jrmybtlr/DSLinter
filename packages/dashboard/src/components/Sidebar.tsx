@@ -9,7 +9,6 @@ import type { DashboardThemePreference } from "../shell/DashboardLayout";
 
 type Props = {
   report: WorkspaceReport | null;
-  playgroundIds: Set<string>;
   reportLoading: boolean;
   reportError: string | null;
   route: HashRoute;
@@ -50,7 +49,6 @@ function sectionLabel(text: string) {
 
 export function Sidebar({
   report,
-  playgroundIds,
   reportLoading,
   reportError,
   route,
@@ -64,7 +62,8 @@ export function Sidebar({
     [report],
   );
   const tokensActive = route.view === "tokens";
-  const governanceActive = route.view === "governance";
+  const governanceActive =
+    route.view === "governance" && route.catalog == null;
 
   const onThemeValueChange = (value: string) => {
     if (value !== "light" && value !== "dark") return;
@@ -173,16 +172,13 @@ export function Sidebar({
           ) : null}
           {catalogNames.map((name) => {
             const active =
-              (route.view === "component" && route.componentId === name) ||
-              (route.view === "governance" && route.catalog === name);
+              route.view === "component" && route.componentId === name;
             return (
               <button
                 key={name}
                 type="button"
                 onClick={() =>
-                  playgroundIds.has(name)
-                    ? onNavigate({ view: "component", componentId: name })
-                    : onNavigate({ view: "governance", catalog: name })
+                  onNavigate({ view: "component", componentId: name })
                 }
                 className={navButtonClass(active)}
               >

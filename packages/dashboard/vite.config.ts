@@ -6,6 +6,10 @@ import { defineConfig } from "vite";
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = path.join(packageRoot, "src");
+const defaultScanRoot = path.resolve(packageRoot, "../../demo");
+const scanRoot = process.env.DSLINT_SCAN_ROOT
+  ? path.resolve(process.env.DSLINT_SCAN_ROOT)
+  : defaultScanRoot;
 
 export default defineConfig(({ mode }) => {
   const apiPort = Number(process.env.DSLINT_SERVE_PORT ?? "7878");
@@ -16,6 +20,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": srcDir,
+        "@dslint-scan": scanRoot,
       },
     },
     build: {

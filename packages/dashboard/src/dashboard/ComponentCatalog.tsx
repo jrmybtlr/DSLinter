@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
   HoverCard,
   HoverCardContent,
@@ -16,9 +16,13 @@ import {
   aggregateDeclaredProps,
   aggregateDefinitions,
   catalogComponentNames,
-  catalogRowDomId,
   usageMap,
 } from "./aggregate";
+import {
+  catalogAttributeProps,
+  ComponentPropUsageDetail,
+  buildUnusedPropSetForComponent,
+} from "./ComponentPropUsageDetail";
 import { shortPath } from "./paths";
 import type { WorkspaceReport } from "../types/report";
 import { pluralize } from "usemods";
@@ -26,26 +30,15 @@ import { pluralize } from "usemods";
 /** Set of `"ComponentName/propName"` keys for every declared prop with no recorded usage. */
 function buildUnusedPropSet(report: WorkspaceReport): Set<string> {
   const s = new Set<string>();
-  const usageByComponent = new Map(
-    (report.usage_by_component ?? []).map((usage) => [
-      usage.component,
-      usage.prop_frequencies ?? {},
-    ]),
-  );
-
-  for (const file of report.files ?? []) {
-    for (const definition of file.definitions ?? []) {
-      const componentName = definition.name;
-      const propFrequencies = usageByComponent.get(componentName) ?? {};
-
-      for (const propName of definition.declared_props ?? []) {
-        if ((propFrequencies[propName] ?? 0) === 0) {
-          s.add(`${componentName}/${propName}`);
-        }
-      }
-    }
+  const declaredByName = aggregateDeclaredProps(report);
+  for (const [componentName, declared] of declaredByName) {
+    const unused = buildUnusedPropSetForComponent(
+      report,
+      componentName,
+      declared,
+    );
+    for (const key of unused) s.add(key);
   }
-
   return s;
 }
 
@@ -63,51 +56,24 @@ function CatalogPropUsageHover({
   unusedProps: Set<string>;
   usedPropCount: number;
 }) {
-  const used = declared.filter(
-    (prop) => !unusedProps.has(`${component}/${prop}`),
-  );
-  const unused = declared.filter((prop) =>
-    unusedProps.has(`${component}/${prop}`),
-  );
+  const attributeProps = catalogAttributeProps(declared);
 
   return (
     <HoverCard openDelay={200} closeDelay={100}>
       <HoverCardTrigger asChild>
         <button type="button" className={catalogHoverTriggerClass}>
           <span className="text-muted-foreground">
-            {usedPropCount}/{declared.length} {pluralize("prop", usedPropCount)}{" "}
-            used
+            {usedPropCount}/{attributeProps.length}{" "}
+            {pluralize("prop", usedPropCount)} used
           </span>
         </button>
       </HoverCardTrigger>
       <HoverCardContent align="start" className="w-56 p-3">
-        <p className="text-xs font-medium text-foreground">Props</p>
-        {used.length > 0 ? (
-          <div className="mt-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Used
-            </p>
-            <ul className="mt-1 space-y-0.5 font-mono text-xs text-foreground">
-              {used.map((prop) => (
-                <li key={prop}>{prop}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {unused.length > 0 ? (
-          <div className={used.length > 0 ? "mt-3" : "mt-2"}>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Never passed
-            </p>
-            <ul className="mt-1 space-y-0.5 font-mono text-xs text-muted-foreground/70">
-              {unused.map((prop) => (
-                <li key={prop} className="line-through">
-                  {prop}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        <ComponentPropUsageDetail
+          component={component}
+          declared={declared}
+          unusedProps={unusedProps}
+        />
       </HoverCardContent>
     </HoverCard>
   );
@@ -149,10 +115,10 @@ function CatalogAppUsageHover({
 
 export function ComponentCatalog({
   report,
-  focusName,
+  onOpenComponent,
 }: {
   report: WorkspaceReport;
-  focusName?: string;
+  onOpenComponent?: (name: string) => void;
 }) {
   const defs = aggregateDefinitions(report);
   const usages = usageMap(report);
@@ -162,12 +128,6 @@ export function ComponentCatalog({
     () => aggregateDeclaredProps(report),
     [report],
   );
-
-  useEffect(() => {
-    if (!focusName || !names.includes(focusName)) return;
-    const el = document.getElementById(catalogRowDomId(focusName));
-    el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [focusName, names]);
 
   return (
     <Table>
@@ -182,16 +142,29 @@ export function ComponentCatalog({
         {names.map((name) => {
           const use = usages.get(name);
           const declared = declaredByName.get(name) ?? [];
-          const usedPropCount = declared.filter(
+          const attributeProps = catalogAttributeProps(declared);
+          const usedPropCount = attributeProps.filter(
             (prop) => !unusedProps.has(`${name}/${prop}`),
           ).length;
 
           return (
-            <TableRow key={name} id={catalogRowDomId(name)}>
-              <TableCell>{name}</TableCell>
+            <TableRow key={name}>
+              <TableCell>
+                {onOpenComponent ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenComponent(name)}
+                    className="text-left font-medium text-foreground underline decoration-transparent underline-offset-2 transition hover:decoration-current"
+                  >
+                    {name}
+                  </button>
+                ) : (
+                  name
+                )}
+              </TableCell>
 
               <TableCell>
-                {declared.length > 0 ? (
+                {attributeProps.length > 0 ? (
                   <CatalogPropUsageHover
                     component={name}
                     declared={declared}

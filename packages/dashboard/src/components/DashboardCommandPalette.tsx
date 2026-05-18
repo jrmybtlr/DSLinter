@@ -13,7 +13,6 @@ import type { HashRoute } from "../shell/hashRoute";
 
 type Props = {
   catalogNames: string[];
-  playgroundIds: Set<string>;
   onNavigate: (next: HashRoute) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,21 +25,8 @@ function eventTargetIsEditable(target: EventTarget | null): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-function navigateToCatalogName(
-  name: string,
-  playgroundIds: Set<string>,
-  onNavigate: (next: HashRoute) => void,
-) {
-  if (playgroundIds.has(name)) {
-    onNavigate({ view: "component", componentId: name });
-  } else {
-    onNavigate({ view: "governance", catalog: name });
-  }
-}
-
 export function DashboardCommandPalette({
   catalogNames,
-  playgroundIds,
   onNavigate,
   open,
   onOpenChange,
@@ -86,7 +72,7 @@ export function DashboardCommandPalette({
                 key={name}
                 value={name}
                 onSelect={() => {
-                  navigateToCatalogName(name, playgroundIds, onNavigate);
+                  onNavigate({ view: "component", componentId: name });
                   close();
                 }}
               >

@@ -39,7 +39,11 @@ fn longest_playground_group(rel: &str, config: &DslintConfig) -> Option<String> 
     best.map(|(_, g)| g)
 }
 
-fn file_in_playground_prefix(rel: &str, config: &DslintConfig) -> bool {
+/// When `playground_groups` is empty, every scanned TSX/JSX under the repo root is previewable.
+fn file_in_playground_scope(rel: &str, config: &DslintConfig) -> bool {
+    if config.playground_groups.is_empty() {
+        return !rel.is_empty();
+    }
     longest_playground_group(rel, config).is_some()
 }
 
@@ -82,12 +86,9 @@ fn pick_definition<'a>(
     None
 }
 
-/// One playground row per eligible TSX/JSX file under `playground_groups` prefixes.
+/// One playground row per eligible TSX/JSX file in the scan (whole repo when `playground_groups` is unset).
 pub fn build_playground_specs(root: &Path, files: &[FileScan], config: &DslintConfig) -> Vec<PlaygroundSpec> {
     let mut out = Vec::new();
-    if config.playground_groups.is_empty() {
-        return out;
-    }
     for file in files {
         let path = &file.path;
         let ext = path
@@ -99,7 +100,7 @@ pub fn build_playground_specs(root: &Path, files: &[FileScan], config: &DslintCo
             continue;
         }
         let rel = rel_path_under_root(root, path);
-        if rel.is_empty() || !file_in_playground_prefix(&rel, config) {
+        if rel.is_empty() || !file_in_playground_scope(&rel, config) {
             continue;
         }
         let stem = path
@@ -112,7 +113,7 @@ pub fn build_playground_specs(root: &Path, files: &[FileScan], config: &DslintCo
         };
         let group = playground_spec_group(&rel, config);
         out.push(PlaygroundSpec {
-            id: stem,
+            id: def.name.clone(),
             export_name: def.name.clone(),
             rel_path: rel,
             declared_props: def.declared_props.clone(),
@@ -200,6 +201,29 @@ mod tests {
     fn single_playground_group_omits_row_group() {
         let config = cfg_single_components();
         assert!(playground_spec_group("src/components/Foo.tsx", &config).is_none());
+    }
+
+    #[test]
+    fn build_includes_all_tsx_when_playground_groups_unset() {
+        let root = PathBuf::from("/repo");
+        let config = DslintConfig::default();
+        let files = vec![FileScan {
+            path: PathBuf::from("/repo/src/views/ActionItem.tsx"),
+            definitions: vec![ComponentDefinition {
+                name: "ActionItem".into(),
+                kind: DefinitionKind::Function,
+                line: 1,
+                declared_props: vec![],
+            }],
+            usages: vec![],
+            parse_errors: vec![],
+            findings: vec![],
+            ast_extracts: Default::default(),
+        }];
+        let specs = build_playground_specs(&root, &files, &config);
+        assert_eq!(specs.len(), 1);
+        assert_eq!(specs[0].export_name, "ActionItem");
+        assert_eq!(specs[0].rel_path, "src/views/ActionItem.tsx");
     }
 
     #[test]
