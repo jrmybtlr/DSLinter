@@ -1,5 +1,67 @@
 # Changelog
 
+## v0.0.28
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.27...v0.0.28)
+
+### 🏡 Chore
+
+- Update dashboard build process and CLI commands ([43c71d6](https://github.com/jrmybtlr/DSLinter/commit/43c71d6))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
+## v0.0.27
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.26...v0.0.27)
+
+### 🩹 Fixes
+
+- **ci:** Prepublish skip optional npm publish ([b69b368](https://github.com/jrmybtlr/DSLinter/commit/b69b368))
+- **ci:** Disable npm provenance on publish (retry-safe) ([5aaece8](https://github.com/jrmybtlr/DSLinter/commit/5aaece8))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
+## v0.0.26
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.25...v0.0.26)
+
+### 🩹 Fixes
+
+- **ci:** Skip gh-release in napi prepublish ([cdcda0e](https://github.com/jrmybtlr/DSLinter/commit/cdcda0e))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
+## v0.0.25
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.24...v0.0.25)
+
+### 🩹 Fixes
+
+- **ci:** Single macos job + mold on publish ([b2a193d](https://github.com/jrmybtlr/DSLinter/commit/b2a193d))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
+## v0.0.24
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.23...v0.0.24)
+
+### 🩹 Fixes
+
+- **ci:** Skip lifecycle scripts and install mold for Rust job ([e85d8d9](https://github.com/jrmybtlr/DSLinter/commit/e85d8d9))
+- **ci:** Build x86_64-apple-darwin on macos-latest ([bcc1af8](https://github.com/jrmybtlr/DSLinter/commit/bcc1af8))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.23
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.22...v0.0.23)

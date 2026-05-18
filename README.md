@@ -10,12 +10,16 @@ Prebuilt native binaries ship with the **`dslinter`** npm package — you do not
 
 ```bash
 npm install -D dslinter
-npx dslinter /path/to/repo
-npx dslinter /path/to/repo --json
-npx dslinter -p /path/to/repo
-npx dslinter /path/to/repo --fail-on-warnings
-npx dslinter demo --serve 4141 -o demo/public/dslint-report.json
+npx dslinter                    # local dev: watch + dashboard (Vite app required)
+npx dslinter --report /path/to/repo
+npx dslinter --report /path/to/repo --json
+npx dslinter --report -p /path/to/repo --fail-on-warnings
+npx dslinter --report --output public/dslint-report.json
+npx dslinter --watch --output public/dslint-report.json
+npx dslinter --build            # write report + vite build (in a Vite project)
 ```
+
+In **CI** (`CI=true`), bare `npx dslinter` runs **`--report`** (one-shot stdout). Use `--report` explicitly if your CI does not set `CI`.
 
 The CLI binary is named **`dslinter`** (not `dslint`) to avoid collision with an unrelated [crates.io `dslint`](https://crates.io/crates/dslint) package.
 
@@ -57,19 +61,20 @@ cd demo && npm install && npm run dev
 
 The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on npm). Component previews are driven by **`playgrounds`** in `dslint-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
 
-`npm run dev` picks a mode based on whether a **dslinter** scanner is available (NAPI binding from `npm install`, `DSLINT_BIN`, or `dslinter` on PATH):
+`npm run dev` runs **`dslinter`** (same as `npx dslinter` in `demo/`): scanner on port **7878** plus Vite with proxy to `/dslint-report.json` and `/events` (SSE live updates). Requires the NAPI binding from `npm install` or `DSLINT_BIN`.
 
-| Situation | Behavior |
-|-----------|----------|
-| Scanner available | Vite and `dslinter --serve` run together; the dashboard updates over **SSE** when source files change. |
-| Scanner missing | Vite only, with a warning. The app uses the committed `demo/public/dslint-report.json` and does not auto-refresh. Run `pnpm run build:napi` (contributors) or set `DSLINT_BIN`. |
+| Script | Behavior |
+|--------|----------|
+| `npm run dev` | `dslinter` dev mode (watch + serve + Vite) |
+| `npm run dev:serve` | Scanner HTTP only (`--serve 7878`) |
+| `npm run dev:watch` | Watch JSON file only (no Vite) |
+| `npm run dev:vite-only` | Vite only (static committed report) |
+| `npm run dslint:report` | One-shot report file + merge playgrounds |
 
-Explicit scripts: `npm run dev:serve` (SSE), `npm run dev:watch` (5s polling), `npm run dev:vite-only`.
-
-For a one-off report without the dev server:
+For CI or a terminal-only report:
 
 ```bash
-cd demo && npm run dslint:report
+npx dslinter --report /path/to/repo --json --fail-on-warnings
 ```
 
 ## What the CLI covers today

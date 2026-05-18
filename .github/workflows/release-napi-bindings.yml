@@ -28,10 +28,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # One macOS runner, both darwin targets (macos-13 retired; avoids 2x queue).
           - host: macos-latest
-            target: aarch64-apple-darwin
-          - host: macos-13
-            target: x86_64-apple-darwin
+            target: darwin
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             build_flags: --use-napi-cross
@@ -44,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 9
 
@@ -55,7 +54,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.target == 'darwin' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target }}
 
       - name: Install mold linker (Linux)
         if: runner.os == 'Linux'
@@ -70,20 +69,28 @@ jobs:
       - name: Build native binding
         shell: bash
         run: |
-          pnpm exec napi build \
-            --platform \
-            --release \
-            --target "${{ matrix.target }}" \
-            --cwd . \
-            --output-dir packages/dashboard \
-            --package-json-path packages/dashboard/package.json \
-            --js-package-name @dslinter/binding \
-            --js index.cjs \
-            --no-default-features \
-            --features napi \
-            ${{ matrix.build_flags }}
+          build_one() {
+            pnpm exec napi build \
+              --platform \
+              --release \
+              --target "$1" \
+              --cwd . \
+              --output-dir packages/dashboard \
+              --package-json-path packages/dashboard/package.json \
+              --js-package-name @dslinter/binding \
+              --js index.cjs \
+              --no-default-features \
+              --features napi \
+              "${@:2}"
+          }
+          if [ "${{ matrix.target }}" = "darwin" ]; then
+            build_one aarch64-apple-darwin
+            build_one x86_64-apple-darwin
+          else
+            build_one "${{ matrix.target }}" ${{ matrix.build_flags }}
+          fi
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: bindings-${{ matrix.target }}
           path: |
@@ -97,7 +104,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 9
 
@@ -109,8 +116,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install mold linker (Linux)
+        run: sudo apt-get update && sudo apt-get install -y mold clang
+
       - name: Run package tests before publish
         run: pnpm --filter dslinter test
+
+      - name: Build bundled dashboard SPA
+        run: pnpm --filter dslinter run build:dashboard
 
       - name: Generate index.cjs loader
         run: pnpm run build:napi
@@ -122,7 +137,7 @@ jobs:
             --package-json-path packages/dashboard/package.json \
             --npm-dir npm
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           path: artifacts
           merge-multiple: true
@@ -148,13 +163,16 @@ jobs:
           pnpm exec napi prepublish \
             --cwd . \
             --package-json-path packages/dashboard/package.json \
-            --npm-dir npm
+            --npm-dir npm \
+            --no-gh-release \
+            --skip-optional-publish
 
       - name: Publish platform bindings and dslinter
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Provenance + CI retry same version → TLOG_CREATE_ENTRY_ERROR (409)
+          NPM_CONFIG_PROVENANCE: "false"
         run: |
-          npm config set provenance true
           for dir in npm/*; do
             [ -d "$dir" ] || continue
             (cd "$dir" && npm publish --access public)
