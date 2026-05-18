@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.35
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.34...v0.0.35)
+
+### 🏡 Chore
+
+- Update dependencies and improve dashboard functionality ([71a42f2](https://github.com/jrmybtlr/DSLinter/commit/71a42f2))
+- Update @napi-rs/cli to version 3.6.2 and refactor ANSI regex in dev-banner ([dd264b2](https://github.com/jrmybtlr/DSLinter/commit/dd264b2))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.34
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.33...v0.0.34)
