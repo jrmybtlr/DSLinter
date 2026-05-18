@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 use regex::Regex;
 
 use crate::config::DslintConfig;
-use crate::directives::{apply_inline_suppressions, collect_workspace_sources};
+use crate::directives::apply_inline_suppressions;
 use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{
     DuplicateComponent, FileScan, GovernanceScores, LintFinding, OwnershipSummary, Severity,
@@ -54,11 +54,9 @@ fn quoted_literal_re() -> &'static Regex {
 pub fn evaluate_workspace(
     root: PathBuf,
     files: Vec<FileScan>,
+    sources: HashMap<PathBuf, String>,
     config: &DslintConfig,
 ) -> WorkspaceReport {
-    // Read every source file once and reuse the text throughout this function,
-    // eliminating duplicate disk reads across rules.
-    let sources = collect_workspace_sources(&root, &files);
 
     let mut findings = Vec::new();
     for file in &files {

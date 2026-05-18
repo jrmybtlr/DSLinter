@@ -1,8 +1,6 @@
 //! `// dslint-ignore-next-line rule-id,...` and block suppressions.
 
 use std::collections::HashMap;
-use std::path::Path;
-
 use crate::model::LintFinding;
 
 fn parse_ignore_comment(line: &str) -> Option<Vec<String>> {
@@ -81,22 +79,6 @@ pub fn apply_inline_suppressions(
             !rule_suppressed_by_patterns(&f.rule_id, &patterns)
         })
         .collect()
-}
-
-pub fn collect_workspace_sources(
-    _root: &Path,
-    files: &[crate::model::FileScan],
-) -> HashMap<std::path::PathBuf, String> {
-    let mut map = HashMap::new();
-    for f in files {
-        if map.contains_key(&f.path) {
-            continue;
-        }
-        if let Ok(s) = std::fs::read_to_string(&f.path) {
-            map.insert(f.path.clone(), s);
-        }
-    }
-    map
 }
 
 #[cfg(test)]

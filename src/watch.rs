@@ -48,6 +48,13 @@ const WRITE_TIMEOUT: Duration = Duration::from_secs(30);
 /// Maximum bytes read for a single static file response.
 const MAX_STATIC_FILE_BYTES: u64 = 16 * 1024 * 1024;
 
+fn quiet_logs() -> bool {
+    matches!(
+        std::env::var("DSLINTER_QUIET").as_deref(),
+        Ok("1") | Ok("true") | Ok("TRUE")
+    )
+}
+
 // ── Public entry point ───────────────────────────────────────────────────────
 
 pub fn run_watch(
@@ -61,50 +68,19 @@ pub fn run_watch(
     let config = crate::config::DslintConfig::load_from_root(root)?;
     let paths = crate::scan::collect_component_files(root, &config)?;
 
-    let mut files: Vec<crate::model::FileScan> = if parallel {
-        use rayon::prelude::*;
-        let mut v: Vec<_> = paths
-            .par_iter()
-            .map(|p| match fs::read_to_string(p) {
-                Ok(src) => crate::scan_file(p, &src),
-                Err(e) => crate::model::FileScan {
-                    parse_errors: vec![format!(
-                        "dslint: could not read `{}`: {e}",
-                        p.display()
-                    )],
-                    path: p.clone(),
-                    definitions: Vec::new(),
-                    usages: Vec::new(),
-                    findings: Vec::new(),
-                    ast_extracts: Default::default(),
-                },
-            })
-            .collect();
-        v.sort_by(|a, b| a.path.cmp(&b.path));
-        v
+    let (mut files, mut sources) = if crate::scan_pipeline::should_scan_parallel(parallel, paths.len())
+    {
+        crate::scan_pipeline::scan_paths_parallel(&paths)
     } else {
-        let mut v: Vec<_> = paths
-            .iter()
-            .map(|p| match fs::read_to_string(p) {
-                Ok(src) => crate::scan_file(p, &src),
-                Err(e) => crate::model::FileScan {
-                    parse_errors: vec![format!(
-                        "dslint: could not read `{}`: {e}",
-                        p.display()
-                    )],
-                    path: p.clone(),
-                    definitions: Vec::new(),
-                    usages: Vec::new(),
-                    findings: Vec::new(),
-                    ast_extracts: Default::default(),
-                },
-            })
-            .collect();
-        v.sort_by(|a, b| a.path.cmp(&b.path));
-        v
+        crate::scan_pipeline::scan_paths_sequential(&paths)
     };
 
-    let report = crate::rules::evaluate_workspace(root.to_path_buf(), files.clone(), &config);
+    let report = crate::rules::evaluate_workspace(
+        root.to_path_buf(),
+        files.clone(),
+        sources.clone(),
+        &config,
+    );
     let json = serde_json::to_string_pretty(&report)?;
 
     // Ensure output directory exists.
@@ -114,7 +90,9 @@ pub fn run_watch(
         })?;
     }
     write_atomic(&output, &json)?;
-    eprintln!("dslint: initial scan done — wrote {}", output.display());
+    if !quiet_logs() {
+        eprintln!("dslint: initial scan done — wrote {}", output.display());
+    }
 
     // Shared state for the HTTP server (if --serve).
     let json_arc: Arc<RwLock<String>> = Arc::new(RwLock::new(json));
@@ -127,13 +105,17 @@ pub fn run_watch(
         let static_root = dashboard_static;
         thread::spawn(move || {
             if let Err(e) = run_http_server(port, json_clone, version_clone, static_root) {
-                eprintln!("dslint: serve error: {e}");
+                if !quiet_logs() {
+                    eprintln!("dslint: serve error: {e}");
+                }
             }
         });
-        if has_dashboard {
-            eprintln!("dslint: serving dashboard + API on http://127.0.0.1:{port}");
-        } else {
-            eprintln!("dslint: serving on http://127.0.0.1:{port}");
+        if !quiet_logs() {
+            if has_dashboard {
+                eprintln!("dslint: serving dashboard + API on http://127.0.0.1:{port}");
+            } else {
+                eprintln!("dslint: serving on http://127.0.0.1:{port}");
+            }
         }
     }
 
@@ -143,7 +125,9 @@ pub fn run_watch(
         .filter_map(|p| fs::metadata(p).ok().and_then(|m| m.modified().ok()).map(|t| (p.clone(), t)))
         .collect();
 
-    eprintln!("dslint: watching {} (poll every {POLL_MS} ms) …", root.display());
+    if !quiet_logs() {
+        eprintln!("dslint: watching {} (poll every {POLL_MS} ms) …", root.display());
+    }
 
     loop {
         thread::sleep(Duration::from_millis(POLL_MS));
@@ -184,35 +168,24 @@ pub fn run_watch(
         }
         if !deleted.is_empty() {
             files.retain(|f| !deleted.contains(&f.path));
+            for p in &deleted {
+                sources.remove(p);
+            }
         }
 
         if changed.is_empty() && deleted.is_empty() {
             continue;
         }
 
-        // Re-scan changed files.
         for path in &changed {
-            match fs::read_to_string(path) {
-                Ok(src) => {
-                    let new_scan = crate::scan_file(path, &src);
-                    if let Some(existing) = files.iter_mut().find(|f| f.path == *path) {
-                        *existing = new_scan;
-                    } else {
-                        files.push(new_scan);
-                    }
-                }
-                Err(_) => {
-                    // File disappeared between discovery and read — treat as deleted.
-                    files.retain(|f| f.path != *path);
-                }
-            }
+            crate::rescan_file(path, &mut files, &mut sources);
         }
         files.sort_by(|a, b| a.path.cmp(&b.path));
 
-        // Rebuild workspace report.
         let new_report = crate::rules::evaluate_workspace(
             root.to_path_buf(),
             files.clone(),
+            sources.clone(),
             &config,
         );
         let new_json = match serde_json::to_string_pretty(&new_report) {

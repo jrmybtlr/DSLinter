@@ -9,9 +9,8 @@ use oxc_ast::ast::{
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
-use regex::Regex;
-
 use crate::lines::{line_of_offset, newline_offsets};
+use crate::text_patterns::{suppression_match_iter, todo_marker_match_iter};
 use crate::model::{LintFinding, Severity};
 
 const LARGE_FILE_LINES: usize = 400;
@@ -203,10 +202,7 @@ pub fn collect_text_code_quality(report_path: &Path, source: &str) -> Vec<LintFi
     // Precompute newline positions once so the regex loops run in O(log n) per match.
     let newlines = newline_offsets(source);
 
-    let suppression =
-        Regex::new(r"(?m)//.*\beslint-disable\b|@ts-ignore\b|@ts-expect-error\b|@ts-nocheck\b")
-            .expect("suppression regex");
-    for m in suppression.find_iter(source) {
+    for m in suppression_match_iter(source) {
         let line = line_of_offset(&newlines, m.start());
         push_quality_finding(
             &mut out,
@@ -218,9 +214,7 @@ pub fn collect_text_code_quality(report_path: &Path, source: &str) -> Vec<LintFi
         );
     }
 
-    let todo =
-        Regex::new(r"(?m)//\s*(TODO|FIXME|HACK)\b|/\*\s*(TODO|FIXME|HACK)\b").expect("todo regex");
-    for m in todo.find_iter(source) {
+    for m in todo_marker_match_iter(source) {
         let line = line_of_offset(&newlines, m.start());
         push_quality_finding(
             &mut out,

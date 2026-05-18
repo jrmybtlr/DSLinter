@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   defaultReportPath,
   defaultServePort,
@@ -9,9 +9,40 @@ import {
   resolveBundledDashboardDir,
   resolveViteBin,
 } from "../lib/project-root.mjs";
-import { warnIfPortBusy } from "../lib/port-check.mjs";
+import { writeDevBanner } from "../lib/dev-banner.mjs";
+import { findAvailablePort, warnIfPortBusy } from "../lib/port-check.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
 import { waitForPort } from "../lib/wait-for-port.mjs";
+
+const POLL_MS = 150;
+
+/**
+ * @param {number} preferred
+ */
+async function resolveUiPort(preferred) {
+  const fromEnv = process.env.DSLINTER_DEV_UI_PORT?.trim();
+  const start = fromEnv
+    ? Number.parseInt(fromEnv, 10)
+    : preferred;
+  if (!Number.isFinite(start) || start < 1 || start > 65535) {
+    return findAvailablePort(preferred);
+  }
+  return findAvailablePort(start);
+}
+
+/**
+ * @param {{
+ *   scanPath: string;
+ *   reportPath: string;
+ *   apiPort: number;
+ *   apiAvailable: boolean;
+ *   dashboardUrl?: string | null;
+ *   bundledUrl?: string | null;
+ * }} banner
+ */
+function printDevBanner(banner) {
+  writeDevBanner({ ...banner, pollMs: POLL_MS });
+}
 
 /**
  * @param {{
@@ -24,6 +55,7 @@ import { waitForPort } from "../lib/wait-for-port.mjs";
 export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort }) {
   const port = servePort ?? defaultServePort();
   const reportPath = defaultReportPath(scanPath, outputPath);
+  const scanAbs = resolve(scanPath);
   const consumerViteRoot = findViteRoot(process.cwd());
   const embedRoot = getDashboardPackageRoot();
   const embedViteBin = hasEmbedDashboard() ? resolveViteBin(embedRoot) : null;
@@ -54,11 +86,14 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
     args.push("--dashboard-static", bundledDist);
   }
 
-  if (hasServe || args.some((a) => a.startsWith("--serve="))) {
-    await warnIfPortBusy(port);
-  }
+  const apiAvailable = !(await warnIfPortBusy(port, { silent: true }));
 
-  const scanner = await spawnScanner(args);
+  const scanner = await spawnScanner(args, {
+    env: {
+      ...process.env,
+      DSLINTER_QUIET: "1",
+    },
+  });
   const children = [scanner];
 
   const cleanup = (signal) => {
@@ -76,21 +111,44 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
     else if (code !== 0 && code !== null) process.exit(code);
   });
 
-  try {
-    await waitForPort(port);
-  } catch (err) {
-    process.stderr.write(`${err instanceof Error ? err.message : err}\n`);
-    cleanup("SIGTERM");
-    process.exit(1);
+  if (apiAvailable) {
+    try {
+      await waitForPort(port);
+    } catch (err) {
+      process.stderr.write(`${err instanceof Error ? err.message : err}\n`);
+      cleanup("SIGTERM");
+      process.exit(1);
+    }
   }
 
-  const apiUrl = `http://127.0.0.1:${port}/dslint-report.json`;
+  const bundledUrl = attachBundledStatic ? `http://127.0.0.1:${port}/` : null;
+
+  const bannerBase = {
+    scanPath: scanAbs,
+    reportPath,
+    apiPort: port,
+    apiAvailable,
+    bundledUrl,
+  };
 
   if (useEmbedViteDev) {
-    const uiPort = process.env.DSLINTER_DEV_UI_PORT?.trim() || "5175";
+    const uiPort = await resolveUiPort(
+      Number.parseInt(process.env.DSLINTER_DEV_UI_PORT?.trim() || "5175", 10) || 5175,
+    );
+    const dashboardUrl = `http://127.0.0.1:${uiPort}/`;
+
     const vite = spawn(
       process.execPath,
-      [embedViteBin, "--config", join(embedRoot, "vite.config.ts"), "--mode", "serve", "--port", uiPort],
+      [
+        embedViteBin,
+        "--config",
+        join(embedRoot, "vite.config.ts"),
+        "--mode",
+        "serve",
+        "--port",
+        String(uiPort),
+        "--strictPort",
+      ],
       {
         cwd: embedRoot,
         stdio: "inherit",
@@ -98,17 +156,8 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
       },
     );
     children.push(vite);
-    process.stderr.write(
-      [
-        "",
-        "[dslinter] Dashboard UI (live source)",
-        `  http://127.0.0.1:${uiPort}/`,
-        "[dslinter] Scanner API",
-        `  ${apiUrl}`,
-        `  SSE: http://127.0.0.1:${port}/events`,
-        "",
-      ].join("\n"),
-    );
+    printDevBanner({ ...bannerBase, dashboardUrl });
+
     vite.on("exit", (code, signal) => {
       cleanup("SIGTERM");
       if (signal) process.kill(process.pid, signal);
@@ -125,32 +174,20 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
       process.exit(1);
     }
 
-    const bundledUrl = attachBundledStatic ? `http://127.0.0.1:${port}/` : null;
-    process.stderr.write(
-      [
-        "",
-        "[dslinter] Dashboard UI (recommended) — Vite dev server with live dslinter source:",
-        "  http://localhost:5173/  (or the port Vite prints below if 5173 is taken)",
-        bundledUrl
-          ? `[dslinter] Bundled dashboard (same build as publish) — only if port ${port} bound successfully:`
-          : `[dslinter] Scanner API only on :${port} (port may be busy — use Vite URL above):`,
-        bundledUrl ? `  ${bundledUrl}` : null,
-        `  ${apiUrl}`,
-        `  SSE: http://127.0.0.1:${port}/events`,
-        "",
-        "  Do not use `npx dslint` — that is a different npm package. Use `npm run dev` or `npx dslinter .` in demo/.",
-        "",
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    );
+    const uiPort = await resolveUiPort(5173);
+    const dashboardUrl = `http://localhost:${uiPort}/`;
 
-    const vite = spawn(process.execPath, [viteBin, "--mode", "serve"], {
-      cwd: consumerViteRoot,
-      stdio: "inherit",
-      env: { ...process.env, DSLINT_SERVE_PORT: String(port) },
-    });
+    const vite = spawn(
+      process.execPath,
+      [viteBin, "--mode", "serve", "--port", String(uiPort), "--strictPort"],
+      {
+        cwd: consumerViteRoot,
+        stdio: "inherit",
+        env: { ...process.env, DSLINT_SERVE_PORT: String(port) },
+      },
+    );
     children.push(vite);
+    printDevBanner({ ...bannerBase, dashboardUrl });
 
     vite.on("exit", (code, signal) => {
       cleanup("SIGTERM");
@@ -161,30 +198,14 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
   }
 
   if (bundledDist) {
-    const url = `http://127.0.0.1:${port}/`;
-    process.stderr.write(
-      [
-        "",
-        "[dslinter] Bundled dashboard",
-        `  ${url}`,
-        `  Report: ${apiUrl}`,
-        "",
-      ].join("\n"),
-    );
-    maybeOpenBrowser(url);
+    const dashboardUrl = bundledUrl ?? `http://127.0.0.1:${port}/`;
+    printDevBanner({ ...bannerBase, dashboardUrl });
+    maybeOpenBrowser(dashboardUrl);
     scanner.on("exit", (code) => process.exit(code ?? 0));
     return;
   }
 
-  process.stderr.write(
-    [
-      "",
-      "[dslinter] Scanner only (no dashboard UI).",
-      `  Report: ${apiUrl}`,
-      "  Run `pnpm --filter dslinter run build:dashboard` or use a Vite project with dslinter.",
-      "",
-    ].join("\n"),
-  );
+  printDevBanner(bannerBase);
   scanner.on("exit", (code) => process.exit(code ?? 0));
 }
 

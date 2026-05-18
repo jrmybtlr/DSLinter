@@ -37,11 +37,12 @@ export async function spawnScanner(scannerArgs, options = {}) {
 
   return spawn(process.execPath, [binScript, ...scannerArgs], {
     stdio: "inherit",
+    ...options,
     env: {
       ...process.env,
       DSLINTER_INTERNAL: "1",
+      ...options.env,
     },
-    ...options,
   });
 }
 

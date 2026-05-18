@@ -29,7 +29,8 @@ struct Cli {
     #[arg(long)]
     json: bool,
 
-    /// Scan files in parallel (recommended for large trees).
+    /// Scan files in parallel. Also enabled automatically when the tree has
+    /// 50+ component files (see `PARALLEL_SCAN_THRESHOLD` in the library).
     #[arg(short, long)]
     parallel: bool,
 
@@ -128,11 +129,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
         };
     }
 
-    let report = match if cli.parallel {
-        crate::scan_workspace_parallel(&root)
-    } else {
-        crate::scan_workspace(&root)
-    } {
+    let report = match crate::scan_workspace_auto(&root, cli.parallel) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("{e:#}");

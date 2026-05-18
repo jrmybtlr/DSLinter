@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: Number(process.env.DSLINTER_DEV_UI_PORT ?? "5175"),
-      strictPort: false,
+      strictPort: true,
       proxy:
         mode === "serve"
           ? {
