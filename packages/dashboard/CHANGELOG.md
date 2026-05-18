@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.34
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.33...v0.0.34)
+
+### 🩹 Fixes
+
+- Update native binding version checks to 0.0.33 and improve type definitions in ComponentPlaygroundPane ([99ad1e6](https://github.com/jrmybtlr/DSLinter/commit/99ad1e6))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.0.33
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.0.32...v0.0.33)
