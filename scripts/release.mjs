@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import semver from "semver";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repo = process.env.GITHUB_REPOSITORY ?? "jrmybtlr/DSLinter";
@@ -20,8 +21,6 @@ if (!bump) {
   process.stderr.write("Usage: node scripts/release.mjs --patch|--minor|--major\n");
   process.exit(1);
 }
-
-const kind = bump.slice(2);
 
 function run(cmd, args, opts = {}) {
   const r = spawnSync(cmd, args, { stdio: "inherit", ...opts });
@@ -76,7 +75,27 @@ function readPackageVersion() {
 }
 
 run("pnpm", ["run", "test"]);
-run("pnpm", ["exec", "changelogen", "--release", kind, "--dir", "packages/dashboard"]);
+
+const bumpKind = bump.slice(2); // patch | minor | major
+const currentVersion = readPackageVersion();
+const nextVersion = semver.inc(currentVersion, bumpKind);
+if (!nextVersion) {
+  process.stderr.write(`Invalid semver bump ${bumpKind} from ${currentVersion}\n`);
+  process.exit(1);
+}
+
+// changelogen expects `--release --minor` (not `--release minor`). On 0.x it downgrades
+// minor→patch unless we pass `-r` with the version the caller asked for.
+run("pnpm", [
+  "exec",
+  "changelogen",
+  "--release",
+  bump,
+  "-r",
+  nextVersion,
+  "--dir",
+  "packages/dashboard",
+]);
 
 const version = readPackageVersion();
 const tag = `v${version}`;
