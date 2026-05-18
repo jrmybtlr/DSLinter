@@ -1002,6 +1002,18 @@ mod prop_tests {
     }
 
     #[test]
+    fn rollup_counts_children_from_jsx_content() {
+        let files = vec![make_file(
+            "page.tsx",
+            vec![],
+            vec![("FlexStack", vec!["children"])],
+        )];
+        let rows = rollup_usage(&files);
+        let flex = rows.iter().find(|r| r.component == "FlexStack").unwrap();
+        assert_eq!(*flex.prop_frequencies.get("children").unwrap(), 1);
+    }
+
+    #[test]
     fn rollup_records_usage_locations() {
         let files = vec![make_file(
             "x.tsx",

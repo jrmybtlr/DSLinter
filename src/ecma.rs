@@ -374,7 +374,8 @@ fn non_empty_string_literal_attr(attrs: &[JSXAttributeItem<'_>], name: &str) -> 
     }
 }
 
-fn jsx_children_have_visible_text(children: &[JSXChild<'_>]) -> bool {
+/// True when JSX element content would pass `children` in React (text, nested nodes, or expressions).
+fn jsx_has_child_content(children: &[JSXChild<'_>]) -> bool {
     for child in children {
         match child {
             JSXChild::Text(t) => {
@@ -388,6 +389,23 @@ fn jsx_children_have_visible_text(children: &[JSXChild<'_>]) -> bool {
         }
     }
     false
+}
+
+fn jsx_children_have_visible_text(children: &[JSXChild<'_>]) -> bool {
+    jsx_has_child_content(children)
+}
+
+fn props_from_jsx_element(
+    attributes: &[JSXAttributeItem<'_>],
+    children: &[JSXChild<'_>],
+) -> Vec<String> {
+    let mut props = props_from_attributes(attributes);
+    if jsx_has_child_content(children) && !props.iter().any(|p| p == "children") {
+        props.push("children".to_string());
+    }
+    props.sort();
+    props.dedup();
+    props
 }
 
 fn button_has_accessible_name(attrs: &[JSXAttributeItem<'_>], children: &[JSXChild<'_>]) -> bool {
@@ -630,26 +648,25 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                 );
             }
         }
+
+        if let Some(component) = jsx_name(&el.opening_element.name) {
+            if usage_is_design_component(&component) {
+                let props = props_from_jsx_element(&el.opening_element.attributes, &el.children);
+                let prop_values = prop_values_from_attributes(&el.opening_element.attributes);
+                self.usages.push(JsxUsage {
+                    component,
+                    line: self.line(el.opening_element.span.start),
+                    props,
+                    prop_values,
+                });
+            }
+        }
+
         walk::walk_jsx_element(self, el);
     }
 
     fn visit_jsx_opening_element(&mut self, el: &JSXOpeningElement<'a>) {
         self.check_intrinsic_a11y_opening(el);
-
-        let Some(component) = jsx_name(&el.name) else {
-            walk::walk_jsx_opening_element(self, el);
-            return;
-        };
-        if usage_is_design_component(&component) {
-            let props = props_from_attributes(&el.attributes);
-            let prop_values = prop_values_from_attributes(&el.attributes);
-            self.usages.push(JsxUsage {
-                component,
-                line: self.line(el.span.start),
-                props,
-                prop_values,
-            });
-        }
         walk::walk_jsx_opening_element(self, el);
     }
 }
@@ -856,5 +873,48 @@ export function InlineCode({ children }: Props) {
             .find(|d| d.name == "InlineCode")
             .expect("InlineCode definition");
         assert_eq!(def.declared_props, vec!["children"]);
+    }
+
+    #[test]
+    fn usage_records_children_from_jsx_content() {
+        let src = r#"
+export function Page() {
+  return <FlexStack><p>x</p></FlexStack>;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Page.tsx"), src);
+        let usage = scan
+            .usages
+            .iter()
+            .find(|u| u.component == "FlexStack")
+            .expect("FlexStack usage");
+        assert!(usage.props.contains(&"children".to_string()));
+    }
+
+    #[test]
+    fn usage_omits_children_for_self_closing() {
+        let src = r#"export function Page() { return <FlexStack />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Page.tsx"), src);
+        let usage = scan
+            .usages
+            .iter()
+            .find(|u| u.component == "FlexStack")
+            .expect("FlexStack usage");
+        assert!(!usage.props.contains(&"children".to_string()));
+    }
+
+    #[test]
+    fn usage_dedupes_children_attr_and_jsx_content() {
+        let src = r#"export function Page() { return <FlexStack children="x">y</FlexStack>; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Page.tsx"), src);
+        let usage = scan
+            .usages
+            .iter()
+            .find(|u| u.component == "FlexStack")
+            .expect("FlexStack usage");
+        assert_eq!(
+            usage.props.iter().filter(|p| *p == "children").count(),
+            1
+        );
     }
 }
