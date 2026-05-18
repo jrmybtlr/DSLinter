@@ -25,7 +25,18 @@ export type {
   FileScan,
   PlaygroundSpec,
   DeclaredPropKind,
+  CssTokenSummary,
+  CssTokenDefinition,
+  CssTokenUsage,
+  CssTokenCategory,
+  CssTokenScope,
 } from "./types/report";
+export { buildMergedTokenView } from "./dashboard/mergeTokenCatalog";
+export type {
+  MergedTokenView,
+  ScannedTokenRow,
+  TokenUsageFilter,
+} from "./dashboard/mergeTokenCatalog";
 export type {
   TokenCatalog,
   TokenCatalogColor,

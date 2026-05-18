@@ -158,6 +158,52 @@ pub struct OwnershipSummary {
 }
 
 /// Workbench playground row derived from scan + `playground_groups` in config (no per-file TS).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CssTokenCategory {
+    Color,
+    Spacing,
+    Radius,
+    Typography,
+    Other,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CssTokenScope {
+    Theme,
+    Root,
+    Selector,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CssTokenDefinition {
+    pub name: String,
+    pub value: String,
+    pub category: CssTokenCategory,
+    pub scope: CssTokenScope,
+    pub path: PathBuf,
+    pub line: u32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CssTokenUsage {
+    pub name: String,
+    pub reference_count: u32,
+    pub file_count: u32,
+    pub files: Vec<PathBuf>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub usage_locations: Vec<UsageLocation>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CssTokenSummary {
+    pub definitions: Vec<CssTokenDefinition>,
+    pub usage_by_token: Vec<CssTokenUsage>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unused_tokens: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct PlaygroundSpec {
     /// Stable id (file stem), used in URLs / sidebar.
@@ -186,4 +232,6 @@ pub struct WorkspaceReport {
     pub scores: GovernanceScores,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub playgrounds: Vec<PlaygroundSpec>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub css_tokens: Option<CssTokenSummary>,
 }

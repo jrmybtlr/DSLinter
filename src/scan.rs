@@ -77,3 +77,51 @@ pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Re
     out.sort();
     Ok(out)
 }
+
+fn is_skipped_css_file(path: &Path) -> bool {
+    let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+        return true;
+    };
+    if name.ends_with(".min.css") {
+        return true;
+    }
+    // Compiled Tailwind output — not a token source of truth.
+    if name == "tw-test.css" {
+        return true;
+    }
+    false
+}
+
+/// Collect source `.css` files under `root` (respects ignore rules; skips vendor/build dirs).
+pub fn collect_css_files(root: &Path, config: &DslintConfig) -> anyhow::Result<Vec<PathBuf>> {
+    let engine = build_ignore_engine(root, config)?;
+    let mut out = Vec::new();
+    for entry in WalkDir::new(root)
+        .into_iter()
+        .filter_entry(|e| !is_skipped_dir(e))
+    {
+        let Ok(entry) = entry else {
+            continue;
+        };
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let path = entry.path().to_path_buf();
+        if is_skipped_css_file(&path) {
+            continue;
+        }
+        if let Some(ref eng) = engine {
+            if eng.matches(root, &path) {
+                continue;
+            }
+        }
+        let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
+            continue;
+        };
+        if ext.eq_ignore_ascii_case("css") {
+            out.push(path);
+        }
+    }
+    out.sort();
+    Ok(out)
+}

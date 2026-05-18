@@ -48,6 +48,9 @@ pub struct DslintConfig {
     /// colors but no explicit `dark:` color variant is present.
     #[serde(default)]
     pub check_dark_mode_contrast: bool,
+    /// When true, emit `token-unused-css-var` for theme/root CSS variables with no references.
+    #[serde(default)]
+    pub check_unused_css_tokens: bool,
 }
 
 impl DslintConfig {

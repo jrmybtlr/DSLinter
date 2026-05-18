@@ -45,7 +45,8 @@ Put `.dslint.json` or `dslint.json` at the repository root:
     "disabled_rules": ["code-todo-marker"],
     "report_console_error": true
   },
-  "check_dark_mode_contrast": false
+  "check_dark_mode_contrast": false,
+  "check_unused_css_tokens": false
 }
 ```
 
@@ -83,9 +84,10 @@ npx dslinter --report /path/to/repo --json --fail-on-warnings
 - **Usage:** PascalCase JSX and Vue template usage, with prop lists (variant hints)
 - **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` and `<input>` accessible names (JSX AST + Vue `<template>` heuristics); governance scoring weights all `a11y-*` rules
 - **Code quality (`code-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
-- **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`)
+- **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`), CSS custom-property inventory with used/unused tracking (`css_tokens` in `--json`)
 - **Ownership:** rollups in `--json` and the dashboard when `ownership` is set
-- **Scores:** heuristic governance scores (the token pillar is omitted until `known_tokens` is set); `--json` for dashboards and CI
+- **Scores:** heuristic governance scores (token pillar uses CSS token adoption when `css_tokens` is present, else `known_tokens` substring match); `--json` for dashboards and CI
+- **CSS tokens (`css_tokens` in JSON):** scans source `.css` (plus `@import` targets like `dslinter/theme.css`), classifies `--color-*` / `--spacing-*` / etc., and reports references from `var(--*)` and Tailwind utilities; optional `token-unused-css-var` when `check_unused_css_tokens` is true
 
 Roadmap follows phased governance (tokens, deeper a11y, drift, AI compliance) described elsewhere in the project docs.
 

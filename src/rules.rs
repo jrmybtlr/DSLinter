@@ -7,11 +7,12 @@ use std::sync::OnceLock;
 use regex::Regex;
 
 use crate::config::DslintConfig;
+use crate::css_tokens::{analyze_css_tokens, token_adoption_from_css, unused_css_var_findings};
 use crate::directives::apply_inline_suppressions;
 use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{
-    DuplicateComponent, FileScan, GovernanceScores, LintFinding, OwnershipSummary, Severity,
-    UsageLocation, UsageSummary, WorkspaceReport,
+    CssTokenSummary, DuplicateComponent, FileScan, GovernanceScores, LintFinding,
+    OwnershipSummary, Severity, UsageLocation, UsageSummary, WorkspaceReport,
 };
 use crate::playground_emit::build_playground_specs;
 
@@ -91,12 +92,24 @@ pub fn evaluate_workspace(
 
     findings.extend(unused_props_findings(&files, &usage_by_component, config));
 
+    let css_tokens = analyze_css_tokens(&root, &files, &sources, config);
+    if let Some(ref summary) = css_tokens {
+        findings.extend(unused_css_var_findings(summary, config));
+    }
+
     findings = apply_inline_suppressions(findings, &sources);
     findings = filter_smell_config(findings, config);
 
     let ownership = compute_ownership(&root, &files, config);
 
-    let scores = compute_scores(&findings, &duplicate_components, &files, config, &sources);
+    let scores = compute_scores(
+        &findings,
+        &duplicate_components,
+        &files,
+        config,
+        &sources,
+        css_tokens.as_ref(),
+    );
 
     let playgrounds = build_playground_specs(&root, &files, config);
 
@@ -109,6 +122,7 @@ pub fn evaluate_workspace(
         ownership,
         scores,
         playgrounds,
+        css_tokens,
     }
 }
 
@@ -710,6 +724,7 @@ fn compute_scores(
     files: &[FileScan],
     config: &DslintConfig,
     sources: &HashMap<PathBuf, String>,
+    css_tokens: Option<&CssTokenSummary>,
 ) -> GovernanceScores {
     let warn = findings
         .iter()
@@ -717,7 +732,9 @@ fn compute_scores(
         .count() as i32;
     let dup_penalty = duplicates.len() as i32 * 5;
 
-    let token_adoption = token_adoption_pct(files, config, sources);
+    let token_adoption = css_tokens
+        .and_then(token_adoption_from_css)
+        .or_else(|| token_adoption_pct(files, config, sources));
     let maintainability =
         (100_i32 - warn * 3 - dup_penalty - smell_penalty(findings)).clamp(0, 100) as u8;
     let accessibility = (100_i32 - a11y_penalty(findings)).clamp(0, 100) as u8;

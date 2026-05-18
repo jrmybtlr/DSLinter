@@ -20,4 +20,8 @@ fn demo_workspace_has_inventory_and_rules() {
         !report.ownership.is_empty(),
         "ownership rollup should include at least one bucket"
     );
+    assert!(
+        report.css_tokens.is_some(),
+        "demo should emit css_tokens from stylesheets"
+    );
 }
