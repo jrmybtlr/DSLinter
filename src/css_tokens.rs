@@ -98,6 +98,67 @@ fn extract_imports(content: &str) -> Vec<String> {
         .collect()
 }
 
+fn dslinter_styles_filename(rest: &str) -> &str {
+    if rest == "theme.css" {
+        "dashboard-theme.css"
+    } else {
+        rest
+    }
+}
+
+/// Walk `start` and its ancestors for an existing file.
+fn find_file_in_ancestors(start: &Path, build: impl Fn(&Path) -> PathBuf) -> Option<PathBuf> {
+    for base in start.ancestors() {
+        let candidate = build(base);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn resolve_node_modules_import(anchors: &[&Path], spec: &str) -> Option<PathBuf> {
+    let rel = spec.replace('/', std::path::MAIN_SEPARATOR_STR);
+    for anchor in anchors {
+        if let Some(path) =
+            find_file_in_ancestors(anchor, |base| base.join("node_modules").join(&rel))
+        {
+            return Some(path);
+        }
+    }
+    None
+}
+
+fn resolve_monorepo_dslinter_styles(anchors: &[&Path], rest: &str) -> Option<PathBuf> {
+    let theme_file = dslinter_styles_filename(rest);
+    for anchor in anchors {
+        if let Some(path) = find_file_in_ancestors(anchor, |base| {
+            base.join("packages")
+                .join("dashboard")
+                .join("src")
+                .join("styles")
+                .join(theme_file)
+        }) {
+            return Some(path);
+        }
+        if let Some(path) = find_file_in_ancestors(anchor, |base| {
+            base.join("packages").join("dashboard").join(rest)
+        }) {
+            return Some(path);
+        }
+        if let Some(path) = find_file_in_ancestors(anchor, |base| {
+            base.join("packages")
+                .join("dashboard")
+                .join("src")
+                .join("styles")
+                .join(rest)
+        }) {
+            return Some(path);
+        }
+    }
+    None
+}
+
 /// Resolve `@import "…"` relative to the importing file or package name under `node_modules`.
 pub fn resolve_css_import(root: &Path, from_file: &Path, spec: &str) -> Option<PathBuf> {
     let spec = spec.trim();
@@ -114,49 +175,35 @@ pub fn resolve_css_import(root: &Path, from_file: &Path, spec: &str) -> Option<P
         return None;
     }
 
-    // Package import: `dslinter/theme.css` → node_modules or monorepo package path.
-    let under_node_modules = root.join("node_modules").join(spec.replace('/', std::path::MAIN_SEPARATOR_STR));
-    if under_node_modules.is_file() {
-        return Some(under_node_modules);
+    let from_parent = from_file.parent().unwrap_or(root);
+    let anchors = [root, from_parent];
+
+    if let Some(path) = resolve_node_modules_import(&anchors, spec) {
+        return Some(path);
     }
 
-    // Monorepo / linked package: `dslinter` → packages/dashboard
+    // Package import: `dslinter/theme.css` → node_modules or monorepo package path.
     if let Some((pkg, rest)) = spec.split_once('/') {
         if pkg == "dslinter" {
-            let styles_dir = root
-                .join("packages")
-                .join("dashboard")
-                .join("src")
-                .join("styles");
-            let theme_file = if rest == "theme.css" {
-                "dashboard-theme.css"
-            } else {
-                rest
-            };
-            let theme = styles_dir.join(theme_file);
-            if theme.is_file() {
-                return Some(theme);
+            if let Some(path) = resolve_monorepo_dslinter_styles(&anchors, rest) {
+                return Some(path);
             }
-            let embed = root.join("packages").join("dashboard").join(rest);
-            if embed.is_file() {
-                return Some(embed);
-            }
-            let nm_theme = root
-                .join("node_modules")
-                .join("dslinter")
-                .join("src")
-                .join("styles")
-                .join(theme_file);
-            if nm_theme.is_file() {
-                return Some(nm_theme);
+            let theme_file = dslinter_styles_filename(rest);
+            if let Some(path) = find_file_in_ancestors(root, |base| {
+                base.join("node_modules")
+                    .join("dslinter")
+                    .join("src")
+                    .join("styles")
+                    .join(theme_file)
+            }) {
+                return Some(path);
             }
         }
     }
 
-    // Bare filename relative to repo root
-    let at_root = root.join(spec);
-    if at_root.is_file() {
-        return Some(at_root);
+    // Bare filename relative to scan root and ancestors (e.g. committed theme path).
+    if let Some(path) = find_file_in_ancestors(root, |base| base.join(spec)) {
+        return Some(path);
     }
 
     None
@@ -580,11 +627,24 @@ mod tests {
     }
 
     #[test]
-    fn resolves_package_import() {
+    fn resolves_package_import_from_repo_root() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let from = root.join("demo/src/index.css");
         let resolved = resolve_css_import(&root, &from, "dslinter/theme.css");
         assert!(resolved.is_some(), "expected monorepo theme path");
+        assert!(resolved.unwrap().ends_with("dashboard-theme.css"));
+    }
+
+    #[test]
+    fn resolves_package_import_from_demo_scan_root() {
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest.join("demo");
+        let from = root.join("src/index.css");
+        let resolved = resolve_css_import(&root, &from, "dslinter/theme.css");
+        assert!(
+            resolved.is_some(),
+            "demo scan root should resolve theme via parent monorepo path"
+        );
         assert!(resolved.unwrap().ends_with("dashboard-theme.css"));
     }
 
