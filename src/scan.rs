@@ -34,12 +34,27 @@ fn build_ignore_engine(root: &Path, config: &DslintConfig) -> anyhow::Result<Opt
     let mut lines = Vec::new();
     lines.extend(load_ignore_file_lines(&root.join(".gitignore"))?);
     lines.extend(load_ignore_file_lines(&root.join(".dslintignore"))?);
+    lines.extend(config.ignore_globs.iter().cloned());
     lines.extend(config.exclude_globs.iter().cloned());
     IgnoreEngine::from_patterns(&lines)
 }
 
+fn in_include_scope(root: &Path, path: &Path, config: &DslintConfig) -> bool {
+    if config.include_dirs.is_empty() {
+        return true;
+    }
+    config.include_dirs.iter().any(|dir| {
+        let trimmed = dir.trim().trim_matches('/');
+        if trimmed.is_empty() {
+            return false;
+        }
+        let candidate = root.join(trimmed);
+        path.starts_with(&candidate)
+    })
+}
+
 /// Collect component-related source paths under `root`, respecting `.gitignore`,
-/// `.dslintignore`, and `exclude_globs` in config.
+/// `.dslintignore`, and configured ignore globs (`ignore_globs`/`exclude_globs`).
 pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Result<Vec<PathBuf>> {
     let engine = build_ignore_engine(root, config)?;
     let mut out = Vec::new();
@@ -59,6 +74,9 @@ pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Re
                 continue;
             }
         }
+        if !in_include_scope(root, &path, config) {
+            continue;
+        }
         let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
             continue;
         };
@@ -66,7 +84,8 @@ pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Re
         // Collect every extension the parser understands (see `scan_file` in lib.rs).
         // Plain `.ts` / `.js` files are included so that components written without
         // JSX syntax (e.g. render-function components, re-export barrels) are also
-        // inventoried.  Use `exclude_globs` in `.dslint.json` to narrow this set.
+        // inventoried.  Use `ignore_globs` (or legacy `exclude_globs`) in `.dslint.json` to
+        // narrow this set.
         if matches!(
             ext.as_str(),
             "tsx" | "jsx" | "vue" | "ts" | "js" | "mts" | "cts"
@@ -124,4 +143,75 @@ pub fn collect_css_files(root: &Path, config: &DslintConfig) -> anyhow::Result<V
     }
     out.sort();
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn include_dirs_limits_component_scan_scope() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("src/components")).unwrap();
+        std::fs::create_dir_all(root.join("other")).unwrap();
+        std::fs::write(root.join("src/components/Button.tsx"), "export function Button() { return null; }").unwrap();
+        std::fs::write(root.join("other/Outside.tsx"), "export function Outside() { return null; }").unwrap();
+
+        let config = DslintConfig {
+            include_dirs: vec!["src/components".into()],
+            ..Default::default()
+        };
+        let files = collect_component_files(root, &config).unwrap();
+        let rels: Vec<_> = files
+            .iter()
+            .filter_map(|p| p.strip_prefix(root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(rels, vec!["src/components/Button.tsx"]);
+    }
+
+    #[test]
+    fn ignore_globs_filters_files_like_exclude_globs() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("src")).unwrap();
+        std::fs::write(root.join("src/Keep.tsx"), "export function Keep() { return null; }").unwrap();
+        std::fs::write(root.join("src/Skip.tsx"), "export function Skip() { return null; }").unwrap();
+
+        let config = DslintConfig {
+            ignore_globs: vec!["src/Skip.tsx".into()],
+            ..Default::default()
+        };
+        let files = collect_component_files(root, &config).unwrap();
+        let rels: Vec<_> = files
+            .iter()
+            .filter_map(|p| p.strip_prefix(root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(rels, vec!["src/Keep.tsx"]);
+    }
+
+    #[test]
+    fn include_dirs_does_not_limit_css_scan_scope() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("src/components")).unwrap();
+        std::fs::create_dir_all(root.join("src/styles")).unwrap();
+        std::fs::write(root.join("src/components/Button.tsx"), "export function Button() { return null; }").unwrap();
+        std::fs::write(root.join("src/styles/global.css"), ":root { --color-brand: #000; }").unwrap();
+
+        let config = DslintConfig {
+            include_dirs: vec!["src/components".into()],
+            ..Default::default()
+        };
+        let files = collect_css_files(root, &config).unwrap();
+        let rels: Vec<_> = files
+            .iter()
+            .filter_map(|p| p.strip_prefix(root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(rels, vec!["src/styles/global.css"]);
+    }
 }

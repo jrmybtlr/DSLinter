@@ -12,6 +12,7 @@ import {
 import { writeDevBanner } from "../lib/dev-banner.mjs";
 import { findAvailablePort, warnIfPortBusy } from "../lib/port-check.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
+import { ensureDslintConfig } from "../lib/scaffold-config.mjs";
 import { waitForPort } from "../lib/wait-for-port.mjs";
 
 const POLL_MS = 150;
@@ -56,6 +57,10 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
   const port = servePort ?? defaultServePort();
   const reportPath = defaultReportPath(scanPath, outputPath);
   const scanAbs = resolve(scanPath);
+  const configResult = ensureDslintConfig({ targetDir: scanAbs, layout: "default" });
+  if (configResult.created) {
+    process.stderr.write(`dslinter: scaffolded ${configResult.path}\n`);
+  }
   const consumerViteRoot = findViteRoot(process.cwd());
   const embedRoot = getDashboardPackageRoot();
   const embedViteBin = hasEmbedDashboard() ? resolveViteBin(embedRoot) : null;
