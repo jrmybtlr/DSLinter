@@ -196,7 +196,10 @@ export function formatDevBanner(opts) {
     plainWidths.push(14 + 2 + `${apiBase}/events`.length);
   }
   if (opts.pollMs) plainWidths.push(14 + 2 + `polling every ${opts.pollMs} ms`.length);
-  plainWidths.push(visibleLength("  Open the Dashboard URL in your browser. Ctrl+C to stop."));
+  const footerPlain = opts.bundledUrl
+    ? "  Open the Bundled UI URL in your browser. Ctrl+C to stop."
+    : "  Open the Dashboard URL in your browser. Ctrl+C to stop.";
+  plainWidths.push(visibleLength(footerPlain));
 
   const contentWidth = Math.min(maxBox - 4, Math.max(...plainWidths, 40));
   const totalWidth = contentWidth + 4;
@@ -213,7 +216,7 @@ export function formatDevBanner(opts) {
     ...row(color.label("Report file"), reportPlain, contentWidth, color.value),
   );
   styledRows.push("");
-  if (opts.dashboardUrl) {
+  if (opts.dashboardUrl && !opts.bundledUrl) {
     styledRows.push(
       ...row(color.label("Dashboard"), opts.dashboardUrl, contentWidth, color.url),
     );
@@ -251,7 +254,7 @@ export function formatDevBanner(opts) {
     );
   }
   styledRows.push("");
-  styledRows.push(color.dim("  Open the Dashboard URL in your browser. Ctrl+C to stop."));
+  styledRows.push(color.dim(footerPlain));
 
   return boxLines(styledRows, totalWidth).join("\n");
 }

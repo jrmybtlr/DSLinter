@@ -22,7 +22,7 @@ describe("shortenPath", () => {
 });
 
 describe("formatDevBanner", () => {
-  it("includes logo, scan path, report, dashboard, and API URLs", () => {
+  it("includes logo, scan path, report, bundled UI, and API URLs", () => {
     const text = formatDevBanner({
       scanPath: "/tmp/components",
       reportPath: "/tmp/components/public/dslint-report.json",
@@ -36,11 +36,27 @@ describe("formatDevBanner", () => {
     expect(text).toContain(LOGO[1]);
     expect(text).toContain("Scan path");
     expect(text).toContain("Report file");
-    expect(text).toContain("Dashboard");
-    expect(text).toContain("http://localhost:5173/");
+    expect(text).toContain("Bundled UI");
+    expect(text).not.toContain("http://localhost:5173/");
+    expect(text).not.toMatch(/\bDashboard\b/);
     expect(text).toContain("7878");
     expect(text).toContain("dslint-report.json");
     expect(text).toContain("polling every 150 ms");
+    expect(text).toContain("Open the Bundled UI URL");
+  });
+
+  it("shows dashboard URL when bundled UI is not served", () => {
+    const text = formatDevBanner({
+      scanPath: "/tmp/components",
+      reportPath: "/tmp/components/public/dslint-report.json",
+      apiPort: 7878,
+      apiAvailable: true,
+      dashboardUrl: "http://localhost:5173/",
+      pollMs: 150,
+    });
+    expect(text).toContain("Dashboard");
+    expect(text).toContain("http://localhost:5173/");
+    expect(text).toContain("Open the Dashboard URL");
   });
 
   it("marks API unavailable when port is busy", () => {

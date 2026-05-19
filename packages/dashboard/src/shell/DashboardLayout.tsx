@@ -12,12 +12,14 @@ import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 import { Button } from "@/components/ui/button";
 import { cn } from "../lib/utils";
+import { ComponentInspectPane } from "../components/ComponentInspectPane";
 import { ComponentPlaygroundPane } from "../components/ComponentPlaygroundPane";
 import { GovernancePane } from "../components/GovernancePane";
 import { Sidebar } from "../components/Sidebar";
 import { TokensPane } from "../components/TokensPane";
 import { DashboardCommandPalette } from "../components/DashboardCommandPalette";
 import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
+import { resolvePlaygroundEntry } from "../playground/buildPlaygroundEntriesFromReport";
 import { useHashRoute } from "./useHashRoute";
 
 const STORAGE_KEY = "dslinter-dashboard-theme";
@@ -150,22 +152,10 @@ function DashboardLayoutInner({
     [dslinterReport.report],
   );
 
-  const playgroundIds = useMemo(
-    () => new Set(playgroundEntries.map((e) => e.id)),
-    [playgroundEntries],
-  );
-
-  const focusName =
-    route.view === "governance" ? route.catalog : undefined;
-
-  const getEntry = (id: string) => playgroundEntries.find((e) => e.id === id);
-
-  useEffect(() => {
-    if (route.view !== "component") return;
-    if (getEntry(route.componentId)) return;
-    if (!catalogNames.includes(route.componentId)) return;
-    navigate({ view: "governance", catalog: route.componentId });
-  }, [route, catalogNames, playgroundEntries, navigate]);
+  const reportReady =
+    !dslinterReport.loading &&
+    dslinterReport.error == null &&
+    dslinterReport.report != null;
 
   let main: ReactNode;
   if (route.view === "tokens") {
@@ -182,18 +172,46 @@ function DashboardLayoutInner({
         reportUrl={reportUrl}
         dslinterReportHint={dslinterReportHint}
         dslinterReport={dslinterReport}
-        focusName={focusName}
+        onOpenComponent={(name) =>
+          navigate({ view: "component", componentId: name })
+        }
       />
     );
   } else {
-    const entry = getEntry(route.componentId);
-    if (!entry) {
+    const componentId = route.componentId;
+    const entry = resolvePlaygroundEntry(playgroundEntries, componentId);
+    const inCatalog = catalogNames.includes(componentId);
+    const hasPlaygroundSpec =
+      dslinterReport.report?.playgrounds?.some(
+        (p) => p.export_name === componentId || p.id === componentId,
+      ) ?? false;
+
+    if (entry) {
+      main = (
+        <ComponentPlaygroundPane
+          entry={entry}
+          formatModulePath={formatModulePath}
+          workspaceReport={dslinterReport.report}
+          reportReady={reportReady}
+        />
+      );
+    } else if (inCatalog) {
+      main = (
+        <ComponentInspectPane
+          componentId={componentId}
+          workspaceReport={dslinterReport.report}
+          reportReady={reportReady}
+          hasPlaygroundSpec={hasPlaygroundSpec}
+          onBackToGovernance={() => navigate({ view: "governance" })}
+        />
+      );
+    } else {
       main = (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-muted/40 px-8 text-center">
-          <p className="text-sm font-medium text-foreground">Unknown preview</p>
+          <p className="text-sm font-medium text-foreground">Unknown component</p>
           <p className="max-w-md text-xs text-muted-foreground">
-            No playground registered for{" "}
-            <span className="font-mono">{route.componentId}</span>.
+            <span className="font-mono">{componentId}</span> is not in the
+            latest scan catalog.
           </p>
           <Button
             type="button"
@@ -203,19 +221,6 @@ function DashboardLayoutInner({
             Back to governance
           </Button>
         </div>
-      );
-    } else {
-      main = (
-        <ComponentPlaygroundPane
-          entry={entry}
-          formatModulePath={formatModulePath}
-          workspaceReport={dslinterReport.report}
-          reportReady={
-            !dslinterReport.loading &&
-            dslinterReport.error == null &&
-            dslinterReport.report != null
-          }
-        />
       );
     }
   }
@@ -229,14 +234,12 @@ function DashboardLayoutInner({
     >
       <DashboardCommandPalette
         catalogNames={catalogNames}
-        playgroundIds={playgroundIds}
         onNavigate={navigate}
         open={commandPaletteOpen}
         onOpenChange={setCommandPaletteOpen}
       />
       <Sidebar
         report={dslinterReport.report}
-        playgroundIds={playgroundIds}
         reportLoading={dslinterReport.loading}
         reportError={dslinterReport.error}
         route={route}

@@ -9,7 +9,7 @@ type Props = {
   reportUrl?: string;
   dslinterReportHint?: string;
   dslinterReport: DslinterReportState;
-  focusName?: string;
+  onOpenComponent?: (name: string) => void;
 };
 
 export function GovernancePane({
@@ -17,7 +17,7 @@ export function GovernancePane({
   reportUrl: _reportUrl = "/dslint-report.json",
   dslinterReportHint = "npm run dslint:report",
   dslinterReport,
-  focusName,
+  onOpenComponent,
 }: Props) {
   const { report, error, loading } = dslinterReport;
   const componentCatalogCount = report
@@ -80,7 +80,7 @@ export function GovernancePane({
         </p>
       </header>
       <div className="min-w-0 w-full px-6 py-8">
-        <DashboardBody report={report} focusName={focusName} />
+        <DashboardBody report={report} onOpenComponent={onOpenComponent} />
       </div>
     </div>
   );

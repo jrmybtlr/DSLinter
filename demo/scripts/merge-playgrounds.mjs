@@ -237,56 +237,52 @@ function pickDefinition(definitions, stem) {
 
 const playgrounds = [];
 const checkerBundle = getDemoCheckerProgram(demoRoot);
+const hasPlaygroundGroups = Object.keys(playgroundGroups).length > 0;
 
-if (Object.keys(playgroundGroups).length) {
-  for (const file of report.files ?? []) {
-    const rel = relPath(file.path);
-    if (!rel) continue;
-    if (!longestGroup(rel)) continue;
-    if (!/\.(tsx|jsx)$/i.test(rel)) continue;
-    const stem =
-      rel
-        .split("/")
-        .pop()
-        ?.replace(/\.(tsx|jsx)$/i, "") ?? "";
-    const def = pickDefinition(file.definitions ?? [], stem);
-    if (!def) continue;
-    let declared = def.declared_props ?? [];
-    // Prefer the TSX source-of-truth for destructured props when available.
-    // This keeps `declared_props` fresh even if the JSON report is stale or
-    // the Rust extractor doesn't populate `declared_props` for a file yet.
-    const inferred = inferDeclaredPropsFromTsx(demoRoot, rel, def.name);
-    if (inferred.length) {
-      if (!declared.length || inferred.length > declared.length) {
-        declared = inferred;
-      }
+for (const file of report.files ?? []) {
+  const rel = relPath(file.path);
+  if (!rel) continue;
+  if (hasPlaygroundGroups && !longestGroup(rel)) continue;
+  if (!/\.(tsx|jsx)$/i.test(rel)) continue;
+  const stem =
+    rel
+      .split("/")
+      .pop()
+      ?.replace(/\.(tsx|jsx)$/i, "") ?? "";
+  const def = pickDefinition(file.definitions ?? [], stem);
+  if (!def) continue;
+  let declared = def.declared_props ?? [];
+  const inferred = inferDeclaredPropsFromTsx(demoRoot, rel, def.name);
+  if (inferred.length) {
+    if (!declared.length || inferred.length > declared.length) {
+      declared = inferred;
     }
-    const row = {
-      id: stem,
-      export_name: def.name,
-      rel_path: rel,
-      declared_props: declared,
-    };
-    if (playgroundGroupKeyCount > 1) {
-      row.group = longestGroup(rel);
-    }
-    if (checkerBundle) {
-      const kinds = inferDeclaredPropKindsFromTs(
-        checkerBundle.checker,
-        checkerBundle.program,
-        demoRoot,
-        rel,
-        def.name,
-        declared,
-      );
-      if (Object.keys(kinds).length) {
-        row.declared_prop_kinds = kinds;
-      }
-    }
-    playgrounds.push(row);
   }
-  playgrounds.sort((a, b) => a.rel_path.localeCompare(b.rel_path));
+  const row = {
+    id: def.name,
+    export_name: def.name,
+    rel_path: rel,
+    declared_props: declared,
+  };
+  if (playgroundGroupKeyCount > 1) {
+    row.group = longestGroup(rel);
+  }
+  if (checkerBundle) {
+    const kinds = inferDeclaredPropKindsFromTs(
+      checkerBundle.checker,
+      checkerBundle.program,
+      demoRoot,
+      rel,
+      def.name,
+      declared,
+    );
+    if (Object.keys(kinds).length) {
+      row.declared_prop_kinds = kinds;
+    }
+  }
+  playgrounds.push(row);
 }
+playgrounds.sort((a, b) => a.rel_path.localeCompare(b.rel_path));
 
 report.playgrounds = playgrounds;
 writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);

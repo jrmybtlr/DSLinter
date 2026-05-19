@@ -14,10 +14,10 @@ import { ScoreStrip } from "./ScoreStrip";
 
 export function DashboardBody({
   report,
-  focusName,
+  onOpenComponent,
 }: {
   report: WorkspaceReport;
-  focusName?: string;
+  onOpenComponent?: (name: string) => void;
 }) {
   return (
     <div className="space-y-10">
@@ -62,7 +62,7 @@ export function DashboardBody({
         title="Components"
         description="Definitions and JSX usage from the latest snapshot."
       >
-        <ComponentCatalog report={report} focusName={focusName} />
+        <ComponentCatalog report={report} onOpenComponent={onOpenComponent} />
       </Section>
 
       <Section

@@ -13,6 +13,12 @@ export type {
 } from "./types/controls";
 export { defaultArgsFromControls } from "./types/controls";
 export { definePlayground } from "./playground/definePlayground";
+export {
+  buildPlaygroundEntriesFromReport,
+  playgroundCatalogId,
+  resolvePlaygroundEntry,
+} from "./playground/buildPlaygroundEntriesFromReport";
+export type { BuildPlaygroundModules, BuildPlaygroundOptions } from "./playground/buildPlaygroundEntriesFromReport";
 export type { DefinedPlayground } from "./playground/definePlayground";
 export type { PlaygroundPreviewProps, PlaygroundPreviewComponent } from "./types/preview";
 export type {
@@ -69,6 +75,7 @@ export { a11ySummaryForModule, resolveModuleSourcePath } from "./report/a11yForM
 export type { A11yModuleSummary } from "./report/a11yForModule";
 export { tokenStyleFindingsForModule } from "./report/tokenStyleFindingsForModule";
 export { codeScoreSummaryForModule } from "./report/codeScoreForModule";
+export { findingsForComponent } from "./report/findingsForComponent";
 export type { CodeScoreModuleSummary } from "./report/codeScoreForModule";
 export { TokenWall } from "./dashboard/TokenWall";
 export { DashboardBody } from "./dashboard/DashboardBody";

@@ -157,7 +157,7 @@ pub struct OwnershipSummary {
     pub definitions: usize,
 }
 
-/// Workbench playground row derived from scan + `playground_groups` in config (no per-file TS).
+/// Dashboard playground row from scan (all TSX/JSX under the repo when `playground_groups` is unset).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CssTokenCategory {

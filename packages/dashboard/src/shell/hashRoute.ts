@@ -29,7 +29,8 @@ export function parseHashRoute(hash: string): HashRoute {
   if (raw.startsWith("governance/")) {
     const catalog = decodeURIComponent(raw.slice("governance/".length));
     if (catalog.length > 0) {
-      return { view: "governance", catalog };
+      /** Legacy deep links — component pages replaced governance catalog scroll. */
+      return { view: "component", componentId: catalog };
     }
   }
   if (raw.startsWith("component/")) {

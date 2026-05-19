@@ -152,11 +152,17 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
       {
         cwd: embedRoot,
         stdio: "inherit",
-        env: { ...process.env, DSLINT_SERVE_PORT: String(port) },
+        env: {
+          ...process.env,
+          DSLINT_SERVE_PORT: String(port),
+          DSLINT_SCAN_ROOT: scanAbs,
+        },
       },
     );
     children.push(vite);
-    printDevBanner({ ...bannerBase, dashboardUrl });
+    printDevBanner(
+      attachBundledStatic ? bannerBase : { ...bannerBase, dashboardUrl },
+    );
 
     vite.on("exit", (code, signal) => {
       cleanup("SIGTERM");
@@ -183,11 +189,17 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
       {
         cwd: consumerViteRoot,
         stdio: "inherit",
-        env: { ...process.env, DSLINT_SERVE_PORT: String(port) },
+        env: {
+          ...process.env,
+          DSLINT_SERVE_PORT: String(port),
+          DSLINT_SCAN_ROOT: scanAbs,
+        },
       },
     );
     children.push(vite);
-    printDevBanner({ ...bannerBase, dashboardUrl });
+    printDevBanner(
+      attachBundledStatic ? bannerBase : { ...bannerBase, dashboardUrl },
+    );
 
     vite.on("exit", (code, signal) => {
       cleanup("SIGTERM");
@@ -198,9 +210,9 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
   }
 
   if (bundledDist) {
-    const dashboardUrl = bundledUrl ?? `http://127.0.0.1:${port}/`;
-    printDevBanner({ ...bannerBase, dashboardUrl });
-    maybeOpenBrowser(dashboardUrl);
+    const openUrl = bundledUrl ?? `http://127.0.0.1:${port}/`;
+    printDevBanner(bannerBase);
+    maybeOpenBrowser(openUrl);
     scanner.on("exit", (code) => process.exit(code ?? 0));
     return;
   }
