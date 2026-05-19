@@ -55,7 +55,7 @@ Put `.dslint.json` or `dslint.json` at the repository root:
 }
 ```
 
-`include_dirs` restricts component/CSS discovery to those directory prefixes.  
+`include_dirs` restricts component discovery to those directory prefixes.  
 `ignore_globs` uses the same ignore semantics as `.gitignore`/`.dslintignore`.  
 `css_entrypoints` scopes token analysis to selected CSS entry files (+ their `@import` graph).
 

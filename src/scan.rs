@@ -134,9 +134,6 @@ pub fn collect_css_files(root: &Path, config: &DslintConfig) -> anyhow::Result<V
                 continue;
             }
         }
-        if !in_include_scope(root, &path, config) {
-            continue;
-        }
         let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
             continue;
         };
@@ -194,5 +191,27 @@ mod tests {
             .map(|p| p.to_string_lossy().replace('\\', "/"))
             .collect();
         assert_eq!(rels, vec!["src/Keep.tsx"]);
+    }
+
+    #[test]
+    fn include_dirs_does_not_limit_css_scan_scope() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("src/components")).unwrap();
+        std::fs::create_dir_all(root.join("src/styles")).unwrap();
+        std::fs::write(root.join("src/components/Button.tsx"), "export function Button() { return null; }").unwrap();
+        std::fs::write(root.join("src/styles/global.css"), ":root { --color-brand: #000; }").unwrap();
+
+        let config = DslintConfig {
+            include_dirs: vec!["src/components".into()],
+            ..Default::default()
+        };
+        let files = collect_css_files(root, &config).unwrap();
+        let rels: Vec<_> = files
+            .iter()
+            .filter_map(|p| p.strip_prefix(root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(rels, vec!["src/styles/global.css"]);
     }
 }
