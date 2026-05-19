@@ -104,6 +104,11 @@ fn resolve_css_entry_paths(root: &Path, config: &DslintConfig) -> Vec<PathBuf> {
         let path = root.join(trimmed);
         if path.is_file() {
             out.push(path);
+        } else {
+            eprintln!(
+                "dslint: css_entrypoints entry not found: {}",
+                path.display()
+            );
         }
     }
     out.sort();
