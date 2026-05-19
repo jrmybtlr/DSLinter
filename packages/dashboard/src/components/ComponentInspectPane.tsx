@@ -21,6 +21,8 @@ import { FindingsList } from "../dashboard/FindingsList";
 import { shortPath } from "../dashboard/paths";
 import { findingsForComponent } from "../report/findingsForComponent";
 import type { WorkspaceReport } from "../types/report";
+import type { PlaygroundJoinSkip } from "../playground/playgroundJoin";
+import { findPlaygroundSpec } from "../playground/playgroundJoin";
 import { Section } from "./Section";
 
 type Props = {
@@ -28,6 +30,8 @@ type Props = {
   workspaceReport: WorkspaceReport | null;
   reportReady: boolean;
   hasPlaygroundSpec: boolean;
+  /** When the report row exists but Vite could not load the module/export. */
+  playgroundJoinSkip?: PlaygroundJoinSkip;
   onBackToGovernance: () => void;
 };
 
@@ -36,8 +40,10 @@ export function ComponentInspectPane({
   workspaceReport,
   reportReady,
   hasPlaygroundSpec,
+  playgroundJoinSkip,
   onBackToGovernance,
 }: Props) {
+  const playgroundSpec = findPlaygroundSpec(workspaceReport, componentId);
   const definitions = useMemo(() => {
     if (!workspaceReport) return [];
     return aggregateDefinitions(workspaceReport).get(componentId) ?? [];
@@ -66,6 +72,15 @@ export function ComponentInspectPane({
     ? "A preview was expected for this component but the module could not be loaded in the dashboard bundle (check the file path, export name, or that npx dslinter was run from the project root)."
     : "No playable component definition was found in a .tsx/.jsx file under the scanned workspace — only names from JSX usage appear in the catalog.";
 
+  const joinDetail =
+    playgroundJoinSkip?.reason === "module_not_found"
+      ? `Vite glob is missing key "${playgroundJoinSkip.globKey}" for report path "${playgroundJoinSkip.rel_path}". Run npx dslinter init and wire import.meta.glob in src/playground/buildRegistry.ts.`
+      : playgroundJoinSkip?.reason === "export_not_found"
+        ? `Module loaded but named export "${playgroundJoinSkip.export_name}" was not found. Use export function ${playgroundJoinSkip.export_name}(…) in ${playgroundJoinSkip.rel_path}.`
+        : playgroundSpec
+          ? `Report path: ${playgroundSpec.rel_path} (export ${playgroundSpec.export_name}). Ensure buildRegistry.ts glob covers this file and globKeyFromRelPath matches your import.meta.glob keys.`
+          : null;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <div className="min-h-0 flex-1 overflow-auto">
@@ -81,6 +96,11 @@ export function ComponentInspectPane({
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                 Scan snapshot — no live preview. {previewNote}
               </p>
+              {joinDetail ? (
+                <p className="mt-2 max-w-2xl font-mono text-xs text-muted-foreground">
+                  {joinDetail}
+                </p>
+              ) : null}
             </div>
             <Button type="button" size="sm" variant="outline" onClick={onBackToGovernance}>
               Back to governance

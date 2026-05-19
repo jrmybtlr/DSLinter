@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { useWorkspaceReport, DashboardLayout } from "dslinter";
-import { buildPlaygroundEntries } from "./playground/buildRegistry";
+import {
+  buildPlaygroundEntries,
+  getPlaygroundJoinSkips,
+} from "./playground/buildRegistry";
 import { tokenCatalog } from "./tokenCatalog";
 
 // When running `npm run dev:serve` Vite proxies /events to the Rust server,
@@ -22,9 +25,15 @@ export default function App() {
     [dslinterReport.report],
   );
 
+  const playgroundJoinSkips = useMemo(
+    () => getPlaygroundJoinSkips(dslinterReport.report),
+    [dslinterReport.report],
+  );
+
   return (
     <DashboardLayout
       playgroundEntries={playgroundEntries}
+      playgroundJoinSkips={playgroundJoinSkips}
       tokenCatalog={tokenCatalog}
       dslinterReport={dslinterReport}
       dslinterReportHint="npm run dslint:report (from demo/)"

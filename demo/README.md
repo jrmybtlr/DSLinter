@@ -13,12 +13,12 @@ This repo uses **workspace linking** at the repo root so every dependency declar
 
 The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in [`../packages/dashboard/`](../packages/dashboard/) and is consumed like a published library:
 
-- **Local:** `demo/package.json` uses `"dslinter": "file:../packages/dashboard"`. Vite is configured with `optimizeDeps.exclude: ["dslinter"]` so edits under `packages/dashboard/src/` hot-reload with `npm run dev` / `pnpm dev` in `demo/`.
+- **Local:** `demo/package.json` uses `"dslinter": "workspace:*"`. Vite aliases `dslinter` to `packages/dashboard/src` (and `optimizeDeps.exclude: ["dslinter"]`) so edits hot-reload without reinstalling when new modules are added.
 - **After publish:** depend on `"dslinter": "^0.0.1"` (or your registry scope) and keep the same **`@import "dslinter/theme.css"`** line after Tailwind in your app CSS.
 
 The demo app wires **data** as follows:
 
-- **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.tsx")` to resolve live previews (no `definePlayground` in each component file).
+- **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.{tsx,jsx}")` via `createPlaygroundRegistry` from **dslinter** (covers nested paths like `src/components/ui/button.tsx`). Passes `playgroundJoinSkips` to the dashboard for inspect-pane hints when a preview fails to load.
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
 - **`tokenCatalog.ts`** — optional Tailwind utility hints for the token wall; CSS variables are discovered automatically from `dslint-report.json` → `css_tokens`.
 - **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslinterReport` into `DashboardLayout`.

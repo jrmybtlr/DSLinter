@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import {
-  buildPlaygroundEntriesFromReport,
+  buildPlaygroundEntriesFromReportWithSkips,
   DashboardLayout,
   useWorkspaceReport,
 } from "../src/index";
@@ -14,9 +14,9 @@ export default function App() {
     refreshIntervalMs: 0,
   });
 
-  const playgroundEntries = useMemo(
+  const playgroundBuild = useMemo(
     () =>
-      buildPlaygroundEntriesFromReport(
+      buildPlaygroundEntriesFromReportWithSkips(
         dslinterReport.report,
         scanPlaygroundModules,
       ),
@@ -25,7 +25,8 @@ export default function App() {
 
   return (
     <DashboardLayout
-      playgroundEntries={playgroundEntries}
+      playgroundEntries={playgroundBuild.entries}
+      playgroundJoinSkips={playgroundBuild.skipped}
       tokenCatalog={tokenCatalog}
       dslinterReport={dslinterReport}
       dslinterReportHint="dslinter (watch + serve)"

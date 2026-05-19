@@ -73,6 +73,7 @@
     "index.cjs",
     "index.d.ts",
     "src",
+    "templates",
     "components.json",
     "README.md",
     "LICENSE",

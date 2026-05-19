@@ -6,7 +6,8 @@ import react from "@vitejs/plugin-react";
 
 const DSLINT_SERVE_PORT = 7878;
 const demoDir = path.dirname(fileURLToPath(import.meta.url));
-const dashboardSrc = path.resolve(demoDir, "../packages/dashboard/src");
+const dashboardPkg = path.resolve(demoDir, "../packages/dashboard");
+const dashboardSrc = path.join(dashboardPkg, "src");
 /** One React instance for demo + linked dashboard (avoids invalid hook call). */
 const reactRoot = path.resolve(demoDir, "node_modules/react");
 const reactDomRoot = path.resolve(demoDir, "node_modules/react-dom");
@@ -19,14 +20,22 @@ export default defineConfig(({ mode }) => ({
   plugins: [tailwindcss(), react()],
   resolve: {
     dedupe: ["react", "react-dom"],
-    alias: {
+    alias: [
+      /** Live workspace source — avoids stale pnpm store copies when new modules are added. */
+      {
+        find: "dslinter/theme.css",
+        replacement: path.join(dashboardSrc, "styles/dashboard-theme.css"),
+      },
+      { find: /^dslinter$/, replacement: path.join(dashboardSrc, "index.ts") },
       /** Matches dashboard `components.json` / shadcn `@/*` imports from linked package source. */
-      "@": dashboardSrc,
-      react: reactRoot,
-      "react-dom": reactDomRoot,
-      /** ESM re-export from `react` — avoids CJS `use-sync-external-store/shim` under `@fs`. */
-      "use-sync-external-store/shim": useSyncExternalStoreShim,
-    },
+      { find: "@", replacement: dashboardSrc },
+      { find: "react", replacement: reactRoot },
+      { find: "react-dom", replacement: reactDomRoot },
+      {
+        find: "use-sync-external-store/shim",
+        replacement: useSyncExternalStoreShim,
+      },
+    ],
   },
   optimizeDeps: {
     /**

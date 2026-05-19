@@ -20,6 +20,10 @@ import { TokensPane } from "../components/TokensPane";
 import { DashboardCommandPalette } from "../components/DashboardCommandPalette";
 import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
 import { resolvePlaygroundEntry } from "../playground/buildPlaygroundEntriesFromReport";
+import {
+  findPlaygroundJoinSkip,
+  type PlaygroundJoinSkip,
+} from "../playground/playgroundJoin";
 import { useHashRoute } from "./useHashRoute";
 
 const STORAGE_KEY = "dslinter-dashboard-theme";
@@ -121,6 +125,8 @@ export function useDashboardTheme(): DashboardThemeContextValue {
 
 export type DashboardLayoutProps = {
   playgroundEntries: PlaygroundEntry[];
+  /** Join failures from `buildPlaygroundEntriesFromReportWithSkips` — powers inspect-pane hints. */
+  playgroundJoinSkips?: PlaygroundJoinSkip[];
   tokenCatalog?: TokenCatalog;
   /** Custom intro shown above the governance inventory on `#!/governance`; defaults to package copy. */
   overview?: ReactNode;
@@ -136,6 +142,7 @@ export type DashboardLayoutProps = {
 
 function DashboardLayoutInner({
   playgroundEntries,
+  playgroundJoinSkips,
   tokenCatalog,
   overview,
   reportUrl,
@@ -202,6 +209,10 @@ function DashboardLayoutInner({
           workspaceReport={dslinterReport.report}
           reportReady={reportReady}
           hasPlaygroundSpec={hasPlaygroundSpec}
+          playgroundJoinSkip={findPlaygroundJoinSkip(
+            playgroundJoinSkips,
+            componentId,
+          )}
           onBackToGovernance={() => navigate({ view: "governance" })}
         />
       );

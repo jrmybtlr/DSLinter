@@ -48,6 +48,7 @@ The crates.io crate **`dslint`** is a **different project**. Use **`cargo instal
 Typical usage:
 
 ```bash
+npx dslinter init                         # scaffold src/playground/buildRegistry.ts
 npx dslinter                              # dev (watch + dashboard)
 npx dslinter --report /path/to/repo --json
 npx dslinter --report --output public/dslint-report.json
@@ -71,11 +72,53 @@ Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`). Your Vite
    @import "dslinter/theme.css";
    ```
 
+## Live component previews (consumer Vite apps)
+
+If the dashboard shows **“Scan snapshot — no live preview”** for a component that appears in the catalog, the scanner found the file but Vite did not load it. Wire previews in three steps:
+
+1. **Scaffold** (optional): `npx dslinter init` → writes `src/playground/buildRegistry.ts`
+2. **Glob** must cover nested paths, e.g. `import.meta.glob("../components/**/*.{tsx,jsx}", { eager: true })`
+3. **App**: pass `playgroundEntries` and `playgroundJoinSkips` from the registry into `DashboardLayout`
+
+```tsx
+import { useMemo } from "react";
+import { DashboardLayout, useWorkspaceReport } from "dslinter";
+import {
+  buildPlaygroundEntries,
+  getPlaygroundJoinSkips,
+} from "./playground/buildRegistry";
+
+const dslinterReport = useWorkspaceReport({
+  reportUrl: "/dslint-report.json",
+  watchUrl: "/events",
+});
+
+const playgroundEntries = useMemo(
+  () => buildPlaygroundEntries(dslinterReport.report),
+  [dslinterReport.report],
+);
+const playgroundJoinSkips = useMemo(
+  () => getPlaygroundJoinSkips(dslinterReport.report),
+  [dslinterReport.report],
+);
+
+<DashboardLayout
+  playgroundEntries={playgroundEntries}
+  playgroundJoinSkips={playgroundJoinSkips}
+  dslinterReport={dslinterReport}
+/>;
+```
+
+In dev, skipped joins are also logged to the console. The inspect pane shows the expected Vite glob key when a preview fails.
+
+Run the scanner from the **project root** (`npx dslinter .`) so `playgrounds[].rel_path` matches your repo layout.
+
 ## Wiring the layout
 
 `DashboardLayout` needs:
 
 - **`playgroundEntries`** — from the report’s `playgrounds` list joined to your React modules (see repo `demo/src/playground/buildRegistry.ts`).
+- **`playgroundJoinSkips`** (optional) — from `buildPlaygroundEntriesFromReportWithSkips` for richer inspect-pane hints.
 - **`tokenCatalog`** — token wall data (see `demo/src/tokenCatalog.ts`).
 - **`dslinterReport`** — from `useWorkspaceReport({ reportUrl: "/dslint-report.json", ... })`.
 

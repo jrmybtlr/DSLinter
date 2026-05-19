@@ -15,10 +15,30 @@ export { defaultArgsFromControls } from "./types/controls";
 export { definePlayground } from "./playground/definePlayground";
 export {
   buildPlaygroundEntriesFromReport,
+  buildPlaygroundEntriesFromReportWithSkips,
   playgroundCatalogId,
   resolvePlaygroundEntry,
+  defaultConsumerGlobKeyFromRelPath,
+  defaultEmbedGlobKeyFromRelPath,
+  diagnosePlaygroundJoinSkips,
+  findPlaygroundJoinSkip,
+  findPlaygroundSpec,
+  logPlaygroundJoinSkips,
 } from "./playground/buildPlaygroundEntriesFromReport";
-export type { BuildPlaygroundModules, BuildPlaygroundOptions } from "./playground/buildPlaygroundEntriesFromReport";
+export type {
+  BuildPlaygroundModules,
+  BuildPlaygroundOptions,
+  BuildPlaygroundResult,
+} from "./playground/buildPlaygroundEntriesFromReport";
+export type {
+  PlaygroundJoinSkip,
+  PlaygroundJoinSkipReason,
+} from "./playground/buildPlaygroundEntriesFromReport";
+export {
+  createPlaygroundRegistry,
+  createPlaygroundRegistryEntriesOnly,
+} from "./playground/createPlaygroundRegistry";
+export type { CreatePlaygroundRegistryOptions } from "./playground/createPlaygroundRegistry";
 export type { DefinedPlayground } from "./playground/definePlayground";
 export type { PlaygroundPreviewProps, PlaygroundPreviewComponent } from "./types/preview";
 export type {

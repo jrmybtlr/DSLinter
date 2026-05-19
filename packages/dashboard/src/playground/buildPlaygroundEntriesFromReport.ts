@@ -2,6 +2,12 @@ import { createElement, type ComponentType } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { DeclaredPropKind, PlaygroundSpec, WorkspaceReport } from "../types/report";
 import type { PlaygroundEntry, PlaygroundMeta, PlaygroundPreviewComponent } from "../types/playground";
+import {
+  defaultEmbedGlobKeyFromRelPath,
+  diagnosePlaygroundJoinSkips,
+  logPlaygroundJoinSkips,
+  type PlaygroundJoinSkip,
+} from "./playgroundJoin";
 
 export type BuildPlaygroundModules = Record<string, Record<string, unknown>>;
 
@@ -10,12 +16,28 @@ export type BuildPlaygroundOptions = {
   globKeyFromRelPath?: (relPath: string) => string;
   controlOverrides?: Record<string, PlaygroundControl[]>;
   staticDefaults?: Record<string, Record<string, unknown>>;
+  /** When true (default in Vite dev), log specs that failed to join to `modules`. */
+  logJoinSkips?: boolean;
+};
+
+export type BuildPlaygroundResult = {
+  entries: PlaygroundEntry[];
+  skipped: PlaygroundJoinSkip[];
 };
 
 function defaultGlobKeyFromRelPath(relPath: string): string {
-  const trimmed = relPath.replace(/^\/+/, "");
-  return `@dslint-scan/${trimmed}`;
+  return defaultEmbedGlobKeyFromRelPath(relPath);
 }
+
+export type { PlaygroundJoinSkip, PlaygroundJoinSkipReason } from "./playgroundJoin";
+export {
+  defaultConsumerGlobKeyFromRelPath,
+  defaultEmbedGlobKeyFromRelPath,
+  diagnosePlaygroundJoinSkips,
+  findPlaygroundJoinSkip,
+  findPlaygroundSpec,
+  logPlaygroundJoinSkips,
+} from "./playgroundJoin";
 
 function coerceDeclaredPropKind(v: unknown): DeclaredPropKind | undefined {
   if (v === "boolean" || v === "string" || v === "number" || v === "unknown")
@@ -281,18 +303,26 @@ export function resolvePlaygroundEntry(
 }
 
 /** Build playground entries from report specs + eager Vite modules. */
-export function buildPlaygroundEntriesFromReport(
+export function buildPlaygroundEntriesFromReportWithSkips(
   report: WorkspaceReport | null | undefined,
   modules: BuildPlaygroundModules,
   options: BuildPlaygroundOptions = {},
-): PlaygroundEntry[] {
+): BuildPlaygroundResult {
   const specs = report?.playgrounds;
-  if (!specs?.length) return [];
+  if (!specs?.length) return { entries: [], skipped: [] };
 
   const globKeyFromRelPath =
     options.globKeyFromRelPath ?? defaultGlobKeyFromRelPath;
   const controlOverrides = options.controlOverrides ?? {};
   const staticDefaultsMap = options.staticDefaults ?? {};
+
+  const skipped = diagnosePlaygroundJoinSkips(report, modules, {
+    globKeyFromRelPath,
+  });
+  const shouldLog =
+    options.logJoinSkips ??
+    (typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV));
+  if (shouldLog) logPlaygroundJoinSkips(skipped);
 
   const out: PlaygroundEntry[] = [];
   for (const spec of specs) {
@@ -345,5 +375,15 @@ export function buildPlaygroundEntriesFromReport(
     if (ga !== gb) return ga.localeCompare(gb);
     return a.meta.title.localeCompare(b.meta.title);
   });
-  return out;
+  return { entries: out, skipped };
+}
+
+/** Build playground entries from report specs + eager Vite modules. */
+export function buildPlaygroundEntriesFromReport(
+  report: WorkspaceReport | null | undefined,
+  modules: BuildPlaygroundModules,
+  options: BuildPlaygroundOptions = {},
+): PlaygroundEntry[] {
+  return buildPlaygroundEntriesFromReportWithSkips(report, modules, options)
+    .entries;
 }

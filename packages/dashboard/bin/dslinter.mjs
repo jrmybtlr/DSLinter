@@ -6,9 +6,15 @@ import { parseDslinterArgs } from "./lib/parse-args.mjs";
 import { runScannerInternal } from "./lib/run-scanner.mjs";
 import { runBuildMode } from "./modes/build.mjs";
 import { runDevMode } from "./modes/dev.mjs";
+import { runInitMode } from "./modes/init.mjs";
 import { runReportMode } from "./modes/report.mjs";
 
 const rawArgs = process.argv.slice(2);
+
+if (rawArgs[0] === "init") {
+  runInitMode({ targetDir: rawArgs[1] });
+  process.exit(0);
+}
 
 if (process.env.DSLINTER_INTERNAL === "1") {
   runScannerInternal(rawArgs);

@@ -16,7 +16,7 @@
     "dslint:serve": "node ../packages/dashboard/bin/dslinter.mjs --serve 7878 --output public/dslint-report.json"
   },
   "dependencies": {
-    "dslinter": "file:../packages/dashboard",
+    "dslinter": "workspace:*",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

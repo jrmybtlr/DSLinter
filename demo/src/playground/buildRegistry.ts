@@ -1,17 +1,12 @@
 import type { PlaygroundControl, PlaygroundEntry, WorkspaceReport } from "dslinter";
-import { buildPlaygroundEntriesFromReport } from "dslinter";
+import { createPlaygroundRegistry } from "dslinter";
 
 import { playgroundStaticDefaults } from "./playgroundDefaults";
 
 /** Relative to this file — not `@/` (Vite aliases `@` to the dashboard package for shadcn). */
-const modules = import.meta.glob("../components/**/*.tsx", {
+const modules = import.meta.glob("../components/**/*.{tsx,jsx}", {
   eager: true,
 }) as Record<string, Record<string, unknown>>;
-
-function relPathToGlobKey(relPath: string): string {
-  const trimmed = relPath.replace(/^\/+/, "").replace(/^src\//, "");
-  return `../${trimmed}`;
-}
 
 const controlOverrides: Record<string, PlaygroundControl[]> = {
   LegacyButton: [
@@ -95,13 +90,21 @@ const controlOverrides: Record<string, PlaygroundControl[]> = {
   ],
 };
 
+const buildWithSkips = createPlaygroundRegistry(modules, {
+  controlOverrides,
+  staticDefaults: playgroundStaticDefaults,
+});
+
 /** Build playground entries from `dslint-report.json` + eager component modules. */
 export function buildPlaygroundEntries(
   report: WorkspaceReport | null | undefined,
 ): PlaygroundEntry[] {
-  return buildPlaygroundEntriesFromReport(report, modules, {
-    globKeyFromRelPath: relPathToGlobKey,
-    controlOverrides,
-    staticDefaults: playgroundStaticDefaults,
-  });
+  return buildWithSkips(report).entries;
+}
+
+/** Skipped joins for inspect-pane diagnostics (`DashboardLayout` → `playgroundJoinSkips`). */
+export function getPlaygroundJoinSkips(
+  report: WorkspaceReport | null | undefined,
+) {
+  return buildWithSkips(report).skipped;
 }
