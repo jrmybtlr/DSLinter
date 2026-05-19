@@ -1,15 +1,21 @@
 /**
- * Add to your existing `vite.config.ts` when using `npx dslinter` dev mode.
- * Adjust paths if your app layout differs from `src/` + `public/dslint-report.json`.
+ * Merge into your existing `vite.config.ts` when using `npx dslinter` dev mode.
+ *
+ * Published dslinter source uses relative imports only — your app's `@/*` alias
+ * (e.g. Laravel `@/*` → `resources/js/*`) does not need remapping for package UI.
+ *
+ * Adjust proxy paths if your report is not served from the Vite dev server root.
  */
-import path from "node:path";
-
 const DSLINT_SERVE_PORT = Number(process.env.DSLINT_SERVE_PORT ?? "7878");
 
 // Inside defineConfig(({ mode }) => ({ ... })):
 export const dslinterViteSnippet = {
   resolve: {
     dedupe: ["react", "react-dom"],
+  },
+  optimizeDeps: {
+    /** Source-first package: transpile from node_modules instead of pre-bundling. */
+    exclude: ["dslinter"],
   },
   server: {
     proxy:

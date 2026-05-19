@@ -10,7 +10,7 @@ import {
 import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import { ComponentInspectPane } from "../components/ComponentInspectPane";
 import { ComponentPlaygroundPane } from "../components/ComponentPlaygroundPane";

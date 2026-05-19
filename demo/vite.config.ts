@@ -27,8 +27,6 @@ export default defineConfig(({ mode }) => ({
         replacement: path.join(dashboardSrc, "styles/dashboard-theme.css"),
       },
       { find: /^dslinter$/, replacement: path.join(dashboardSrc, "index.ts") },
-      /** Matches dashboard `components.json` / shadcn `@/*` imports from linked package source. */
-      { find: "@", replacement: dashboardSrc },
       { find: "react", replacement: reactRoot },
       { find: "react-dom", replacement: reactDomRoot },
       {

@@ -4,8 +4,8 @@ import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
 import type { CodeScoreModuleSummary } from "../report/codeScoreForModule";
 import type { LintFinding, UsageSummary } from "../types/report";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "./ui/table";
 import { controlsToApiRows } from "./controlApiTable";
 import { PlaygroundControlField } from "./PlaygroundControlField";
 import { PlaygroundUsageCode } from "./PlaygroundUsageCode";

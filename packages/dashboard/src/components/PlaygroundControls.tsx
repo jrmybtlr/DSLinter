@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 import { PlaygroundControlField } from "./PlaygroundControlField";
 
 type Props = {

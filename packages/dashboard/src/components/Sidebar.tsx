@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { IconMoon, IconSearch, IconSun } from "@/components/icons";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { IconMoon, IconSearch, IconSun } from "./icons";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 
 import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
 import type { WorkspaceReport } from "../types/report";

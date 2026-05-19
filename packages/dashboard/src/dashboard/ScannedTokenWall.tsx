@@ -3,7 +3,7 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card";
+} from "../components/ui/hover-card";
 import { cn } from "../lib/utils";
 import { shortPath } from "./paths";
 import {

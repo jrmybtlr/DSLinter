@@ -55,7 +55,19 @@ npx dslinter --report --output public/dslint-report.json
 npx dslinter --watch --output public/dslint-report.json
 ```
 
-Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`). Your Vite config should proxy `/dslint-report.json` and `/events` to that port in `serve` mode (see repo `demo/vite.config.ts`).
+Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`). Your Vite config should proxy `/dslint-report.json` and `/events` to that port in `serve` mode. Merge `templates/vite.dslinter.snippet.ts` (copied by `npx dslinter init`) or see repo `demo/vite.config.ts` for a linked-workspace example.
+
+### Consumer Vite (Laravel, Inertia, existing `@/*` aliases)
+
+Published `dslinter` source uses **relative imports only** — no `@/components/...` paths inside `node_modules/dslinter/src`. Your app's `@/*` alias (for example Laravel `@/*` → `resources/js/*`) will not hijack dslinter's internal UI imports.
+
+After `npx dslinter init --laravel`, merge only the official snippet into `vite.config.ts`:
+
+- `resolve.dedupe`: `["react", "react-dom"]`
+- `optimizeDeps.exclude`: `["dslinter"]` (source-first package; transpile from `node_modules`)
+- `server.proxy` for `/dslint-report.json` and `/events` → `DSLINT_SERVE_PORT`
+
+You do **not** need alias overrides such as `@/components` → `node_modules/dslinter/src/components`.
 
 ## Styles (Tailwind v4)
 

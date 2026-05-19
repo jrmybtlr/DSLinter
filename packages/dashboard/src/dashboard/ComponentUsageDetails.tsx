@@ -6,12 +6,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "../components/ui/table";
 import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
 import { shortPath } from "./paths";
 import { EmptyCard } from "../components/EmptyCard";
-import { InlineCode } from "@/components/InlineCode";
+import { InlineCode } from "../components/InlineCode";
 
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";

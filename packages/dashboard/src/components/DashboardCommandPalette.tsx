@@ -7,7 +7,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "./ui/command";
 
 import type { HashRoute } from "../shell/hashRoute";
 

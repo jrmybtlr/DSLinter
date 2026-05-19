@@ -1,5 +1,5 @@
 import type { TokenCatalog } from "../types/tokenCatalog";
-import type { CssTokenSummary, WorkspaceReport } from "../types/report";
+import type { WorkspaceReport } from "../types/report";
 
 export type TokenUsageFilter = "all" | "used" | "unused";
 

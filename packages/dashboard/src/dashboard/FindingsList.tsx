@@ -6,11 +6,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "../components/ui/table";
 import { shortPath } from "./paths";
 import type { LintFinding, Severity } from "../types/report";
-import { Badge } from "@/components/ui/badge";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Badge } from "../components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
 
 type Filter = "all" | Severity;
 

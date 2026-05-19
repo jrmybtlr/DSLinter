@@ -1,6 +1,6 @@
 import type { PlaygroundArgs } from "../types/controls";
 import type { PlaygroundPreviewComponent } from "../types/preview";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "./ui/badge";
 import { PLAYGROUND_VARIANT_MATRIX_CAP } from "../playground/enumerateControlCombinations";
 
 type Props = {

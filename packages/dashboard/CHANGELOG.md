@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### 🩹 Fixes
+
+- Remove `@/` path aliases from published `src/` so host apps with their own `@/*` Vite alias (Laravel/Inertia, etc.) no longer resolve dslinter UI imports to the wrong tree. Consumers need only the official vite snippet (proxy, react dedupe, `optimizeDeps.exclude`).
+
 ## v0.1.3
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.2...v0.1.3)
