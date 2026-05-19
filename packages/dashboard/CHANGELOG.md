@@ -6,9 +6,15 @@
 
 ## Unreleased
 
+### 🚀 Enhancements
+
+- **`dslinter/vite` plugin** — virtual `playground-modules` map keyed by `@dslint-scan/<rel_path>`; scanner proxy, react dedupe, `optimizeDeps.exclude`, and `server.fs.allow` for the scan root.
+- **`DashboardLayout autoPlayground`** and **`usePlaygroundFromReport`** — zero-config live previews without `buildRegistry.ts`.
+- **`npx dslinter`** auto-merges the plugin into consumer Vite via `vite/consumer.config.mjs` when a host app is detected.
+
 ### 🩹 Fixes
 
-- Remove `@/` path aliases from published `src/` so host apps with their own `@/*` Vite alias (Laravel/Inertia, etc.) no longer resolve dslinter UI imports to the wrong tree. Consumers need only the official vite snippet (proxy, react dedupe, `optimizeDeps.exclude`).
+- Remove `@/` path aliases from published `src/` so host apps with their own `@/*` Vite alias (Laravel/Inertia, etc.) no longer resolve dslinter UI imports to the wrong tree.
 
 ## v0.1.3
 

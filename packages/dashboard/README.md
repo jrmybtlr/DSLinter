@@ -55,19 +55,40 @@ npx dslinter --report --output public/dslint-report.json
 npx dslinter --watch --output public/dslint-report.json
 ```
 
-Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`). Your Vite config should proxy `/dslint-report.json` and `/events` to that port in `serve` mode. Merge `templates/vite.dslinter.snippet.ts` (copied by `npx dslinter init`) or see repo `demo/vite.config.ts` for a linked-workspace example.
+Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`).
+
+### Zero-config live previews (recommended)
+
+**`npx dslinter .`** from your project root auto-merges the dslinter Vite plugin (playground module glob, scanner proxy, react dedupe). In your app:
+
+```tsx
+import { DashboardLayout, useWorkspaceReport } from "dslinter";
+
+const dslinterReport = useWorkspaceReport({
+  reportUrl: "/dslint-report.json",
+  watchUrl: "/events",
+});
+
+<DashboardLayout autoPlayground dslinterReport={dslinterReport} tokenCatalog={...} />;
+```
+
+No `buildRegistry.ts` scaffold required. Works with Laravel/Inertia (`resources/js/Components/...`) and existing `@/*` → `resources/js/*` aliases.
+
+**Direct `vite --mode serve`:** add one line to `vite.config.ts`:
+
+```ts
+import dslinter from "dslinter/vite";
+
+export default defineConfig({
+  plugins: [dslinter(), /* your plugins */],
+});
+```
+
+The plugin sets `DSLINT_SCAN_ROOT` from the environment (set by `npx dslinter`) or defaults to `process.cwd()`.
 
 ### Consumer Vite (Laravel, Inertia, existing `@/*` aliases)
 
-Published `dslinter` source uses **relative imports only** — no `@/components/...` paths inside `node_modules/dslinter/src`. Your app's `@/*` alias (for example Laravel `@/*` → `resources/js/*`) will not hijack dslinter's internal UI imports.
-
-After `npx dslinter init --laravel`, merge only the official snippet into `vite.config.ts`:
-
-- `resolve.dedupe`: `["react", "react-dom"]`
-- `optimizeDeps.exclude`: `["dslinter"]` (source-first package; transpile from `node_modules`)
-- `server.proxy` for `/dslint-report.json` and `/events` → `DSLINT_SERVE_PORT`
-
-You do **not** need alias overrides such as `@/components` → `node_modules/dslinter/src/components`.
+Published `dslinter` source uses **relative imports only** — your app's `@/*` alias does not hijack dslinter internal UI. You do **not** need `@/components` → `node_modules/dslinter` alias overrides.
 
 ## Styles (Tailwind v4)
 
@@ -84,44 +105,28 @@ You do **not** need alias overrides such as `@/components` → `node_modules/dsl
    @import "dslinter/theme.css";
    ```
 
-## Live component previews (consumer Vite apps)
+## Live component previews (advanced / custom glob)
 
-If the dashboard shows **“Scan snapshot — no live preview”** for a component that appears in the catalog, the scanner found the file but Vite did not load it. Wire previews in three steps:
+Use **`autoPlayground`** (above) for zero-config previews. Optionally scaffold a narrower glob for faster dev or custom controls:
 
-1. **Scaffold** (optional): `npx dslinter init` → `src/playground/buildRegistry.ts`; for Inertia/Laravel (`resources/js/…`) use `npx dslinter init --laravel`
-2. **Glob** must cover nested paths, e.g. `import.meta.glob("../components/**/*.{tsx,jsx}", { eager: true })`
-3. **App**: pass `playgroundEntries` and `playgroundJoinSkips` from the registry into `DashboardLayout`
+- `npx dslinter init` → `src/playground/buildRegistry.ts`
+- `npx dslinter init --laravel` → `resources/js/playground/buildRegistry.ts`
 
 ```tsx
 import { useMemo } from "react";
 import { DashboardLayout, useWorkspaceReport } from "dslinter";
-import {
-  buildPlaygroundEntries,
-  getPlaygroundJoinSkips,
-} from "./playground/buildRegistry";
+import { buildPlaygroundEntries } from "./playground/buildRegistry";
 
-const dslinterReport = useWorkspaceReport({
-  reportUrl: "/dslint-report.json",
-  watchUrl: "/events",
-});
-
+const dslinterReport = useWorkspaceReport({ reportUrl: "/dslint-report.json", watchUrl: "/events" });
 const playgroundEntries = useMemo(
   () => buildPlaygroundEntries(dslinterReport.report),
   [dslinterReport.report],
 );
-const playgroundJoinSkips = useMemo(
-  () => getPlaygroundJoinSkips(dslinterReport.report),
-  [dslinterReport.report],
-);
 
-<DashboardLayout
-  playgroundEntries={playgroundEntries}
-  playgroundJoinSkips={playgroundJoinSkips}
-  dslinterReport={dslinterReport}
-/>;
+<DashboardLayout playgroundEntries={playgroundEntries} dslinterReport={dslinterReport} />;
 ```
 
-In dev, skipped joins are also logged to the console. The inspect pane shows the expected Vite glob key when a preview fails.
+Or use `usePlaygroundFromReport(report)` with `dslinter/playground-modules` when the Vite plugin is active.
 
 Run the scanner from the **project root** (`npx dslinter .`) so `playgrounds[].rel_path` matches your repo layout.
 
@@ -129,8 +134,8 @@ Run the scanner from the **project root** (`npx dslinter .`) so `playgrounds[].r
 
 `DashboardLayout` needs:
 
-- **`playgroundEntries`** — from the report’s `playgrounds` list joined to your React modules (see repo `demo/src/playground/buildRegistry.ts`).
-- **`playgroundJoinSkips`** (optional) — from `buildPlaygroundEntriesFromReportWithSkips` for richer inspect-pane hints.
+- **`autoPlayground`** (recommended) — or **`playgroundEntries`** from a custom registry / `usePlaygroundFromReport`.
+- **`playgroundJoinSkips`** (optional) — auto-filled when using `autoPlayground`.
 - **`tokenCatalog`** — token wall data (see `demo/src/tokenCatalog.ts`).
 - **`dslinterReport`** — from `useWorkspaceReport({ reportUrl: "/dslint-report.json", ... })`.
 

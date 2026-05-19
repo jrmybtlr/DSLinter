@@ -183,9 +183,23 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
     const uiPort = await resolveUiPort(5173);
     const dashboardUrl = `http://localhost:${uiPort}/`;
 
+    const consumerConfig = join(
+      getDashboardPackageRoot(),
+      "vite",
+      "consumer.config.mjs",
+    );
     const vite = spawn(
       process.execPath,
-      [viteBin, "--mode", "serve", "--port", String(uiPort), "--strictPort"],
+      [
+        viteBin,
+        "--config",
+        consumerConfig,
+        "--mode",
+        "serve",
+        "--port",
+        String(uiPort),
+        "--strictPort",
+      ],
       {
         cwd: consumerViteRoot,
         stdio: "inherit",
@@ -193,6 +207,7 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
           ...process.env,
           DSLINT_SERVE_PORT: String(port),
           DSLINT_SCAN_ROOT: scanAbs,
+          DSLINT_VITE_ROOT: consumerViteRoot,
         },
       },
     );

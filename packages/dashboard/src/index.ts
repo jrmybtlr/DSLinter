@@ -39,6 +39,7 @@ export {
   createPlaygroundRegistry,
   createPlaygroundRegistryEntriesOnly,
 } from "./playground/createPlaygroundRegistry";
+export { usePlaygroundFromReport } from "./playground/usePlaygroundFromReport";
 export type { CreatePlaygroundRegistryOptions } from "./playground/createPlaygroundRegistry";
 export type { DefinedPlayground } from "./playground/definePlayground";
 export type { PlaygroundPreviewProps, PlaygroundPreviewComponent } from "./types/preview";

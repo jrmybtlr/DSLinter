@@ -1,10 +1,7 @@
-import { useMemo } from "react";
 import {
-  buildPlaygroundEntriesFromReportWithSkips,
   DashboardLayout,
   useWorkspaceReport,
 } from "../src/index";
-import { scanPlaygroundModules } from "./playgroundModules";
 import { tokenCatalog } from "./tokenCatalog";
 
 export default function App() {
@@ -14,25 +11,12 @@ export default function App() {
     refreshIntervalMs: 0,
   });
 
-  const playgroundBuild = useMemo(
-    () =>
-      buildPlaygroundEntriesFromReportWithSkips(
-        dslinterReport.report,
-        scanPlaygroundModules,
-      ),
-    [dslinterReport.report],
-  );
-
   return (
     <DashboardLayout
-      playgroundEntries={playgroundBuild.entries}
-      playgroundJoinSkips={playgroundBuild.skipped}
+      autoPlayground
       tokenCatalog={tokenCatalog}
       dslinterReport={dslinterReport}
       dslinterReportHint="dslinter (watch + serve)"
-      formatModulePath={(modulePath) =>
-        modulePath.replace(/^@dslint-scan\//, "")
-      }
     />
   );
 }

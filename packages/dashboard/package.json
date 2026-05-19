@@ -64,7 +64,15 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./theme.css": "./src/styles/dashboard-theme.css"
+    "./theme.css": "./src/styles/dashboard-theme.css",
+    "./vite": {
+      "types": "./vite/plugin.ts",
+      "default": "./vite/plugin.ts"
+    },
+    "./playground-modules": {
+      "types": "./src/playground/scanPlaygroundModules.ts",
+      "default": "./src/playground/scanPlaygroundModules.ts"
+    }
   },
   "types": "./src/index.ts",
   "files": [
@@ -73,6 +81,7 @@
     "index.cjs",
     "index.d.ts",
     "src",
+    "vite",
     "templates",
     "components.json",
     "README.md",

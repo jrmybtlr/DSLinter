@@ -76,18 +76,24 @@ export function ComponentUsageDetails({
     <Table className="[&>table]:table-fixed [&>table]:w-full">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[40%]">File</TableHead>
+          <TableHead className="w-[40%] min-w-0">File</TableHead>
           <TableHead className="w-14 whitespace-nowrap">Line</TableHead>
           <TableHead className="min-w-0">Props at this call site</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.map((loc, i) => {
+          const fileText = shortPath(report.root, loc.path);
           const propsText = formatCallSiteProps(loc);
           return (
             <TableRow key={`${loc.path}-${loc.line}-${i}`}>
-              <TableCell className="font-mono text-xs text-foreground">
-                {shortPath(report.root, loc.path)}
+              <TableCell className="min-w-0 max-w-0">
+                <span
+                  className="block truncate font-mono text-xs text-foreground"
+                  title={fileText}
+                >
+                  {fileText}
+                </span>
               </TableCell>
               <TableCell className="tabular-nums text-muted-foreground">
                 {loc.line}

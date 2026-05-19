@@ -76,23 +76,19 @@ export function ComponentInspectPane({
     if (playgroundJoinSkip?.reason === "module_not_found") {
       const { globKey, rel_path } = playgroundJoinSkip;
       if (globKey.startsWith("@dslint-scan/")) {
-        const relativeGlobKey = globKey.replace(/^@dslint-scan\//, "../");
-        if (rel_path.startsWith("resources/js/")) {
-          return [
-            `Expected embed glob key "${globKey}" but your Vite app did not load it.`,
-            `Laravel/Inertia fix: run npx dslinter init --laravel, then wire buildPlaygroundEntries from resources/js/playground/buildRegistry.ts (glob ../**/*.{tsx,jsx}, expected key "${relativeGlobKey}").`,
-            `Or add resolve.alias "@dslint-scan" → project root and import.meta.glob("@dslint-scan/**/*.{tsx,jsx}", { eager: true }) in App.`,
-          ].join(" ");
-        }
-        return `Vite glob is missing key "${globKey}" for "${rel_path}". Add resolve.alias "@dslint-scan" → scan root in vite.config.ts, or use npx dslinter init and a relative import.meta.glob in buildRegistry.ts.`;
+        return [
+          `Expected module key "${globKey}" but the dslinter Vite plugin did not load it.`,
+          `Use <DashboardLayout autoPlayground /> and run via npx dslinter (zero vite.config changes), or add plugins: [dslinter()] from dslinter/vite to vite.config.ts.`,
+          `Run the scanner from the project root so rel_path "${rel_path}" matches files under DSLINT_SCAN_ROOT.`,
+        ].join(" ");
       }
-      return `Vite glob is missing key "${globKey}" for report path "${rel_path}". Run npx dslinter init (or init --laravel for resources/js) and ensure import.meta.glob covers this file.`;
+      return `Vite glob is missing key "${globKey}" for report path "${rel_path}". Use autoPlayground + dslinter/vite, or run npx dslinter init for a custom buildRegistry.ts glob.`;
     }
     if (playgroundJoinSkip?.reason === "export_not_found") {
       return `Module loaded but named export "${playgroundJoinSkip.export_name}" was not found. Use export function ${playgroundJoinSkip.export_name}(…) in ${playgroundJoinSkip.rel_path}.`;
     }
     if (playgroundSpec) {
-      return `Report path: ${playgroundSpec.rel_path} (export ${playgroundSpec.export_name}). Ensure buildRegistry.ts glob covers this file and globKeyFromRelPath matches your import.meta.glob keys.`;
+      return `Report path: ${playgroundSpec.rel_path} (export ${playgroundSpec.export_name}). Use autoPlayground with dslinter/vite, or ensure buildRegistry.ts glob covers this file.`;
     }
     return null;
   })();

@@ -24,6 +24,7 @@ import {
   findPlaygroundJoinSkip,
   type PlaygroundJoinSkip,
 } from "../playground/playgroundJoin";
+import { usePlaygroundFromReport } from "../playground/usePlaygroundFromReport";
 import { useHashRoute } from "./useHashRoute";
 
 const STORAGE_KEY = "dslinter-dashboard-theme";
@@ -124,7 +125,14 @@ export function useDashboardTheme(): DashboardThemeContextValue {
 }
 
 export type DashboardLayoutProps = {
-  playgroundEntries: PlaygroundEntry[];
+  /**
+   * When true, loads playground modules from the dslinter Vite plugin
+   * (`virtual:dslinter/playground-modules`). Requires `plugins: [dslinter()]`
+   * from `dslinter/vite`, or running via `npx dslinter`.
+   */
+  autoPlayground?: boolean;
+  /** Required unless `autoPlayground` is true. */
+  playgroundEntries?: PlaygroundEntry[];
   /** Join failures from `buildPlaygroundEntriesFromReportWithSkips` — powers inspect-pane hints. */
   playgroundJoinSkips?: PlaygroundJoinSkip[];
   tokenCatalog?: TokenCatalog;
@@ -141,8 +149,9 @@ export type DashboardLayoutProps = {
 };
 
 function DashboardLayoutInner({
-  playgroundEntries,
-  playgroundJoinSkips,
+  autoPlayground = false,
+  playgroundEntries: playgroundEntriesProp,
+  playgroundJoinSkips: playgroundJoinSkipsProp,
   tokenCatalog,
   overview,
   reportUrl,
@@ -150,6 +159,21 @@ function DashboardLayoutInner({
   formatModulePath,
   dslinterReport,
 }: DashboardLayoutProps) {
+  const autoPlaygroundBuild = usePlaygroundFromReport(
+    autoPlayground ? dslinterReport.report : null,
+  );
+  const playgroundEntries = autoPlayground
+    ? autoPlaygroundBuild.entries
+    : (playgroundEntriesProp ?? []);
+  const playgroundJoinSkips = autoPlayground
+    ? autoPlaygroundBuild.skipped
+    : playgroundJoinSkipsProp;
+  const resolvedFormatModulePath =
+    formatModulePath ??
+    (autoPlayground
+      ? (modulePath: string) => modulePath.replace(/^@dslint-scan\//, "")
+      : undefined);
+
   const [route, navigate] = useHashRoute();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { theme, setTheme, resolvedTheme } = useDashboardTheme();
@@ -197,7 +221,7 @@ function DashboardLayoutInner({
       main = (
         <ComponentPlaygroundPane
           entry={entry}
-          formatModulePath={formatModulePath}
+          formatModulePath={resolvedFormatModulePath}
           workspaceReport={dslinterReport.report}
           reportReady={reportReady}
         />

@@ -63,18 +63,16 @@ export function runInitMode(opts = {}) {
   writeFileSync(
     appHintPath,
     [
-      "Wire live component previews in your App:",
+      "Recommended (no registry file):",
       "",
-      "  import { useMemo } from 'react';",
       "  import { DashboardLayout, useWorkspaceReport } from 'dslinter';",
-      layout === "laravel"
-        ? "  import { buildPlaygroundEntries } from './playground/buildRegistry'; // adjust relative path from your entry file"
-        : "  import { buildPlaygroundEntries } from './playground/buildRegistry';",
-      "",
       "  const dslinterReport = useWorkspaceReport({ reportUrl: '/dslint-report.json', watchUrl: '/events' });",
-      "  const playgroundEntries = useMemo(() => buildPlaygroundEntries(dslinterReport.report), [dslinterReport.report]);",
+      "  <DashboardLayout autoPlayground dslinterReport={dslinterReport} ... />",
       "",
-      "  <DashboardLayout playgroundEntries={playgroundEntries} dslinterReport={dslinterReport} ... />",
+      "Optional — custom glob via this registry:",
+      "",
+      "  import { buildPlaygroundEntries } from './playground/buildRegistry';",
+      "  <DashboardLayout playgroundEntries={buildPlaygroundEntries(dslinterReport.report)} ... />",
       "",
       "Run the scanner from the repo root: npx dslinter .",
       "",
@@ -89,12 +87,10 @@ export function runInitMode(opts = {}) {
       `Layout: ${layout}`,
       "",
       "Next:",
-      `  1. Import buildPlaygroundEntries in your App (see ${registryDir}/README.txt)`,
-      "  2. Merge vite.dslinter.snippet.ts into vite.config.ts (proxy, react dedupe, optimizeDeps.exclude)",
-      layout === "laravel"
-        ? "     No extra @ alias remapping is required — dslinter UI uses relative imports."
-        : "     No @ alias overrides needed for dslinter internal UI.",
-      "  3. Run npx dslinter . from the project root",
+      `  1. Use <DashboardLayout autoPlayground /> (see ${registryDir}/README.txt)`,
+      "  2. Run npx dslinter . from the project root (merges dslinter/vite automatically)",
+      "     Or add plugins: [dslinter()] from dslinter/vite for direct vite --mode serve",
+      "  3. Optional: use buildRegistry.ts for a narrower glob or control overrides",
       "",
     ].join("\n"),
   );
