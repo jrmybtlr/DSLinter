@@ -24,6 +24,18 @@ fn default_true() -> bool {
 
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct DslintConfig {
+    /// Restrict component/file discovery to these directory prefixes (relative to repo root).
+    /// When empty, all directories are eligible (subject to ignores).
+    #[serde(default)]
+    pub include_dirs: Vec<String>,
+    /// File/directory glob ignores (same semantics as `.gitignore` / `.dslintignore`).
+    /// This is the preferred field name; `exclude_globs` remains supported for compatibility.
+    #[serde(default)]
+    pub ignore_globs: Vec<String>,
+    /// Optional main CSS entry files (relative to repo root) used for token analysis.
+    /// When empty, DSLint discovers CSS files automatically.
+    #[serde(default)]
+    pub css_entrypoints: Vec<String>,
     /// Component names (exact JSX identifiers) that should not be used.
     #[serde(default)]
     pub deprecated_components: Vec<String>,

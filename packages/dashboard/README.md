@@ -48,7 +48,7 @@ The crates.io crate **`dslint`** is a **different project**. Use **`cargo instal
 Typical usage:
 
 ```bash
-npx dslinter init                         # scaffold src/playground/buildRegistry.ts
+npx dslinter init                         # scaffold .dslint.json + src/playground/buildRegistry.ts
 npx dslinter                              # dev (watch + dashboard)
 npx dslinter --report /path/to/repo --json
 npx dslinter --report --output public/dslint-report.json
@@ -56,6 +56,7 @@ npx dslinter --watch --output public/dslint-report.json
 ```
 
 Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`).
+On first local run, `npx dslinter` scaffolds `.dslint.json` automatically if missing.
 
 ### Zero-config live previews (recommended)
 
@@ -111,6 +112,11 @@ Use **`autoPlayground`** (above) for zero-config previews. Optionally scaffold a
 
 - `npx dslinter init` → `src/playground/buildRegistry.ts`
 - `npx dslinter init --laravel` → `resources/js/playground/buildRegistry.ts`
+
+`npx dslinter init` now also scaffolds a starter `.dslint.json` (unless one already exists), including:
+- `include_dirs` (directory scope for discovery)
+- `ignore_globs` (file/directory ignores)
+- `css_entrypoints` (main CSS entry files for token analysis)
 
 ```tsx
 import { useMemo } from "react";

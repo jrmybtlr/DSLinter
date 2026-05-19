@@ -11,6 +11,7 @@ Prebuilt native binaries ship with the **`dslinter`** npm package — you do not
 ```bash
 npm install -D dslinter
 npx dslinter                    # local dev: watch + dashboard (Vite app required)
+npx dslinter init               # scaffold baseline .dslint.json + optional playground registry files
 npx dslinter --report /path/to/repo
 npx dslinter --report /path/to/repo --json
 npx dslinter --report -p /path/to/repo --fail-on-warnings
@@ -20,6 +21,7 @@ npx dslinter --build            # write report + vite build (in a Vite project)
 ```
 
 In **CI** (`CI=true`), bare `npx dslinter` runs **`--report`** (one-shot stdout). Use `--report` explicitly if your CI does not set `CI`.
+On local first run, `npx dslinter` auto-creates a starter **`.dslint.json`** when no config exists.
 
 The CLI binary is named **`dslinter`** (not `dslint`) to avoid collision with an unrelated [crates.io `dslint`](https://crates.io/crates/dslint) package.
 
@@ -35,6 +37,9 @@ Put `.dslint.json` or `dslint.json` at the repository root:
 
 ```json
 {
+  "include_dirs": ["src/components"],
+  "ignore_globs": ["fixtures/**"],
+  "css_entrypoints": ["src/index.css"],
   "deprecated_components": ["LegacyButton"],
   "known_tokens": ["--color-", "spacing.", "theme."],
   "ownership": {
@@ -50,7 +55,12 @@ Put `.dslint.json` or `dslint.json` at the repository root:
 }
 ```
 
+`include_dirs` restricts component/CSS discovery to those directory prefixes.  
+`ignore_globs` uses the same ignore semantics as `.gitignore`/`.dslintignore`.  
+`css_entrypoints` scopes token analysis to selected CSS entry files (+ their `@import` graph).
+
 `smell.disabled_rules` accepts `code-*` rule ids (and legacy `smell-*` aliases). `check_dark_mode_contrast` is **heuristic**: it inspects static `class` / `className` strings and string arguments to `cn(...)`, `clsx(...)`, and `classnames(...)` extracted from the AST where possible.
+Legacy `exclude_globs` remains supported for backwards compatibility.
 
 ## Demo app
 
