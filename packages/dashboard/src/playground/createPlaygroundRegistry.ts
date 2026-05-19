@@ -6,14 +6,22 @@ import {
   type BuildPlaygroundOptions,
   type BuildPlaygroundResult,
 } from "./buildPlaygroundEntriesFromReport";
-import { defaultConsumerGlobKeyFromRelPath } from "./playgroundJoin";
+import {
+  createConsumerGlobKeyFromRelPath,
+  defaultConsumerGlobKeyFromRelPath,
+} from "./playgroundJoin";
 
 export type CreatePlaygroundRegistryOptions = Omit<
   BuildPlaygroundOptions,
   "globKeyFromRelPath"
 > & {
-  /** Defaults to {@link defaultConsumerGlobKeyFromRelPath} (`src/playground` → `src/components`). */
+  /**
+   * Defaults to {@link defaultConsumerGlobKeyFromRelPath}
+   * (strips `src/` or `resources/js/` then prefixes `../`).
+   */
   globKeyFromRelPath?: (relPath: string) => string;
+  /** Passed to {@link createConsumerGlobKeyFromRelPath} when `globKeyFromRelPath` is omitted. */
+  stripPrefixes?: readonly string[];
 };
 
 /**
@@ -30,7 +38,12 @@ export function createPlaygroundRegistry(
   options: CreatePlaygroundRegistryOptions = {},
 ): (report: WorkspaceReport | null | undefined) => BuildPlaygroundResult {
   const globKeyFromRelPath =
-    options.globKeyFromRelPath ?? defaultConsumerGlobKeyFromRelPath;
+    options.globKeyFromRelPath ??
+    (options.stripPrefixes
+      ? createConsumerGlobKeyFromRelPath({
+          stripPrefixes: options.stripPrefixes,
+        })
+      : defaultConsumerGlobKeyFromRelPath);
   return (report) =>
     buildPlaygroundEntriesFromReportWithSkips(report, modules, {
       ...options,

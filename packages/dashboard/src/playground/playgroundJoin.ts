@@ -10,15 +10,44 @@ export type PlaygroundJoinSkip = {
   reason: PlaygroundJoinSkipReason;
 };
 
+const DEFAULT_CONSUMER_STRIP_PREFIXES = ["src/", "resources/js/"] as const;
+
+/**
+ * Build `globKeyFromRelPath` for a registry file one level below a source root
+ * (e.g. `src/playground/` or `resources/js/playground/`).
+ */
+export function createConsumerGlobKeyFromRelPath(
+  options: {
+    /** Path prefixes removed from report `rel_path` before prepending `relativePrefix`. */
+    stripPrefixes?: readonly string[];
+    /** Prepended to the stripped path (default `../`). */
+    relativePrefix?: string;
+  } = {},
+): (relPath: string) => string {
+  const stripPrefixes = options.stripPrefixes ?? DEFAULT_CONSUMER_STRIP_PREFIXES;
+  const relativePrefix = options.relativePrefix ?? "../";
+  return (relPath: string) => {
+    let trimmed = relPath.replace(/^\/+/, "");
+    for (const prefix of stripPrefixes) {
+      if (trimmed.startsWith(prefix)) {
+        trimmed = trimmed.slice(prefix.length);
+        break;
+      }
+    }
+    return `${relativePrefix}${trimmed}`;
+  };
+}
+
 /**
  * Maps report `rel_path` to a Vite `import.meta.glob` key when the registry lives in
- * `src/playground/` and components live under `src/components/`.
+ * `src/playground/` or `resources/js/playground/` next to your components.
  *
- * Example: `src/components/ui/button.tsx` → `../components/ui/button.tsx`
+ * Examples:
+ * - `src/components/ui/button.tsx` → `../components/ui/button.tsx`
+ * - `resources/js/Components/Icons/Activity.tsx` → `../Components/Icons/Activity.tsx`
  */
 export function defaultConsumerGlobKeyFromRelPath(relPath: string): string {
-  const trimmed = relPath.replace(/^\/+/, "").replace(/^src\//, "");
-  return `../${trimmed}`;
+  return createConsumerGlobKeyFromRelPath()(relPath);
 }
 
 export function defaultEmbedGlobKeyFromRelPath(relPath: string): string {

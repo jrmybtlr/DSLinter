@@ -28,6 +28,9 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
     },
     server: {
+      fs: {
+        allow: [packageRoot, scanRoot],
+      },
       port: Number(process.env.DSLINTER_DEV_UI_PORT ?? "5175"),
       strictPort: true,
       proxy:

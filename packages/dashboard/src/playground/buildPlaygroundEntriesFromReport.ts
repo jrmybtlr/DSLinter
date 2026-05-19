@@ -31,6 +31,7 @@ function defaultGlobKeyFromRelPath(relPath: string): string {
 
 export type { PlaygroundJoinSkip, PlaygroundJoinSkipReason } from "./playgroundJoin";
 export {
+  createConsumerGlobKeyFromRelPath,
   defaultConsumerGlobKeyFromRelPath,
   defaultEmbedGlobKeyFromRelPath,
   diagnosePlaygroundJoinSkips,

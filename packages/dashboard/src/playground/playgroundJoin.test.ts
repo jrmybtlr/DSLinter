@@ -18,6 +18,14 @@ describe("defaultConsumerGlobKeyFromRelPath", () => {
       "../components/Button.tsx",
     );
   });
+
+  it("maps Laravel resources/js paths", () => {
+    expect(
+      defaultConsumerGlobKeyFromRelPath(
+        "resources/js/Components/Icons/Activity.tsx",
+      ),
+    ).toBe("../Components/Icons/Activity.tsx");
+  });
 });
 
 describe("diagnosePlaygroundJoinSkips", () => {

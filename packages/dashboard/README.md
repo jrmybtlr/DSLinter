@@ -76,7 +76,7 @@ Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`). Your Vite
 
 If the dashboard shows **“Scan snapshot — no live preview”** for a component that appears in the catalog, the scanner found the file but Vite did not load it. Wire previews in three steps:
 
-1. **Scaffold** (optional): `npx dslinter init` → writes `src/playground/buildRegistry.ts`
+1. **Scaffold** (optional): `npx dslinter init` → `src/playground/buildRegistry.ts`; for Inertia/Laravel (`resources/js/…`) use `npx dslinter init --laravel`
 2. **Glob** must cover nested paths, e.g. `import.meta.glob("../components/**/*.{tsx,jsx}", { eager: true })`
 3. **App**: pass `playgroundEntries` and `playgroundJoinSkips` from the registry into `DashboardLayout`
 

@@ -12,7 +12,7 @@ import { runReportMode } from "./modes/report.mjs";
 const rawArgs = process.argv.slice(2);
 
 if (rawArgs[0] === "init") {
-  runInitMode({ targetDir: rawArgs[1] });
+  runInitMode({ argv: rawArgs.slice(1) });
   process.exit(0);
 }
 

@@ -18,6 +18,7 @@ export {
   buildPlaygroundEntriesFromReportWithSkips,
   playgroundCatalogId,
   resolvePlaygroundEntry,
+  createConsumerGlobKeyFromRelPath,
   defaultConsumerGlobKeyFromRelPath,
   defaultEmbedGlobKeyFromRelPath,
   diagnosePlaygroundJoinSkips,

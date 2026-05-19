@@ -5,17 +5,38 @@ import { fileURLToPath } from "node:url";
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 /**
- * @param {{ targetDir?: string }} opts
+ * @param {string} targetDir
+ * @returns {"laravel" | "default"}
+ */
+function detectInitLayout(targetDir) {
+  if (existsSync(join(targetDir, "resources", "js"))) return "laravel";
+  return "default";
+}
+
+/**
+ * @param {{ targetDir?: string; layout?: "laravel" | "default"; argv?: string[] }} opts
  */
 export function runInitMode(opts = {}) {
-  const targetDir = resolve(opts.targetDir ?? process.cwd());
-  const registryDir = join(targetDir, "src", "playground");
+  const argv = opts.argv ?? [];
+  const forceLaravel = argv.includes("--laravel") || argv.includes("--resources-js");
+  const targetDir = resolve(
+    opts.targetDir ?? argv.find((a) => !a.startsWith("-")) ?? process.cwd(),
+  );
+  const layout =
+    opts.layout ?? (forceLaravel ? "laravel" : detectInitLayout(targetDir));
+
+  const registryDir =
+    layout === "laravel"
+      ? join(targetDir, "resources", "js", "playground")
+      : join(targetDir, "src", "playground");
   const registryPath = join(registryDir, "buildRegistry.ts");
+  const templateName =
+    layout === "laravel" ? "buildRegistry.laravel.ts" : "buildRegistry.ts";
   const templatePath = join(
     packageRoot,
     "templates",
     "playground",
-    "buildRegistry.ts",
+    templateName,
   );
 
   if (existsSync(registryPath)) {
@@ -46,7 +67,9 @@ export function runInitMode(opts = {}) {
       "",
       "  import { useMemo } from 'react';",
       "  import { DashboardLayout, useWorkspaceReport } from 'dslinter';",
-      "  import { buildPlaygroundEntries } from './playground/buildRegistry';",
+      layout === "laravel"
+        ? "  import { buildPlaygroundEntries } from '@/playground/buildRegistry';"
+        : "  import { buildPlaygroundEntries } from './playground/buildRegistry';",
       "",
       "  const dslinterReport = useWorkspaceReport({ reportUrl: '/dslint-report.json', watchUrl: '/events' });",
       "  const playgroundEntries = useMemo(() => buildPlaygroundEntries(dslinterReport.report), [dslinterReport.report]);",
@@ -63,9 +86,14 @@ export function runInitMode(opts = {}) {
       "dslinter init: wrote playground registry",
       `  ${registryPath}`,
       "",
+      `Layout: ${layout}`,
+      "",
       "Next:",
-      "  1. Import buildPlaygroundEntries in your App (see src/playground/README.txt)",
+      `  1. Import buildPlaygroundEntries in your App (see ${registryDir}/README.txt)`,
       "  2. Merge vite.dslinter.snippet.ts into vite.config.ts (proxy + react dedupe)",
+      layout === "laravel"
+        ? "     (Inertia: glob uses resources/js/** — not @dslint-scan unless you add the alias snippet)"
+        : "",
       "  3. Run npx dslinter . from the project root",
       "",
     ].join("\n"),

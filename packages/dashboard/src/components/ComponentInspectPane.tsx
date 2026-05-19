@@ -72,14 +72,30 @@ export function ComponentInspectPane({
     ? "A preview was expected for this component but the module could not be loaded in the dashboard bundle (check the file path, export name, or that npx dslinter was run from the project root)."
     : "No playable component definition was found in a .tsx/.jsx file under the scanned workspace — only names from JSX usage appear in the catalog.";
 
-  const joinDetail =
-    playgroundJoinSkip?.reason === "module_not_found"
-      ? `Vite glob is missing key "${playgroundJoinSkip.globKey}" for report path "${playgroundJoinSkip.rel_path}". Run npx dslinter init and wire import.meta.glob in src/playground/buildRegistry.ts.`
-      : playgroundJoinSkip?.reason === "export_not_found"
-        ? `Module loaded but named export "${playgroundJoinSkip.export_name}" was not found. Use export function ${playgroundJoinSkip.export_name}(…) in ${playgroundJoinSkip.rel_path}.`
-        : playgroundSpec
-          ? `Report path: ${playgroundSpec.rel_path} (export ${playgroundSpec.export_name}). Ensure buildRegistry.ts glob covers this file and globKeyFromRelPath matches your import.meta.glob keys.`
-          : null;
+  const joinDetail = (() => {
+    if (playgroundJoinSkip?.reason === "module_not_found") {
+      const { globKey, rel_path } = playgroundJoinSkip;
+      if (globKey.startsWith("@dslint-scan/")) {
+        const relativeGlobKey = globKey.replace(/^@dslint-scan\//, "../");
+        if (rel_path.startsWith("resources/js/")) {
+          return [
+            `Expected embed glob key "${globKey}" but your Vite app did not load it.`,
+            `Laravel/Inertia fix: run npx dslinter init --laravel, then wire buildPlaygroundEntries from resources/js/playground/buildRegistry.ts (glob ../**/*.{tsx,jsx}, expected key "${relativeGlobKey}").`,
+            `Or add resolve.alias "@dslint-scan" → project root and import.meta.glob("@dslint-scan/**/*.{tsx,jsx}", { eager: true }) in App.`,
+          ].join(" ");
+        }
+        return `Vite glob is missing key "${globKey}" for "${rel_path}". Add resolve.alias "@dslint-scan" → scan root in vite.config.ts, or use npx dslinter init and a relative import.meta.glob in buildRegistry.ts.`;
+      }
+      return `Vite glob is missing key "${globKey}" for report path "${rel_path}". Run npx dslinter init (or init --laravel for resources/js) and ensure import.meta.glob covers this file.`;
+    }
+    if (playgroundJoinSkip?.reason === "export_not_found") {
+      return `Module loaded but named export "${playgroundJoinSkip.export_name}" was not found. Use export function ${playgroundJoinSkip.export_name}(…) in ${playgroundJoinSkip.rel_path}.`;
+    }
+    if (playgroundSpec) {
+      return `Report path: ${playgroundSpec.rel_path} (export ${playgroundSpec.export_name}). Ensure buildRegistry.ts glob covers this file and globKeyFromRelPath matches your import.meta.glob keys.`;
+    }
+    return null;
+  })();
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
