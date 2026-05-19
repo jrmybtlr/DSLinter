@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.8
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.7...v0.1.8)
+
+### 🚀 Enhancements
+
+- Auto-scaffold dslint config and add scan scope options ([572e97b](https://github.com/jrmybtlr/DSLinter/commit/572e97b))
+
+### 🩹 Fixes
+
+- Warn when css_entrypoint path is missing ([88a5038](https://github.com/jrmybtlr/DSLinter/commit/88a5038))
+- Don't scope CSS discovery to include_dirs ([7e6df94](https://github.com/jrmybtlr/DSLinter/commit/7e6df94))
+
 ## v0.1.7
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.5...v0.1.7)
