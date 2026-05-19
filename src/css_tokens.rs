@@ -91,6 +91,31 @@ pub fn load_css_sources(root: &Path, entry_paths: &[PathBuf]) -> HashMap<PathBuf
     sources
 }
 
+fn resolve_css_entry_paths(root: &Path, config: &DslintConfig) -> Vec<PathBuf> {
+    if config.css_entrypoints.is_empty() {
+        return collect_css_files(root, config).unwrap_or_default();
+    }
+    let mut out = Vec::new();
+    for entry in &config.css_entrypoints {
+        let trimmed = entry.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        let path = root.join(trimmed);
+        if path.is_file() {
+            out.push(path);
+        } else {
+            eprintln!(
+                "dslint: css_entrypoints entry not found: {}",
+                path.display()
+            );
+        }
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
 fn extract_imports(content: &str) -> Vec<String> {
     css_import_re()
         .captures_iter(content)
@@ -380,7 +405,7 @@ pub fn analyze_css_tokens(
     component_sources: &HashMap<PathBuf, String>,
     config: &DslintConfig,
 ) -> Option<CssTokenSummary> {
-    let entry_paths = collect_css_files(root, config).ok()?;
+    let entry_paths = resolve_css_entry_paths(root, config);
     if entry_paths.is_empty() && component_sources.is_empty() {
         return None;
     }
@@ -595,6 +620,7 @@ pub fn token_adoption_from_css(summary: &CssTokenSummary) -> Option<u8> {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+    use tempfile::tempdir;
 
     #[test]
     fn parses_theme_and_root_vars() {
@@ -653,5 +679,30 @@ mod tests {
         let known: HashSet<String> = ["--color-primary".into()].into_iter().collect();
         let vars = class_tokens_to_css_vars("bg-primary hover:bg-primary/90", &known);
         assert!(vars.iter().any(|v| v == "--color-primary"));
+    }
+
+    #[test]
+    fn css_entrypoints_limit_loaded_css_sources() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("styles")).unwrap();
+        std::fs::write(
+            root.join("styles/main.css"),
+            ":root { --color-main: #111; } .a { color: var(--color-main); }",
+        )
+        .unwrap();
+        std::fs::write(root.join("styles/other.css"), ":root { --color-other: #222; }").unwrap();
+
+        let config = DslintConfig {
+            css_entrypoints: vec!["styles/main.css".into()],
+            ..Default::default()
+        };
+        let entry = resolve_css_entry_paths(root, &config);
+        let rels: Vec<_> = entry
+            .iter()
+            .filter_map(|p| p.strip_prefix(root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(rels, vec!["styles/main.css"]);
     }
 }

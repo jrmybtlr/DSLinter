@@ -1,6 +1,7 @@
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ensureDslintConfig } from "../lib/scaffold-config.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -39,15 +40,12 @@ export function runInitMode(opts = {}) {
     templateName,
   );
 
-  if (existsSync(registryPath)) {
-    process.stderr.write(
-      `dslinter init: ${registryPath} already exists — remove it first to re-scaffold.\n`,
-    );
-    process.exit(1);
+  const configResult = ensureDslintConfig({ targetDir, layout });
+  const wroteRegistry = !existsSync(registryPath);
+  if (wroteRegistry) {
+    mkdirSync(registryDir, { recursive: true });
+    copyFileSync(templatePath, registryPath);
   }
-
-  mkdirSync(registryDir, { recursive: true });
-  copyFileSync(templatePath, registryPath);
 
   const snippetPath = join(registryDir, "vite.dslinter.snippet.ts");
   const snippetTemplate = join(
@@ -55,34 +53,43 @@ export function runInitMode(opts = {}) {
     "templates",
     "vite.dslinter.snippet.ts",
   );
-  if (!existsSync(snippetPath) && existsSync(snippetTemplate)) {
+  if (wroteRegistry && !existsSync(snippetPath) && existsSync(snippetTemplate)) {
     copyFileSync(snippetTemplate, snippetPath);
   }
 
   const appHintPath = join(registryDir, "README.txt");
-  writeFileSync(
-    appHintPath,
-    [
-      "Recommended (no registry file):",
-      "",
-      "  import { DashboardLayout, useWorkspaceReport } from 'dslinter';",
-      "  const dslinterReport = useWorkspaceReport({ reportUrl: '/dslint-report.json', watchUrl: '/events' });",
-      "  <DashboardLayout autoPlayground dslinterReport={dslinterReport} ... />",
-      "",
-      "Optional — custom glob via this registry:",
-      "",
-      "  import { buildPlaygroundEntries } from './playground/buildRegistry';",
-      "  <DashboardLayout playgroundEntries={buildPlaygroundEntries(dslinterReport.report)} ... />",
-      "",
-      "Run the scanner from the repo root: npx dslinter .",
-      "",
-    ].join("\n"),
-  );
+  if (wroteRegistry) {
+    writeFileSync(
+      appHintPath,
+      [
+        "Recommended (no registry file):",
+        "",
+        "  import { DashboardLayout, useWorkspaceReport } from 'dslinter';",
+        "  const dslinterReport = useWorkspaceReport({ reportUrl: '/dslint-report.json', watchUrl: '/events' });",
+        "  <DashboardLayout autoPlayground dslinterReport={dslinterReport} ... />",
+        "",
+        "Optional — custom glob via this registry:",
+        "",
+        "  import { buildPlaygroundEntries } from './playground/buildRegistry';",
+        "  <DashboardLayout playgroundEntries={buildPlaygroundEntries(dslinterReport.report)} ... />",
+        "",
+        "Run the scanner from the repo root: npx dslinter .",
+        "",
+      ].join("\n"),
+    );
+  }
 
   process.stdout.write(
     [
-      "dslinter init: wrote playground registry",
+      wroteRegistry
+        ? "dslinter init: wrote playground registry"
+        : "dslinter init: playground registry already exists (kept)",
       `  ${registryPath}`,
+      "",
+      configResult.created
+        ? "dslinter init: wrote config"
+        : "dslinter init: config already exists (kept)",
+      `  ${configResult.path}`,
       "",
       `Layout: ${layout}`,
       "",
