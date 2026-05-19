@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -24,8 +26,9 @@ import {
   findPlaygroundJoinSkip,
   type PlaygroundJoinSkip,
 } from "../playground/playgroundJoin";
-import { usePlaygroundFromReport } from "../playground/usePlaygroundFromReport";
 import { useHashRoute } from "./useHashRoute";
+
+const DashboardLayoutAuto = lazy(() => import("./DashboardLayoutAuto"));
 
 const STORAGE_KEY = "dslinter-dashboard-theme";
 
@@ -148,32 +151,24 @@ export type DashboardLayoutProps = {
   dslinterReport: DslinterReportState;
 };
 
-function DashboardLayoutInner({
-  autoPlayground = false,
-  playgroundEntries: playgroundEntriesProp,
-  playgroundJoinSkips: playgroundJoinSkipsProp,
+export type DashboardLayoutInnerProps = Omit<
+  DashboardLayoutProps,
+  "autoPlayground" | "playgroundEntries" | "playgroundJoinSkips"
+> & {
+  playgroundEntries: PlaygroundEntry[];
+  playgroundJoinSkips?: PlaygroundJoinSkip[];
+};
+
+export function DashboardLayoutInner({
+  playgroundEntries,
+  playgroundJoinSkips,
   tokenCatalog,
   overview,
   reportUrl,
   dslinterReportHint,
   formatModulePath,
   dslinterReport,
-}: DashboardLayoutProps) {
-  const autoPlaygroundBuild = usePlaygroundFromReport(
-    autoPlayground ? dslinterReport.report : null,
-  );
-  const playgroundEntries = autoPlayground
-    ? autoPlaygroundBuild.entries
-    : (playgroundEntriesProp ?? []);
-  const playgroundJoinSkips = autoPlayground
-    ? autoPlaygroundBuild.skipped
-    : playgroundJoinSkipsProp;
-  const resolvedFormatModulePath =
-    formatModulePath ??
-    (autoPlayground
-      ? (modulePath: string) => modulePath.replace(/^@dslint-scan\//, "")
-      : undefined);
-
+}: DashboardLayoutInnerProps) {
   const [route, navigate] = useHashRoute();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { theme, setTheme, resolvedTheme } = useDashboardTheme();
@@ -221,7 +216,7 @@ function DashboardLayoutInner({
       main = (
         <ComponentPlaygroundPane
           entry={entry}
-          formatModulePath={resolvedFormatModulePath}
+          formatModulePath={formatModulePath}
           workspaceReport={dslinterReport.report}
           reportReady={reportReady}
         />
@@ -291,9 +286,23 @@ function DashboardLayoutInner({
 }
 
 export function DashboardLayout(props: DashboardLayoutProps) {
+  if (props.autoPlayground) {
+    return (
+      <DashboardThemeProvider>
+        <Suspense fallback={null}>
+          <DashboardLayoutAuto {...props} />
+        </Suspense>
+      </DashboardThemeProvider>
+    );
+  }
+
   return (
     <DashboardThemeProvider>
-      <DashboardLayoutInner {...props} />
+      <DashboardLayoutInner
+        {...props}
+        playgroundEntries={props.playgroundEntries ?? []}
+        playgroundJoinSkips={props.playgroundJoinSkips}
+      />
     </DashboardThemeProvider>
   );
 }

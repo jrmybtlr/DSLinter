@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
+import dslinter from "../packages/dashboard/vite/plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -17,7 +18,7 @@ const useSyncExternalStoreShim = path.resolve(
 );
 
 export default defineConfig(({ mode }) => ({
-  plugins: [tailwindcss(), react()],
+  plugins: [tailwindcss(), react(), dslinter({ scanRoot: demoDir })],
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: [

@@ -1,8 +1,4 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { defineConfig, loadConfigFromFile, mergeConfig } from "vite";
-
-const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Merges the consumer's vite.config with the dslinter plugin.

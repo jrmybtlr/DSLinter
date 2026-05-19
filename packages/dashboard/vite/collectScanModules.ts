@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 
 const SKIP_DIR_NAMES = new Set([
