@@ -37,7 +37,8 @@ jobs:
           - host: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
             build_flags: --use-napi-cross
-          - host: windows-latest
+          # Pin before windows-latest → windows-2025 redirect (June 2026).
+          - host: windows-2025
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.host }}
     steps:
@@ -167,14 +168,42 @@ jobs:
             --no-gh-release \
             --skip-optional-publish
 
-      - name: Publish platform bindings and dslinter
+      - name: Verify npm publish credentials
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NPM_TOKEN secret is missing. Add an npm automation or granular token with publish access to the @dslinter scope (all @dslinter/binding-* packages and dslinter)."
+            exit 1
+          fi
+          npm config set @dslinter:registry https://registry.npmjs.org/
+          echo "npm user: $(npm whoami)"
+          pkg=$(node -p "require('./packages/dashboard/package.json').name")
+          ver=$(node -p "require('./packages/dashboard/package.json').version")
+          echo "Will publish ${pkg}@${ver} and @dslinter/binding-*@${ver}"
+          sample=$(ls -d npm/*/ | head -1)
+          (cd "$sample" && npm publish --access public --dry-run)
+
+      - name: Publish platform bindings
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           # Provenance + CI retry same version → TLOG_CREATE_ENTRY_ERROR (409)
           NPM_CONFIG_PROVENANCE: "false"
         run: |
-          for dir in npm/*; do
+          set -euo pipefail
+          npm config set @dslinter:registry https://registry.npmjs.org/
+          for dir in npm/*/; do
             [ -d "$dir" ] || continue
+            name=$(node -p "require('./${dir}package.json').name")
+            echo "::group::Publish ${name}"
             (cd "$dir" && npm publish --access public)
+            echo "::endgroup::"
           done
+
+      - name: Publish dslinter
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "false"
+        run: |
           pnpm --filter dslinter publish --access public --no-git-checks --ignore-scripts

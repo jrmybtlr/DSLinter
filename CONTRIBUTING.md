@@ -41,7 +41,9 @@ Override with a cargo-built binary: `DSLINT_BIN=/path/to/target/release/dslinter
 
 ## Release workflow
 
-From repo root (maintainers). Requires `NPM_TOKEN` in GitHub Actions secrets.
+From repo root (maintainers). Requires `NPM_TOKEN` in GitHub Actions secrets with **publish** access to the entire **`@dslinter` scope** (every `@dslinter/binding-*` platform package plus `dslinter`). A granular token limited to `dslinter` only will fail with `404 Not Found` on binding publishes.
+
+Create the token at [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens): use an **Automation** token, or a **Granular** token with *Packages and scopes* → *Read and write* for `@dslinter/*` (or all packages on the account).
 
 ```bash
 pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → CI publishes npm
