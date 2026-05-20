@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.1.10
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.8...v0.1.10)
+
+### 🏡 Chore
+
+- **release:** V0.1.9 ([a54ea04](https://github.com/jrmybtlr/DSLinter/commit/a54ea04))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.1.8
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.7...v0.1.8)
