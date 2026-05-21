@@ -43,19 +43,31 @@ Override with a cargo-built binary: `DSLINT_BIN=/path/to/target/release/dslinter
 
 From repo root (maintainers). Requires `NPM_TOKEN` in GitHub Actions secrets with **publish** access to the entire **`@dslinter` scope** (every `@dslinter/binding-*` platform package plus `dslinter`). A granular token limited to `dslinter` only will fail with `404 Not Found` on binding publishes.
 
-Create the token at [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens): use an **Automation** token, or a **Granular** token with *Packages and scopes* → *Read and write* for `@dslinter/*` (or all packages on the account).
+Create the token at [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens):
+
+- **Use an Automation token** (recommended for CI). It bypasses 2FA and does not prompt for OTP.
+- Do **not** use a Classic “Publish” token or a Granular token tied to your account 2FA — those fail in CI with `EOTP` (“requires a one-time password”) even when `npm whoami` succeeds.
+
+Grant publish access to the full **`@dslinter`** scope (every `@dslinter/binding-*` package plus `dslinter`).
 
 ```bash
-# After creating the token on npmjs.com:
+# After creating the Automation token on npmjs.com:
 gh secret set NPM_TOKEN --repo jrmybtlr/DSLinter
 
 pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → CI publishes npm
 ```
 
-If publish fails with `401` on `npm whoami` or `404` on `@dslinter/binding-*`, the `NPM_TOKEN` secret is expired or revoked — regenerate the token and update the secret, then re-run the workflow (no new tag needed if that version was never published):
+If publish fails:
+
+| Error | Fix |
+|-------|-----|
+| `401` on `npm whoami` or `404` on `@dslinter/binding-*` | Token expired/revoked or wrong scope — create a new **Automation** token and update the secret. |
+| `EOTP` / one-time password | Token is not an Automation token — replace `NPM_TOKEN` with an [Automation token](https://www.npmjs.com/settings/tokens). |
+
+Re-run without a new version bump if that version was never published:
 
 ```bash
-gh workflow run release-napi-bindings.yml --ref v0.1.10
+gh workflow run release-napi-bindings.yml --ref v0.1.12
 ```
 
 CI workflow: [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml) builds all platform bindings and publishes `@dslinter/binding-*` plus `dslinter`.
