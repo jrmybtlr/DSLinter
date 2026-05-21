@@ -46,7 +46,16 @@ From repo root (maintainers). Requires `NPM_TOKEN` in GitHub Actions secrets wit
 Create the token at [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens): use an **Automation** token, or a **Granular** token with *Packages and scopes* → *Read and write* for `@dslinter/*` (or all packages on the account).
 
 ```bash
+# After creating the token on npmjs.com:
+gh secret set NPM_TOKEN --repo jrmybtlr/DSLinter
+
 pnpm run release:patch   # test → version bump → git push + tag vX.Y.Z → CI publishes npm
+```
+
+If publish fails with `401` on `npm whoami` or `404` on `@dslinter/binding-*`, the `NPM_TOKEN` secret is expired or revoked — regenerate the token and update the secret, then re-run the workflow (no new tag needed if that version was never published):
+
+```bash
+gh workflow run release-napi-bindings.yml --ref v0.1.10
 ```
 
 CI workflow: [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml) builds all platform bindings and publishes `@dslinter/binding-*` plus `dslinter`.

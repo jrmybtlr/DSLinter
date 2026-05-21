@@ -71,6 +71,10 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
     process.env.DSLINTER_NO_EMBED_VITE?.trim() !== "1";
 
   const bundledDist = useEmbedViteDev ? null : resolveBundledDashboardDir();
+  const useConsumerViteDev =
+    consumerViteRoot != null &&
+    bundledDist == null &&
+    process.env.DSLINTER_NO_CONSUMER_VITE?.trim() !== "1";
 
   const args = [...scannerArgs];
   const hasServe = args.some((a) => a === "--serve" || a.startsWith("--serve="));
@@ -177,7 +181,7 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
     return;
   }
 
-  if (consumerViteRoot) {
+  if (useConsumerViteDev) {
     const viteBin = resolveViteBin(consumerViteRoot);
     if (!viteBin) {
       process.stderr.write(`dslinter: vite not installed in ${consumerViteRoot}. Run npm install.\n`);

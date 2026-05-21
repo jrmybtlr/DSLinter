@@ -28,11 +28,25 @@ function maxMtimeInDir(dir, latest = 0) {
 }
 
 /**
+ * @param {string} [root]
+ * @returns {boolean} true when embed SPA sources exist (monorepo / git checkout).
+ */
+export function hasEmbedDashboard(root = packageRoot) {
+  return existsSync(join(root, "index.html"));
+}
+
+/**
  * Rebuild `dashboard-dist/` when embed sources are newer than the bundle (or dist is missing).
+ * Published npm installs omit embed sources; use prebuilt `dashboard-dist/` only.
  * @param {string} root
  */
 export function ensureDashboardBuilt(root = packageRoot) {
-  const distIndex = join(root, "dashboard-dist", "index.html");
+  const distDir = join(root, "dashboard-dist");
+  if (!hasEmbedDashboard(root)) {
+    return dashboardDirIfReady(distDir);
+  }
+
+  const distIndex = join(distDir, "index.html");
   const force =
     process.env.DSLINTER_REBUILD_DASHBOARD === "1" ||
     process.env.DSLINTER_REBUILD_DASHBOARD?.toLowerCase() === "true";
@@ -40,12 +54,9 @@ export function ensureDashboardBuilt(root = packageRoot) {
   let needsBuild = force || !existsSync(distIndex);
   if (!needsBuild) {
     const distMtime = statSync(distIndex).mtimeMs;
-    for (const sub of ["src", "embed"]) {
-      const dir = join(root, sub);
-      if (existsSync(dir) && maxMtimeInDir(dir) > distMtime) {
-        needsBuild = true;
-        break;
-      }
+    const embedDir = join(root, "embed");
+    if (existsSync(embedDir) && maxMtimeInDir(embedDir) > distMtime) {
+      needsBuild = true;
     }
     const configPath = join(root, "vite.config.ts");
     if (existsSync(configPath) && statSync(configPath).mtimeMs > distMtime) {
@@ -53,7 +64,7 @@ export function ensureDashboardBuilt(root = packageRoot) {
     }
   }
 
-  if (!needsBuild) return dashboardDirIfReady(join(root, "dashboard-dist"));
+  if (!needsBuild) return dashboardDirIfReady(distDir);
 
   process.stderr.write("[dslinter] Building dashboard bundle (dashboard-dist)…\n");
   const result = spawnSync("npm", ["run", "build:dashboard"], {
@@ -64,12 +75,7 @@ export function ensureDashboardBuilt(root = packageRoot) {
   if (result.status !== 0) {
     throw new Error("dslinter: dashboard build failed");
   }
-  return dashboardDirIfReady(join(root, "dashboard-dist"));
-}
-
-/** @returns {boolean} */
-export function hasEmbedDashboard() {
-  return existsSync(join(packageRoot, "index.html"));
+  return dashboardDirIfReady(distDir);
 }
 
 const VITE_CONFIG_NAMES = ["vite.config.ts", "vite.config.js", "vite.config.mjs", "vite.config.cjs"];
