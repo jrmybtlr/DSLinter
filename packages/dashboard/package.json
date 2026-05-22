@@ -81,6 +81,7 @@
     "index.cjs",
     "index.d.ts",
     "src",
+    "shared",
     "vite",
     "templates",
     "components.json",

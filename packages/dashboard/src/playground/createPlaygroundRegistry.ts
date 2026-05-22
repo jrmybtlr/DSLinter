@@ -1,3 +1,4 @@
+import type { PlaygroundEntry } from "../types/playground";
 import type { WorkspaceReport } from "../types/report";
 import {
   buildPlaygroundEntriesFromReportWithSkips,
@@ -48,4 +49,13 @@ export function createPlaygroundRegistry(
       ...options,
       globKeyFromRelPath,
     });
+}
+
+/** Convenience when you only need entries (skips are still logged in dev). */
+export function createPlaygroundRegistryEntriesOnly(
+  modules: BuildPlaygroundModules,
+  options: CreatePlaygroundRegistryOptions = {},
+): (report: WorkspaceReport | null | undefined) => PlaygroundEntry[] {
+  const build = createPlaygroundRegistry(modules, options);
+  return (report) => build(report).entries;
 }

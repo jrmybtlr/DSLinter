@@ -37,6 +37,7 @@ export type {
 } from "./playground/buildPlaygroundEntriesFromReport";
 export {
   createPlaygroundRegistry,
+  createPlaygroundRegistryEntriesOnly,
 } from "./playground/createPlaygroundRegistry";
 export { usePlaygroundFromReport } from "./playground/usePlaygroundFromReport";
 export type { CreatePlaygroundRegistryOptions } from "./playground/createPlaygroundRegistry";
