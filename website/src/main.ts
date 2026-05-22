@@ -1,3 +1,5 @@
+import "./main.css";
+
 const navToggle = document.querySelector<HTMLButtonElement>("[data-nav-toggle]");
 const mobileNav = document.querySelector<HTMLElement>("[data-mobile-nav]");
 
