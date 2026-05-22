@@ -2,7 +2,9 @@
  * Legacy snippet — prefer `import dslinter from "dslinter/vite"` (one plugin line).
  * `npx dslinter` merges the plugin automatically when a consumer Vite app exists.
  */
-const DSLINT_SERVE_PORT = Number(process.env.DSLINT_SERVE_PORT ?? "7878");
+import { resolveServePort } from "../../shared/servePort";
+
+const DSLINT_SERVE_PORT = resolveServePort();
 
 export const dslinterViteSnippet = {
   resolve: {

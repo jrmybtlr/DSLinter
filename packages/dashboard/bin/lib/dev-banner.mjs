@@ -198,7 +198,9 @@ export function formatDevBanner(opts) {
   if (opts.pollMs) plainWidths.push(14 + 2 + `polling every ${opts.pollMs} ms`.length);
   const footerPlain = opts.bundledUrl
     ? "  Open the Bundled UI URL in your browser. Ctrl+C to stop."
-    : "  Open the Dashboard URL in your browser. Ctrl+C to stop.";
+    : opts.dashboardUrl
+      ? "  Open the Dashboard URL (UI), not the Scanner API port. Ctrl+C to stop."
+      : "  Open the Dashboard URL in your browser. Ctrl+C to stop.";
   plainWidths.push(visibleLength(footerPlain));
 
   const contentWidth = Math.min(maxBox - 4, Math.max(...plainWidths, 40));

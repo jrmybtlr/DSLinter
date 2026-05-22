@@ -47,16 +47,6 @@ export function runInitMode(opts = {}) {
     copyFileSync(templatePath, registryPath);
   }
 
-  const snippetPath = join(registryDir, "vite.dslinter.snippet.ts");
-  const snippetTemplate = join(
-    packageRoot,
-    "templates",
-    "vite.dslinter.snippet.ts",
-  );
-  if (wroteRegistry && !existsSync(snippetPath) && existsSync(snippetTemplate)) {
-    copyFileSync(snippetTemplate, snippetPath);
-  }
-
   const appHintPath = join(registryDir, "README.txt");
   if (wroteRegistry) {
     writeFileSync(
