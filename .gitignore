@@ -6,6 +6,8 @@ node_modules/
 demo/node_modules/
 packages/dashboard/node_modules/
 demo/dist/
+website/dist/
+website/node_modules/
 packages/dashboard/dashboard-dist/
 demo/public/dslint-report.json
 packages/dashboard/vendor/
