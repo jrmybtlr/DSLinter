@@ -304,7 +304,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         let tpl = inner.as_str();
         let tpl_start = inner.start();
         let tpl_line_offset = line_offset_before(&newlines, tpl_start);
-        merge_template_usages(source, tpl, tpl_start, &mut scan.usages);
+        merge_template_usages(&newlines, tpl, tpl_start, &mut scan.usages);
         scan.findings
             .extend(vue_template_a11y_findings(path, source, tpl, tpl_start));
         crate::class_strings::extend_template_class_extracts(
@@ -318,13 +318,11 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
 }
 
 fn merge_template_usages(
-    full_source: &str,
+    newlines: &[usize],
     template: &str,
     template_inner_start: usize,
     usages: &mut Vec<JsxUsage>,
 ) {
-    let newlines = newline_offsets(full_source);
-
     for cap in template_pascal_re().captures_iter(template) {
         let component = cap.get(1).unwrap().as_str().to_string();
         let rel_start = cap.get(0).unwrap().start();
