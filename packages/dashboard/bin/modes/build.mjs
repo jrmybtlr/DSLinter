@@ -1,6 +1,11 @@
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { defaultReportPath, findViteRoot, resolveViteBin } from "../lib/project-root.mjs";
+import {
+  defaultReportPath,
+  findViteRoot,
+  resolveViteBin,
+  warnIfSubdirectoryScan,
+} from "../lib/project-root.mjs";
 import { runScannerSync } from "../lib/run-scanner.mjs";
 
 /**
@@ -11,6 +16,8 @@ import { runScannerSync } from "../lib/run-scanner.mjs";
  * }}
  */
 export function runBuildMode({ scanPath, outputPath, scannerArgs }) {
+  const scanAbs = resolve(scanPath);
+  warnIfSubdirectoryScan(scanAbs, { outputPath });
   const reportPath = defaultReportPath(scanPath, outputPath);
   const args = ["--report", ...scannerArgs];
   if (!args.some((a) => a === "--output" || a.startsWith("--output="))) {
@@ -33,7 +40,6 @@ export function runBuildMode({ scanPath, outputPath, scannerArgs }) {
     process.stderr.write(`dslinter: vite not installed in ${viteRoot}. Run npm install.\n`);
     process.exit(1);
   }
-  const scanAbs = resolve(scanPath);
   const child = spawnSync(process.execPath, [viteBin, "build"], {
     cwd: viteRoot,
     stdio: "inherit",

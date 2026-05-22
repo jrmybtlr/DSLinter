@@ -91,7 +91,7 @@ jobs:
             build_one "${{ matrix.target }}" ${{ matrix.build_flags }}
           fi
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: bindings-${{ matrix.target }}
           path: |
@@ -143,7 +143,7 @@ jobs:
             --package-json-path packages/dashboard/package.json \
             --npm-dir npm
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           path: artifacts
           merge-multiple: true

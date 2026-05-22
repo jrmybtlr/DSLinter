@@ -139,7 +139,7 @@ export type DashboardLayoutProps = {
   /** Join failures from `buildPlaygroundEntriesFromReportWithSkips` — powers inspect-pane hints. */
   playgroundJoinSkips?: PlaygroundJoinSkip[];
   tokenCatalog?: TokenCatalog;
-  /** Custom intro shown above the governance inventory on `#!/governance`; defaults to package copy. */
+  /** Custom intro shown above the governance inventory on `/governance`; defaults to package copy. */
   overview?: ReactNode;
   /** Fetch URL for `dslint --json` output. */
   reportUrl?: string;

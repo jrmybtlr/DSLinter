@@ -1,6 +1,10 @@
 /** Values passed from the dashboard control panel into `PlaygroundPreview`. */
 export type PlaygroundArgs = Record<string, string | number | boolean>;
 
+export type PlaygroundValuesUpdater = (
+  next: PlaygroundArgs | ((prev: PlaygroundArgs) => PlaygroundArgs),
+) => void;
+
 export type PlaygroundBooleanControl = {
   key: string;
   label: string;

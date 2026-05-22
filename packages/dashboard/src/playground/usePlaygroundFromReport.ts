@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { WorkspaceReport } from "../types/report";
 import { buildPlaygroundEntriesFromReportWithSkips } from "./buildPlaygroundEntriesFromReport";
 import type { BuildPlaygroundResult } from "./buildPlaygroundEntriesFromReport";
+import { playgroundSpecsKey } from "./playgroundSpecsKey";
 import { scanPlaygroundModules } from "./scanPlaygroundModules";
 
 /**
@@ -12,12 +13,13 @@ import { scanPlaygroundModules } from "./scanPlaygroundModules";
 export function usePlaygroundFromReport(
   report: WorkspaceReport | null | undefined,
 ): BuildPlaygroundResult {
+  const specsKey = playgroundSpecsKey(report);
   return useMemo(
     () =>
       buildPlaygroundEntriesFromReportWithSkips(
         report,
         scanPlaygroundModules,
       ),
-    [report],
+    [specsKey],
   );
 }

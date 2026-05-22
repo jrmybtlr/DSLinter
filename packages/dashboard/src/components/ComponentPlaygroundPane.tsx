@@ -99,7 +99,7 @@ export function ComponentPlaygroundPane({
   workspaceReport,
   reportReady,
 }: Props) {
-  const { Preview } = entry;
+  const { renderPreview } = entry;
   const rel = formatModulePath
     ? formatModulePath(entry.modulePath)
     : entry.modulePath.replace(/^\.\.\//, "");
@@ -309,8 +309,8 @@ export function ComponentPlaygroundPane({
                     aria-hidden
                   />
                 </button>
-                <div className="min-w-0 bg-card p-8">
-                  <Preview values={values} />
+                <div className="ds-playground-preview-canvas min-w-0 p-8">
+                  {renderPreview(values)}
                 </div>
               </div>
             </div>
@@ -424,7 +424,7 @@ export function ComponentPlaygroundPane({
                 All variants
               </h2>
               <PlaygroundVariantMatrix
-                Preview={Preview}
+                renderPreview={renderPreview}
                 combinations={variantEnumeration.combinations}
                 finiteAxisKeys={variantEnumeration.finiteAxisKeys}
                 totalCount={variantEnumeration.totalCount}

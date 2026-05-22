@@ -10,6 +10,7 @@ export type {
   PlaygroundStringControl,
   PlaygroundNumberControl,
   PlaygroundSelectControl,
+  PlaygroundValuesUpdater,
 } from "./types/controls";
 export { defaultArgsFromControls } from "./types/controls";
 export { definePlayground } from "./playground/definePlayground";
@@ -40,6 +41,7 @@ export {
   createPlaygroundRegistryEntriesOnly,
 } from "./playground/createPlaygroundRegistry";
 export { usePlaygroundFromReport } from "./playground/usePlaygroundFromReport";
+export { playgroundSpecsKey } from "./playground/playgroundSpecsKey";
 export type { CreatePlaygroundRegistryOptions } from "./playground/createPlaygroundRegistry";
 export type { DefinedPlayground } from "./playground/definePlayground";
 export type { PlaygroundPreviewProps, PlaygroundPreviewComponent } from "./types/preview";

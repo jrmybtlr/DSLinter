@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useWorkspaceReport, DashboardLayout } from "dslinter";
+import { useWorkspaceReport, DashboardLayout, playgroundSpecsKey } from "dslinter";
 import {
   buildPlaygroundEntries,
   getPlaygroundJoinSkips,
@@ -20,14 +20,16 @@ export default function App() {
     refreshIntervalMs: IS_SERVE_MODE ? 0 : 5000,
   });
 
+  const specsKey = playgroundSpecsKey(dslinterReport.report);
+
   const playgroundEntries = useMemo(
     () => buildPlaygroundEntries(dslinterReport.report),
-    [dslinterReport.report],
+    [specsKey],
   );
 
   const playgroundJoinSkips = useMemo(
     () => getPlaygroundJoinSkips(dslinterReport.report),
-    [dslinterReport.report],
+    [specsKey],
   );
 
   return (

@@ -5,6 +5,15 @@ const CONFIG_NAMES = [".dslint.json", "dslint.json"];
 
 /**
  * @param {string} targetDir
+ * @returns {"laravel" | "default"}
+ */
+export function detectInitLayout(targetDir) {
+  if (existsSync(join(targetDir, "resources", "js"))) return "laravel";
+  return "default";
+}
+
+/**
+ * @param {string} targetDir
  * @returns {string | null}
  */
 export function findDslintConfigPath(targetDir) {

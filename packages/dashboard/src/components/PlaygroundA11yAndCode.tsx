@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
+import type { PlaygroundArgs, PlaygroundControl, PlaygroundValuesUpdater } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
 import type { CodeScoreModuleSummary } from "../report/codeScoreForModule";
@@ -200,7 +200,7 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
 type ApiProps = {
   controls: PlaygroundControl[];
   values: PlaygroundArgs;
-  onChange: (next: PlaygroundArgs) => void;
+  onChange: PlaygroundValuesUpdater;
   onReset: () => void;
   /** When set, adds columns for how often each prop appears at scanned JSX call sites. */
   reportUsage?: UsageSummary;
@@ -237,9 +237,9 @@ export function PlaygroundApiReference({
 
   const patch = useCallback(
     (key: string, value: string | number | boolean) => {
-      onChange({ ...values, [key]: value });
+      onChange((prev) => ({ ...prev, [key]: value }));
     },
-    [onChange, values],
+    [onChange],
   );
 
   const rows = controlsToApiRows(controls);

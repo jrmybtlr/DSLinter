@@ -79,4 +79,33 @@ describe("diagnosePlaygroundJoinSkips", () => {
     expect(entries).toHaveLength(1);
     expect(entries[0]?.id).toBe("Button");
   });
+
+  it("joins bare rel_path via unique suffix when subdirectory scan shortened the path", () => {
+    const subdirReport: WorkspaceReport = {
+      ...report,
+      playgrounds: [
+        {
+          id: "Button",
+          export_name: "Button",
+          rel_path: "Button.tsx",
+          declared_props: [],
+        },
+      ],
+    };
+    const modules = {
+      "../Components/Button.tsx": {
+        Button: function Button() {
+          return null;
+        },
+      },
+    };
+    const { entries, skipped } = buildPlaygroundEntriesFromReportWithSkips(
+      subdirReport,
+      modules,
+      { globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath, logJoinSkips: false },
+    );
+    expect(skipped).toHaveLength(0);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.modulePath).toBe("../Components/Button.tsx");
+  });
 });

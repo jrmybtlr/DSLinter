@@ -185,4 +185,15 @@
       transparent 1px
     );
   }
+
+  /** Neutral stage so light- and dark-targeted component variants stay visible. */
+  .ds-playground-preview-canvas {
+    background-color: rgb(71 85 105);
+    background-image: radial-gradient(
+      circle,
+      rgb(100 116 139 / 0.35) 1px,
+      transparent 1px
+    );
+    background-size: 12px 12px;
+  }
 }

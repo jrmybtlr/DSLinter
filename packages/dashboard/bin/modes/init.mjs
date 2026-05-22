@@ -1,18 +1,9 @@
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ensureDslintConfig } from "../lib/scaffold-config.mjs";
+import { detectInitLayout, ensureDslintConfig } from "../lib/scaffold-config.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
-
-/**
- * @param {string} targetDir
- * @returns {"laravel" | "default"}
- */
-function detectInitLayout(targetDir) {
-  if (existsSync(join(targetDir, "resources", "js"))) return "laravel";
-  return "default";
-}
 
 /**
  * @param {{ targetDir?: string; layout?: "laravel" | "default"; argv?: string[] }} opts

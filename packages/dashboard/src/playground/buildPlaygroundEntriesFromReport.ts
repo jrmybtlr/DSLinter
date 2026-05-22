@@ -6,6 +6,7 @@ import {
   defaultEmbedGlobKeyFromRelPath,
   diagnosePlaygroundJoinSkips,
   logPlaygroundJoinSkips,
+  resolveModuleKeyForRelPath,
   type PlaygroundJoinSkip,
 } from "./playgroundJoin";
 
@@ -67,7 +68,7 @@ function isLikelyBooleanProp(name: string): boolean {
 }
 
 function defaultStringForProp(key: string): string {
-  if (key === "href") return "#!/governance";
+  if (key === "href") return "/governance";
   const k = key.toLowerCase();
   if (
     k === "title" ||
@@ -138,13 +139,22 @@ function controlsForSpec(
   return controlsFromDeclaredProps(declaredProps, propKinds);
 }
 
+function propKeysForPreview(
+  controls: PlaygroundControl[],
+  declaredProps: string[],
+): string[] {
+  if (controls.length > 0) return controls.map((c) => c.key);
+  return declaredProps.filter((k) => k !== "key" && k !== "ref");
+}
+
 function valuesToComponentProps(
+  controls: PlaygroundControl[],
   declaredProps: string[],
   values: PlaygroundArgs,
   propKinds?: Partial<Record<string, DeclaredPropKind>>,
 ): Record<string, unknown> {
   const o: Record<string, unknown> = {};
-  for (const key of declaredProps) {
+  for (const key of propKeysForPreview(controls, declaredProps)) {
     if (key === "key" || key === "ref") continue;
     if (key === "children") {
       const v = values.children;
@@ -328,7 +338,12 @@ export function buildPlaygroundEntriesFromReportWithSkips(
   const out: PlaygroundEntry[] = [];
   for (const spec of specs) {
     const globKey = globKeyFromRelPath(spec.rel_path);
-    const mod = modules[globKey];
+    const resolvedKey = resolveModuleKeyForRelPath(
+      spec.rel_path,
+      modules,
+      globKeyFromRelPath,
+    );
+    const mod = resolvedKey ? modules[resolvedKey] : undefined;
     if (!mod) continue;
     const Cmp = getExport(mod, spec.export_name);
     if (!Cmp) continue;
@@ -347,10 +362,19 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       staticDefaultsMap[spec.id] ??
       {};
 
-    function Preview({ values }: { values: PlaygroundArgs }) {
-      const fromValues = valuesToComponentProps(declared, values, propKinds);
+    const renderPreview = (values: PlaygroundArgs) => {
+      const fromValues = valuesToComponentProps(
+        controls,
+        declared,
+        values,
+        propKinds,
+      );
       const merged = mergeStaticDefaults(fromValues, staticDefaults);
       return createElement(Cmp, merged);
+    };
+
+    function Preview({ values }: { values: PlaygroundArgs }) {
+      return renderPreview(values);
     }
 
     const meta: PlaygroundMeta = {
@@ -362,10 +386,11 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     out.push({
       id: catalogId,
       meta,
-      modulePath: globKey,
+      modulePath: resolvedKey ?? globKey,
       controls,
       usageSnippet: (values) =>
         genericUsageSnippet(spec.export_name, values, controls),
+      renderPreview,
       Preview: Preview as PlaygroundPreviewComponent,
     });
   }

@@ -1,12 +1,12 @@
 import { useCallback } from "react";
-import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
+import type { PlaygroundArgs, PlaygroundValuesUpdater } from "../types/controls";
 import { Button } from "./ui/button";
 import { PlaygroundControlField } from "./PlaygroundControlField";
 
 type Props = {
   controls: PlaygroundControl[];
   values: PlaygroundArgs;
-  onChange: (next: PlaygroundArgs) => void;
+  onChange: PlaygroundValuesUpdater;
   onReset: () => void;
   /** Omit the outer card wrapper (doc-style pages provide their own section chrome). */
   bare?: boolean;
@@ -21,9 +21,9 @@ export function PlaygroundControls({
 }: Props) {
   const patch = useCallback(
     (key: string, value: string | number | boolean) => {
-      onChange({ ...values, [key]: value });
+      onChange((prev) => ({ ...prev, [key]: value }));
     },
-    [onChange, values],
+    [onChange],
   );
 
   if (controls.length === 0) return null;

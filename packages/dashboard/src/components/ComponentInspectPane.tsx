@@ -75,6 +75,9 @@ export function ComponentInspectPane({
   const joinDetail = (() => {
     if (playgroundJoinSkip?.reason === "module_not_found") {
       const { globKey, rel_path } = playgroundJoinSkip;
+      const subdirHint = !rel_path.includes("/")
+        ? " This usually means the scanner was run from a subdirectory. Re-run from the project root: npx dslinter ."
+        : "";
       if (globKey.startsWith("@dslint-scan/")) {
         return [
           `Expected module key "${globKey}" but the dslinter Vite plugin did not load it.`,
@@ -82,7 +85,13 @@ export function ComponentInspectPane({
           `Run the scanner from the project root so rel_path "${rel_path}" matches files under DSLINT_SCAN_ROOT.`,
         ].join(" ");
       }
-      return `Vite glob is missing key "${globKey}" for report path "${rel_path}". Use autoPlayground + dslinter/vite, or run npx dslinter init for a custom buildRegistry.ts glob.`;
+      return [
+        `Vite glob is missing key "${globKey}" for report path "${rel_path}".`,
+        `Prefer <DashboardLayout autoPlayground /> with plugins: [dslinter()] from dslinter/vite, or run npx dslinter init for a custom buildRegistry.ts glob.`,
+        subdirHint,
+      ]
+        .filter(Boolean)
+        .join("");
     }
     if (playgroundJoinSkip?.reason === "export_not_found") {
       return `Module loaded but named export "${playgroundJoinSkip.export_name}" was not found. Use export function ${playgroundJoinSkip.export_name}(…) in ${playgroundJoinSkip.rel_path}.`;

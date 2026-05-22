@@ -1,27 +1,52 @@
-import { useCallback, useSyncExternalStore } from "react";
-import { formatHashRoute, parseHashRoute, type HashRoute } from "./hashRoute";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
+import {
+  formatHashRoute,
+  parseHashRoute,
+  stripLegacyHashFragment,
+  type HashRoute,
+} from "./hashRoute";
+
+const NAVIGATE_EVENT = "dslinter:navigate";
 
 function subscribe(onStoreChange: () => void) {
-  window.addEventListener("hashchange", onStoreChange);
-  return () => window.removeEventListener("hashchange", onStoreChange);
+  window.addEventListener("popstate", onStoreChange);
+  window.addEventListener(NAVIGATE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("popstate", onStoreChange);
+    window.removeEventListener(NAVIGATE_EVENT, onStoreChange);
+  };
 }
 
-function getHashSnapshot() {
-  return window.location.hash || "#!/governance";
+function getPathSnapshot() {
+  return window.location.pathname || "/governance";
 }
 
-function getServerHashSnapshot() {
-  return "#!/governance";
+function getServerPathSnapshot() {
+  return "/governance";
 }
 
 export function useHashRoute(): [HashRoute, (next: HashRoute) => void] {
-  const hash = useSyncExternalStore(subscribe, getHashSnapshot, getServerHashSnapshot);
-  const route = parseHashRoute(hash);
+  const pathname = useSyncExternalStore(
+    subscribe,
+    getPathSnapshot,
+    getServerPathSnapshot,
+  );
+  const route = parseHashRoute(pathname);
+
+  useEffect(() => {
+    if (stripLegacyHashFragment()) {
+      window.dispatchEvent(new Event(NAVIGATE_EVENT));
+    }
+  }, []);
 
   const navigate = useCallback((next: HashRoute) => {
-    const nextHash = formatHashRoute(next);
-    if (nextHash !== window.location.hash) {
-      window.location.hash = nextHash;
+    const nextPath = formatHashRoute(next);
+    const pathChanged = nextPath !== window.location.pathname;
+    if (pathChanged) {
+      window.history.pushState(null, "", nextPath);
+    }
+    if (stripLegacyHashFragment() || pathChanged) {
+      window.dispatchEvent(new Event(NAVIGATE_EVENT));
     }
   }, []);
 

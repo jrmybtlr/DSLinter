@@ -62,8 +62,7 @@ export function Sidebar({
     [report],
   );
   const tokensActive = route.view === "tokens";
-  const governanceActive =
-    route.view === "governance" && route.catalog == null;
+  const governanceActive = route.view === "governance";
 
   const onThemeValueChange = (value: string) => {
     if (value !== "light" && value !== "dark") return;

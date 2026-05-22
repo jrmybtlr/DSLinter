@@ -8,11 +8,12 @@ import {
   hasEmbedDashboard,
   resolveBundledDashboardDir,
   resolveViteBin,
+  warnIfSubdirectoryScan,
 } from "../lib/project-root.mjs";
 import { writeDevBanner } from "../lib/dev-banner.mjs";
 import { findAvailablePort, warnIfPortBusy } from "../lib/port-check.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
-import { ensureDslintConfig } from "../lib/scaffold-config.mjs";
+import { detectInitLayout, ensureDslintConfig } from "../lib/scaffold-config.mjs";
 import { waitForPort } from "../lib/wait-for-port.mjs";
 
 const POLL_MS = 150;
@@ -57,24 +58,32 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
   const port = servePort ?? defaultServePort();
   const reportPath = defaultReportPath(scanPath, outputPath);
   const scanAbs = resolve(scanPath);
-  const configResult = ensureDslintConfig({ targetDir: scanAbs, layout: "default" });
+  warnIfSubdirectoryScan(scanAbs, { outputPath });
+  const viteRootForConfig = findViteRoot(scanAbs) ?? scanAbs;
+  const configResult = ensureDslintConfig({
+    targetDir: viteRootForConfig,
+    layout: detectInitLayout(viteRootForConfig),
+  });
   if (configResult.created) {
     process.stderr.write(`dslinter: scaffolded ${configResult.path}\n`);
   }
   const consumerViteRoot = findViteRoot(process.cwd());
   const embedRoot = getDashboardPackageRoot();
   const embedViteBin = hasEmbedDashboard() ? resolveViteBin(embedRoot) : null;
+  /** Prefer the host Vite app (live dashboard source + HMR) when detected. */
+  const useConsumerViteDev =
+    consumerViteRoot != null &&
+    process.env.DSLINTER_NO_CONSUMER_VITE?.trim() !== "1";
   /** Live embed UI from source (proxies report/SSE to the scanner port). */
   const useEmbedViteDev =
     embedViteBin != null &&
     consumerViteRoot == null &&
     process.env.DSLINTER_NO_EMBED_VITE?.trim() !== "1";
 
-  const bundledDist = useEmbedViteDev ? null : resolveBundledDashboardDir();
-  const useConsumerViteDev =
-    consumerViteRoot != null &&
-    bundledDist == null &&
-    process.env.DSLINTER_NO_CONSUMER_VITE?.trim() !== "1";
+  const bundledDist =
+    useEmbedViteDev || useConsumerViteDev
+      ? null
+      : resolveBundledDashboardDir();
 
   const args = [...scannerArgs];
   const hasServe = args.some((a) => a === "--serve" || a.startsWith("--serve="));

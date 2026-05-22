@@ -1,10 +1,10 @@
+import type { ReactNode } from "react";
 import type { PlaygroundArgs } from "../types/controls";
-import type { PlaygroundPreviewComponent } from "../types/preview";
 import { Badge } from "./ui/badge";
 import { PLAYGROUND_VARIANT_MATRIX_CAP } from "../playground/enumerateControlCombinations";
 
 type Props = {
-  Preview: PlaygroundPreviewComponent;
+  renderPreview: (values: PlaygroundArgs) => ReactNode;
   combinations: PlaygroundArgs[];
   finiteAxisKeys: string[];
   totalCount: number;
@@ -17,7 +17,7 @@ function formatValue(value: string | number | boolean): string {
 }
 
 export function PlaygroundVariantMatrix({
-  Preview,
+  renderPreview,
   combinations,
   finiteAxisKeys,
   totalCount,
@@ -57,8 +57,8 @@ export function PlaygroundVariantMatrix({
                 );
               })}
             </div>
-            <div className="min-w-0 bg-card p-3">
-              <Preview values={combo} />
+            <div className="min-w-0 ds-playground-preview-canvas p-3">
+              {renderPreview(combo)}
             </div>
           </div>
         ))}

@@ -19,7 +19,7 @@ export const playgroundStaticDefaults: Record<string, Record<string, unknown>> =
     label: "Notes",
     rows: 4,
   },
-  TextLink: { href: "#!/governance" },
+  TextLink: { href: "/governance" },
   ProgressBar: { value: 45, max: 100 },
   InlineAlert: {
     children: "You can edit props in the playground panel to try different variants.",

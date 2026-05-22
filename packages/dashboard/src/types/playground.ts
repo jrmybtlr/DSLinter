@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "./controls";
 import type { PlaygroundPreviewComponent } from "./preview";
 
@@ -17,5 +18,8 @@ export type PlaygroundEntry = {
   controls: PlaygroundControl[];
   /** Optional JSX-ish snippet from current `values` (consumer-defined). */
   usageSnippet?: (values: PlaygroundArgs) => string;
+  /** Render live preview from control values (preferred — avoids unstable component types). */
+  renderPreview: (values: PlaygroundArgs) => ReactNode;
+  /** @deprecated Use `renderPreview` — kept for manual `definePlayground` call sites. */
   Preview: PlaygroundPreviewComponent;
 };

@@ -91,6 +91,21 @@ The plugin sets `DSLINT_SCAN_ROOT` from the environment (set by `npx dslinter`) 
 
 Published `dslinter` source uses **relative imports only** — your app's `@/*` alias does not hijack dslinter internal UI. You do **not** need `@/components` → `node_modules/dslinter` alias overrides.
 
+### Laravel / Inertia embedded dashboard
+
+When the dashboard lives inside your Inertia app (not only via `npx dslinter` dev):
+
+| Step | Requirement |
+|------|-------------|
+| Scan | Always from the **project root**: `npx dslinter . --output public/dslint-report.json` |
+| Dashboard | `<DashboardLayout autoPlayground dslinterReport={...} />` |
+| Vite | `plugins: [dslinter()]` from `dslinter/vite` in `vite.config.js` |
+| Report | `public/dslint-report.json` at the Laravel root (not under `resources/js/`) |
+
+**Avoid** scanning a subdirectory such as `resources/js/Components` — `playgrounds[].rel_path` becomes bare filenames (`Button.tsx`) and breaks glob joins. If you must scan a subdir, dslinter still writes the report to the project `public/` when a parent `vite.config.*` exists, and may resolve previews via unique path suffixes when only one file matches.
+
+**Init for Laravel:** `npx dslinter init --laravel` scaffolds `resources/js/playground/buildRegistry.ts` with a broad glob. Prefer `autoPlayground` unless you need custom playground controls.
+
 ## Styles (Tailwind v4)
 
 1. In your app CSS, load Tailwind, then point Tailwind at this package so utility scanning picks up dashboard classes:

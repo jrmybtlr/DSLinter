@@ -1,40 +1,26 @@
 export type HashRoute =
   | { view: "tokens" }
-  | { view: "governance"; catalog?: string }
+  | { view: "governance" }
   | { view: "component"; componentId: string };
 
-const PREFIX = "#!/";
-
-function stripShebang(hash: string): string {
-  if (hash.startsWith(PREFIX)) {
-    return hash.slice(PREFIX.length);
+function normalizePath(input: string): string {
+  const raw = input.trim();
+  if (raw.startsWith("/")) {
+    return raw.replace(/\/+$/, "") || "/";
   }
-  if (hash.startsWith("#")) {
-    return hash.slice(1);
-  }
-  return hash;
+  return raw.length > 0 ? `/${raw}` : "/";
 }
 
-export function parseHashRoute(hash: string): HashRoute {
-  const raw = stripShebang(hash).trim();
-  if (raw === "" || raw === "overview") {
+export function parseHashRoute(pathname: string): HashRoute {
+  const path = normalizePath(pathname);
+  if (path === "/" || path === "/overview" || path === "/governance") {
     return { view: "governance" };
   }
-  if (raw === "tokens") {
+  if (path === "/tokens") {
     return { view: "tokens" };
   }
-  if (raw === "governance") {
-    return { view: "governance" };
-  }
-  if (raw.startsWith("governance/")) {
-    const catalog = decodeURIComponent(raw.slice("governance/".length));
-    if (catalog.length > 0) {
-      /** Legacy deep links — component pages replaced governance catalog scroll. */
-      return { view: "component", componentId: catalog };
-    }
-  }
-  if (raw.startsWith("component/")) {
-    const componentId = decodeURIComponent(raw.slice("component/".length));
+  if (path.startsWith("/component/")) {
+    const componentId = decodeURIComponent(path.slice("/component/".length));
     if (componentId.length > 0) {
       return { view: "component", componentId };
     }
@@ -45,14 +31,20 @@ export function parseHashRoute(hash: string): HashRoute {
 export function formatHashRoute(route: HashRoute): string {
   switch (route.view) {
     case "tokens":
-      return `${PREFIX}tokens`;
+      return "/tokens";
     case "governance":
-      return route.catalog
-        ? `${PREFIX}governance/${encodeURIComponent(route.catalog)}`
-        : `${PREFIX}governance`;
+      return "/governance";
     case "component":
-      return `${PREFIX}component/${encodeURIComponent(route.componentId)}`;
+      return `/component/${encodeURIComponent(route.componentId)}`;
     default:
-      return `${PREFIX}governance`;
+      return "/governance";
   }
+}
+
+/** Drop stale `#!/…` fragments left over from hash routing. */
+export function stripLegacyHashFragment(): boolean {
+  if (!window.location.hash.startsWith("#!/")) return false;
+  const clean = window.location.pathname + window.location.search;
+  window.history.replaceState(null, "", clean || "/governance");
+  return true;
 }

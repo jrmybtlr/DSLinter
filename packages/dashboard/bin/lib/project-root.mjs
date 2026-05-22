@@ -103,7 +103,35 @@ export function findViteRoot(startDir) {
  */
 export function defaultReportPath(scanPath, outputFlag) {
   if (outputFlag) return resolve(outputFlag);
-  return resolve(scanPath, "public", "dslint-report.json");
+  const scanAbs = resolve(scanPath);
+  const viteRoot = findViteRoot(scanAbs);
+  if (viteRoot && resolve(viteRoot) !== scanAbs) {
+    return resolve(viteRoot, "public", "dslint-report.json");
+  }
+  return resolve(scanAbs, "public", "dslint-report.json");
+}
+
+/**
+ * Warn when the scan path is a subdirectory of the Vite project root (shortened rel_path breaks previews).
+ * @param {string} scanPath absolute or relative scan path
+ * @param {{ outputPath?: string | null }} [opts]
+ */
+export function warnIfSubdirectoryScan(scanPath, opts = {}) {
+  const scanAbs = resolve(scanPath);
+  const viteRoot = findViteRoot(scanAbs);
+  if (!viteRoot) return;
+  const viteAbs = resolve(viteRoot);
+  if (scanAbs === viteAbs) return;
+
+  process.stderr.write(
+    "dslinter: warning: scanning a subdirectory — playground rel_path values will be shortened. Run from the project root (npx dslinter .) for live previews.\n",
+  );
+  if (!opts.outputPath) {
+    const reportAt = defaultReportPath(scanPath, null);
+    process.stderr.write(
+      `dslinter: writing report to ${reportAt} (project public/).\n`,
+    );
+  }
 }
 
 /**

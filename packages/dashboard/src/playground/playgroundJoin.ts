@@ -64,6 +64,36 @@ function getExport(
 }
 
 /**
+ * When `rel_path` is a bare filename (subdirectory scan), find a unique module key
+ * whose path ends with `/${relPath}` (consumer glob or embed keys).
+ */
+export function findUniqueModuleKeyBySuffix(
+  relPath: string,
+  modules: BuildPlaygroundModules,
+): string | undefined {
+  const trimmed = relPath.replace(/^\/+/, "");
+  if (trimmed.includes("/")) return undefined;
+
+  const suffix = `/${trimmed}`;
+  const candidates = Object.keys(modules).filter((key) => key.endsWith(suffix));
+  const unique = [...new Set(candidates)];
+  return unique.length === 1 ? unique[0] : undefined;
+}
+
+/**
+ * Resolve a module map key for a report `rel_path` (exact glob key, then suffix fallback).
+ */
+export function resolveModuleKeyForRelPath(
+  relPath: string,
+  modules: BuildPlaygroundModules,
+  globKeyFromRelPath: (relPath: string) => string,
+): string | undefined {
+  const primary = globKeyFromRelPath(relPath);
+  if (modules[primary]) return primary;
+  return findUniqueModuleKeyBySuffix(relPath, modules);
+}
+
+/**
  * For each playground spec, explain why it would not join to `modules`.
  */
 export function diagnosePlaygroundJoinSkips(
@@ -80,7 +110,12 @@ export function diagnosePlaygroundJoinSkips(
   const skipped: PlaygroundJoinSkip[] = [];
   for (const spec of specs) {
     const globKey = globKeyFromRelPath(spec.rel_path);
-    const mod = modules[globKey];
+    const resolvedKey = resolveModuleKeyForRelPath(
+      spec.rel_path,
+      modules,
+      globKeyFromRelPath,
+    );
+    const mod = resolvedKey ? modules[resolvedKey] : undefined;
     if (!mod) {
       skipped.push({
         export_name: spec.export_name,
@@ -94,7 +129,7 @@ export function diagnosePlaygroundJoinSkips(
       skipped.push({
         export_name: spec.export_name,
         rel_path: spec.rel_path,
-        globKey,
+        globKey: resolvedKey ?? globKey,
         reason: "export_not_found",
       });
     }
