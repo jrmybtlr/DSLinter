@@ -6,6 +6,6 @@ pub const ANCHOR_HREF: &str = "`<a>` must have a meaningful `href` for navigatio
 pub const ANCHOR_PLACEHOLDER_HREF: &str =
     "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.";
 pub const INPUT_LABEL: &str =
-    "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).";
+    "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label>`).";
 pub const BUTTON_NAME: &str =
     "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.";

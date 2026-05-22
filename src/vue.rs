@@ -221,8 +221,8 @@ fn merge_file_scan(into: &mut FileScan, mut part: FileScan) {
     into.ast_extracts.merge_from(part.ast_extracts);
 }
 
-fn line_offset_before(source: &str, offset: usize) -> u32 {
-    line_of_offset(&newline_offsets(source), offset).saturating_sub(1)
+fn line_offset_before(newlines: &[usize], offset: usize) -> u32 {
+    line_of_offset(newlines, offset).saturating_sub(1)
 }
 
 /// Merge Vue template component references into an ECMA analysis of the `<script>` blocks.
@@ -233,6 +233,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
     let pseudo_js = path.with_extension("jsx");
 
     let mut scan = FileScan::empty(path.to_path_buf());
+    let newlines = newline_offsets(source);
 
     let all_script: String = caps
         .iter()
@@ -249,7 +250,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
             let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
             let inner_m = cap.get(2).expect("script inner group");
             let inner = inner_m.as_str();
-            let line_offset = line_offset_before(source, inner_m.start());
+            let line_offset = line_offset_before(&newlines, inner_m.start());
 
             let parse_as = if lang_is_ts(attrs)
                 || source.contains("lang=\"ts\"")
@@ -302,7 +303,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         let inner = cap.get(1).expect("template inner group");
         let tpl = inner.as_str();
         let tpl_start = inner.start();
-        let tpl_line_offset = line_offset_before(source, tpl_start);
+        let tpl_line_offset = line_offset_before(&newlines, tpl_start);
         merge_template_usages(source, tpl, tpl_start, &mut scan.usages);
         scan.findings
             .extend(vue_template_a11y_findings(path, source, tpl, tpl_start));

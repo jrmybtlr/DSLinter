@@ -20,7 +20,7 @@ fn file_in_playground_scope(rel: &str, config: &DslintConfig) -> bool {
     longest_playground_group(rel, config).is_some()
 }
 
-/// Sidebar / breadcrumb group. Omitted when `playground_groups` has only key so the UI stays flat.
+/// Sidebar / breadcrumb group. Omitted when `playground_groups` has only one key so the UI stays flat.
 fn playground_spec_group(rel: &str, config: &DslintConfig) -> Option<String> {
     if config.playground_groups.len() <= 1 {
         return None;

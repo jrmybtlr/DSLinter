@@ -15,7 +15,7 @@ use crate::css_tokens::{analyze_css_tokens, unused_css_var_findings};
 use crate::directives::apply_inline_suppressions;
 use crate::model::{FileScan, OwnershipSummary, WorkspaceReport};
 use crate::playground_emit::build_playground_specs;
-use crate::util::paths::{path_matches_prefix, rel_path_under_root};
+use crate::util::paths::{path_matches_prefix, rel_path_from_canon_root};
 
 use config_filter::filter_code_quality_config;
 use dark_mode::dark_mode_contrast_findings;
@@ -88,10 +88,11 @@ fn compute_ownership(
     files: &[FileScan],
     config: &DslintConfig,
 ) -> Vec<OwnershipSummary> {
+    let root_canon = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
     let mut buckets: HashMap<String, (usize, usize)> = HashMap::new();
 
     for file in files {
-        let rel = rel_path_under_root(root, &file.path);
+        let rel = rel_path_from_canon_root(&root_canon, &file.path);
         let owner_label = config
             .ownership
             .iter()

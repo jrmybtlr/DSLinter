@@ -5,8 +5,14 @@ use std::path::Path;
 
 pub fn rel_path_under_root(root: &Path, file_path: &Path) -> String {
     let root_canon = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    rel_path_from_canon_root(&root_canon, file_path)
+}
+
+/// Like [`rel_path_under_root`] but accepts an already-canonicalized root, avoiding
+/// a redundant filesystem `canonicalize` call when the same root is used repeatedly.
+pub fn rel_path_from_canon_root(root_canon: &Path, file_path: &Path) -> String {
     file_path
-        .strip_prefix(&root_canon)
+        .strip_prefix(root_canon)
         .ok()
         .map(|p| p.to_string_lossy().replace('\\', "/"))
         .unwrap_or_default()
