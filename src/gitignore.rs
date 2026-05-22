@@ -121,8 +121,6 @@ fn gitignore_line_to_globs(pat: &str) -> Vec<String> {
         }
     } else if anchored_root {
         body.to_string()
-    } else if body.contains('/') {
-        format!("**/{}", body)
     } else {
         format!("**/{}", body)
     };

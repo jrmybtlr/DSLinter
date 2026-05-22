@@ -1,24 +1,15 @@
 //! AST extraction for class strings, `cn`/`clsx` arguments, and string literals (Oxc).
 
-use std::sync::OnceLock;
-
 use oxc_ast::ast::{
     Argument, CallExpression, Expression, JSXAttribute, JSXAttributeName, JSXAttributeValue,
     JSXExpression, Program,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
-use regex::Regex;
 
 use crate::lines::line_of_offset;
 use crate::model::{AstExtracts, ClassStringFragment, ClassStringKind, StringLiteralFragment};
-
-fn class_attr_template_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r#"(?:class|className)\s*=\s*["']([^"']+)["']"#).expect("class attr regex")
-    })
-}
+use crate::util::regex::class_attr_re;
 
 /// Collect class-string and literal fragments from a parsed ECMA program.
 pub fn collect_ast_extracts(
@@ -41,7 +32,7 @@ pub fn extend_template_class_extracts(
     line_offset: u32,
 ) {
     let newlines = crate::lines::newline_offsets(template);
-    let re = class_attr_template_re();
+    let re = class_attr_re();
     for caps in re.captures_iter(template) {
         let Some(full) = caps.get(0) else {
             continue;

@@ -1,7 +1,9 @@
 //! `// dslint-ignore-next-line rule-id,...` and block suppressions.
 
 use std::collections::HashMap;
+
 use crate::model::LintFinding;
+use crate::util::rule_match::rule_suppressed_by_patterns;
 
 fn parse_ignore_comment(line: &str) -> Option<Vec<String>> {
     let trimmed = line.trim();
@@ -25,23 +27,6 @@ fn parse_ignore_comment(line: &str) -> Option<Vec<String>> {
     )
 }
 
-fn rule_suppressed_by_patterns(rule_id: &str, patterns: &[String]) -> bool {
-    for p in patterns {
-        if p == "*" {
-            return true;
-        }
-        if p.ends_with('*') && !p.starts_with('*') {
-            let pre = &p[..p.len() - 1];
-            if rule_id.starts_with(pre) {
-                return true;
-            }
-        } else if p == rule_id {
-            return true;
-        }
-    }
-    false
-}
-
 /// Drops findings whose preceding source line requests suppression.
 ///
 /// Precomputes a `Vec<&str>` of lines for each source file so that each
@@ -50,7 +35,6 @@ pub fn apply_inline_suppressions(
     findings: Vec<LintFinding>,
     sources: &HashMap<std::path::PathBuf, String>,
 ) -> Vec<LintFinding> {
-    // Precompute line vectors once per source file (O(n) build, O(1) lookup).
     let line_cache: HashMap<&std::path::PathBuf, Vec<&str>> = sources
         .iter()
         .map(|(k, v)| (k, v.lines().collect()))
@@ -69,7 +53,6 @@ pub fn apply_inline_suppressions(
             if prev_line == 0 {
                 return true;
             }
-            // Line numbers are 1-indexed; prev_line is already (ln - 1).
             let Some(prev) = lines.get((prev_line - 1) as usize) else {
                 return true;
             };
@@ -91,13 +74,13 @@ mod tests {
         let src = "// dslint-ignore-next-line foo\nconst x = 1;\n";
         let mut m = HashMap::new();
         m.insert(PathBuf::from("a.ts"), src.to_string());
-        let findings = vec![LintFinding {
-            rule_id: "foo".into(),
-            message: "m".into(),
-            path: PathBuf::from("a.ts"),
-            line: Some(2),
-            severity: crate::model::Severity::Warning,
-        }];
+        let findings = vec![LintFinding::new(
+            "foo",
+            PathBuf::from("a.ts"),
+            Some(2),
+            crate::model::Severity::Warning,
+            "m",
+        )];
         let out = apply_inline_suppressions(findings, &m);
         assert!(out.is_empty());
     }

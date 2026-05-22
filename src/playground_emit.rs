@@ -5,38 +5,11 @@ use std::path::Path;
 
 use crate::config::DslintConfig;
 use crate::model::{ComponentDefinition, DefinitionKind, FileScan, PlaygroundSpec};
-
-fn rel_path_under_root(root: &Path, file_path: &Path) -> String {
-    let root_canon = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
-    file_path
-        .strip_prefix(&root_canon)
-        .ok()
-        .map(|p| p.to_string_lossy().replace('\\', "/"))
-        .unwrap_or_default()
-}
+use crate::util::paths::{longest_matching_group, rel_path_under_root};
 
 /// Longest matching prefix wins (nested groups).
 fn longest_playground_group(rel: &str, config: &DslintConfig) -> Option<String> {
-    if config.playground_groups.is_empty() {
-        return None;
-    }
-    let rel = rel.trim_start_matches('/');
-    let mut best: Option<(usize, String)> = None;
-    for (group, prefixes) in &config.playground_groups {
-        for pre_raw in prefixes {
-            let pre = pre_raw.trim().trim_start_matches('/').trim_end_matches('/');
-            if pre.is_empty() {
-                continue;
-            }
-            if rel == pre || rel.starts_with(&format!("{pre}/")) {
-                let len = pre.len();
-                if best.as_ref().map_or(true, |(l, _)| len > *l) {
-                    best = Some((len, group.clone()));
-                }
-            }
-        }
-    }
-    best.map(|(_, g)| g)
+    longest_matching_group(rel, &config.playground_groups)
 }
 
 /// When `playground_groups` is empty, every scanned TSX/JSX under the repo root is previewable.
@@ -47,7 +20,7 @@ fn file_in_playground_scope(rel: &str, config: &DslintConfig) -> bool {
     longest_playground_group(rel, config).is_some()
 }
 
-/// Sidebar / breadcrumb group. Omitted when `playground_groups` has only one key so the UI stays flat.
+/// Sidebar / breadcrumb group. Omitted when `playground_groups` has only key so the UI stays flat.
 fn playground_spec_group(rel: &str, config: &DslintConfig) -> Option<String> {
     if config.playground_groups.len() <= 1 {
         return None;
@@ -87,7 +60,11 @@ fn pick_definition<'a>(
 }
 
 /// One playground row per eligible TSX/JSX file in the scan (whole repo when `playground_groups` is unset).
-pub fn build_playground_specs(root: &Path, files: &[FileScan], config: &DslintConfig) -> Vec<PlaygroundSpec> {
+pub fn build_playground_specs(
+    root: &Path,
+    files: &[FileScan],
+    config: &DslintConfig,
+) -> Vec<PlaygroundSpec> {
     let mut out = Vec::new();
     for file in files {
         let path = &file.path;

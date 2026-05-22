@@ -1,6 +1,7 @@
 //! Shared report types for scans and governance output.
 
 use std::collections::BTreeMap;
+use std::fmt::Display;
 use std::path::PathBuf;
 
 use serde::Serialize;
@@ -49,6 +50,24 @@ pub struct LintFinding {
     pub path: PathBuf,
     pub line: Option<u32>,
     pub severity: Severity,
+}
+
+impl LintFinding {
+    pub fn new(
+        rule_id: impl Into<String>,
+        path: PathBuf,
+        line: Option<u32>,
+        severity: Severity,
+        message: impl Into<String>,
+    ) -> Self {
+        Self {
+            rule_id: rule_id.into(),
+            message: message.into(),
+            path,
+            line,
+            severity,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -100,6 +119,44 @@ pub struct FileScan {
     /// Class strings and literals from Oxc (and Vue template heuristics); workspace rules only.
     #[serde(skip)]
     pub ast_extracts: AstExtracts,
+}
+
+impl FileScan {
+    pub fn empty(path: PathBuf) -> Self {
+        Self {
+            path,
+            definitions: Vec::new(),
+            usages: Vec::new(),
+            parse_errors: Vec::new(),
+            findings: Vec::new(),
+            ast_extracts: AstExtracts::default(),
+        }
+    }
+
+    pub fn read_error(path: PathBuf, err: impl Display) -> Self {
+        Self {
+            parse_errors: vec![format!(
+                "dslinter: could not read `{}`: {err}",
+                path.display()
+            )],
+            path,
+            definitions: Vec::new(),
+            usages: Vec::new(),
+            findings: Vec::new(),
+            ast_extracts: AstExtracts::default(),
+        }
+    }
+
+    pub fn unsupported_ext(path: PathBuf, ext: &str) -> Self {
+        Self {
+            parse_errors: vec![format!("dslinter: unsupported extension `{ext}`")],
+            path,
+            definitions: Vec::new(),
+            usages: Vec::new(),
+            findings: Vec::new(),
+            ast_extracts: AstExtracts::default(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
