@@ -2,10 +2,11 @@
  * DSLinter dashboard design tokens + shadcn/ui theme.
  * Host apps import once: `@import "dslinter/theme.css";` after `@import "tailwindcss"` and `@source` for this package.
  */
+ 
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *, [data-dashboard-theme="dark"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -178,7 +179,7 @@
     background-size: 10px 10px;
   }
 
-  .dark .ds-playground-dot-surface {
+  :is(.dark, [data-dashboard-theme="dark"]) .ds-playground-dot-surface {
     background-image: radial-gradient(
       circle,
       rgb(148 163 184 / 0.22) 1px,

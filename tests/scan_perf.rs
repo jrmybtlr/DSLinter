@@ -10,7 +10,8 @@ use dslinter::scan_pipeline::{scan_paths_parallel, scan_paths_sequential, PARALL
 fn demo_workspace_scan_completes_within_budget() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo");
     let config = dslinter::config::DslintConfig::load_from_root(&root).expect("config");
-    let paths = dslinter::scan::collect_component_files(&root, &config).expect("paths");
+    let paths =
+        dslinter::scan::collect_component_files(&root, &root, &config).expect("paths");
     assert!(!paths.is_empty(), "demo should have component files");
 
     let start = Instant::now();
@@ -42,12 +43,13 @@ fn synthetic_tree_uses_single_read_pipeline() {
 
     let paths: Vec<PathBuf> = (0..8).map(|i| root.join(format!("Component{i}.tsx"))).collect();
 
+    let config = dslinter::config::DslintConfig::default();
     let seq_start = Instant::now();
-    let (seq_files, seq_sources) = scan_paths_sequential(&paths);
+    let (seq_files, seq_sources) = scan_paths_sequential(&paths, &config);
     let seq_elapsed = seq_start.elapsed();
 
     let par_start = Instant::now();
-    let (par_files, par_sources) = scan_paths_parallel(&paths);
+    let (par_files, par_sources) = scan_paths_parallel(&paths, &config);
     let par_elapsed = par_start.elapsed();
 
     assert_eq!(seq_files.len(), 8);

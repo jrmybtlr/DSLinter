@@ -1,8 +1,6 @@
 {
   "include_dirs": [
-    "resources/js/Components",
-    "resources/js/components",
-    "resources/js"
+    "resources/js/components"
   ],
   "ignore_globs": [],
   "css_entrypoints": [

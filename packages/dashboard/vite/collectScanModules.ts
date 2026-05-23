@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { embedGlobKeyFromRelPath } from "../src/playground/embedGlobKey";
 
 const CONFIG_NAMES = [".dslinter.json", "dslinter.json"];
@@ -23,12 +23,23 @@ const SKIP_DIR_NAMES = new Set([
 
 const SOURCE_EXT = /\.(tsx|jsx)$/;
 
-function findConfigPath(projectRoot: string): string | null {
-  for (const name of CONFIG_NAMES) {
-    const candidate = join(projectRoot, name);
-    if (existsSync(candidate)) return candidate;
+function findConfigPath(startDir: string): string | null {
+  let dir = resolve(startDir);
+  for (;;) {
+    for (const name of CONFIG_NAMES) {
+      const candidate = join(dir, name);
+      if (existsSync(candidate)) return candidate;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
   }
   return null;
+}
+
+function projectRootForConfig(startDir: string): string {
+  const configPath = findConfigPath(startDir);
+  return configPath ? dirname(configPath) : resolve(startDir);
 }
 
 function readIncludeDirs(projectRoot: string): string[] | null {
@@ -47,7 +58,25 @@ function readIncludeDirs(projectRoot: string): string[] | null {
   return null;
 }
 
-function walkDir(dir: string, projectRoot: string, out: string[]): void {
+function matchesIncludeDirs(
+  relFromProject: string,
+  includeDirs: string[] | null,
+): boolean {
+  if (!includeDirs) return true;
+  return includeDirs.some((dir) => {
+    const norm = dir.trim().replace(/\\/g, "/").replace(/\/$/, "");
+    if (!norm) return false;
+    return relFromProject === norm || relFromProject.startsWith(`${norm}/`);
+  });
+}
+
+function walkDir(
+  dir: string,
+  scanAbs: string,
+  projectRoot: string,
+  includeDirs: string[] | null,
+  out: string[],
+): void {
   let entries;
   try {
     entries = readdirSync(dir, { withFileTypes: true });
@@ -59,29 +88,27 @@ function walkDir(dir: string, projectRoot: string, out: string[]): void {
     const full = join(dir, ent.name);
     if (ent.isDirectory()) {
       if (SKIP_DIR_NAMES.has(ent.name)) continue;
-      walkDir(full, projectRoot, out);
+      walkDir(full, scanAbs, projectRoot, includeDirs, out);
     } else if (ent.isFile() && SOURCE_EXT.test(ent.name)) {
-      out.push(relative(projectRoot, full).replace(/\\/g, "/"));
+      const relFromProject = relative(projectRoot, full).replace(/\\/g, "/");
+      if (!matchesIncludeDirs(relFromProject, includeDirs)) continue;
+      out.push(relFromProject);
     }
   }
 }
 
 /**
  * Collect repo-relative posix paths for `.tsx`/`.jsx` files under `scanRoot`.
- * When `.dslinter.json` defines `include_dirs`, only those directories are walked.
+ * Config and `include_dirs` resolve from the nearest project root; only files
+ * under `scanRoot` are walked.
  */
 export function collectScanModuleRelPaths(scanRoot: string): string[] {
-  const root = resolve(scanRoot);
-  const includeDirs = readIncludeDirs(root);
+  const scanAbs = resolve(scanRoot);
+  const projectRoot = projectRootForConfig(scanAbs);
+  const includeDirs = readIncludeDirs(projectRoot);
   const out: string[] = [];
 
-  if (includeDirs) {
-    for (const dir of includeDirs) {
-      walkDir(join(root, dir), root, out);
-    }
-  } else {
-    walkDir(root, root, out);
-  }
+  walkDir(scanAbs, scanAbs, projectRoot, includeDirs, out);
 
   out.sort();
   return out;

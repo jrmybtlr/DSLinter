@@ -28,7 +28,7 @@ export function PlaygroundVariantMatrix({
   return (
     <>
       {capped ? (
-        <p className="rounded-md border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+        <p className="rounded-md border border-border  px-3 py-2 text-sm text-muted-foreground">
           Showing {combinations.length} of {totalCount} combinations (limit{" "}
           {PLAYGROUND_VARIANT_MATRIX_CAP}). Reduce select options or split
           controls to preview more here.

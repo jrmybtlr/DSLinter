@@ -49,6 +49,7 @@ function printDevBanner(banner) {
 /**
  * @param {{
  *   scanPath: string;
+ *   projectRoot: string;
  *   outputPath: string | null;
  *   scannerArgs: string[];
  *   servePort: number | null;
@@ -58,6 +59,7 @@ function printDevBanner(banner) {
  */
 export async function runDevMode({
   scanPath,
+  projectRoot,
   outputPath,
   scannerArgs,
   servePort,
@@ -65,11 +67,11 @@ export async function runDevMode({
 }) {
   const port = servePort ?? defaultServePort();
   const scanAbs = resolve(scanPath);
+  const projectAbs = resolve(projectRoot);
   const reportPath = defaultReportPath(scanAbs, outputPath);
-  const viteRootForConfig = findViteRoot(scanAbs) ?? scanAbs;
 
   await ensureMinimalSetup({
-    targetDir: viteRootForConfig,
+    targetDir: projectAbs,
     reportPath,
     yes,
   });

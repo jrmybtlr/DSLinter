@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { PlaygroundControl, PlaygroundEntry } from "../types/playground";
 import type { WorkspaceReport } from "../types/report";
+import { defaultArgsFromControls } from "../types/controls";
 import {
   buildPlaygroundEntriesFromReportWithSkips,
   resolvePlaygroundEntry,
@@ -146,10 +147,13 @@ describe("playground preview props", () => {
         },
       ],
     };
+    let lastProps: Record<string, unknown> | null = null;
     const modules = {
       "../components/ui/button.tsx": {
-        Button: (props: Record<string, unknown>) =>
-          createElement("button", props, "btn"),
+        Button: (props: Record<string, unknown>) => {
+          lastProps = props;
+          return createElement("button", props, props.children);
+        },
       },
     };
     const { entries } = buildPlaygroundEntriesFromReportWithSkips(
@@ -174,5 +178,68 @@ describe("playground preview props", () => {
     }
     const asChild = entry!.controls.find((c) => c.key === "asChild");
     expect(asChild?.type).toBe("boolean");
+
+    const children = entry!.controls.find((c) => c.key === "children");
+    expect(children?.type).toBe("string");
+    if (children?.type === "string") {
+      expect(children.default).toBe("Example");
+    }
+
+    renderToStaticMarkup(createElement(entry!.Preview, { values: {} }));
+    expect(lastProps).toMatchObject({ children: "Example" });
+    const defaultValues = defaultArgsFromControls(entry!.controls);
+    expect(entry!.usageSnippet?.(defaultValues)).toBe("<Button>Example</Button>");
+  });
+
+  it("adds children control from repo usage when declared_props omits it", () => {
+    const badgeReport: WorkspaceReport = {
+      ...report,
+      usage_by_component: [
+        {
+          component: "Badge",
+          reference_count: 3,
+          file_count: 2,
+          max_props_on_single_use: 2,
+          files: [],
+          prop_frequencies: { children: 3 },
+        },
+      ],
+      playgrounds: [
+        {
+          id: "Badge",
+          export_name: "Badge",
+          rel_path: "src/components/ui/badge.tsx",
+          declared_props: ["variant"],
+          declared_prop_options: {
+            variant: ["default", "secondary"],
+          },
+          declared_prop_defaults: { variant: "default" },
+        },
+      ],
+    };
+    let lastProps: Record<string, unknown> | null = null;
+    const modules = {
+      "../components/ui/badge.tsx": {
+        Badge: (props: Record<string, unknown>) => {
+          lastProps = props;
+          return createElement("span", props, props.children);
+        },
+      },
+    };
+    const { entries } = buildPlaygroundEntriesFromReportWithSkips(
+      badgeReport,
+      modules,
+      {
+        globKeyFromRelPath: (rel) => `../components/ui/${rel.split("/").pop()}`,
+        logJoinSkips: false,
+      },
+    );
+    const entry = entries[0];
+    expect(entry).toBeDefined();
+    expect(entry!.controls.some((c) => c.key === "children")).toBe(true);
+    renderToStaticMarkup(createElement(entry!.Preview, { values: {} }));
+    expect(lastProps).toMatchObject({ children: "Example" });
+    const defaultValues = defaultArgsFromControls(entry!.controls);
+    expect(entry!.usageSnippet?.(defaultValues)).toBe("<Badge>Example</Badge>");
   });
 });

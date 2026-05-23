@@ -18,6 +18,7 @@ use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
 use oxc_syntax::scope::ScopeFlags;
 
+use crate::import_filter::{self, ImportFilter};
 use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{
     ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity,
@@ -36,6 +37,7 @@ pub fn analyze_ecma_for_paths(
     parse_as_path: &Path,
     source: &str,
     include_text_code_quality: bool,
+    import_filter: &ImportFilter,
 ) -> FileScan {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(parse_as_path).unwrap_or_else(|_| SourceType::tsx());
@@ -55,6 +57,7 @@ pub fn analyze_ecma_for_paths(
 
     let ts_prop_shapes = crate::ts_shape_map::collect_ts_prop_shape_map(&program);
     let cva_bindings = cva_extract::collect_cva_bindings(&program);
+    let external_jsx_bindings = import_filter.external_jsx_bindings_from_program(&program);
     let newlines = newline_offsets(source);
     let mut v = ExtractVisitor {
         path: report_path.to_path_buf(),
@@ -66,6 +69,7 @@ pub fn analyze_ecma_for_paths(
         ts_prop_shapes,
         cva_bindings,
         export_wrapped_component_spans: HashSet::new(),
+        external_jsx_bindings,
     };
     v.visit_program(&program);
 
@@ -95,7 +99,15 @@ pub fn analyze_ecma_for_paths(
 }
 
 pub fn analyze_ecma_file(path: &Path, source: &str) -> FileScan {
-    analyze_ecma_for_paths(path, path, source, true)
+    analyze_ecma_for_paths(path, path, source, true, &ImportFilter::default())
+}
+
+pub fn analyze_ecma_file_with_filter(
+    path: &Path,
+    source: &str,
+    import_filter: &ImportFilter,
+) -> FileScan {
+    analyze_ecma_for_paths(path, path, source, true, import_filter)
 }
 
 fn binding_name(id: &oxc_ast::ast::BindingIdentifier<'_>) -> String {
@@ -139,6 +151,11 @@ fn merge_declared_props(
     keys.extend(crate::ts_shape_map::props_from_first_param_type_annotation(
         params, ts_shapes,
     ));
+    if crate::ts_shape_map::children_from_first_param_type_annotation(params)
+        && !keys.iter().any(|k| k == "children")
+    {
+        keys.push("children".to_string());
+    }
     dedupe_props_preserve_order(&mut keys);
     keys
 }
@@ -474,6 +491,8 @@ struct ExtractVisitor<'nl> {
     cva_bindings: HashMap<String, CvaBinding>,
     /// `export function Foo` is recorded here first so `visit_function` does not duplicate it.
     export_wrapped_component_spans: HashSet<(u32, u32)>,
+    /// JSX roots (`SheetPrimitive`, …) bound to third-party imports in this file.
+    external_jsx_bindings: HashSet<String>,
 }
 
 impl ExtractVisitor<'_> {
@@ -692,7 +711,9 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
         }
 
         if let Some(component) = jsx_name(&el.opening_element.name) {
-            if usage_is_design_component(&component) {
+            if usage_is_design_component(&component)
+                && !import_filter::usage_root_is_external(&component, &self.external_jsx_bindings)
+            {
                 let props = props_from_jsx_element(&el.opening_element.attributes, &el.children);
                 let prop_values = prop_values_from_attributes(&el.opening_element.attributes);
                 self.usages.push(JsxUsage {
@@ -933,6 +954,10 @@ function Button({
             btn.declared_prop_defaults.get("variant").map(String::as_str),
             Some("default")
         );
+        assert!(
+            btn.declared_props.contains(&"children".to_string()),
+            "ComponentProps<\"button\"> should imply children"
+        );
     }
 
     #[test]
@@ -985,17 +1010,36 @@ export function Page() {
     }
 
     #[test]
-    fn usage_dedupes_children_attr_and_jsx_content() {
-        let src = r#"export function Page() { return <FlexStack children="x">y</FlexStack>; }"#;
-        let scan = analyze_ecma_file(&PathBuf::from("Page.tsx"), src);
-        let usage = scan
-            .usages
-            .iter()
-            .find(|u| u.component == "FlexStack")
-            .expect("FlexStack usage");
-        assert_eq!(
-            usage.props.iter().filter(|p| *p == "children").count(),
-            1
+    fn usage_skips_third_party_namespace_jsx_bindings() {
+        let src = r#"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
+import { CheckIcon } from "lucide-react"
+
+function SheetContent() {
+  return (
+    <SheetPrimitive.Content>
+      <SheetPrimitive.Close>
+        <CheckIcon />
+      </SheetPrimitive.Close>
+    </SheetPrimitive.Content>
+  )
+}
+
+export { SheetContent }
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("sheet.tsx"), src);
+        assert!(
+            !scan
+                .usages
+                .iter()
+                .any(|u| u.component.starts_with("SheetPrimitive")),
+            "radix primitives should not appear as usages: {:?}",
+            scan.usages
+        );
+        assert!(
+            !scan.usages.iter().any(|u| u.component == "CheckIcon"),
+            "lucide icons should not appear as usages: {:?}",
+            scan.usages
         );
     }
 }

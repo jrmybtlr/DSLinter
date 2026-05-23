@@ -60,6 +60,31 @@ function nextPreviewWidthForResize(
   return clampPreviewWidth(prevPreview, nextOuter);
 }
 
+function PreviewResizeHandle({
+  side,
+  onPointerDown,
+}: {
+  side: "left" | "right";
+  onPointerDown: (e: PointerEvent<HTMLButtonElement>) => void;
+}) {
+  const positionClass =
+    side === "left" ? "left-0 -translate-x-1/2" : "right-0 translate-x-1/2";
+
+  return (
+    <button
+      type="button"
+      className={`absolute top-0 bottom-0 z-10 flex w-4 ${positionClass} cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-muted p-0 shadow-xs ring-1 ring-border hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+      aria-label="Resize preview from center (drag left or right)"
+      onPointerDown={onPointerDown}
+    >
+      <span
+        className="h-10 w-px rounded-full bg-muted-foreground/40"
+        aria-hidden
+      />
+    </button>
+  );
+}
+
 function TocLink({ href, children }: { href: string; children: ReactNode }) {
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     // Modifier keys / non-primary clicks → fall back to default browser behaviour.
@@ -241,39 +266,47 @@ export function ComponentPlaygroundPane({
   const showVariantsSection =
     hasControls &&
     (variantEnumeration.combinations.length > 0 ||
-      (variantEnumeration.combinations.length === 0 &&
-        variantEnumeration.totalCount === 0));
+      variantEnumeration.totalCount === 0);
+
+  const report = reportReady ? workspaceReport : null;
+  const resetControls = () => setValues(defaultArgsFromControls(entry.controls));
+
+  const tocItems: { href: string; label: string; show?: boolean }[] = [
+    { href: "#api-reference", label: "API reference", show: hasControls },
+    { href: "#usage", label: "Usage" },
+    { href: "#repo-usage", label: "Repo usage" },
+    { href: "#design-tokens", label: "Design tokens" },
+    { href: "#code-score", label: "Code score" },
+    { href: "#accessibility", label: "Accessibility" },
+    { href: "#variants", label: "Variants", show: showVariantsSection },
+  ];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <div className="min-h-0 flex-1 overflow-auto">
         <header id="source" className="scroll-mt-20 border-b border-border bg-card p-6">
-          <div className="mx-auto">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-muted-foreground">
-                  {entry.meta.group ? (
-                    <>
-                      Components <span className="text-muted-foreground/40">/</span>{" "}
-                      <span className="capitalize text-foreground/80">
-                        {entry.meta.group}
-                      </span>
-                    </>
-                  ) : (
-                    "Components"
-                  )}
-                </p>
-                <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                  {entry.meta.title}
-                </h1>
-                <p
-                  className="mt-1 truncate font-mono text-xs text-muted-foreground"
-                  title={rel}
-                >
-                  {rel}
-                </p>
-              </div>
-            </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-muted-foreground">
+              Components
+              {entry.meta.group ? (
+                <>
+                  {" "}
+                  <span className="text-muted-foreground/40">/</span>{" "}
+                  <span className="capitalize text-foreground/80">
+                    {entry.meta.group}
+                  </span>
+                </>
+              ) : null}
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+              {entry.meta.title}
+            </h1>
+            <p
+              className="mt-1 truncate font-mono text-xs text-muted-foreground"
+              title={rel}
+            >
+              {rel}
+            </p>
           </div>
         </header>
 
@@ -288,28 +321,14 @@ export function ComponentPlaygroundPane({
                 className="relative min-w-0 shrink-0 select-none rounded-lg border border-border bg-muted/50 shadow-xs"
                 style={{ width: previewWidthPx }}
               >
-                <button
-                  type="button"
-                  className="absolute left-0 top-0 bottom-0 z-10 flex w-4 -translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-muted p-0 shadow-xs ring-1 ring-border hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label="Resize preview from center (drag left or right)"
+                <PreviewResizeHandle
+                  side="left"
                   onPointerDown={attachSymmetricWidthDrag("left")}
-                >
-                  <span
-                    className="h-10 w-px rounded-full bg-muted-foreground/40"
-                    aria-hidden
-                  />
-                </button>
-                <button
-                  type="button"
-                  className="absolute right-0 top-0 bottom-0 z-10 flex w-4 translate-x-1/2 cursor-ew-resize touch-none items-center justify-center rounded border-0 bg-muted p-0 shadow-xs ring-1 ring-border hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label="Resize preview from center (drag left or right)"
+                />
+                <PreviewResizeHandle
+                  side="right"
                   onPointerDown={attachSymmetricWidthDrag("right")}
-                >
-                  <span
-                    className="h-10 w-px rounded-full bg-muted-foreground/40"
-                    aria-hidden
-                  />
-                </button>
+                />
                 <div className="ds-playground-preview-canvas min-w-0 p-8">
                   <PlaygroundPreviewErrorBoundary componentName={entry.meta.title}>
                     {renderPreview(values)}
@@ -318,15 +337,12 @@ export function ComponentPlaygroundPane({
               </div>
             </div>
             {maxOuterPx > 0 ? (
-              <div className="mt-4 divide-x divide-border h-6 overflow-hidden items-center mx-auto flex w-fit border border-border bg-card text-center text-xs/none tabular-nums font-mono rounded-sm text-muted-foreground">
+              <div className="mx-auto mt-4 flex h-6 w-fit items-center overflow-hidden rounded-sm border border-border bg-card text-center font-mono text-xs/none tabular-nums text-muted-foreground divide-x divide-border">
                 <span className="p-2.5">{Math.round(previewWidthPx)}px</span>
-                <span className=" p-2.5" title="usemods detectBreakpoint">
+                <span className="p-2.5" title="usemods detectBreakpoint">
                   Screen: {windowBreakpoint ?? "—"}
                 </span>
-                <span
-                  className=" p-2.5"
-                  title="usemods detectContainerBreakpoint"
-                >
+                <span className="p-2.5" title="usemods detectContainerBreakpoint">
                   Container: {containerBreakpoint ?? "—"}
                 </span>
               </div>
@@ -342,24 +358,17 @@ export function ComponentPlaygroundPane({
                   controls={entry.controls}
                   values={values}
                   onChange={setValues}
-                  onReset={() =>
-                    setValues(defaultArgsFromControls(entry.controls))
-                  }
+                  onReset={resetControls}
                   reportUsage={repoUsage}
                   declaredPropsFromScan={declaredPropsFromScan}
-                  governanceReportLoaded={
-                    reportReady && workspaceReport != null
-                  }
+                  governanceReportLoaded={report != null}
                 />
               ) : null}
 
               <PlaygroundUsageSection entry={entry} values={values} />
 
               <Section id="repo-usage" title="Repo usage" description="">
-                <ComponentUsageDetails
-                  report={reportReady ? workspaceReport : null}
-                  componentId={entry.id}
-                />
+                <ComponentUsageDetails report={report} componentId={entry.id} />
               </Section>
 
               <Section
@@ -401,17 +410,13 @@ export function ComponentPlaygroundPane({
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   On this page
                 </p>
-                {hasControls ? (
-                  <TocLink href="#api-reference">API reference</TocLink>
-                ) : null}
-                <TocLink href="#usage">Usage</TocLink>
-                <TocLink href="#repo-usage">Repo usage</TocLink>
-                <TocLink href="#design-tokens">Design tokens</TocLink>
-                <TocLink href="#code-score">Code score</TocLink>
-                <TocLink href="#accessibility">Accessibility</TocLink>
-                {showVariantsSection ? (
-                  <TocLink href="#variants">Variants</TocLink>
-                ) : null}
+                {tocItems.map(({ href, label, show = true }) =>
+                  show ? (
+                    <TocLink key={href} href={href}>
+                      {label}
+                    </TocLink>
+                  ) : null,
+                )}
               </nav>
             </aside>
           </div>
@@ -420,7 +425,7 @@ export function ComponentPlaygroundPane({
         {variantEnumeration.combinations.length > 0 ? (
           <section
             id="variants"
-            className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t  pt-10 pb-12"
+            className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t pt-10 pb-12"
           >
             <div className="min-w-0 w-full px-6 lg:px-12">
               <h2 className="w-fit bg-card text-xl font-semibold tracking-tight text-foreground">

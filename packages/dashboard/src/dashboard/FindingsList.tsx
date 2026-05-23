@@ -48,64 +48,63 @@ export function FindingsList({
   if (findings.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-        No findings — rules are quiet on this snapshot.
+        No findings
       </p>
     );
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        <ToggleGroup
-          type="single"
-          value={filter}
-          onValueChange={(value) => {
-            if (isFilter(value)) setFilter(value);
-          }}
-          variant="outline"
-          size="sm"
-          aria-label="Filter findings by severity"
-          className="contents"
+      <ToggleGroup
+        type="single"
+        value={filter}
+        onValueChange={(value) => {
+          if (isFilter(value)) setFilter(value);
+        }}
+        variant="outline"
+        size="sm"
+        aria-label="Filter findings by severity"
+        className="contents"
+      >
+        <ToggleGroupItem
+          value="all"
+          className="rounded-full px-2.5 text-xs font-medium"
         >
-          <ToggleGroupItem
-            value="all"
-            className="rounded-full px-2.5 text-xs font-medium"
-          >
-            All
-            <span className="ml-1 tabular-nums text-muted-foreground">
-              {findings.length}
-            </span>
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="warning"
-            className="rounded-full px-2.5 text-xs font-medium"
-          >
-            Warnings
-            <span className="ml-1 tabular-nums text-muted-foreground">
-              {counts.warning}
-            </span>
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="error"
-            className="rounded-full px-2.5 text-xs font-medium"
-          >
-            Errors
-            <span className="ml-1 tabular-nums text-muted-foreground">
-              {counts.error}
-            </span>
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="info"
-            className="rounded-full px-2.5 text-xs font-medium"
-          >
-            Info
-            <span className="ml-1 tabular-nums text-muted-foreground">
-              {counts.info}
-            </span>
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
-      <Table>
+          All
+          <span className="ml-1 tabular-nums text-muted-foreground">
+            {findings.length}
+          </span>
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="warning"
+          className="rounded-full px-2.5 text-xs font-medium"
+        >
+          Warnings
+          <span className="ml-1 tabular-nums text-muted-foreground">
+            {counts.warning}
+          </span>
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="error"
+          className="rounded-full px-2.5 text-xs font-medium"
+        >
+          Errors
+          <span className="ml-1 tabular-nums text-muted-foreground">
+            {counts.error}
+          </span>
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="info"
+          className="rounded-full px-2.5 text-xs font-medium"
+        >
+          Info
+          <span className="ml-1 tabular-nums text-muted-foreground">
+            {counts.info}
+          </span>
+        </ToggleGroupItem>
+      </ToggleGroup>
+
+      <Table className="mt-4">
         <TableHeader>
           <TableRow>
             <TableHead scope="col">Severity</TableHead>

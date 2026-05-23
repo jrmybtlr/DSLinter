@@ -11,17 +11,24 @@ import { runScannerSync } from "../lib/run-scanner.mjs";
 /**
  * @param {{
  *   scanPath: string;
+ *   projectRoot: string;
  *   outputPath: string | null;
  *   scannerArgs: string[];
  *   yes?: boolean;
  * }}
  */
-export async function runBuildMode({ scanPath, outputPath, scannerArgs, yes = false }) {
+export async function runBuildMode({
+  scanPath,
+  projectRoot,
+  outputPath,
+  scannerArgs,
+  yes = false,
+}) {
   const scanAbs = resolve(scanPath);
+  const projectAbs = resolve(projectRoot);
   const reportPath = defaultReportPath(scanAbs, outputPath);
-  const viteRootForConfig = findViteRoot(scanAbs) ?? scanAbs;
   await ensureMinimalSetup({
-    targetDir: viteRootForConfig,
+    targetDir: projectAbs,
     reportPath,
     yes,
   });

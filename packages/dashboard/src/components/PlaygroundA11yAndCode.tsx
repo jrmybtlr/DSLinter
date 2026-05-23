@@ -1,5 +1,9 @@
 import { useCallback } from "react";
-import type { PlaygroundArgs, PlaygroundControl, PlaygroundValuesUpdater } from "../types/controls";
+import type {
+  PlaygroundArgs,
+  PlaygroundControl,
+  PlaygroundValuesUpdater,
+} from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
 import type { CodeScoreModuleSummary } from "../report/codeScoreForModule";
@@ -257,7 +261,6 @@ export function PlaygroundApiReference({
     <Section
       id="api-reference"
       title="API reference"
-      description=""
       actions={
         <Button type="button" variant="outline" size="sm" onClick={onReset}>
           Reset defaults

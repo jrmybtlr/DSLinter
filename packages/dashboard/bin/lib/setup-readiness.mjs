@@ -1,12 +1,16 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import {
+  detectDefaultIncludeDir,
   detectInitLayout,
   findDslintConfigPath,
   writeDslintConfig,
 } from "./scaffold-config.mjs";
+import { resolveProjectRoot } from "./resolve-project.mjs";
 import { resolveServePort } from "./constants.mjs";
 import { readEnv } from "./env.mjs";
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 import { confirmYesNo, isInteractiveTTY } from "./prompt.mjs";
 import { defaultReportPath } from "./project-root.mjs";
 
@@ -103,7 +107,23 @@ export async function ensureMinimalSetup(opts) {
 
   if (issues.some((i) => i.kind === "missing_config")) {
     const layout = detectInitLayout(targetDir);
-    const result = writeDslintConfig({ targetDir, layout });
+    let includeDir = detectDefaultIncludeDir(targetDir, layout);
+    if (interactive && includeDir) {
+      const rl = createInterface({ input, output });
+      try {
+        const answer = (
+          await rl.question(`Components directory [${includeDir}]: `)
+        ).trim();
+        if (answer) includeDir = answer;
+      } finally {
+        rl.close();
+      }
+    }
+    const result = writeDslintConfig({
+      targetDir,
+      layout,
+      ...(includeDir ? { includeDir } : {}),
+    });
     applied.push(result.path);
     process.stderr.write(`dslinter: created ${result.path}\n`);
   }
@@ -125,7 +145,7 @@ export async function ensureMinimalSetup(opts) {
 export async function ensureMinimalSetupForScan(scanPath, opts = {}) {
   const scanAbs = resolve(scanPath);
   const reportPath = defaultReportPath(scanAbs, null);
-  const targetDir = scanAbs;
+  const targetDir = resolveProjectRoot(scanAbs);
   return ensureMinimalSetup({
     targetDir,
     reportPath,

@@ -31,37 +31,29 @@ export function resolveProjectRoot(cwd = process.cwd()) {
 }
 
 /**
- * Resolve the scan path: explicit positional wins; otherwise project root from cwd.
+ * Resolve the scan path (file-walk boundary): explicit positional relative to cwd;
+ * otherwise cwd. `"."` is literal cwd, not project root.
  * @param {string | null | undefined} explicitPath user positional or null for default
  * @param {string} [cwd]
  * @returns {string} absolute path
  */
 export function resolveScanPath(explicitPath, cwd = process.cwd()) {
-  if (explicitPath != null && explicitPath !== "" && explicitPath !== ".") {
+  if (explicitPath != null && explicitPath !== "") {
     return resolve(cwd, explicitPath);
   }
-  return resolveProjectRoot(cwd);
+  return resolve(cwd);
 }
 
 /**
- * When cwd is a subdirectory and no explicit path was passed, promote to project root for scanning.
- * Explicit positional paths are honored as-is (see dslinter.mjs).
- * @param {string} scanPath absolute scan path after resolveScanPath
+ * Scan root (walk boundary) and project root (config, CSS, report parent).
+ * @param {string | null | undefined} explicitPath
  * @param {string} [cwd]
- * @returns {{ scanPath: string; promoted: boolean; originalPath?: string }}
+ * @returns {{ scanPath: string; projectRoot: string }}
  */
-export function promoteScanToProjectRoot(scanPath, cwd = process.cwd()) {
-  const scanAbs = resolve(scanPath);
+export function resolveScanAndProjectRoots(explicitPath, cwd = process.cwd()) {
+  const scanPath = resolveScanPath(explicitPath, cwd);
   const projectRoot = resolveProjectRoot(cwd);
-  if (scanAbs === projectRoot) {
-    return { scanPath: scanAbs, promoted: false };
-  }
-  const viteRoot = findViteRoot(scanAbs) ?? projectRoot;
-  const target = resolve(viteRoot);
-  if (scanAbs === target) {
-    return { scanPath: scanAbs, promoted: false };
-  }
-  return { scanPath: target, promoted: true, originalPath: scanAbs };
+  return { scanPath, projectRoot };
 }
 
 /**

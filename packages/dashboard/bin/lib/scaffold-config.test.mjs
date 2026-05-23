@@ -15,9 +15,19 @@ describe("ensureDslintConfig", () => {
 
     const raw = readFileSync(result.path, "utf8");
     const parsed = JSON.parse(raw);
-    expect(parsed.include_dirs).toContain("src/components");
+    expect(parsed.include_dirs).toEqual(["src/components"]);
     expect(parsed.css_entrypoints).toContain("src/index.css");
     expect(parsed.ignore_globs).toEqual([]);
+  });
+
+  it("prefers narrowest laravel components dir", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-scaffold-laravel-"));
+    mkdirSync(join(root, "resources", "js", "components"), { recursive: true });
+    mkdirSync(join(root, "resources", "js", "layouts"), { recursive: true });
+
+    const result = ensureDslintConfig({ targetDir: root, layout: "laravel" });
+    const parsed = JSON.parse(readFileSync(result.path, "utf8"));
+    expect(parsed.include_dirs).toEqual(["resources/js/components"]);
   });
 
   it("does not overwrite an existing config", () => {

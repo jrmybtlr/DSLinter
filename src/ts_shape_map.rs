@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 
 use oxc_ast::ast::{
     Declaration, ExportNamedDeclaration, FormalParameters, Program, PropertyKey, Statement,
-    TSInterfaceBody, TSSignature, TSType, TSTypeLiteral, TSTypeName,
+    TSLiteral, TSInterfaceBody, TSSignature, TSType, TSTypeLiteral, TSTypeName, TSTypeReference,
 };
 
 /// Map type name → unique property keys from object literals / interfaces / aliases (declaration order).
@@ -55,6 +55,102 @@ pub fn props_from_first_param_type_annotation(
         return Vec::new();
     };
     props_from_ts_type(&note.type_annotation, shapes, &mut HashSet::new())
+}
+
+/// True when the first parameter's type includes `React.ComponentProps<"intrinsic">` (or similar)
+/// for an HTML element that accepts JSX children.
+pub fn children_from_first_param_type_annotation(params: &FormalParameters<'_>) -> bool {
+    let Some(first) = params.items.first() else {
+        return false;
+    };
+    let Some(note) = first.pattern.type_annotation.as_ref() else {
+        return false;
+    };
+    type_accepts_children(&note.type_annotation)
+}
+
+fn type_accepts_children(ty: &TSType<'_>) -> bool {
+    let ty = ty.without_parenthesized();
+    match ty {
+        TSType::TSIntersectionType(i) => i
+            .types
+            .iter()
+            .any(|t| type_accepts_children(t)),
+        TSType::TSUnionType(u) => u.types.iter().any(|t| type_accepts_children(t)),
+        TSType::TSTypeReference(r) => component_props_accepts_children(r),
+        _ => false,
+    }
+}
+
+fn component_props_accepts_children(r: &TSTypeReference<'_>) -> bool {
+    let Some(sym) = type_reference_root_name(&r.type_name) else {
+        return false;
+    };
+    if sym != "ComponentProps" && sym != "ComponentPropsWithoutRef" {
+        return false;
+    }
+    let Some(params) = r.type_parameters.as_ref() else {
+        return false;
+    };
+    let Some(first) = params.params.first() else {
+        return false;
+    };
+    intrinsic_tag_accepts_children(first)
+}
+
+fn intrinsic_tag_accepts_children(ty: &TSType<'_>) -> bool {
+    let ty = ty.without_parenthesized();
+    let TSType::TSLiteralType(lit) = ty else {
+        return false;
+    };
+    let TSLiteral::StringLiteral(s) = &lit.literal else {
+        return false;
+    };
+    intrinsic_accepts_children(s.value.as_str())
+}
+
+fn intrinsic_accepts_children(tag: &str) -> bool {
+    matches!(
+        tag,
+        "a" | "article"
+            | "aside"
+            | "button"
+            | "code"
+            | "details"
+            | "div"
+            | "em"
+            | "fieldset"
+            | "footer"
+            | "form"
+            | "h1"
+            | "h2"
+            | "h3"
+            | "h4"
+            | "h5"
+            | "h6"
+            | "header"
+            | "label"
+            | "legend"
+            | "li"
+            | "main"
+            | "nav"
+            | "ol"
+            | "p"
+            | "pre"
+            | "section"
+            | "small"
+            | "span"
+            | "strong"
+            | "summary"
+            | "table"
+            | "tbody"
+            | "td"
+            | "tfoot"
+            | "th"
+            | "thead"
+            | "tr"
+            | "ul"
+    )
 }
 
 fn ingest_top_level_statement<'a>(

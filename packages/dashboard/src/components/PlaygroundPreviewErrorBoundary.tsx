@@ -17,8 +17,12 @@ export class PlaygroundPreviewErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    if (import.meta.env?.DEV) {
-      console.warn("[dslinter] preview render failed", error, info.componentStack);
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "[dslinter] preview render failed",
+        error,
+        info.componentStack,
+      );
     }
   }
 

@@ -2,7 +2,7 @@
  * Parse dslinter CLI argv into mode + scanner args (no subprocess).
  */
 
-import { resolveScanPath } from "./resolve-project.mjs";
+import { resolveScanAndProjectRoots } from "./resolve-project.mjs";
 
 const MODE_FLAGS = new Set(["--report", "--watch", "--build"]);
 const YES_FLAGS = new Set(["--yes", "-y"]);
@@ -20,6 +20,7 @@ function parseServePort(raw) {
  *   mode: "dev" | "report" | "watch" | "build" | "scanner";
  *   scannerArgs: string[];
  *   scanPath: string;
+ *   projectRoot: string;
  *   outputPath: string | null;
  *   servePort: number | null;
  *   yes: boolean;
@@ -75,12 +76,13 @@ export function parseDslinterArgs(argv) {
   }
 
   const explicitScanPath = positional ?? null;
-  const scanPath = resolveScanPath(explicitScanPath);
+  const { scanPath, projectRoot } = resolveScanAndProjectRoots(explicitScanPath);
 
   return {
     mode,
     scannerArgs,
     scanPath,
+    projectRoot,
     outputPath,
     servePort,
     yes,

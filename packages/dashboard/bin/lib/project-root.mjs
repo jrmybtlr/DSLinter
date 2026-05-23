@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { dirname, isAbsolute, join, normalize, resolve } from "node:path";
+import { dirname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveServePort } from "./constants.mjs";
 import { readEnv } from "./env.mjs";
@@ -117,11 +117,38 @@ export function defaultReportPath(scanPath, outputFlag) {
 /**
  * Log when scan was promoted from a subdirectory to the project root.
  * @param {{ promoted: boolean; originalPath?: string; scanPath: string }} info
+ * @deprecated Subdirectory scans are no longer promoted; use {@link logScanScopeHint}.
  */
 export function logScanRootPromotion(info) {
   if (!info.promoted || !info.originalPath) return;
   process.stderr.write(
     `dslinter: using project root ${info.scanPath} (was ${info.originalPath}).\n`,
+  );
+}
+
+/**
+ * Log when scanning a subdirectory while config/report use the project root.
+ * @param {{
+ *   scanPath: string;
+ *   projectRoot: string;
+ *   explicitScanPath: string | null;
+ * }} info
+ */
+export function logScanScopeHint(info) {
+  const scanAbs = resolve(info.scanPath);
+  const projectAbs = resolve(info.projectRoot);
+  if (scanAbs === projectAbs) return;
+
+  const implicit =
+    info.explicitScanPath == null ||
+    info.explicitScanPath === "" ||
+    info.explicitScanPath === ".";
+  if (!implicit) return;
+
+  const rel =
+    relative(projectAbs, scanAbs).replace(/\\/g, "/") || scanAbs;
+  process.stderr.write(
+    `dslinter: scanning ${rel} (project root: ${projectAbs}). Run from repo root for a full-repo scan.\n`,
   );
 }
 

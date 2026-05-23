@@ -56,17 +56,43 @@ function pickPlaygroundGroupPrefix(targetDir, layout, includeDirs) {
  * @param {string} targetDir
  * @param {"laravel" | "default"} layout
  */
+/**
+ * Pick the narrowest existing directory from ordered candidates (first match wins).
+ * @param {string} targetDir
+ * @param {string[]} candidates ordered narrow → broad
+ * @returns {string[]}
+ */
+function narrowestIncludeDir(targetDir, candidates) {
+  for (const rel of candidates) {
+    if (existsSync(join(targetDir, rel))) return [rel];
+  }
+  return [];
+}
+
+/**
+ * @param {string} targetDir
+ * @param {"laravel" | "default"} layout
+ * @returns {string | undefined}
+ */
+export function detectDefaultIncludeDir(targetDir, layout) {
+  const candidates =
+    layout === "laravel"
+      ? ["resources/js/components", "resources/js/Components", "resources/js"]
+      : ["src/components", "src/ui", "src"];
+  return narrowestIncludeDir(targetDir, candidates)[0];
+}
+
 function buildStarterConfig(targetDir, layout) {
   const includeCandidates =
     layout === "laravel"
-      ? ["resources/js/Components", "resources/js/components", "resources/js"]
+      ? ["resources/js/components", "resources/js/Components", "resources/js"]
       : ["src/components", "src/ui", "src"];
   const cssCandidates =
     layout === "laravel"
       ? ["resources/css/app.css", "src/index.css"]
       : ["src/index.css", "src/styles.css", "src/app.css", "app/globals.css"];
 
-  const includeDirs = existingPaths(targetDir, includeCandidates);
+  const includeDirs = narrowestIncludeDir(targetDir, includeCandidates);
   const cssEntrypoints = existingPaths(targetDir, cssCandidates);
   const groupPrefix = pickPlaygroundGroupPrefix(targetDir, layout, includeDirs);
 
@@ -94,7 +120,11 @@ export function assessDslintConfig(targetDir) {
 }
 
 /**
- * @param {{ targetDir: string; layout: "laravel" | "default" }} opts
+ * @param {{
+ *   targetDir: string;
+ *   layout: "laravel" | "default";
+ *   includeDir?: string;
+ * }} opts
  * @returns {{ created: boolean; path: string; existed: boolean }}
  */
 export function writeDslintConfig(opts) {
@@ -107,6 +137,17 @@ export function writeDslintConfig(opts) {
   const configPath = join(targetDir, DEFAULT_CONFIG_FILE_NAME);
   mkdirSync(targetDir, { recursive: true });
   const payload = buildStarterConfig(targetDir, opts.layout);
+  if (opts.includeDir) {
+    payload.include_dirs = [opts.includeDir];
+    const groupPrefix = pickPlaygroundGroupPrefix(
+      targetDir,
+      opts.layout,
+      payload.include_dirs,
+    );
+    if (groupPrefix) {
+      payload.playground_groups = { components: [groupPrefix] };
+    }
+  }
   writeFileSync(configPath, `${JSON.stringify(payload, null, 2)}\n`);
   return { created: true, path: configPath, existed: false };
 }

@@ -8,6 +8,7 @@ use regex::Regex;
 
 use crate::code_quality;
 use crate::ecma::analyze_ecma_for_paths;
+use crate::import_filter::ImportFilter;
 use crate::lines::{line_of_offset, newline_offsets, offset_line};
 use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity};
 use crate::util::{a11y, kebab};
@@ -227,7 +228,7 @@ fn line_offset_before(newlines: &[usize], offset: usize) -> u32 {
 }
 
 /// Merge Vue template component references into an ECMA analysis of the `<script>` blocks.
-pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
+pub fn analyze_vue_file(path: &Path, source: &str, import_filter: &ImportFilter) -> FileScan {
     let caps: Vec<_> = script_block_re().captures_iter(source).collect();
 
     let pseudo_ts = path.with_extension("tsx");
@@ -262,7 +263,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
                 &pseudo_js
             };
 
-            let mut part = analyze_ecma_for_paths(path, parse_as, inner, false);
+            let mut part = analyze_ecma_for_paths(path, parse_as, inner, false, import_filter);
             for d in &mut part.definitions {
                 d.line += line_offset;
             }
@@ -307,7 +308,21 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         let tpl = inner.as_str();
         let tpl_start = inner.start();
         let tpl_line_offset = line_offset_before(&newlines, tpl_start);
-        merge_template_usages(&newlines, tpl, tpl_start, &mut scan.usages);
+        let script_is_ts = caps.iter().any(|c| {
+            let attrs = c.get(1).map(|m| m.as_str()).unwrap_or("");
+            lang_is_ts(attrs) || source.contains("lang=\"ts\"") || source.contains("lang='ts'")
+        });
+        let external_bindings = import_filter.external_jsx_bindings_from_source(
+            &all_script,
+            if script_is_ts { &pseudo_ts } else { &pseudo_js },
+        );
+        merge_template_usages(
+            &newlines,
+            tpl,
+            tpl_start,
+            &mut scan.usages,
+            &external_bindings,
+        );
         scan.findings
             .extend(vue_template_a11y_findings(path, source, tpl, tpl_start));
         crate::class_strings::extend_template_class_extracts(
@@ -325,9 +340,13 @@ fn merge_template_usages(
     template: &str,
     template_inner_start: usize,
     usages: &mut Vec<JsxUsage>,
+    external_bindings: &std::collections::HashSet<String>,
 ) {
     for cap in template_pascal_re().captures_iter(template) {
         let component = cap.get(1).unwrap().as_str().to_string();
+        if crate::import_filter::usage_root_is_external(&component, external_bindings) {
+            continue;
+        }
         let rel_start = cap.get(0).unwrap().start();
         let line = line_of_offset(&newlines, template_inner_start + rel_start);
         usages.push(JsxUsage {
@@ -368,7 +387,7 @@ import DesignHeader from './DesignHeader.vue'
 const x = 1
 </script>
 "#;
-        let scan = analyze_vue_file(&PathBuf::from("Page.vue"), src);
+        let scan = analyze_vue_file(&PathBuf::from("Page.vue"), src, &ImportFilter::default());
         assert!(
             scan.usages.iter().any(|u| u.component == "DesignHeader"),
             "{:?}",
@@ -385,7 +404,7 @@ const x = 1
 const x = 1
 </script>
 "#;
-        let scan = analyze_vue_file(&PathBuf::from("Page.vue"), src);
+        let scan = analyze_vue_file(&PathBuf::from("Page.vue"), src, &ImportFilter::default());
         assert!(
             scan.usages.iter().any(|u| u.component == "DesignHeader"),
             "{:?}",
@@ -396,7 +415,7 @@ const x = 1
     #[test]
     fn vue_template_img_alt() {
         let src = r#"<template><img src="x" /></template><script setup>const x=1</script>"#;
-        let scan = analyze_vue_file(&PathBuf::from("Bad.vue"), src);
+        let scan = analyze_vue_file(&PathBuf::from("Bad.vue"), src, &ImportFilter::default());
         assert!(
             scan.findings.iter().any(|f| f.rule_id == "a11y-img-alt"),
             "{:?}",
@@ -410,7 +429,7 @@ const x = 1
 <script setup lang="ts">
 defineProps(['title', 'color'])
 </script>"#;
-        let scan = analyze_vue_file(&PathBuf::from("MyCard.vue"), src);
+        let scan = analyze_vue_file(&PathBuf::from("MyCard.vue"), src, &ImportFilter::default());
         let def = scan
             .definitions
             .iter()
@@ -433,7 +452,7 @@ defineProps({
   disabled: Boolean,
 })
 </script>"#;
-        let scan = analyze_vue_file(&PathBuf::from("MyButton.vue"), src);
+        let scan = analyze_vue_file(&PathBuf::from("MyButton.vue"), src, &ImportFilter::default());
         let def = scan
             .definitions
             .iter()

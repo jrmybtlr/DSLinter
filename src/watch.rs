@@ -65,13 +65,13 @@ pub fn run_watch(
     dashboard_static: Option<PathBuf>,
 ) -> anyhow::Result<()> {
     // Initial full scan.
-    let config = crate::config::DslintConfig::load_from_root(root)?;
+    let (project_root, config) = crate::config::DslintConfig::load_nearest(root)?;
     let (mut files, mut sources) =
-        crate::scan_pipeline::scan_workspace_files(root, &config, parallel)?;
+        crate::scan_pipeline::scan_workspace_files(root, &project_root, &config, parallel)?;
     let paths: Vec<PathBuf> = files.iter().map(|f| f.path.clone()).collect();
 
     let report = crate::rules::evaluate_workspace(
-        root.to_path_buf(),
+        project_root.clone(),
         files.clone(),
         sources.clone(),
         &config,
@@ -128,7 +128,8 @@ pub fn run_watch(
         thread::sleep(Duration::from_millis(POLL_MS));
 
         // Re-collect the file list to detect new/deleted files.
-        let current_paths = match crate::scan::collect_component_files(root, &config) {
+        let current_paths =
+            match crate::scan::collect_component_files(root, &project_root, &config) {
             Ok(p) => p,
             Err(_) => continue,
         };
@@ -173,12 +174,12 @@ pub fn run_watch(
         }
 
         for path in &changed {
-            crate::rescan_file(path, &mut files, &mut sources);
+            crate::rescan_file(path, &config, &mut files, &mut sources);
         }
         files.sort_by(|a, b| a.path.cmp(&b.path));
 
         let new_report = crate::rules::evaluate_workspace(
-            root.to_path_buf(),
+            project_root.clone(),
             files.clone(),
             sources.clone(),
             &config,

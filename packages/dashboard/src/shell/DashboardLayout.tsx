@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -13,7 +14,6 @@ import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 import { Button } from "../components/ui/button";
-import { cn } from "../lib/utils";
 import { ComponentInspectPane } from "../components/ComponentInspectPane";
 import { ComponentPlaygroundPane } from "../components/ComponentPlaygroundPane";
 import { GovernancePane } from "../components/GovernancePane";
@@ -85,6 +85,26 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback((next: DashboardThemePreference) => {
     setThemeState(next);
   }, []);
+
+  /** Override host / OS theme while the dashboard is mounted (testing UI colors). */
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const previous = {
+      hadDark: root.classList.contains("dark"),
+      colorScheme: root.style.colorScheme,
+    };
+
+    return () => {
+      root.classList.toggle("dark", previous.hadDark);
+      root.style.colorScheme = previous.colorScheme;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme;
+  }, [theme]);
 
   useEffect(() => {
     try {
@@ -257,10 +277,8 @@ export function DashboardLayoutInner({
 
   return (
     <div
-      className={cn(
-        "flex h-screen min-h-0 bg-background text-foreground",
-        resolvedTheme === "dark" && "dark",
-      )}
+      data-dashboard-theme={resolvedTheme}
+      className="flex h-screen min-h-0 bg-background text-foreground"
     >
       <DashboardCommandPalette
         catalogNames={catalogNames}

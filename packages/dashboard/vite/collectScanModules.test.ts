@@ -62,4 +62,29 @@ describe("collectScanModuleRelPaths", () => {
     const paths = collectScanModuleRelPaths(root);
     expect(paths).toEqual(["resources/js/components/ui/button.tsx"]);
   });
+
+  it("scopes collection to scanRoot subdirectory", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-scan-sub-"));
+    mkdirSync(join(root, "resources", "js", "components"), { recursive: true });
+    mkdirSync(join(root, "resources", "js", "layouts", "auth"), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(root, "resources", "js", "components", "Button.tsx"),
+      "export function Button() { return null; }",
+    );
+    writeFileSync(
+      join(root, "resources", "js", "layouts", "auth", "Split.tsx"),
+      "export function Split() { return null; }",
+    );
+    writeFileSync(
+      join(root, ".dslinter.json"),
+      JSON.stringify({ include_dirs: ["resources/js"] }),
+    );
+
+    const paths = collectScanModuleRelPaths(
+      join(root, "resources", "js", "components"),
+    );
+    expect(paths).toEqual(["resources/js/components/Button.tsx"]);
+  });
 });

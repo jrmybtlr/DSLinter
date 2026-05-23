@@ -1,7 +1,7 @@
 //! Optional `.dslinter.json` configuration.
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Context;
 use serde::Deserialize;
@@ -63,19 +63,53 @@ pub struct DslintConfig {
     /// When true, emit `token-unused-css-var` for theme/root CSS variables with no references.
     #[serde(default)]
     pub check_unused_css_tokens: bool,
+    /// Prefixes for in-repo import paths (e.g. `@/components`). Imports starting with `./`,
+    /// `../`, or any of these prefixes are treated as local design-system modules.
+    #[serde(default = "default_local_import_prefixes")]
+    pub local_import_prefixes: Vec<String>,
+    /// Glob patterns for third-party module specifiers excluded from the component catalog
+    /// (e.g. `@radix-ui/*`, `lucide-react`). Non-local imports are always excluded; these
+    /// patterns document common packages and apply when `local_import_prefixes` is widened.
+    #[serde(default = "default_external_import_patterns")]
+    pub external_import_patterns: Vec<String>,
+}
+
+fn default_local_import_prefixes() -> Vec<String> {
+    crate::import_filter::default_local_import_prefixes()
+}
+
+fn default_external_import_patterns() -> Vec<String> {
+    crate::import_filter::default_external_import_patterns()
 }
 
 impl DslintConfig {
-    pub fn load_from_root(root: &Path) -> anyhow::Result<Self> {
-        for name in DEFAULT_CONFIG_NAMES {
-            let p = root.join(name);
-            if p.is_file() {
-                let raw =
-                    std::fs::read_to_string(&p).with_context(|| format!("read {}", p.display()))?;
-                return serde_json::from_str(&raw)
-                    .with_context(|| format!("parse {}", p.display()));
+    /// Load config from the nearest ancestor of `start` that contains `.dslinter.json`.
+    /// Returns `(project_root, config)` where `project_root` is the directory holding the file,
+    /// or `start` (canonicalized) when no config exists.
+    pub fn load_nearest(start: &Path) -> anyhow::Result<(PathBuf, Self)> {
+        let mut dir = std::fs::canonicalize(start).unwrap_or_else(|_| start.to_path_buf());
+        loop {
+            for name in DEFAULT_CONFIG_NAMES {
+                let p = dir.join(name);
+                if p.is_file() {
+                    let raw = std::fs::read_to_string(&p)
+                        .with_context(|| format!("read {}", p.display()))?;
+                    let config = serde_json::from_str(&raw)
+                        .with_context(|| format!("parse {}", p.display()))?;
+                    return Ok((dir, config));
+                }
             }
+            let Some(parent) = dir.parent() else {
+                return Ok((dir, Self::default()));
+            };
+            if parent == dir.as_path() {
+                return Ok((dir, Self::default()));
+            }
+            dir = parent.to_path_buf();
         }
-        Ok(Self::default())
+    }
+
+    pub fn load_from_root(root: &Path) -> anyhow::Result<Self> {
+        Ok(Self::load_nearest(root)?.1)
     }
 }

@@ -10,7 +10,7 @@ export function Section({
   id: string;
   children: ReactNode;
   title: string;
-  description: string;
+  description?: string;
   actions?: ReactNode;
 }) {
   return (

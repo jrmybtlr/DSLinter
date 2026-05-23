@@ -1,6 +1,6 @@
 import { createElement, type ComponentType } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
-import type { DeclaredPropKind, PlaygroundSpec, WorkspaceReport } from "../types/report";
+import type { DeclaredPropKind, PlaygroundSpec, UsageSummary, WorkspaceReport } from "../types/report";
 import type { PlaygroundEntry, PlaygroundMeta, PlaygroundPreviewComponent } from "../types/playground";
 import {
   defaultEmbedGlobKeyFromRelPath,
@@ -25,6 +25,47 @@ export type BuildPlaygroundResult = {
   entries: PlaygroundEntry[];
   skipped: PlaygroundJoinSkip[];
 };
+
+const CHILDREN_SLOT_DEFAULT = "Example";
+
+function childrenControl(): PlaygroundStringControl {
+  return {
+    key: "children",
+    label: "children",
+    type: "string",
+    default: CHILDREN_SLOT_DEFAULT,
+    placeholder: "Slot content",
+  };
+}
+
+type PlaygroundStringControl = Extract<PlaygroundControl, { type: "string" }>;
+
+function componentAcceptsChildren(
+  declaredProps: string[],
+  usage?: UsageSummary,
+): boolean {
+  if (declaredProps.includes("children")) return true;
+  if (declaredProps.includes("asChild")) return true;
+  if ((usage?.prop_frequencies?.children ?? 0) > 0) return true;
+  return false;
+}
+
+function ensureChildrenControl(
+  controls: PlaygroundControl[],
+  acceptsChildren: boolean,
+): PlaygroundControl[] {
+  if (!acceptsChildren || controls.some((c) => c.key === "children")) {
+    return controls;
+  }
+  return [...controls, childrenControl()];
+}
+
+function usageForExportName(
+  report: WorkspaceReport | null | undefined,
+  exportName: string,
+): UsageSummary | undefined {
+  return report?.usage_by_component?.find((u) => u.component === exportName);
+}
 
 function defaultGlobKeyFromRelPath(relPath: string): string {
   return defaultEmbedGlobKeyFromRelPath(relPath);
@@ -93,13 +134,7 @@ function controlsFromDeclaredProps(
   for (const key of declaredProps) {
     if (skip.has(key)) continue;
     if (key === "children") {
-      out.push({
-        key: "children",
-        label: "children",
-        type: "string",
-        default: "",
-        placeholder: "Preview if empty",
-      });
+      out.push(childrenControl());
       continue;
     }
     const options = propOptions?.[key];
@@ -184,7 +219,7 @@ function valuesToComponentProps(
       o[key] =
         v !== undefined && v !== null && String(v).length > 0
           ? String(v)
-          : "Preview";
+          : CHILDREN_SLOT_DEFAULT;
       continue;
     }
     const kind = propKinds?.[key];
@@ -374,13 +409,17 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     const catalogId = playgroundCatalogId(spec);
     const declared = spec.declared_props ?? [];
     const propKinds = normalizedPropKinds(spec.declared_prop_kinds);
-    const controls = controlsForSpec(
-      catalogId,
-      declared,
-      propKinds,
-      spec.declared_prop_options,
-      spec.declared_prop_defaults,
-      controlOverrides,
+    const repoUsage = usageForExportName(report, spec.export_name);
+    const controls = ensureChildrenControl(
+      controlsForSpec(
+        catalogId,
+        declared,
+        propKinds,
+        spec.declared_prop_options,
+        spec.declared_prop_defaults,
+        controlOverrides,
+      ),
+      componentAcceptsChildren(declared, repoUsage),
     );
     const staticDefaults =
       staticDefaultsMap[catalogId] ??

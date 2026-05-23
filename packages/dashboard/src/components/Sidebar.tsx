@@ -65,6 +65,7 @@ export function Sidebar({
   const governanceActive = route.view === "governance";
 
   const onThemeValueChange = (value: string) => {
+    // Radix ToggleGroup (single) emits "" when re-clicking the active item — keep selection.
     if (value !== "light" && value !== "dark") return;
     onThemeChange(value);
   };

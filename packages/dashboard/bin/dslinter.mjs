@@ -3,11 +3,8 @@
  * DSLinter CLI: mode routing (dev / report / watch / build) + scanner (NAPI or DSLINTER_BIN).
  */
 import { parseDslinterArgs } from "./lib/parse-args.mjs";
-import {
-  promoteScanToProjectRoot,
-  withScannerScanPath,
-} from "./lib/resolve-project.mjs";
-import { logScanRootPromotion } from "./lib/project-root.mjs";
+import { withScannerScanPath } from "./lib/resolve-project.mjs";
+import { logScanScopeHint } from "./lib/project-root.mjs";
 import { runScannerInternal } from "./lib/run-scanner.mjs";
 import { runBuildMode } from "./modes/build.mjs";
 import { runDevMode } from "./modes/dev.mjs";
@@ -42,13 +39,13 @@ try {
 }
 
 const { mode } = parsed;
-const promoted =
-  parsed.explicitScanPath != null
-    ? { scanPath: parsed.scanPath, promoted: false }
-    : promoteScanToProjectRoot(parsed.scanPath);
-logScanRootPromotion(promoted);
-const scannerArgs = withScannerScanPath(parsed.scannerArgs, promoted.scanPath);
-const runParsed = { ...parsed, scanPath: promoted.scanPath, scannerArgs };
+logScanScopeHint({
+  scanPath: parsed.scanPath,
+  projectRoot: parsed.projectRoot,
+  explicitScanPath: parsed.explicitScanPath,
+});
+const scannerArgs = withScannerScanPath(parsed.scannerArgs, parsed.scanPath);
+const runParsed = { ...parsed, scannerArgs };
 
 switch (mode) {
   case "dev":

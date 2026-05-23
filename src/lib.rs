@@ -8,6 +8,7 @@ pub mod css_tokens;
 pub mod directives;
 pub mod ecma;
 pub mod gitignore;
+pub mod import_filter;
 pub mod lines;
 pub mod model;
 pub mod playground_emit;
@@ -30,28 +31,34 @@ mod napi;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use crate::config::DslintConfig;
+use crate::import_filter::ImportFilter;
 use crate::model::{FileScan, WorkspaceReport};
 pub use scan_pipeline::PARALLEL_SCAN_THRESHOLD;
 
 /// Parse a single supported source file into definitions + JSX/Vue usages.
-pub fn scan_file(path: &Path, source: &str) -> FileScan {
+pub fn scan_file(path: &Path, source: &str, config: &DslintConfig) -> FileScan {
+    let import_filter = ImportFilter::from_config(config);
     let ext = path
         .extension()
         .and_then(|e| e.to_str())
         .unwrap_or("")
         .to_ascii_lowercase();
     match ext.as_str() {
-        "vue" => vue::analyze_vue_file(path, source),
-        "tsx" | "jsx" | "js" | "ts" | "mts" | "cts" => ecma::analyze_ecma_file(path, source),
+        "vue" => vue::analyze_vue_file(path, source, &import_filter),
+        "tsx" | "jsx" | "js" | "ts" | "mts" | "cts" => {
+            ecma::analyze_ecma_file_with_filter(path, source, &import_filter)
+        }
         _ => FileScan::unsupported_ext(path.to_path_buf(), &ext),
     }
 }
 
-fn scan_and_evaluate(root: &Path, parallel: bool) -> anyhow::Result<WorkspaceReport> {
-    let config = config::DslintConfig::load_from_root(root)?;
-    let (files, sources) = scan_pipeline::scan_workspace_files(root, &config, parallel)?;
+fn scan_and_evaluate(scan_root: &Path, parallel: bool) -> anyhow::Result<WorkspaceReport> {
+    let (project_root, config) = config::DslintConfig::load_nearest(scan_root)?;
+    let (files, sources) =
+        scan_pipeline::scan_workspace_files(scan_root, &project_root, &config, parallel)?;
     Ok(rules::evaluate_workspace(
-        root.to_path_buf(),
+        project_root,
         files,
         sources,
         &config,
@@ -76,10 +83,11 @@ pub fn scan_workspace_auto(root: &Path, explicit_parallel: bool) -> anyhow::Resu
 /// Re-scan a single file and update workspace caches (watch mode).
 pub fn rescan_file(
     path: &Path,
+    config: &DslintConfig,
     files: &mut Vec<FileScan>,
     sources: &mut HashMap<PathBuf, String>,
 ) {
-    let (scan, src) = scan_pipeline::read_and_scan_file(path);
+    let (scan, src) = scan_pipeline::read_and_scan_file(path, config);
     if let Some(s) = src {
         sources.insert(path.to_path_buf(), s);
     } else {
