@@ -172,35 +172,23 @@ export function formatDevBanner(opts) {
   const maxBox = Math.min(Math.max(terminalCols, 64), 96);
 
   const scanAbs = resolve(opts.scanPath);
-  const reportAbs = resolve(opts.reportPath);
-  const apiBase = `http://127.0.0.1:${opts.apiPort}`;
-
-  const apiStatusPlain = opts.apiAvailable ? "listening" : "unavailable — port in use";
-  const bundledStatusPlain = opts.apiAvailable ? "ready" : "port busy";
+  const dashboardUrl = opts.dashboardUrl ?? opts.bundledUrl ?? null;
   const scanPlain = shortenPath(scanAbs, 80);
-  const reportPlain = shortenPath(reportAbs, 80);
+  const scannerWarnPlain = opts.apiAvailable
+    ? null
+    : `unavailable — port ${opts.apiPort} in use`;
 
   /** @type {number[]} */
   const plainWidths = [
     ...LOGO.map((l) => visibleLength(l)),
     14 + 2 + scanPlain.length,
-    14 + 2 + reportPlain.length,
   ];
-  if (opts.dashboardUrl) plainWidths.push(14 + 2 + opts.dashboardUrl.length);
-  if (opts.bundledUrl) {
-    plainWidths.push(14 + 2 + `${opts.bundledUrl}  (${bundledStatusPlain})`.length);
-  }
-  plainWidths.push(14 + 2 + `${apiBase}  (${apiStatusPlain})`.length);
-  if (opts.apiAvailable) {
-    plainWidths.push(14 + 2 + `${apiBase}/dslinter-report.json`.length);
-    plainWidths.push(14 + 2 + `${apiBase}/events`.length);
-  }
+  if (dashboardUrl) plainWidths.push(14 + 2 + dashboardUrl.length);
+  if (scannerWarnPlain) plainWidths.push(14 + 2 + scannerWarnPlain.length);
   if (opts.pollMs) plainWidths.push(14 + 2 + `polling every ${opts.pollMs} ms`.length);
-  const footerPlain = opts.bundledUrl
-    ? "  Open the Bundled UI URL in your browser. Ctrl+C to stop."
-    : opts.dashboardUrl
-      ? "  Open the Dashboard URL for previews and governance (not the Scanner API port). Ctrl+C to stop."
-      : "  Open the Dashboard URL in your browser. Ctrl+C to stop.";
+  const footerPlain = dashboardUrl
+    ? "  Open the Dashboard in your browser. Ctrl+C to stop."
+    : "  Ctrl+C to stop.";
   plainWidths.push(visibleLength(footerPlain));
 
   const contentWidth = Math.min(maxBox - 4, Math.max(...plainWidths, 40));
@@ -214,45 +202,20 @@ export function formatDevBanner(opts) {
   styledRows.push(
     ...row(color.label("Scan path"), scanPlain, contentWidth, color.value),
   );
-  styledRows.push(
-    ...row(color.label("Report file"), reportPlain, contentWidth, color.value),
-  );
-  styledRows.push("");
-  if (opts.dashboardUrl && !opts.bundledUrl) {
-    styledRows.push(
-      ...row(color.label("Dashboard"), opts.dashboardUrl, contentWidth, color.url),
-    );
-  }
-  if (opts.bundledUrl) {
-    const status = opts.apiAvailable ? color.ok(bundledStatusPlain) : color.warn(bundledStatusPlain);
-    styledRows.push(
-      ...row(
-        color.label("Bundled UI"),
-        `${opts.bundledUrl}  (${bundledStatusPlain})`,
-        contentWidth,
-        () => `${color.url(opts.bundledUrl)}  ${color.dim("(")}${status}${color.dim(")")}`,
-      ),
-    );
-  }
-  const apiStatus = opts.apiAvailable ? color.ok(apiStatusPlain) : color.err(apiStatusPlain);
-  styledRows.push(
-    ...row(
-      color.label("Scanner API"),
-      `${apiBase}  (${apiStatusPlain})`,
-      contentWidth,
-      () => `${color.url(apiBase)}  ${color.dim("(")}${apiStatus}${color.dim(")")}`,
-    ),
-  );
-  if (opts.apiAvailable) {
-    styledRows.push(
-      ...row("", `${apiBase}/dslinter-report.json`, contentWidth, color.dim),
-    );
-    styledRows.push(...row("", `${apiBase}/events`, contentWidth, color.dim));
-  }
   if (opts.pollMs) {
-    styledRows.push("");
     styledRows.push(
       ...row(color.label("Watch"), `polling every ${opts.pollMs} ms`, contentWidth, color.dim),
+    );
+  }
+  styledRows.push("");
+  if (dashboardUrl) {
+    styledRows.push(
+      ...row(color.label("Dashboard"), dashboardUrl, contentWidth, color.url),
+    );
+  }
+  if (scannerWarnPlain) {
+    styledRows.push(
+      ...row(color.label("Scanner"), scannerWarnPlain, contentWidth, color.err),
     );
   }
   styledRows.push("");

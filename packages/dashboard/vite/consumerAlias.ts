@@ -98,7 +98,10 @@ export function importerUnderScanRoot(
 ): boolean {
   if (!importer || importer === "\0virtual") return false;
   const root = resolve(scanRoot).replace(/\\/g, "/");
-  const norm = importer.replace(/\\/g, "/");
+  let norm = importer.replace(/\\/g, "/");
+  if (norm.startsWith("\0")) norm = norm.slice(1);
+  const q = norm.indexOf("?");
+  if (q !== -1) norm = norm.slice(0, q);
   const rootWithSlash = root.endsWith("/") ? root : `${root}/`;
   return norm === root || norm.startsWith(rootWithSlash);
 }

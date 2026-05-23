@@ -35,4 +35,13 @@ describe("importerUnderScanRoot", () => {
       ),
     ).toBe(false);
   });
+
+  it("matches paths with Vite query suffixes", () => {
+    expect(
+      importerUnderScanRoot(
+        "/repo/resources/js/hooks/use-current-url.ts?v=abc",
+        "/repo",
+      ),
+    ).toBe(true);
+  });
 });

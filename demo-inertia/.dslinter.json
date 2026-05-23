@@ -1,27 +1,16 @@
 {
-  "include_dirs": ["resources/js/components"],
-  "ignore_globs": [],
-  "css_entrypoints": ["resources/css/app.css"],
-  "playground_groups": {
-    "components": ["resources/js/components"]
-  },
-  "deprecated_components": [],
-  "known_tokens": [
-    "bg-primary",
-    "text-primary",
-    "bg-background",
-    "text-foreground",
-    "bg-muted",
-    "text-muted-foreground",
-    "border-border",
-    "rounded-md",
-    "rounded-lg"
+  "include_dirs": [
+    "resources/js/Components",
+    "resources/js/components",
+    "resources/js"
   ],
-  "ownership": {
-    "design-system": ["resources/js/components/"]
-  },
-  "smell": {
-    "disabled_rules": [],
-    "report_console_error": true
+  "ignore_globs": [],
+  "css_entrypoints": [
+    "resources/css/app.css"
+  ],
+  "playground_groups": {
+    "components": [
+      "resources/js/Components"
+    ]
   }
 }

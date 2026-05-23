@@ -22,44 +22,44 @@ describe("shortenPath", () => {
 });
 
 describe("formatDevBanner", () => {
-  it("includes logo, scan path, report, bundled UI, and API URLs", () => {
+  it("includes logo, scan path, dashboard URL, and watch info", () => {
     const text = formatDevBanner({
       scanPath: "/tmp/components",
       reportPath: "/tmp/components/public/dslinter-report.json",
       apiPort: 7878,
       apiAvailable: true,
       dashboardUrl: "http://localhost:5173/",
-      bundledUrl: "http://127.0.0.1:7878/",
       pollMs: 150,
     });
     expect(text).toContain(LOGO[0]);
     expect(text).toContain(LOGO[1]);
     expect(text).toContain("Scan path");
-    expect(text).toContain("Report file");
-    expect(text).toContain("Bundled UI");
-    expect(text).not.toContain("http://localhost:5173/");
-    expect(text).not.toMatch(/\bDashboard\b/);
-    expect(text).toContain("7878");
-    expect(text).toContain("dslinter-report.json");
+    expect(text).not.toContain("Report file");
+    expect(text).toContain("Dashboard");
+    expect(text).toContain("http://localhost:5173/");
+    expect(text).not.toContain("Scanner API");
+    expect(text).not.toContain("dslinter-report.json");
+    expect(text).not.toContain("/events");
     expect(text).toContain("polling every 150 ms");
-    expect(text).toContain("Open the Bundled UI URL");
+    expect(text).toContain("Open the Dashboard in your browser");
   });
 
-  it("shows dashboard URL when bundled UI is not served", () => {
+  it("shows bundled URL as the dashboard when no separate dev server", () => {
     const text = formatDevBanner({
       scanPath: "/tmp/components",
       reportPath: "/tmp/components/public/dslinter-report.json",
       apiPort: 7878,
       apiAvailable: true,
-      dashboardUrl: "http://localhost:5173/",
+      bundledUrl: "http://127.0.0.1:7878/",
       pollMs: 150,
     });
     expect(text).toContain("Dashboard");
-    expect(text).toContain("http://localhost:5173/");
-    expect(text).toContain("Open the Dashboard URL");
+    expect(text).toContain("http://127.0.0.1:7878/");
+    expect(text).not.toContain("Bundled UI");
+    expect(text).not.toContain("Scanner API");
   });
 
-  it("marks API unavailable when port is busy", () => {
+  it("marks scanner unavailable when port is busy", () => {
     const text = formatDevBanner({
       scanPath: ".",
       reportPath: "./public/dslinter-report.json",
@@ -67,7 +67,9 @@ describe("formatDevBanner", () => {
       apiAvailable: false,
       dashboardUrl: "http://localhost:5174/",
     });
+    expect(text).toContain("Scanner");
     expect(text).toContain("unavailable");
+    expect(text).not.toContain("7878/");
     expect(text).not.toContain("/events");
   });
 

@@ -6,7 +6,6 @@ import { defineConfig } from "vite";
 import dslinter from "./vite/plugin";
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
-const srcDir = path.join(packageRoot, "src");
 const defaultScanRoot = path.resolve(packageRoot, "../../demo");
 const scanRoot = process.env.DSLINTER_SCAN_ROOT
   ? path.resolve(process.env.DSLINTER_SCAN_ROOT)
@@ -22,11 +21,6 @@ export default defineConfig(() => ({
     react(),
     dslinter({ scanRoot, consumerViteRoot }),
   ],
-  resolve: {
-    alias: {
-      "@": srcDir,
-    },
-  },
   build: {
     outDir: "dashboard-dist",
     emptyOutDir: true,

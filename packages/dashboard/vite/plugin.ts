@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadConfigFromFile } from "vite";
@@ -7,17 +7,24 @@ import { resolveServePort } from "../shared/servePort";
 import {
   REPORT_URL_PATH,
 } from "../shared/paths";
+import { resolveReportFilePath } from "../shared/reportPath";
 import {
   collectScanModuleRelPaths,
   embedGlobKeyFromRelPath,
 } from "./collectScanModules";
 import {
-  flattenViteAlias,
+  importerUnderScanRoot,
   INERTIA_SHIM_IDS,
-  resolveWithConsumerAliases,
   ZIGGY_SHIM_ID,
   type FlatAlias,
 } from "./consumerAlias";
+import { loadConsumerAliases } from "./loadConsumerAliases";
+import {
+  isWayfinderActionsImport,
+  isWayfinderRoutesImport,
+  resolveExistingModule,
+  resolveWayfinderShim,
+} from "./resolveWayfinderImport";
 
 export const VIRTUAL_PLAYGROUND_MODULES_ID = "virtual:dslinter/playground-modules";
 const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_PLAYGROUND_MODULES_ID}`;
@@ -25,6 +32,8 @@ const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_PLAYGROUND_MODULES_ID}`;
 const pluginDir = dirname(fileURLToPath(import.meta.url));
 const inertiaShimPath = resolve(pluginDir, "shims/inertia-react.tsx");
 const ziggyShimPath = resolve(pluginDir, "shims/ziggy-js.ts");
+const wayfinderRoutesShimPath = resolve(pluginDir, "shims/wayfinder-routes.ts");
+const wayfinderActionsShimPath = resolve(pluginDir, "shims/wayfinder-actions.ts");
 
 export type DslinterVitePluginOptions = {
   /** Scan root (repo root passed to `npx dslinter`). Defaults to `DSLINTER_SCAN_ROOT` or `process.cwd()`. */
@@ -83,12 +92,19 @@ export default function dslinter(
       "",
   );
   const servePort = options.servePort ?? resolveServePort();
-  let relPaths: string[] = [];
-  let consumerAliases: FlatAlias[] = [];
+  const consumerRoot =
+    consumerViteRoot && existsSync(consumerViteRoot) ? consumerViteRoot : null;
+  /** Populated synchronously so resolveId works before async configResolved. */
+  let relPaths = collectScanModuleRelPaths(scanRoot);
+  let consumerAliases: FlatAlias[] = consumerRoot
+    ? loadConsumerAliases(consumerRoot, undefined)
+    : [];
 
   return {
     name: "dslinter",
     enforce: "pre",
+    /** Run before vite:alias so consumer @/ imports are not rewritten to embed src. */
+    order: "pre",
 
     config(config, { mode }): UserConfig {
       const proxy =
@@ -132,24 +148,22 @@ export default function dslinter(
 
     async configResolved(config) {
       relPaths = collectScanModuleRelPaths(scanRoot);
-      consumerAliases = [];
-      const root =
-        consumerViteRoot && existsSync(consumerViteRoot)
-          ? consumerViteRoot
-          : null;
-      if (!root) return;
+      if (!consumerRoot) {
+        consumerAliases = [];
+        return;
+      }
       try {
         const loaded = await loadConfigFromFile(
           { command: config.command, mode: config.mode },
           undefined,
-          root,
+          consumerRoot,
         );
-        consumerAliases = flattenViteAlias(
+        consumerAliases = loadConsumerAliases(
+          consumerRoot,
           loaded?.config?.resolve?.alias,
-          root,
         );
       } catch {
-        consumerAliases = [];
+        consumerAliases = loadConsumerAliases(consumerRoot, undefined);
       }
     },
 
@@ -158,7 +172,7 @@ export default function dslinter(
         return RESOLVED_VIRTUAL_ID;
       }
 
-      if (!importer || !isPlaygroundModuleImporter(importer, scanRoot, relPaths)) {
+      if (!importer || !importerUnderScanRoot(importer, scanRoot)) {
         return null;
       }
 
@@ -169,9 +183,23 @@ export default function dslinter(
         return ziggyShimPath;
       }
 
+      if (
+        isWayfinderRoutesImport(id) ||
+        isWayfinderActionsImport(id)
+      ) {
+        const onDisk = resolveExistingModule(id, consumerAliases);
+        if (onDisk) return onDisk;
+        const shim = resolveWayfinderShim(
+          id,
+          wayfinderRoutesShimPath,
+          wayfinderActionsShimPath,
+        );
+        if (shim) return shim;
+      }
+
       if (consumerAliases.length > 0) {
-        const resolved = resolveWithConsumerAliases(id, consumerAliases);
-        if (resolved) return resolved;
+        const onDisk = resolveExistingModule(id, consumerAliases);
+        if (onDisk) return onDisk;
       }
 
       return null;
@@ -183,6 +211,39 @@ export default function dslinter(
     },
 
     configureServer(server) {
+      const reportFile = resolveReportFilePath(scanRoot);
+
+      server.middlewares.use((req, res, next) => {
+        const path = req.url?.split("?")[0];
+        if (path !== REPORT_URL_PATH) {
+          next();
+          return;
+        }
+        if (!existsSync(reportFile)) {
+          next();
+          return;
+        }
+        try {
+          const stat = statSync(reportFile);
+          const etag = `"${stat.mtimeMs}"`;
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.setHeader("Cache-Control", "no-store");
+          res.setHeader("ETag", etag);
+          if (req.method === "HEAD") {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+          if (req.method === "GET") {
+            res.end(readFileSync(reportFile));
+            return;
+          }
+        } catch {
+          // fall through to proxy / 404
+        }
+        next();
+      });
+
       const refresh = () => {
         relPaths = collectScanModuleRelPaths(scanRoot);
         const mod = server.moduleGraph.getModuleById(RESOLVED_VIRTUAL_ID);
@@ -196,17 +257,3 @@ export default function dslinter(
 }
 
 export { collectScanModuleRelPaths, embedGlobKeyFromRelPath };
-
-/** True when `importer` is a scanned playground module (per `include_dirs` / walk). */
-function isPlaygroundModuleImporter(
-  importer: string,
-  scanRoot: string,
-  relPaths: string[],
-): boolean {
-  const norm = importer.replace(/\\/g, "/");
-  const root = resolve(scanRoot).replace(/\\/g, "/");
-  const rootPrefix = root.endsWith("/") ? root : `${root}/`;
-  if (!norm.startsWith(rootPrefix) && norm !== root) return false;
-  const suffix = norm.startsWith(rootPrefix) ? norm.slice(rootPrefix.length) : "";
-  return relPaths.some((rel) => rel === suffix);
-}

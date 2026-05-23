@@ -2,6 +2,16 @@ import type { ReactNode } from "react";
 
 /** Minimal Inertia stubs for dslinter component previews (no Laravel backend). */
 
+/** No-op entry bootstrap when `app.tsx` is pulled into the playground graph. */
+export function createInertiaApp(_options: Record<string, unknown>) {
+  return undefined;
+}
+
+/** No-op layout prop helper used by some auth pages. */
+export function setLayoutProps(_props: Record<string, unknown>) {
+  return undefined;
+}
+
 const emptyPage = {
   component: "Preview",
   props: {} as Record<string, unknown>,
@@ -61,3 +71,15 @@ export const router = {
   reload: () => undefined,
   replace: () => undefined,
 };
+
+/** Stub for hooks that fetch JSON via Inertia HTTP helpers in playground previews. */
+export function useHttp() {
+  return {
+    submit: async (url?: unknown) => {
+      const path = String(url ?? "");
+      if (path.includes("recovery")) return [];
+      if (path.includes("secret")) return { secretKey: "" };
+      return { svg: "", url: "" };
+    },
+  };
+}

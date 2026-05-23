@@ -182,6 +182,7 @@ export async function runDevMode({
           ...process.env,
           DSLINTER_SERVE_PORT: String(port),
           DSLINTER_SCAN_ROOT: scanAbs,
+          DSLINTER_REPORT_PATH: reportPath,
           ...(consumerViteRootForEnv
             ? { DSLINTER_CONSUMER_VITE_ROOT: consumerViteRootForEnv }
             : {}),
@@ -236,6 +237,7 @@ export async function runDevMode({
           ...process.env,
           DSLINTER_SERVE_PORT: String(port),
           DSLINTER_SCAN_ROOT: scanAbs,
+          DSLINTER_REPORT_PATH: reportPath,
           DSLINTER_VITE_ROOT: consumerViteRoot,
           DSLINTER_CONSUMER_VITE_ROOT: consumerViteRoot,
         },
