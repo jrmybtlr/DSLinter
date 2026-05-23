@@ -61,7 +61,7 @@ function normalizedPropKinds(
 
 function isLikelyBooleanProp(name: string): boolean {
   const n = name.toLowerCase();
-  if (n === "disabled" || n === "loading") return true;
+  if (n === "disabled" || n === "loading" || n === "aschild") return true;
   if (n.startsWith("is") || n.startsWith("has")) return true;
   if (n.startsWith("show") || n.startsWith("hide")) return true;
   return false;
@@ -85,6 +85,8 @@ function defaultStringForProp(key: string): string {
 function controlsFromDeclaredProps(
   declaredProps: string[],
   propKinds?: Partial<Record<string, DeclaredPropKind>>,
+  propOptions?: Record<string, string[]>,
+  propDefaults?: Record<string, string>,
 ): PlaygroundControl[] {
   const skip = new Set(["key", "ref"]);
   const out: PlaygroundControl[] = [];
@@ -97,6 +99,20 @@ function controlsFromDeclaredProps(
         type: "string",
         default: "",
         placeholder: "Preview if empty",
+      });
+      continue;
+    }
+    const options = propOptions?.[key];
+    if (options && options.length >= 2) {
+      const defaultVal =
+        propDefaults?.[key] ??
+        (options.includes("default") ? "default" : options[0]!);
+      out.push({
+        key,
+        label: key,
+        type: "select",
+        default: defaultVal,
+        options: options.map((value) => ({ value, label: value })),
       });
       continue;
     }
@@ -132,11 +148,18 @@ function controlsForSpec(
   catalogId: string,
   declaredProps: string[],
   propKinds: Partial<Record<string, DeclaredPropKind>> | undefined,
+  propOptions: Record<string, string[]> | undefined,
+  propDefaults: Record<string, string> | undefined,
   controlOverrides: Record<string, PlaygroundControl[]>,
 ): PlaygroundControl[] {
   const override = controlOverrides[catalogId];
   if (override) return override;
-  return controlsFromDeclaredProps(declaredProps, propKinds);
+  return controlsFromDeclaredProps(
+    declaredProps,
+    propKinds,
+    propOptions,
+    propDefaults,
+  );
 }
 
 function propKeysForPreview(
@@ -355,6 +378,8 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       catalogId,
       declared,
       propKinds,
+      spec.declared_prop_options,
+      spec.declared_prop_defaults,
       controlOverrides,
     );
     const staticDefaults =

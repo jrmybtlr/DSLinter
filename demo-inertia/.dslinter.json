@@ -10,7 +10,7 @@
   ],
   "playground_groups": {
     "components": [
-      "resources/js/Components"
+      "resources/js/components"
     ]
   }
 }

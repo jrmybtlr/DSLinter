@@ -32,7 +32,7 @@ function SearchShortcutBadge() {
 }
 
 function navButtonClass(active: boolean) {
-  return `w-full rounded-md px-2.5 py-1.5 text-left text-sm transition ${
+  return `w-full rounded-md truncate px-2.5 py-1.5 text-left text-sm transition ${
     active
       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-xs"
       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

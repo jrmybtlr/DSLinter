@@ -23,12 +23,24 @@ describe("resolveProjectRoot", () => {
     expect(resolveProjectRoot(sub)).toBe(root);
   });
 
-  it("promotes subdirectory scan to project root", () => {
+  it("promotes implicit cwd subdirectory scan to project root", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-promote-"));
     const components = join(root, "resources", "js", "Components");
     mkdirSync(components, { recursive: true });
     writeFileSync(join(root, "vite.config.js"), "export default {};\n");
     const result = promoteScanToProjectRoot(components, components);
+    expect(result.promoted).toBe(true);
+    expect(result.scanPath).toBe(root);
+  });
+
+  it("does not promote when explicit scan path differs from project root", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-explicit-subdir-"));
+    const components = join(root, "resources", "js", "components");
+    mkdirSync(components, { recursive: true });
+    writeFileSync(join(root, "vite.config.js"), "export default {};\n");
+    const explicit = resolveScanPath("resources/js/components", root);
+    expect(explicit).toBe(components);
+    const result = promoteScanToProjectRoot(explicit, root);
     expect(result.promoted).toBe(true);
     expect(result.scanPath).toBe(root);
   });

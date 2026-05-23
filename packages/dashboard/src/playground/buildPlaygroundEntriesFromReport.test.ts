@@ -125,4 +125,54 @@ describe("playground preview props", () => {
     );
     expect(lastProps).toMatchObject({ children: "Hello", variant: "muted" });
   });
+
+  it("builds select controls from declared_prop_options (CVA)", () => {
+    const cvaReport: WorkspaceReport = {
+      ...report,
+      playgrounds: [
+        {
+          id: "Button",
+          export_name: "Button",
+          rel_path: "src/components/ui/button.tsx",
+          declared_props: ["variant", "size", "asChild"],
+          declared_prop_options: {
+            variant: ["default", "destructive", "outline"],
+            size: ["default", "sm", "lg"],
+          },
+          declared_prop_defaults: {
+            variant: "default",
+            size: "default",
+          },
+        },
+      ],
+    };
+    const modules = {
+      "../components/ui/button.tsx": {
+        Button: (props: Record<string, unknown>) =>
+          createElement("button", props, "btn"),
+      },
+    };
+    const { entries } = buildPlaygroundEntriesFromReportWithSkips(
+      cvaReport,
+      modules,
+      {
+        globKeyFromRelPath: (rel) => `../components/ui/${rel.split("/").pop()}`,
+        logJoinSkips: false,
+      },
+    );
+    const entry = entries[0];
+    expect(entry).toBeDefined();
+    const variant = entry!.controls.find((c) => c.key === "variant");
+    expect(variant?.type).toBe("select");
+    if (variant?.type === "select") {
+      expect(variant.default).toBe("default");
+      expect(variant.options.map((o) => o.value)).toEqual([
+        "default",
+        "destructive",
+        "outline",
+      ]);
+    }
+    const asChild = entry!.controls.find((c) => c.key === "asChild");
+    expect(asChild?.type).toBe("boolean");
+  });
 });

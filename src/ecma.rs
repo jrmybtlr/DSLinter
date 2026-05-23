@@ -1,6 +1,8 @@
 //! ECMAScript / TypeScript / JSX parsing via Oxc.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
+
+use crate::cva_extract::{self, CvaBinding};
 use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
@@ -52,6 +54,7 @@ pub fn analyze_ecma_for_paths(
     }
 
     let ts_prop_shapes = crate::ts_shape_map::collect_ts_prop_shape_map(&program);
+    let cva_bindings = cva_extract::collect_cva_bindings(&program);
     let newlines = newline_offsets(source);
     let mut v = ExtractVisitor {
         path: report_path.to_path_buf(),
@@ -61,6 +64,7 @@ pub fn analyze_ecma_for_paths(
         findings: Vec::new(),
         fn_depth: 0,
         ts_prop_shapes,
+        cva_bindings,
         export_wrapped_component_spans: HashSet::new(),
     };
     v.visit_program(&program);
@@ -137,6 +141,49 @@ fn merge_declared_props(
     ));
     dedupe_props_preserve_order(&mut keys);
     keys
+}
+
+fn merge_prop_options_for_component(
+    params: &FormalParameters<'_>,
+    cva_bindings: &HashMap<String, CvaBinding>,
+    declared_props: &[String],
+) -> (BTreeMap<String, Vec<String>>, BTreeMap<String, String>) {
+    let (mut options, mut defaults) = cva_extract::prop_options_from_params(params, cva_bindings);
+    if options.is_empty() && !cva_bindings.is_empty() {
+        for prop in declared_props {
+            for cva in cva_bindings.values() {
+                if let Some(opts) = cva.variant_options.get(prop) {
+                    options.insert(prop.clone(), opts.clone());
+                    if let Some(d) = cva.default_variants.get(prop) {
+                        defaults.insert(prop.clone(), d.clone());
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    (options, defaults)
+}
+
+fn component_definition_from_params(
+    name: String,
+    kind: DefinitionKind,
+    line: u32,
+    params: &FormalParameters<'_>,
+    ts_shapes: &HashMap<String, Vec<String>>,
+    cva_bindings: &HashMap<String, CvaBinding>,
+) -> ComponentDefinition {
+    let declared_props = merge_declared_props(params, ts_shapes);
+    let (declared_prop_options, declared_prop_defaults) =
+        merge_prop_options_for_component(params, cva_bindings, &declared_props);
+    ComponentDefinition {
+        name,
+        kind,
+        line,
+        declared_props,
+        declared_prop_options,
+        declared_prop_defaults,
+    }
 }
 
 fn is_component_identifier(name: &str) -> bool {
@@ -424,6 +471,7 @@ struct ExtractVisitor<'nl> {
     findings: Vec<LintFinding>,
     fn_depth: u32,
     ts_prop_shapes: HashMap<String, Vec<String>>,
+    cva_bindings: HashMap<String, CvaBinding>,
     /// `export function Foo` is recorded here first so `visit_function` does not duplicate it.
     export_wrapped_component_spans: HashSet<(u32, u32)>,
 }
@@ -504,13 +552,14 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     self
                         .export_wrapped_component_spans
                         .insert((func.span.start, func.span.end));
-                    let declared_props = merge_declared_props(&func.params, &self.ts_prop_shapes);
-                    self.definitions.push(ComponentDefinition {
+                    self.definitions.push(component_definition_from_params(
                         name,
-                        kind: DefinitionKind::Function,
-                        line: self.line(func.span.start),
-                        declared_props,
-                    });
+                        DefinitionKind::Function,
+                        self.line(func.span.start),
+                        &func.params,
+                        &self.ts_prop_shapes,
+                        &self.cva_bindings,
+                    ));
                 }
             }
         }
@@ -527,14 +576,14 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                         .export_wrapped_component_spans
                         .contains(&(func.span.start, func.span.end))
                 {
-                    let declared_props =
-                        merge_declared_props(&func.params, &self.ts_prop_shapes);
-                    self.definitions.push(ComponentDefinition {
+                    self.definitions.push(component_definition_from_params(
                         name,
-                        kind: DefinitionKind::Function,
-                        line: self.line(func.span.start),
-                        declared_props,
-                    });
+                        DefinitionKind::Function,
+                        self.line(func.span.start),
+                        &func.params,
+                        &self.ts_prop_shapes,
+                        &self.cva_bindings,
+                    ));
                 }
             }
         }
@@ -561,6 +610,8 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                         kind: DefinitionKind::Class,
                         line: self.line(class.span.start),
                         declared_props: Vec::new(),
+                        declared_prop_options: BTreeMap::new(),
+                        declared_prop_defaults: BTreeMap::new(),
                     });
                 }
             }
@@ -581,34 +632,34 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
     ) {
         match &decl.declaration {
             ExportDefaultDeclarationKind::FunctionDeclaration(func) if func.id.is_none() => {
-                let declared_props =
-                    merge_declared_props(&func.params, &self.ts_prop_shapes);
-                self.definitions.push(ComponentDefinition {
-                    name: DEFAULT_EXPORT.to_string(),
-                    kind: DefinitionKind::ExportDefaultAnonymous,
-                    line: self.line(decl.span.start),
-                    declared_props,
-                });
+                self.definitions.push(component_definition_from_params(
+                    DEFAULT_EXPORT.to_string(),
+                    DefinitionKind::ExportDefaultAnonymous,
+                    self.line(decl.span.start),
+                    &func.params,
+                    &self.ts_prop_shapes,
+                    &self.cva_bindings,
+                ));
             }
             ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-                let declared_props =
-                    merge_declared_props(&arrow.params, &self.ts_prop_shapes);
-                self.definitions.push(ComponentDefinition {
-                    name: DEFAULT_EXPORT.to_string(),
-                    kind: DefinitionKind::ExportDefaultAnonymous,
-                    line: self.line(decl.span.start),
-                    declared_props,
-                });
+                self.definitions.push(component_definition_from_params(
+                    DEFAULT_EXPORT.to_string(),
+                    DefinitionKind::ExportDefaultAnonymous,
+                    self.line(decl.span.start),
+                    &arrow.params,
+                    &self.ts_prop_shapes,
+                    &self.cva_bindings,
+                ));
             }
             ExportDefaultDeclarationKind::FunctionExpression(func) => {
-                let declared_props =
-                    merge_declared_props(&func.params, &self.ts_prop_shapes);
-                self.definitions.push(ComponentDefinition {
-                    name: DEFAULT_EXPORT.to_string(),
-                    kind: DefinitionKind::ExportDefaultAnonymous,
-                    line: self.line(decl.span.start),
-                    declared_props,
-                });
+                self.definitions.push(component_definition_from_params(
+                    DEFAULT_EXPORT.to_string(),
+                    DefinitionKind::ExportDefaultAnonymous,
+                    self.line(decl.span.start),
+                    &func.params,
+                    &self.ts_prop_shapes,
+                    &self.cva_bindings,
+                ));
             }
             ExportDefaultDeclarationKind::Identifier(ident) => {
                 let name = format!("default→{}", ident.name.as_str());
@@ -617,6 +668,8 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     kind: DefinitionKind::ExportDefault,
                     line: self.line(decl.span.start),
                     declared_props: Vec::new(),
+                    declared_prop_options: BTreeMap::new(),
+                    declared_prop_defaults: BTreeMap::new(),
                 });
             }
             _ => {}
@@ -672,33 +725,34 @@ impl ExtractVisitor<'_> {
         let Some(init) = &decl.init else {
             return;
         };
-        let (kind, declared_props) = if expr_is_component_like(init) {
-            let props = match init {
+        if expr_is_component_like(init) {
+            let (kind, params) = match init {
                 Expression::ArrowFunctionExpression(arrow) => {
-                    merge_declared_props(&arrow.params, &self.ts_prop_shapes)
+                    (DefinitionKind::ConstArrow, &arrow.params)
                 }
                 Expression::FunctionExpression(func) => {
-                    merge_declared_props(&func.params, &self.ts_prop_shapes)
+                    (DefinitionKind::ConstFunction, &func.params)
                 }
-                _ => Vec::new(),
+                _ => return,
             };
-            let kind = match init {
-                Expression::ArrowFunctionExpression(_) => DefinitionKind::ConstArrow,
-                Expression::FunctionExpression(_) => DefinitionKind::ConstFunction,
-                _ => DefinitionKind::ConstArrow,
-            };
-            (kind, props)
+            self.definitions.push(component_definition_from_params(
+                name,
+                kind,
+                self.line(decl.span.start),
+                params,
+                &self.ts_prop_shapes,
+                &self.cva_bindings,
+            ));
         } else if expr_is_wrapper_call(init) {
-            (DefinitionKind::WrappedComponent, Vec::new())
-        } else {
-            return;
-        };
-        self.definitions.push(ComponentDefinition {
-            name,
-            kind,
-            line: self.line(decl.span.start),
-            declared_props,
-        });
+            self.definitions.push(ComponentDefinition {
+                name,
+                kind: DefinitionKind::WrappedComponent,
+                line: self.line(decl.span.start),
+                declared_props: Vec::new(),
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
+            });
+        }
     }
 }
 
@@ -841,6 +895,44 @@ export function Button({ onClick }: { onClick: () => void } & BtnProps) {
             .find(|d| d.name == "Button")
             .expect("Button definition");
         assert_eq!(btn.declared_props, vec!["onClick", "variant", "size"]);
+    }
+
+    #[test]
+    fn cva_variant_options_on_intersection_variant_props() {
+        let src = r#"
+const buttonVariants = cva("base", {
+  variants: {
+    variant: { default: "a", destructive: "b", outline: "c" },
+    size: { default: "d", sm: "e", lg: "f" },
+  },
+  defaultVariants: { variant: "default", size: "default" },
+});
+function Button({
+  className,
+  variant,
+  size,
+  asChild = false,
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  }) {
+  return <button className={className} />;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("button.tsx"), src);
+        let btn = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Button")
+            .expect("Button");
+        assert_eq!(
+            btn.declared_prop_options.get("variant").map(|v| v.as_slice()),
+            Some(&["default".to_string(), "destructive".to_string(), "outline".to_string()][..])
+        );
+        assert_eq!(
+            btn.declared_prop_defaults.get("variant").map(String::as_str),
+            Some("default")
+        );
     }
 
     #[test]

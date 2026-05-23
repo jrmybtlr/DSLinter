@@ -72,7 +72,7 @@ pnpm run dslinter:dev
 
 The CLI merges `dslinter/vite` automatically, writes `public/dslinter-report.json`, and opens the dashboard UI (see the terminal banner for the URL, typically port **5175**).
 
-Configuration: [`.dslinter.json`](./.dslinter.json) scopes scans to `resources/js/components/`.
+Configuration: [`.dslinter.json`](./.dslinter.json) scopes scans and playground previews to `resources/js/components/`.
 
 Optional embed in your own Inertia app: set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground />` — see [`packages/dashboard/README.md`](../packages/dashboard/README.md).
 

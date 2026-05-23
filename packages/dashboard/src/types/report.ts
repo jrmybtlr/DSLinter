@@ -17,6 +17,10 @@ export interface ComponentDefinition {
   line: number;
   /** Props destructured from the first parameter, when detectable. */
   declared_props?: string[];
+  /** CVA variant option keys per prop (playground select controls). */
+  declared_prop_options?: Record<string, string[]>;
+  /** Default values from CVA `defaultVariants`. */
+  declared_prop_defaults?: Record<string, string>;
 }
 
 export interface JsxUsage {
@@ -102,6 +106,10 @@ export interface PlaygroundSpec {
    * (demo: `merge-playgrounds.mjs`). Omitted when empty or unavailable.
    */
   declared_prop_kinds?: Partial<Record<string, DeclaredPropKind>>;
+  /** CVA variant option keys per prop (dashboard renders as `<Select>`). */
+  declared_prop_options?: Record<string, string[]>;
+  /** Default values from CVA `defaultVariants`. */
+  declared_prop_defaults?: Record<string, string>;
 }
 
 export type CssTokenCategory =

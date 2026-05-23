@@ -1,5 +1,6 @@
 //! Vue single-file component extraction (template usages + script definitions).
 
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::OnceLock;
 
@@ -292,6 +293,8 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
                 kind: DefinitionKind::ExportDefaultAnonymous,
                 line: 1,
                 declared_props: vue_declared_props,
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
             });
         }
     }

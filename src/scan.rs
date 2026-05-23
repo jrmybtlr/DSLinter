@@ -94,10 +94,7 @@ pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Re
             return false;
         };
         let ext = ext.to_ascii_lowercase();
-        matches!(
-            ext.as_str(),
-            "tsx" | "jsx" | "vue" | "ts" | "js" | "mts" | "cts"
-        )
+        matches!(ext.as_str(), "tsx" | "jsx" | "vue")
     })
 }
 
@@ -172,6 +169,37 @@ mod tests {
             .map(|p| p.to_string_lossy().replace('\\', "/"))
             .collect();
         assert_eq!(rels, vec!["src/Keep.tsx"]);
+    }
+
+    #[test]
+    fn excludes_plain_ts_and_js_files() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("src/components")).unwrap();
+        std::fs::write(
+            root.join("src/components/Button.tsx"),
+            "export function Button() { return null; }",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("src/components/utils.ts"),
+            "export const x = 1;",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("src/components/legacy.js"),
+            "export function Legacy() { return null; }",
+        )
+        .unwrap();
+
+        let config = DslintConfig::default();
+        let files = collect_component_files(root, &config).unwrap();
+        let rels: Vec<_> = files
+            .iter()
+            .filter_map(|p| p.strip_prefix(root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(rels, vec!["src/components/Button.tsx"]);
     }
 
     #[test]

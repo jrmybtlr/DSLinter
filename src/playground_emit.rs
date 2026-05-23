@@ -95,6 +95,8 @@ pub fn build_playground_specs(
             rel_path: rel,
             declared_props: def.declared_props.clone(),
             declared_prop_kinds: BTreeMap::new(),
+            declared_prop_options: def.declared_prop_options.clone(),
+            declared_prop_defaults: def.declared_prop_defaults.clone(),
             group,
         });
     }
@@ -125,6 +127,8 @@ mod tests {
             kind: DefinitionKind::Function,
             line: 1,
             declared_props: vec!["children".into()],
+            declared_prop_options: BTreeMap::new(),
+            declared_prop_defaults: BTreeMap::new(),
         }];
         let picked = pick_definition(&defs, "PrimaryButton").unwrap();
         assert_eq!(picked.name, "PrimaryButton");
@@ -137,6 +141,8 @@ mod tests {
             kind: DefinitionKind::Function,
             line: 1,
             declared_props: vec![],
+            declared_prop_options: BTreeMap::new(),
+            declared_prop_defaults: BTreeMap::new(),
         }];
         let picked = pick_definition(&defs, "DuplicateCardA").unwrap();
         assert_eq!(picked.name, "Card");
@@ -150,12 +156,16 @@ mod tests {
                 kind: DefinitionKind::Function,
                 line: 1,
                 declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
             },
             ComponentDefinition {
                 name: "B".into(),
                 kind: DefinitionKind::Function,
                 line: 2,
                 declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
             },
         ];
         assert!(pick_definition(&defs, "OtherStem").is_none());
@@ -191,6 +201,8 @@ mod tests {
                 kind: DefinitionKind::Function,
                 line: 1,
                 declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
             }],
             usages: vec![],
             parse_errors: vec![],
@@ -214,6 +226,8 @@ mod tests {
                 kind: DefinitionKind::Function,
                 line: 1,
                 declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
             }],
             usages: vec![],
             parse_errors: vec![],

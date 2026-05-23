@@ -27,6 +27,12 @@ pub struct ComponentDefinition {
     /// Props destructured from the first parameter of this component function, if detectable.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub declared_props: Vec<String>,
+    /// CVA / static variant option keys per prop (for playground select controls).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub declared_prop_options: BTreeMap<String, Vec<String>>,
+    /// Default variant values from CVA `defaultVariants`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub declared_prop_defaults: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -274,6 +280,12 @@ pub struct PlaygroundSpec {
     /// Simplified TS kinds per prop (`boolean` \| `string` \| `number` \| `unknown`), when tooling fills them.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub declared_prop_kinds: BTreeMap<String, String>,
+    /// CVA variant option keys per prop (dashboard renders as `<Select>`).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub declared_prop_options: BTreeMap<String, Vec<String>>,
+    /// Default values from CVA `defaultVariants`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub declared_prop_defaults: BTreeMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
 }

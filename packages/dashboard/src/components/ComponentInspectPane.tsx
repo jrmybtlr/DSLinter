@@ -70,7 +70,7 @@ export function ComponentInspectPane({
 
   const previewNote = hasPlaygroundSpec
     ? "A preview was expected for this component but the module could not be loaded in the dashboard bundle (check the file path, export name, or that npx dslinter was run from the project root)."
-    : "No playable component definition was found in a .tsx/.jsx file under the scanned workspace — only names from JSX usage appear in the catalog.";
+    : "No playable component definition was found";
 
   const joinDetail = (() => {
     if (playgroundJoinSkip?.reason === "module_not_found") {
@@ -115,7 +115,7 @@ export function ComponentInspectPane({
                 {componentId}
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                Scan snapshot — no live preview. {previewNote}
+                {previewNote}
               </p>
               {joinDetail ? (
                 <p className="mt-2 max-w-2xl font-mono text-xs text-muted-foreground">
@@ -123,7 +123,12 @@ export function ComponentInspectPane({
                 </p>
               ) : null}
             </div>
-            <Button type="button" size="sm" variant="outline" onClick={onBackToGovernance}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onBackToGovernance}
+            >
               Back to governance
             </Button>
           </div>
@@ -146,9 +151,7 @@ export function ComponentInspectPane({
                 </TableHeader>
                 <TableBody>
                   {definitions.map((site) => (
-                    <TableRow
-                      key={`${site.path}:${site.line}:${site.kind}`}
-                    >
+                    <TableRow key={`${site.path}:${site.line}:${site.kind}`}>
                       <TableCell className="font-mono text-xs">
                         {workspaceReport
                           ? shortPath(workspaceReport.root, site.path)
@@ -164,8 +167,8 @@ export function ComponentInspectPane({
               </Table>
             ) : (
               <p className="text-sm text-muted-foreground">
-                No definition sites recorded — this name may appear only from JSX
-                usage.
+                No definition sites recorded — this name may appear only from
+                JSX usage.
               </p>
             )}
           </Section>

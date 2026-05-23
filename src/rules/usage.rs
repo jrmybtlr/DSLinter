@@ -245,6 +245,8 @@ mod prop_tests {
                     kind: DefinitionKind::Function,
                     line: 1,
                     declared_props: props.into_iter().map(|s| s.to_string()).collect(),
+                    declared_prop_options: BTreeMap::new(),
+                    declared_prop_defaults: BTreeMap::new(),
                 })
                 .collect(),
             usages: usages

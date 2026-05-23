@@ -42,7 +42,10 @@ try {
 }
 
 const { mode } = parsed;
-const promoted = promoteScanToProjectRoot(parsed.scanPath);
+const promoted =
+  parsed.explicitScanPath != null
+    ? { scanPath: parsed.scanPath, promoted: false }
+    : promoteScanToProjectRoot(parsed.scanPath);
 logScanRootPromotion(promoted);
 const scannerArgs = withScannerScanPath(parsed.scannerArgs, promoted.scanPath);
 const runParsed = { ...parsed, scanPath: promoted.scanPath, scannerArgs };

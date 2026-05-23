@@ -36,6 +36,23 @@ function existingPaths(targetDir, candidates) {
 }
 
 /**
+ * Prefer lowercase `resources/js/components` for playground_groups when both casings exist.
+ * @param {string} targetDir
+ * @param {"laravel" | "default"} layout
+ * @param {string[]} includeDirs
+ * @returns {string | undefined}
+ */
+function pickPlaygroundGroupPrefix(targetDir, layout, includeDirs) {
+  if (layout === "laravel") {
+    const lower = "resources/js/components";
+    const upper = "resources/js/Components";
+    if (existsSync(join(targetDir, lower))) return lower;
+    if (existsSync(join(targetDir, upper))) return upper;
+  }
+  return includeDirs[0];
+}
+
+/**
  * @param {string} targetDir
  * @param {"laravel" | "default"} layout
  */
@@ -51,7 +68,7 @@ function buildStarterConfig(targetDir, layout) {
 
   const includeDirs = existingPaths(targetDir, includeCandidates);
   const cssEntrypoints = existingPaths(targetDir, cssCandidates);
-  const groupPrefix = includeDirs[0];
+  const groupPrefix = pickPlaygroundGroupPrefix(targetDir, layout, includeDirs);
 
   return {
     include_dirs: includeDirs,

@@ -44,7 +44,8 @@ export function resolveScanPath(explicitPath, cwd = process.cwd()) {
 }
 
 /**
- * When the user passed an explicit subdirectory, promote to project root for scanning.
+ * When cwd is a subdirectory and no explicit path was passed, promote to project root for scanning.
+ * Explicit positional paths are honored as-is (see dslinter.mjs).
  * @param {string} scanPath absolute scan path after resolveScanPath
  * @param {string} [cwd]
  * @returns {{ scanPath: string; promoted: boolean; originalPath?: string }}

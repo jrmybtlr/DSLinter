@@ -3,6 +3,7 @@
 pub mod class_strings;
 pub mod code_quality;
 pub mod config;
+pub mod cva_extract;
 pub mod css_tokens;
 pub mod directives;
 pub mod ecma;
