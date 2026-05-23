@@ -5,6 +5,7 @@ import {
   findViteRoot,
   resolveViteBin,
 } from "../lib/project-root.mjs";
+import { enrichPlaygroundsFromTs } from "../lib/enrich-playgrounds-from-ts.mjs";
 import { ensureMinimalSetup } from "../lib/setup-readiness.mjs";
 import { runScannerSync } from "../lib/run-scanner.mjs";
 
@@ -39,6 +40,11 @@ export async function runBuildMode({
 
   const code = runScannerSync(args);
   if (code !== 0) process.exit(code);
+
+  await enrichPlaygroundsFromTs({
+    projectRoot: projectAbs,
+    reportPath,
+  });
 
   const viteRoot = findViteRoot(process.cwd());
   if (!viteRoot) {

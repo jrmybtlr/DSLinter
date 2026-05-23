@@ -24,9 +24,9 @@ The **`dslinter`** command orchestrates the Rust scanner (via **napi-rs**, same 
 | Mode | Flag | Behavior |
 |------|------|----------|
 | Dev (default locally) | _(none)_ | `--serve`, watch, write `--output`, start Vite `--mode serve` |
-| Report | `--report` | One-shot scan; human stdout or `--json`; `--output` writes JSON |
-| Watch | `--watch` | Watch + write JSON only |
-| Build | `--build` | One-shot report to `--output`, then `vite build` |
+| Report | `--report` | One-shot scan; human stdout or `--json`; `--output` writes JSON; enriches playground prop kinds/options from TypeScript when `tsconfig.json` is present |
+| Watch | `--watch` | Watch + write JSON only; re-enriches playgrounds after each scan |
+| Build | `--build` | One-shot report to `--output` (with TS enrichment), then `vite build` |
 | CI default | `CI=true` | Same as `--report` |
 
 Scanner flags: `--json`, `-p` / `--parallel`, `--fail-on-warnings`, `--max-warnings`, `--output`, `[PATH]`. Low-level: `--serve <port>` (watch + HTTP, no Vite).
