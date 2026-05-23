@@ -6,7 +6,16 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *, [data-dashboard-theme="dark"] *));
+/** Class-based dark only — never `prefers-color-scheme` or host `.dark`. */
+@custom-variant dark (&:is([data-dashboard-theme="dark"] *));
+
+html:has([data-dashboard-theme="light"]) {
+  color-scheme: only light;
+}
+
+html:has([data-dashboard-theme="dark"]) {
+  color-scheme: only dark;
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -88,8 +97,9 @@
   }
 }
 
-:root {
-  color-scheme: light;
+:root,
+[data-dashboard-theme="light"] {
+  color-scheme: only light;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -126,8 +136,8 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  color-scheme: dark;
+[data-dashboard-theme="dark"] {
+  color-scheme: only dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -179,7 +189,7 @@
     background-size: 10px 10px;
   }
 
-  :is(.dark, [data-dashboard-theme="dark"]) .ds-playground-dot-surface {
+  [data-dashboard-theme="dark"] .ds-playground-dot-surface {
     background-image: radial-gradient(
       circle,
       rgb(148 163 184 / 0.22) 1px,
@@ -189,12 +199,6 @@
 
   /** Neutral stage so light- and dark-targeted component variants stay visible. */
   .ds-playground-preview-canvas {
-    background-color: rgb(71 85 105);
-    background-image: radial-gradient(
-      circle,
-      rgb(100 116 139 / 0.35) 1px,
-      transparent 1px
-    );
-    background-size: 12px 12px;
+    background-color: white;
   }
 }

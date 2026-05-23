@@ -26,6 +26,7 @@ import {
 import { shortPath } from "./paths";
 import type { WorkspaceReport } from "../types/report";
 import { pluralize } from "usemods";
+import { TruncatedPath } from "../components/TruncatedPath";
 
 /** Set of `"ComponentName/propName"` keys for every declared prop with no recorded usage. */
 function buildUnusedPropSet(report: WorkspaceReport): Set<string> {
@@ -103,8 +104,11 @@ function CatalogAppUsageHover({
         </p>
         <ul className="mt-2 max-h-48 space-y-0.5 overflow-y-auto font-mono text-xs text-muted-foreground">
           {sortedFiles.map((file) => (
-            <li key={file} className="truncate" title={shortPath(root, file)}>
-              {shortPath(root, file)}
+            <li key={file} className="min-w-0">
+              <TruncatedPath
+                path={shortPath(root, file)}
+                className="text-xs text-muted-foreground"
+              />
             </li>
           ))}
         </ul>

@@ -1,20 +1,23 @@
 import type { ReactNode } from "react";
+import { cn } from "../lib/utils";
 
 export function Section({
   id,
+  className,
   children,
   title,
   description,
   actions,
 }: {
   id: string;
+  className?: string;
   children: ReactNode;
   title: string;
   description?: string;
   actions?: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-20">
+    <section id={id} className={cn("scroll-mt-20", className)}>
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-lg/none font-semibold tracking-tight text-foreground">

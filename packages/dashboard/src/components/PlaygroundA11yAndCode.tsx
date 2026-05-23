@@ -6,6 +6,7 @@ import type {
 } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
+import type { PlaygroundA11yFinding } from "../playground/scanVariantA11y";
 import type { CodeScoreModuleSummary } from "../report/codeScoreForModule";
 import type { LintFinding, UsageSummary } from "../types/report";
 import { Badge } from "./ui/badge";
@@ -156,12 +157,18 @@ export function PlaygroundCodeScoreSection({
 }
 
 type A11yProps = {
-  a11y: A11yModuleSummary;
+  a11y: A11yModuleSummary & { findings: PlaygroundA11yFinding[] };
   reportReady: boolean;
+  variantScanPending?: boolean;
 };
 
-export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
+export function PlaygroundA11ySection({
+  a11y,
+  reportReady,
+  variantScanPending = false,
+}: A11yProps) {
   const hasFindingRows = reportReady && a11y.findings.length > 0;
+  const showVariantColumn = a11y.findings.some((f) => f.variantLabel);
 
   return (
     <>
@@ -169,6 +176,7 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              {showVariantColumn ? <TableHead>Variant</TableHead> : null}
               <TableHead>Rule</TableHead>
               <TableHead>Line</TableHead>
               <TableHead>Severity</TableHead>
@@ -177,7 +185,12 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
           </TableHeader>
           <TableBody>
             {a11y.findings.map((f, i) => (
-              <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${i}`}>
+              <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${f.variantLabel ?? ""}-${i}`}>
+                {showVariantColumn ? (
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {f.variantLabel ?? "—"}
+                  </TableCell>
+                ) : null}
                 <TableCell>{f.rule_id}</TableCell>
                 <TableCell>{f.line ?? "—"}</TableCell>
                 <TableCell>{f.severity}</TableCell>
@@ -188,7 +201,9 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
         </Table>
       ) : reportReady && a11y.issueCount === 0 ? (
         <EmptyCard>
-          No accessibility findings on this file in the current report.
+          {variantScanPending
+            ? "Scanning variant previews for color contrast…"
+            : "No accessibility findings on this file or its variant previews in the current report."}
         </EmptyCard>
       ) : (
         <EmptyCard>
@@ -202,6 +217,7 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
 }
 
 type ApiProps = {
+  entry: PlaygroundEntry;
   controls: PlaygroundControl[];
   values: PlaygroundArgs;
   onChange: PlaygroundValuesUpdater;
@@ -229,6 +245,7 @@ function formatRepoLiteralChips(
 }
 
 export function PlaygroundApiReference({
+  entry,
   controls,
   values,
   onChange,
@@ -256,6 +273,12 @@ export function PlaygroundApiReference({
         .filter((k) => !controlKeys.has(k))
         .sort((a, b) => a.localeCompare(b))
     : [];
+  const repoUsageProps = showRepo
+    ? [...rows.map((r) => r.prop), ...extraRepoProps]
+    : [];
+  const usage =
+    entry.usageSnippet?.(values) ??
+    `// Pass usageSnippet on this PlaygroundEntry, or derive snippets from dslint controls.\n<${entry.id} />`;
 
   return (
     <Section
@@ -273,20 +296,12 @@ export function PlaygroundApiReference({
             <TableHead>Prop</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Value</TableHead>
-            {showRepo ? (
-              <>
-                <TableHead>Usage</TableHead>
-                <TableHead>Values</TableHead>
-              </>
-            ) : null}
           </TableRow>
         </TableHeader>
         <TableBody>
           {controls.map((c) => {
             const r = rows.find((row) => row.prop === c.key);
             if (!r) return null;
-            const n = showRepo ? (freqs[r.prop] ?? 0) : 0;
-            const valueChips = formatRepoLiteralChips(valueFreqs[r.prop]);
             return (
               <TableRow key={r.prop}>
                 <TableCell className="font-medium">{r.prop}</TableCell>
@@ -342,40 +357,32 @@ export function PlaygroundApiReference({
                     layout="table"
                   />
                 </TableCell>
-                {showRepo ? (
-                  <>
-                    <TableCell>{n}</TableCell>
-                    <TableCell>{valueChips}</TableCell>
-                  </>
-                ) : null}
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
 
-      {showRepo && extraRepoProps.length > 0 ? (
-        <div className="mt-4">
-          <h3 className="text-sm font-semibold text-foreground">
-            Also seen in repo (not in playground)
-          </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            These prop names appear in scanned JSX but are not wired as
-            playground controls on this page.
-          </p>
+      {/* Example Code Based on Prop */}
+      <Section id="example-code" title="Example code" className="mt-4">
+        <PlaygroundUsageCode source={usage} />
+      </Section>
+
+      {showRepo ? (
+        <Section id="repo-usage" title="Repo usage" className="mt-4">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Prop</TableHead>
-                <TableHead>Repo call sites</TableHead>
-                <TableHead>Repo literals</TableHead>
+                <TableHead>Count</TableHead>
+                <TableHead>Values</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {extraRepoProps.map((prop) => (
+              {repoUsageProps.map((prop) => (
                 <TableRow key={prop}>
-                  <TableCell>{prop}</TableCell>
-                  <TableCell>×{freqs[prop] ?? 0}</TableCell>
+                  <TableCell className="font-medium">{prop}</TableCell>
+                  <TableCell>{freqs[prop] ?? 0}</TableCell>
                   <TableCell>
                     {formatRepoLiteralChips(valueFreqs[prop])}
                   </TableCell>
@@ -383,7 +390,7 @@ export function PlaygroundApiReference({
               ))}
             </TableBody>
           </Table>
-        </div>
+        </Section>
       ) : null}
     </Section>
   );

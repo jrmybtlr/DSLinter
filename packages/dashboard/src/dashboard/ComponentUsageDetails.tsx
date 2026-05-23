@@ -12,6 +12,7 @@ import { usageMap } from "./aggregate";
 import { shortPath } from "./paths";
 import { EmptyCard } from "../components/EmptyCard";
 import { InlineCode } from "../components/InlineCode";
+import { TruncatedPath } from "../components/TruncatedPath";
 
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";
@@ -47,8 +48,8 @@ export function ComponentUsageDetails({
   if (!report) {
     return (
       <p className="text-sm text-muted-foreground">
-        Load <span className="font-mono">dslinter-report.json</span> to see where
-        this component is used in the workspace.
+        Load <span className="font-mono">dslinter-report.json</span> to see
+        where this component is used in the workspace.
       </p>
     );
   }
@@ -87,13 +88,8 @@ export function ComponentUsageDetails({
           const propsText = formatCallSiteProps(loc);
           return (
             <TableRow key={`${loc.path}-${loc.line}-${i}`}>
-              <TableCell className="min-w-0 max-w-0">
-                <span
-                  className="block truncate font-mono text-xs text-foreground"
-                  title={fileText}
-                >
-                  {fileText}
-                </span>
+              <TableCell className="min-w-0">
+                <TruncatedPath path={fileText} className="text-xs" />
               </TableCell>
               <TableCell className="tabular-nums text-muted-foreground">
                 {loc.line}

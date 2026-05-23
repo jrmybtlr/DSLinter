@@ -6,7 +6,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -48,13 +47,10 @@ function readStored(): DashboardThemePreference | null {
       }
     }
     if (v === "light" || v === "dark") return v;
-    /** Migrate legacy `system` (and any unknown) to an explicit mode. */
-    if (v === "system") {
-      const next = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      localStorage.setItem(STORAGE_KEY, next);
-      return next;
+    /** Migrate legacy `system` (and any unknown) — OS preference is ignored. */
+    if (v != null) {
+      localStorage.setItem(STORAGE_KEY, "light");
+      return "light";
     }
   } catch {
     /* ignore */
@@ -85,26 +81,6 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback((next: DashboardThemePreference) => {
     setThemeState(next);
   }, []);
-
-  /** Override host / OS theme while the dashboard is mounted (testing UI colors). */
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    const previous = {
-      hadDark: root.classList.contains("dark"),
-      colorScheme: root.style.colorScheme,
-    };
-
-    return () => {
-      root.classList.toggle("dark", previous.hadDark);
-      root.style.colorScheme = previous.colorScheme;
-    };
-  }, []);
-
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    root.style.colorScheme = theme;
-  }, [theme]);
 
   useEffect(() => {
     try {

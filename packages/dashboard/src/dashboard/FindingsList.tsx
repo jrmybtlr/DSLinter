@@ -11,6 +11,7 @@ import { shortPath } from "./paths";
 import type { LintFinding, Severity } from "../types/report";
 import { Badge } from "../components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
+import { TruncatedPath } from "../components/TruncatedPath";
 
 type Filter = "all" | Severity;
 
@@ -138,8 +139,16 @@ export function FindingsList({
               <TableCell className="whitespace-normal px-3 py-2 text-sm">
                 {f.message}
               </TableCell>
-              <TableCell className="whitespace-normal px-3 py-2 font-mono text-xs text-muted-foreground">
-                {shortPath(root, f.path)}:{f.line != null ? f.line : "—"}
+              <TableCell className="min-w-0 px-3 py-2 font-mono text-xs text-muted-foreground">
+                <div className="flex min-w-0 items-baseline">
+                  <TruncatedPath
+                    path={shortPath(root, f.path)}
+                    className="min-w-0 flex-1 text-xs"
+                  />
+                  <span className="shrink-0">
+                    :{f.line != null ? f.line : "—"}
+                  </span>
+                </div>
               </TableCell>
             </TableRow>
           ))}

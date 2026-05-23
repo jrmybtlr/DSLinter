@@ -24,6 +24,7 @@ import type { WorkspaceReport } from "../types/report";
 import type { PlaygroundJoinSkip } from "../playground/playgroundJoin";
 import { findPlaygroundSpec } from "../playground/playgroundJoin";
 import { Section } from "./Section";
+import { TruncatedPath } from "./TruncatedPath";
 
 type Props = {
   componentId: string;
@@ -152,10 +153,15 @@ export function ComponentInspectPane({
                 <TableBody>
                   {definitions.map((site) => (
                     <TableRow key={`${site.path}:${site.line}:${site.kind}`}>
-                      <TableCell className="font-mono text-xs">
-                        {workspaceReport
-                          ? shortPath(workspaceReport.root, site.path)
-                          : site.path}
+                      <TableCell className="min-w-0 font-mono text-xs">
+                        <TruncatedPath
+                          path={
+                            workspaceReport
+                              ? shortPath(workspaceReport.root, site.path)
+                              : site.path
+                          }
+                          className="text-xs"
+                        />
                       </TableCell>
                       <TableCell>{site.line}</TableCell>
                       <TableCell className="text-muted-foreground">

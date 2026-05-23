@@ -29,7 +29,13 @@ import {
 import { PlaygroundPreviewErrorBoundary } from "./PlaygroundPreviewErrorBoundary";
 import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
 import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
+import {
+  mergePlaygroundA11yFindings,
+  playgroundA11yScore,
+  type PlaygroundA11yFinding,
+} from "../playground/scanVariantA11y";
 import { Section } from "./Section";
+import { TruncatedPath } from "./TruncatedPath";
 
 type Props = {
   entry: PlaygroundEntry;
@@ -177,6 +183,8 @@ export function ComponentPlaygroundPane({
 
   const previewMeasureRef = useRef<HTMLDivElement>(null);
   const previewFrameRef = useRef<HTMLDivElement>(null);
+  const previewWidthLabelRef = useRef<HTMLSpanElement>(null);
+  const livePreviewWidthRef = useRef(DEFAULT_PREVIEW_PX);
   const maxOuterRef = useRef(0);
   const [maxOuterPx, setMaxOuterPx] = useState(0);
   const [previewWidthPx, setPreviewWidthPx] = useState(DEFAULT_PREVIEW_PX);
@@ -184,6 +192,24 @@ export function ComponentPlaygroundPane({
   const [containerBreakpoint, setContainerBreakpoint] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    livePreviewWidthRef.current = previewWidthPx;
+  }, [previewWidthPx]);
+
+  const applyLivePreviewWidth = useCallback((w: number) => {
+    const clamped = clampPreviewWidth(w, maxOuterRef.current);
+    livePreviewWidthRef.current = clamped;
+    const frame = previewFrameRef.current;
+    if (frame) {
+      frame.style.width = `${clamped}px`;
+    }
+    const label = previewWidthLabelRef.current;
+    if (label) {
+      label.textContent = `${Math.round(clamped)}px`;
+    }
+    return clamped;
+  }, []);
 
   const syncPreviewToOuterWidth = useCallback((nextOuter: number) => {
     if (!Number.isFinite(nextOuter) || nextOuter <= 0) return;
@@ -229,32 +255,61 @@ export function ComponentPlaygroundPane({
     return () => window.removeEventListener("resize", syncUsemodsBreakpoints);
   }, [syncUsemodsBreakpoints]);
 
-  const attachSymmetricWidthDrag = useCallback((side: "left" | "right") => {
-    return (e: PointerEvent<HTMLButtonElement>) => {
-      if (e.button !== 0) return;
-      e.preventDefault();
-      const target = e.currentTarget;
-      target.setPointerCapture(e.pointerId);
-      let lastX = e.clientX;
-      const sign = side === "right" ? 1 : -1;
-      const onMove = (ev: globalThis.PointerEvent) => {
-        const dx = ev.clientX - lastX;
-        lastX = ev.clientX;
-        setPreviewWidthPx((w) =>
-          clampPreviewWidth(w + sign * 2 * dx, maxOuterRef.current),
-        );
+  const attachSymmetricWidthDrag = useCallback(
+    (side: "left" | "right") => {
+      return (e: PointerEvent<HTMLButtonElement>) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        const target = e.currentTarget;
+        target.setPointerCapture(e.pointerId);
+
+        let lastX = e.clientX;
+        let currentWidth = livePreviewWidthRef.current;
+        let rafId = 0;
+        const sign = side === "right" ? 1 : -1;
+        const prevBodyCursor = document.body.style.cursor;
+        const prevBodyUserSelect = document.body.style.userSelect;
+        document.body.style.cursor = "ew-resize";
+        document.body.style.userSelect = "none";
+
+        const flushWidth = () => {
+          rafId = 0;
+          applyLivePreviewWidth(currentWidth);
+        };
+
+        const onMove = (ev: globalThis.PointerEvent) => {
+          const dx = ev.clientX - lastX;
+          lastX = ev.clientX;
+          currentWidth = clampPreviewWidth(
+            currentWidth + sign * 2 * dx,
+            maxOuterRef.current,
+          );
+          if (!rafId) {
+            rafId = requestAnimationFrame(flushWidth);
+          }
+        };
+
+        const endDrag = (ev: globalThis.PointerEvent) => {
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            applyLivePreviewWidth(currentWidth);
+          }
+          setPreviewWidthPx(livePreviewWidthRef.current);
+          document.body.style.cursor = prevBodyCursor;
+          document.body.style.userSelect = prevBodyUserSelect;
+          target.releasePointerCapture(ev.pointerId);
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", endDrag);
+          window.removeEventListener("pointercancel", endDrag);
+        };
+
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", endDrag);
+        window.addEventListener("pointercancel", endDrag);
       };
-      const onUp = (ev: globalThis.PointerEvent) => {
-        target.releasePointerCapture(ev.pointerId);
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-        window.removeEventListener("pointercancel", onUp);
-      };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-      window.addEventListener("pointercancel", onUp);
-    };
-  }, []);
+    },
+    [applyLivePreviewWidth],
+  );
 
   const hasControls = entry.controls.length > 0;
 
@@ -267,6 +322,44 @@ export function ComponentPlaygroundPane({
     hasControls &&
     (variantEnumeration.combinations.length > 0 ||
       variantEnumeration.totalCount === 0);
+
+  const [variantA11yFindings, setVariantA11yFindings] = useState<
+    PlaygroundA11yFinding[]
+  >([]);
+  const [variantScanComplete, setVariantScanComplete] = useState(false);
+
+  useEffect(() => {
+    setVariantA11yFindings([]);
+    setVariantScanComplete(false);
+  }, [entry.id, variantEnumeration.combinations]);
+
+  const handleVariantA11yScan = useCallback(
+    (findings: PlaygroundA11yFinding[]) => {
+      setVariantA11yFindings(findings);
+      setVariantScanComplete(true);
+    },
+    [],
+  );
+
+  const combinedA11y = useMemo(() => {
+    const findings = mergePlaygroundA11yFindings(
+      a11y.findings,
+      variantA11yFindings,
+    );
+    return {
+      ...a11y,
+      findings,
+      issueCount: findings.length,
+      score: playgroundA11yScore(a11y.findings, variantA11yFindings),
+    };
+  }, [a11y, variantA11yFindings]);
+
+  const hasVariantMatrix = variantEnumeration.combinations.length > 0;
+  const variantScanPending = hasVariantMatrix && !variantScanComplete;
+  const a11yScoreLabel =
+    reportReady || variantScanComplete
+      ? `${combinedA11y.score}/100${variantScanPending ? "…" : ""}`
+      : "—";
 
   const report = reportReady ? workspaceReport : null;
   const resetControls = () => setValues(defaultArgsFromControls(entry.controls));
@@ -301,12 +394,10 @@ export function ComponentPlaygroundPane({
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
               {entry.meta.title}
             </h1>
-            <p
-              className="mt-1 truncate font-mono text-xs text-muted-foreground"
-              title={rel}
-            >
-              {rel}
-            </p>
+            <TruncatedPath
+              path={rel}
+              className="mt-1 text-xs text-muted-foreground"
+            />
           </div>
         </header>
 
@@ -318,7 +409,7 @@ export function ComponentPlaygroundPane({
             <div className="flex justify-center">
               <div
                 ref={previewFrameRef}
-                className="relative min-w-0 shrink-0 select-none rounded-lg border border-border bg-muted/50 shadow-xs"
+                className="relative min-w-0 shrink-0 select-none rounded-lg border border-border bg-muted/50 shadow-xs will-change-[width]"
                 style={{ width: previewWidthPx }}
               >
                 <PreviewResizeHandle
@@ -338,7 +429,9 @@ export function ComponentPlaygroundPane({
             </div>
             {maxOuterPx > 0 ? (
               <div className="mx-auto mt-4 flex h-6 w-fit items-center overflow-hidden rounded-sm border border-border bg-card text-center font-mono text-xs/none tabular-nums text-muted-foreground divide-x divide-border">
-                <span className="p-2.5">{Math.round(previewWidthPx)}px</span>
+                <span ref={previewWidthLabelRef} className="p-2.5">
+                  {Math.round(previewWidthPx)}px
+                </span>
                 <span className="p-2.5" title="usemods detectBreakpoint">
                   Screen: {windowBreakpoint ?? "—"}
                 </span>
@@ -355,6 +448,7 @@ export function ComponentPlaygroundPane({
             <div className="min-w-0 space-y-14">
               {hasControls ? (
                 <PlaygroundApiReference
+                  entry={entry}
                   controls={entry.controls}
                   values={values}
                   onChange={setValues}
@@ -395,10 +489,14 @@ export function ComponentPlaygroundPane({
 
               <Section
                 id="accessibility"
-                title={`Accessibility: ${reportReady ? a11y.score : "—"}/100`}
-                description="Accessibility checks and findings from the workspace DSLinter report scoped to this file."
+                title={`Accessibility: ${a11yScoreLabel}`}
+                description="Static accessibility rules from the DSLinter report, plus runtime color-contrast checks on each variant preview below."
               >
-                <PlaygroundA11ySection a11y={a11y} reportReady={reportReady} />
+                <PlaygroundA11ySection
+                  a11y={combinedA11y}
+                  reportReady={reportReady || variantScanComplete}
+                  variantScanPending={variantScanPending}
+                />
               </Section>
             </div>
 
@@ -437,6 +535,7 @@ export function ComponentPlaygroundPane({
                 finiteAxisKeys={variantEnumeration.finiteAxisKeys}
                 totalCount={variantEnumeration.totalCount}
                 capped={variantEnumeration.capped}
+                onVariantA11yScan={handleVariantA11yScan}
               />
             </div>
           </section>

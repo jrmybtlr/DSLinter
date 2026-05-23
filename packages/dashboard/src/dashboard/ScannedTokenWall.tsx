@@ -5,7 +5,7 @@ import {
   HoverCardTrigger,
 } from "../components/ui/hover-card";
 import { cn } from "../lib/utils";
-import { shortPath } from "./paths";
+import { TruncatedPath } from "../components/TruncatedPath";
 import {
   filterTokenRows,
   type MergedTokenView,
@@ -71,8 +71,8 @@ function TokenUsageHover({ row }: { row: ScannedTokenRow }) {
         </p>
         <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-muted-foreground">
           {row.usageFiles.slice(0, 12).map((f) => (
-            <li key={f} className="truncate font-mono">
-              {shortPath(f)}
+            <li key={f} className="min-w-0">
+              <TruncatedPath path={f} className="text-xs" />
             </li>
           ))}
           {row.usageFiles.length > 12 ? (

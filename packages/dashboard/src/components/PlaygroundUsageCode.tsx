@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
+import { useDashboardTheme } from "../shell/DashboardLayout";
 import { renderPlaygroundUsageHtml } from "./playgroundUsageHighlight";
 
 const shellClass =
-  "playground-usage-shiki mt-4 overflow-x-auto rounded-lg border bg-gray-900 p-4 text-sm leading-relaxed shadow-xs " +
+  "playground-usage-shiki mt-4 overflow-x-auto rounded-lg border border-border p-4 text-sm leading-relaxed text-foreground " +
   "[&_.shiki]:!bg-transparent [&_pre.shiki]:!m-0 [&_pre.shiki]:!bg-transparent [&_pre.shiki]:!p-0";
 
 const plainPreClass =
-  "m-0 whitespace-pre font-mono text-sm leading-relaxed text-gray-100";
+  "m-0 whitespace-pre font-mono text-sm leading-relaxed text-foreground";
 
 type Props = {
   source: string;
 };
 
 export function PlaygroundUsageCode({ source }: Props) {
+  const { theme } = useDashboardTheme();
   const [html, setHtml] = useState<string | null>(null);
   const seq = useRef(0);
 
@@ -23,7 +25,7 @@ export function PlaygroundUsageCode({ source }: Props) {
 
     void (async () => {
       try {
-        const next = await renderPlaygroundUsageHtml(source, ac.signal);
+        const next = await renderPlaygroundUsageHtml(source, theme, ac.signal);
         if (id !== seq.current) return;
         setHtml(next);
       } catch (e) {
@@ -34,7 +36,7 @@ export function PlaygroundUsageCode({ source }: Props) {
     })();
 
     return () => ac.abort();
-  }, [source]);
+  }, [source, theme]);
 
   if (html) {
     return (
