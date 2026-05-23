@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import type { Plugin, UserConfig } from "vite";
+import { resolveServePort } from "../shared/servePort";
 import {
   collectScanModuleRelPaths,
   embedGlobKeyFromRelPath,
@@ -14,15 +15,6 @@ export type DslinterVitePluginOptions = {
   /** Scanner HTTP port for report + SSE proxy in `serve` mode. */
   servePort?: number;
 };
-
-function defaultServePort(): number {
-  const fromEnv = process.env.DSLINT_SERVE_PORT?.trim();
-  if (fromEnv) {
-    const n = Number.parseInt(fromEnv, 10);
-    if (Number.isFinite(n) && n > 0 && n <= 65535) return n;
-  }
-  return 7878;
-}
 
 function generatePlaygroundModulesSource(
   scanRoot: string,
@@ -66,7 +58,7 @@ export default function dslinter(
       process.env.DSLINT_SCAN_ROOT ??
       process.cwd(),
   );
-  const servePort = options.servePort ?? defaultServePort();
+  const servePort = options.servePort ?? resolveServePort();
   let relPaths: string[] = [];
 
   return {

@@ -50,10 +50,7 @@ export function defaultConsumerGlobKeyFromRelPath(relPath: string): string {
   return createConsumerGlobKeyFromRelPath()(relPath);
 }
 
-export function defaultEmbedGlobKeyFromRelPath(relPath: string): string {
-  const trimmed = relPath.replace(/^\/+/, "");
-  return `@dslint-scan/${trimmed}`;
-}
+export { defaultEmbedGlobKeyFromRelPath } from "./embedGlobKey";
 
 function getExport(
   mod: Record<string, unknown>,

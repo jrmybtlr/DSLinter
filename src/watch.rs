@@ -66,14 +66,9 @@ pub fn run_watch(
 ) -> anyhow::Result<()> {
     // Initial full scan.
     let config = crate::config::DslintConfig::load_from_root(root)?;
-    let paths = crate::scan::collect_component_files(root, &config)?;
-
-    let (mut files, mut sources) = if crate::scan_pipeline::should_scan_parallel(parallel, paths.len())
-    {
-        crate::scan_pipeline::scan_paths_parallel(&paths)
-    } else {
-        crate::scan_pipeline::scan_paths_sequential(&paths)
-    };
+    let (mut files, mut sources) =
+        crate::scan_pipeline::scan_workspace_files(root, &config, parallel)?;
+    let paths: Vec<PathBuf> = files.iter().map(|f| f.path.clone()).collect();
 
     let report = crate::rules::evaluate_workspace(
         root.to_path_buf(),

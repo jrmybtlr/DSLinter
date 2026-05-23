@@ -60,14 +60,14 @@
 - **npm:** `npm install` from repo root or `demo/` (npm finds parent `workspaces`). Use `"dslinter": "file:../packages/dashboard"` in `demo` — not `"*"` (registry 404).
 - **pnpm:** repo root has `pnpm-workspace.yaml`; run **`pnpm install` from the repo root** so `demo` is in the workspace and the `file:` link resolves. Same `file:` dependency as npm.
 
-## Done — Shiki + Twoslash (`PlaygroundA11yAndCode` usage panel)
+## Done — Shiki (`PlaygroundA11yAndCode` usage panel)
 
-**Shipped:** [Shiki](https://shiki.style/) fine-grained bundle (`createHighlighterCore` + `@shikijs/langs/tsx` + `@shikijs/themes/github-dark` + JS regex engine) and [Twoslash via CDN](https://shiki.style/packages/twoslash) (`twoslash-cdn` + `createTransformerFactory` + `rendererRich`, `throws: false`). Twoslash runs only when `usageSnippetNeedsTwoslash()` matches (`^?`, `// @errors` / `@log` / etc., `// ---cut---`). Twoslash + TypeScript live in **`playgroundUsageTwoslash.ts`** loaded with `import()` so the main chunk stays ~579 kB gzipped ~139 kB; the Twoslash chunk is ~3.6 MB and loads on first Twoslash snippet. **IndexedDB / unstorage** cache was omitted to keep integration small (optional follow-up).
+**Shipped:** [Shiki](https://shiki.style/) fine-grained bundle (`createHighlighterCore` + `@shikijs/langs/tsx` + `@shikijs/themes/github-dark` + JS regex engine).
 
-**Files:** `PlaygroundUsageCode.tsx`, `playgroundUsageHighlight.ts`, `playgroundUsageTwoslash.ts`, `PlaygroundA11yAndCode.tsx`; `@shikijs/twoslash/style-rich.css`; dashboard package `sideEffects: ["**/*.css"]`.
+**Files:** `PlaygroundUsageCode.tsx`, `playgroundUsageHighlight.ts`, `PlaygroundA11yAndCode.tsx`; dashboard package `sideEffects: ["**/*.css"]`.
 
 **Verify:** `npm run build` in `demo/` passes.
 
-## Review (Shiki + Twoslash)
+## Review (Shiki)
 
-- Main vs Twoslash async chunk sizes as above; no `optimizeDeps` change required for current Vite build.
+- Twoslash integration was removed during packages cleanup (unwired dead code + heavy deps).

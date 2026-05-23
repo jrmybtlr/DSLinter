@@ -53,9 +53,10 @@ fn in_include_scope(root: &Path, path: &Path, config: &DslintConfig) -> bool {
     })
 }
 
-/// Collect component-related source paths under `root`, respecting `.gitignore`,
-/// `.dslintignore`, and configured ignore globs (`ignore_globs`/`exclude_globs`).
-pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Result<Vec<PathBuf>> {
+fn walk_files<F>(root: &Path, config: &DslintConfig, mut accept: F) -> anyhow::Result<Vec<PathBuf>>
+where
+    F: FnMut(&Path) -> bool,
+{
     let engine = build_ignore_engine(root, config)?;
     let mut out = Vec::new();
     for entry in WalkDir::new(root)
@@ -74,27 +75,30 @@ pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Re
                 continue;
             }
         }
-        if !in_include_scope(root, &path, config) {
-            continue;
-        }
-        let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
-            continue;
-        };
-        let ext = ext.to_ascii_lowercase();
-        // Collect every extension the parser understands (see `scan_file` in lib.rs).
-        // Plain `.ts` / `.js` files are included so that components written without
-        // JSX syntax (e.g. render-function components, re-export barrels) are also
-        // inventoried.  Use `ignore_globs` (or legacy `exclude_globs`) in `.dslint.json` to
-        // narrow this set.
-        if matches!(
-            ext.as_str(),
-            "tsx" | "jsx" | "vue" | "ts" | "js" | "mts" | "cts"
-        ) {
+        if accept(&path) {
             out.push(path);
         }
     }
     out.sort();
     Ok(out)
+}
+
+/// Collect component-related source paths under `root`, respecting `.gitignore`,
+/// `.dslintignore`, and configured ignore globs (`ignore_globs`/`exclude_globs`).
+pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Result<Vec<PathBuf>> {
+    walk_files(root, config, |path| {
+        if !in_include_scope(root, path, config) {
+            return false;
+        }
+        let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
+            return false;
+        };
+        let ext = ext.to_ascii_lowercase();
+        matches!(
+            ext.as_str(),
+            "tsx" | "jsx" | "vue" | "ts" | "js" | "mts" | "cts"
+        )
+    })
 }
 
 fn is_skipped_css_file(path: &Path) -> bool {
@@ -104,7 +108,6 @@ fn is_skipped_css_file(path: &Path) -> bool {
     if name.ends_with(".min.css") {
         return true;
     }
-    // Compiled Tailwind output — not a token source of truth.
     if name == "tw-test.css" {
         return true;
     }
@@ -113,36 +116,14 @@ fn is_skipped_css_file(path: &Path) -> bool {
 
 /// Collect source `.css` files under `root` (respects ignore rules; skips vendor/build dirs).
 pub fn collect_css_files(root: &Path, config: &DslintConfig) -> anyhow::Result<Vec<PathBuf>> {
-    let engine = build_ignore_engine(root, config)?;
-    let mut out = Vec::new();
-    for entry in WalkDir::new(root)
-        .into_iter()
-        .filter_entry(|e| !is_skipped_dir(e))
-    {
-        let Ok(entry) = entry else {
-            continue;
-        };
-        if !entry.file_type().is_file() {
-            continue;
+    walk_files(root, config, |path| {
+        if is_skipped_css_file(path) {
+            return false;
         }
-        let path = entry.path().to_path_buf();
-        if is_skipped_css_file(&path) {
-            continue;
-        }
-        if let Some(ref eng) = engine {
-            if eng.matches(root, &path) {
-                continue;
-            }
-        }
-        let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
-            continue;
-        };
-        if ext.eq_ignore_ascii_case("css") {
-            out.push(path);
-        }
-    }
-    out.sort();
-    Ok(out)
+        path.extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("css"))
+    })
 }
 
 #[cfg(test)]

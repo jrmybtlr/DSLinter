@@ -72,11 +72,6 @@ export function catalogComponentNames(
   return [...names].sort((a, b) => a.localeCompare(b));
 }
 
-/** Stable DOM id for a catalog table row (used for hash deep-links). */
-export function catalogRowDomId(name: string): string {
-  return `catalog-row-${encodeURIComponent(name)}`;
-}
-
 /** Unique component names for sidebar / command palette (definitions ∪ usage). */
 export function componentCatalogNamesFromReport(
   report: WorkspaceReport | null | undefined,
