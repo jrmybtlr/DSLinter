@@ -137,8 +137,6 @@ export function classifyPropType(checker, type) {
     if (!ok.length) return null;
     const set = new Set(ok);
     if (set.size === 1) return [...set][0];
-    if ([...set].every((x) => x === "string")) return "string";
-    if ([...set].every((x) => x === "number")) return "number";
     return null;
   }
   if (nn.flags & (ts.TypeFlags.Boolean | ts.TypeFlags.BooleanLiteral)) return "boolean";
