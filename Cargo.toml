@@ -40,7 +40,6 @@ rayon = "1.12.0"
 regex = "1.12.3"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-thiserror = "2.0.18"
 walkdir = "2.5.0"
 
 [dev-dependencies]

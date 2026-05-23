@@ -16,6 +16,8 @@ pub mod scan;
 pub mod scan_pipeline;
 mod text_patterns;
 mod ts_shape_map;
+#[macro_use]
+mod util;
 pub mod vue;
 pub mod watch;
 
@@ -24,10 +26,8 @@ pub mod cli;
 #[cfg(feature = "napi")]
 mod napi;
 
-use std::path::Path;
-
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::model::{FileScan, WorkspaceReport};
 pub use scan_pipeline::PARALLEL_SCAN_THRESHOLD;
@@ -42,23 +42,13 @@ pub fn scan_file(path: &Path, source: &str) -> FileScan {
     match ext.as_str() {
         "vue" => vue::analyze_vue_file(path, source),
         "tsx" | "jsx" | "js" | "ts" | "mts" | "cts" => ecma::analyze_ecma_file(path, source),
-        _ => FileScan {
-            path: path.to_path_buf(),
-            definitions: Vec::new(),
-            usages: Vec::new(),
-            parse_errors: vec![format!("dslinter: unsupported extension `{ext}`")],
-            findings: Vec::new(),
-            ast_extracts: Default::default(),
-        },
+        _ => FileScan::unsupported_ext(path.to_path_buf(), &ext),
     }
 }
 
-fn scan_workspace_with_parallel(
-    root: &Path,
-    parallel: bool,
-) -> anyhow::Result<WorkspaceReport> {
+fn scan_and_evaluate(root: &Path, parallel: bool) -> anyhow::Result<WorkspaceReport> {
     let config = config::DslintConfig::load_from_root(root)?;
-    let (files, sources) = scan_pipeline::scan_component_files(root, &config, parallel)?;
+    let (files, sources) = scan_pipeline::scan_workspace_files(root, &config, parallel)?;
     Ok(rules::evaluate_workspace(
         root.to_path_buf(),
         files,
@@ -69,30 +59,17 @@ fn scan_workspace_with_parallel(
 
 /// Scan `root` sequentially (deterministic ordering).
 pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
-    scan_workspace_with_parallel(root, false)
+    scan_and_evaluate(root, false)
 }
 
 /// Scan `root` in parallel for large repositories.
 pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
-    scan_workspace_with_parallel(root, true)
+    scan_and_evaluate(root, true)
 }
 
 /// Scan `root`, using parallel file reads when the tree is large (see [`PARALLEL_SCAN_THRESHOLD`]).
 pub fn scan_workspace_auto(root: &Path, explicit_parallel: bool) -> anyhow::Result<WorkspaceReport> {
-    let config = config::DslintConfig::load_from_root(root)?;
-    let paths = scan::collect_component_files(root, &config)?;
-    let parallel = scan_pipeline::should_scan_parallel(explicit_parallel, paths.len());
-    let (files, sources) = if parallel {
-        scan_pipeline::scan_paths_parallel(&paths)
-    } else {
-        scan_pipeline::scan_paths_sequential(&paths)
-    };
-    Ok(rules::evaluate_workspace(
-        root.to_path_buf(),
-        files,
-        sources,
-        &config,
-    ))
+    scan_and_evaluate(root, explicit_parallel)
 }
 
 /// Re-scan a single file and update workspace caches (watch mode).

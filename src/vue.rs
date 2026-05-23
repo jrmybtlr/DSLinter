@@ -7,8 +7,9 @@ use regex::Regex;
 
 use crate::code_quality;
 use crate::ecma::analyze_ecma_for_paths;
-use crate::lines::offset_line;
+use crate::lines::{line_of_offset, newline_offsets, offset_line};
 use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity};
+use crate::util::{a11y, kebab};
 
 // ── Static regex helpers (compiled once) ────────────────────────────────────
 
@@ -129,26 +130,6 @@ fn extract_vue_declared_props(script_src: &str) -> Vec<String> {
     Vec::new()
 }
 
-/// Infer the PascalCase component name from a `.vue` file path.
-fn component_name_from_path(path: &Path) -> Option<String> {
-    path.file_stem()
-        .and_then(|s| s.to_str())
-        .map(|stem| {
-            // Convert kebab-case file names to PascalCase.
-            stem.split('-')
-                .filter(|p| !p.is_empty())
-                .map(|seg| {
-                    let mut it = seg.chars();
-                    match it.next() {
-                        None => String::new(),
-                        Some(c) => c.to_uppercase().collect::<String>() + it.as_str(),
-                    }
-                })
-                .collect::<String>()
-        })
-        .filter(|n| n.chars().next().is_some_and(|c| c.is_ascii_uppercase()))
-}
-
 /// Template-only accessibility checks (HTML in `<template>`).
 fn vue_template_a11y_findings(
     path: &Path,
@@ -164,14 +145,13 @@ fn vue_template_a11y_findings(
             continue;
         }
         let pos = template_inner_start + cap.get(0).unwrap().start();
-        out.push(LintFinding {
-            rule_id: "a11y-img-alt".into(),
-            message: "`<img>` must include an `alt` attribute (empty string is OK for decorative images)."
-                .into(),
-            path: path.to_path_buf(),
-            line: Some(offset_line(full_source, pos)),
-            severity: Severity::Warning,
-        });
+        out.push(LintFinding::new(
+            "a11y-img-alt",
+            path.to_path_buf(),
+            Some(offset_line(full_source, pos)),
+            Severity::Warning,
+            a11y::IMG_ALT,
+        ));
     }
 
     for cap in anchor_re().captures_iter(template) {
@@ -181,13 +161,13 @@ fn vue_template_a11y_findings(
         let line = offset_line(full_source, pos);
 
         if !lower.contains("href=") {
-            out.push(LintFinding {
-                rule_id: "a11y-anchor-href".into(),
-                message: "`<a>` must have a meaningful `href` for navigation.".into(),
-                path: path.to_path_buf(),
-                line: Some(line),
-                severity: Severity::Warning,
-            });
+            out.push(LintFinding::new(
+                "a11y-anchor-href",
+                path.to_path_buf(),
+                Some(line),
+                Severity::Warning,
+                a11y::ANCHOR_HREF,
+            ));
             continue;
         }
 
@@ -197,14 +177,13 @@ fn vue_template_a11y_findings(
             || lower.contains("href=''")
             || lower.contains("javascript:");
         if bad_href {
-            out.push(LintFinding {
-                rule_id: "a11y-anchor-placeholder-href".into(),
-                message: "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior."
-                    .into(),
-                path: path.to_path_buf(),
-                line: Some(line),
-                severity: Severity::Warning,
-            });
+            out.push(LintFinding::new(
+                "a11y-anchor-placeholder-href",
+                path.to_path_buf(),
+                Some(line),
+                Severity::Warning,
+                a11y::ANCHOR_PLACEHOLDER_HREF,
+            ));
         }
     }
 
@@ -222,14 +201,13 @@ fn vue_template_a11y_findings(
             continue;
         }
         let pos = template_inner_start + cap.get(0).unwrap().start();
-        out.push(LintFinding {
-            rule_id: "a11y-input-label".into(),
-            message: "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label>`)."
-                .into(),
-            path: path.to_path_buf(),
-            line: Some(offset_line(full_source, pos)),
-            severity: Severity::Info,
-        });
+        out.push(LintFinding::new(
+            "a11y-input-label",
+            path.to_path_buf(),
+            Some(offset_line(full_source, pos)),
+            Severity::Info,
+            a11y::INPUT_LABEL,
+        ));
     }
 
     out
@@ -243,17 +221,8 @@ fn merge_file_scan(into: &mut FileScan, mut part: FileScan) {
     into.ast_extracts.merge_from(part.ast_extracts);
 }
 
-fn kebab_to_pascal(raw: &str) -> String {
-    raw.split('-')
-        .filter(|p| !p.is_empty())
-        .map(|seg| {
-            let mut it = seg.chars();
-            match it.next() {
-                None => String::new(),
-                Some(c) => c.to_uppercase().collect::<String>() + it.as_str(),
-            }
-        })
-        .collect()
+fn line_offset_before(newlines: &[usize], offset: usize) -> u32 {
+    line_of_offset(newlines, offset).saturating_sub(1)
 }
 
 /// Merge Vue template component references into an ECMA analysis of the `<script>` blocks.
@@ -263,16 +232,9 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
     let pseudo_ts = path.with_extension("tsx");
     let pseudo_js = path.with_extension("jsx");
 
-    let mut scan = FileScan {
-        path: path.to_path_buf(),
-        definitions: Vec::new(),
-        usages: Vec::new(),
-        parse_errors: Vec::new(),
-        findings: Vec::new(),
-        ast_extracts: Default::default(),
-    };
+    let mut scan = FileScan::empty(path.to_path_buf());
+    let newlines = newline_offsets(source);
 
-    // Collect all script content for prop extraction.
     let all_script: String = caps
         .iter()
         .filter_map(|c| c.get(2))
@@ -288,11 +250,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
             let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
             let inner_m = cap.get(2).expect("script inner group");
             let inner = inner_m.as_str();
-            let inner_start = inner_m.start();
-            let line_offset = source[..inner_start]
-                .bytes()
-                .filter(|&b| b == b'\n')
-                .count() as u32;
+            let line_offset = line_offset_before(&newlines, inner_m.start());
 
             let parse_as = if lang_is_ts(attrs)
                 || source.contains("lang=\"ts\"")
@@ -320,15 +278,10 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         }
     }
 
-    scan.path = path.to_path_buf();
-
-    // If the Vue SFC has no function-based component definition with props captured by
-    // the ECMAScript pass (e.g. <script setup> with defineProps), synthesise one using
-    // regex-based extraction so the unused-prop rule has something to check.
     let vue_declared_props = extract_vue_declared_props(&all_script);
     if !vue_declared_props.is_empty() {
-        // Find an existing top-level definition for this file or create a synthetic one.
-        let component_name = component_name_from_path(path).unwrap_or_else(|| "default".into());
+        let component_name =
+            kebab::component_name_from_path(path).unwrap_or_else(|| "default".into());
         if let Some(def) = scan.definitions.iter_mut().find(|d| d.name == component_name) {
             if def.declared_props.is_empty() {
                 def.declared_props = vue_declared_props;
@@ -350,11 +303,8 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
         let inner = cap.get(1).expect("template inner group");
         let tpl = inner.as_str();
         let tpl_start = inner.start();
-        let tpl_line_offset = source[..tpl_start]
-            .bytes()
-            .filter(|&b| b == b'\n')
-            .count() as u32;
-        merge_template_usages(source, tpl, tpl_start, &mut scan.usages);
+        let tpl_line_offset = line_offset_before(&newlines, tpl_start);
+        merge_template_usages(&newlines, tpl, tpl_start, &mut scan.usages);
         scan.findings
             .extend(vue_template_a11y_findings(path, source, tpl, tpl_start));
         crate::class_strings::extend_template_class_extracts(
@@ -368,16 +318,11 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
 }
 
 fn merge_template_usages(
-    full_source: &str,
+    newlines: &[usize],
     template: &str,
     template_inner_start: usize,
     usages: &mut Vec<JsxUsage>,
 ) {
-    use crate::lines::newline_offsets;
-    use crate::lines::line_of_offset;
-    // Precompute newlines once for the full source so offset→line is O(log n).
-    let newlines = newline_offsets(full_source);
-
     for cap in template_pascal_re().captures_iter(template) {
         let component = cap.get(1).unwrap().as_str().to_string();
         let rel_start = cap.get(0).unwrap().start();
@@ -392,7 +337,7 @@ fn merge_template_usages(
 
     for cap in template_kebab_re().captures_iter(template) {
         let raw = cap.get(1).unwrap().as_str();
-        let component = kebab_to_pascal(raw);
+        let component = kebab::kebab_to_pascal(raw);
         let rel_start = cap.get(0).unwrap().start();
         let line = line_of_offset(&newlines, template_inner_start + rel_start);
         usages.push(JsxUsage {

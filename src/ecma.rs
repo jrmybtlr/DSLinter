@@ -18,8 +18,9 @@ use oxc_syntax::scope::ScopeFlags;
 
 use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::{
-    AstExtracts, ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity,
+    ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity,
 };
+use crate::util::a11y;
 
 const DEFAULT_EXPORT: &str = "default";
 
@@ -45,14 +46,9 @@ pub fn analyze_ecma_for_paths(
 
     let parse_errors: Vec<String> = errors.iter().map(ToString::to_string).collect();
     if panicked {
-        return FileScan {
-            path: report_path.to_path_buf(),
-            definitions: Vec::new(),
-            usages: Vec::new(),
-            parse_errors,
-            findings: Vec::new(),
-            ast_extracts: AstExtracts::default(),
-        };
+        let mut scan = FileScan::empty(report_path.to_path_buf());
+        scan.parse_errors = parse_errors;
+        return scan;
     }
 
     let ts_prop_shapes = crate::ts_shape_map::collect_ts_prop_shape_map(&program);
@@ -224,9 +220,7 @@ fn literal_value_from_jsx_attr_value(value: &Option<JSXAttributeValue<'_>>) -> O
         None => Some("true".to_string()), // boolean shorthand: <Comp disabled />
         Some(JSXAttributeValue::StringLiteral(s)) => Some(s.value.to_string()),
         Some(JSXAttributeValue::ExpressionContainer(expr)) => {
-            let Some(inner) = expr.expression.as_expression() else {
-                return None;
-            };
+            let inner = expr.expression.as_expression()?;
             match inner {
                 Expression::StringLiteral(s) => Some(s.value.to_string()),
                 Expression::NumericLiteral(n) => Some(n.value.to_string()),
@@ -440,13 +434,13 @@ impl ExtractVisitor<'_> {
     }
 
     fn push_a11y(&mut self, line: u32, severity: Severity, rule_id: &str, message: &str) {
-        self.findings.push(LintFinding {
-            rule_id: rule_id.to_string(),
-            message: message.to_string(),
-            path: self.path.clone(),
-            line: Some(line),
+        self.findings.push(LintFinding::new(
+            rule_id,
+            self.path.clone(),
+            Some(line),
             severity,
-        });
+            message,
+        ));
     }
 
     fn check_intrinsic_a11y_opening(&mut self, el: &JSXOpeningElement<'_>) {
@@ -458,28 +452,26 @@ impl ExtractVisitor<'_> {
         };
         let line = self.line(el.span.start);
         match tag {
-            "img" => {
-                if !has_named_attribute(&el.attributes, "alt") {
-                    self.push_a11y(
-                        line,
-                        Severity::Warning,
-                        "a11y-img-alt",
-                        "`<img>` must include an `alt` attribute (empty string is OK for decorative images).",
-                    );
-                }
+            "img" if !has_named_attribute(&el.attributes, "alt") => {
+                self.push_a11y(
+                    line,
+                    Severity::Warning,
+                    "a11y-img-alt",
+                    a11y::IMG_ALT,
+                );
             }
             "a" => match href_accessibility(&el.attributes) {
                 HrefA11y::Missing => self.push_a11y(
                     line,
                     Severity::Warning,
                     "a11y-anchor-href",
-                    "`<a>` must have a meaningful `href` for navigation.",
+                    a11y::ANCHOR_HREF,
                 ),
                 HrefA11y::Placeholder => self.push_a11y(
                     line,
                     Severity::Warning,
                     "a11y-anchor-placeholder-href",
-                    "Avoid empty `href`, `href=\"#\"`, or `javascript:` URLs without accessible behavior.",
+                    a11y::ANCHOR_PLACEHOLDER_HREF,
                 ),
                 HrefA11y::Ok | HrefA11y::Skip => {}
             },
@@ -494,7 +486,7 @@ impl ExtractVisitor<'_> {
                         line,
                         Severity::Info,
                         "a11y-input-label",
-                        "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label htmlFor>`).",
+                        a11y::INPUT_LABEL,
                     );
                 }
             }
@@ -588,17 +580,15 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
         decl: &oxc_ast::ast::ExportDefaultDeclaration<'a>,
     ) {
         match &decl.declaration {
-            ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
-                if func.id.is_none() {
-                    let declared_props =
-                        merge_declared_props(&func.params, &self.ts_prop_shapes);
-                    self.definitions.push(ComponentDefinition {
-                        name: DEFAULT_EXPORT.to_string(),
-                        kind: DefinitionKind::ExportDefaultAnonymous,
-                        line: self.line(decl.span.start),
-                        declared_props,
-                    });
-                }
+            ExportDefaultDeclarationKind::FunctionDeclaration(func) if func.id.is_none() => {
+                let declared_props =
+                    merge_declared_props(&func.params, &self.ts_prop_shapes);
+                self.definitions.push(ComponentDefinition {
+                    name: DEFAULT_EXPORT.to_string(),
+                    kind: DefinitionKind::ExportDefaultAnonymous,
+                    line: self.line(decl.span.start),
+                    declared_props,
+                });
             }
             ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
                 let declared_props =
@@ -635,18 +625,17 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
     }
 
     fn visit_jsx_element(&mut self, el: &JSXElement<'a>) {
-        if let Some("button") = jsx_intrinsic_tag(&el.opening_element.name).as_deref() {
-            if !has_spread_attribute(&el.opening_element.attributes)
-                && !button_has_accessible_name(&el.opening_element.attributes, &el.children)
-            {
-                let line = self.line(el.opening_element.span.start);
-                self.push_a11y(
-                    line,
-                    Severity::Warning,
-                    "a11y-button-name",
-                    "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.",
-                );
-            }
+        if jsx_intrinsic_tag(&el.opening_element.name) == Some("button")
+            && !has_spread_attribute(&el.opening_element.attributes)
+            && !button_has_accessible_name(&el.opening_element.attributes, &el.children)
+        {
+            let line = self.line(el.opening_element.span.start);
+            self.push_a11y(
+                line,
+                Severity::Warning,
+                "a11y-button-name",
+                a11y::BUTTON_NAME,
+            );
         }
 
         if let Some(component) = jsx_name(&el.opening_element.name) {

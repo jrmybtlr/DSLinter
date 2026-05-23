@@ -9,7 +9,7 @@ use serde::Deserialize;
 const DEFAULT_CONFIG_NAMES: &[&str] = &[".dslint.json", "dslint.json"];
 
 #[derive(Debug, Clone, Deserialize, Default)]
-pub struct SmellConfig {
+pub struct CodeQualityConfig {
     /// Rule ids or prefixes (`code-*` quality heuristics; `smell-*` aliases) to silence for this repo.
     #[serde(default)]
     pub disabled_rules: Vec<String>,
@@ -51,8 +51,8 @@ pub struct DslintConfig {
     /// Extra glob lines merged with `.gitignore` / `.dslintignore` semantics.
     #[serde(default)]
     pub exclude_globs: Vec<String>,
-    #[serde(default)]
-    pub smell: SmellConfig,
+    #[serde(default, alias = "smell")]
+    pub code_quality: CodeQualityConfig,
     /// When true, emit `unused-prop` findings for declared props with no call-site usage.
     #[serde(default)]
     pub check_unused_props: bool,
