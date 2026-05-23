@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="DSLinter scans JSX, TSX, and Vue components for design-system health, accessibility, and token governance."
+    />
+    <title>DSLinter — Design-system linter</title>
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+    >
+      Skip to content
+    </a>
+
+    <header class="sticky top-0 z-40 border-b border-surface-border bg-surface-elevated/95 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4 lg:px-8">
+        <a href="/" class="flex items-center gap-2.5 font-semibold tracking-tight text-slate-900">
+          <span
+            class="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground"
+            aria-hidden="true"
+          >
+            DS
+          </span>
+          DSLinter
+        </a>
+
+        <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex" aria-label="Primary">
+          <a href="#features" class="transition-colors hover:text-slate-900">Features</a>
+          <a href="#quick-start" class="transition-colors hover:text-slate-900">Quick start</a>
+          <a
+            href="https://github.com/jrmybtlr/DSLinter"
+            class="transition-colors hover:text-slate-900"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </a>
+        </nav>
+
+        <div class="hidden items-center gap-3 md:flex">
+          <a
+            href="#quick-start"
+            class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Get started
+          </a>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-md border border-surface-border bg-surface-elevated p-2 text-slate-700 md:hidden"
+          data-nav-toggle
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+          aria-label="Toggle navigation menu"
+        >
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <nav
+        id="mobile-nav"
+        data-mobile-nav
+        class="hidden border-t border-surface-border bg-surface-elevated px-6 py-4 md:hidden"
+        aria-label="Mobile"
+      >
+        <ul class="flex flex-col gap-3 text-sm font-medium text-slate-700">
+          <li><a href="#features" class="block py-1">Features</a></li>
+          <li><a href="#quick-start" class="block py-1">Quick start</a></li>
+          <li>
+            <a href="https://github.com/jrmybtlr/DSLinter" class="block py-1" target="_blank" rel="noreferrer">
+              GitHub
+            </a>
+          </li>
+          <li class="pt-2">
+            <a
+              href="#quick-start"
+              class="inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+            >
+              Get started
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="border-b border-surface-border bg-surface-elevated">
+        <div class="mx-auto max-w-6xl px-6 py-16 lg:px-8 lg:py-24">
+          <div class="mx-auto max-w-3xl text-center">
+            <p class="text-sm font-semibold uppercase tracking-wide text-primary">Design-system governance</p>
+            <h1 class="mt-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+              Lint your components for design-system health
+            </h1>
+            <p class="mt-6 text-lg leading-relaxed text-muted-foreground">
+              DSLinter scans JSX, TSX, and Vue repos for component usage, accessibility signals, hardcoded tokens,
+              and governance scores — in the terminal, CI, or a live dashboard.
+            </p>
+            <div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <a
+                href="#quick-start"
+                class="inline-flex w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
+              >
+                Get started
+              </a>
+              <a
+                href="https://github.com/jrmybtlr/DSLinter"
+                class="inline-flex w-full items-center justify-center rounded-lg border border-surface-border bg-surface px-6 py-3 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-100 sm:w-auto"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View on GitHub
+              </a>
+            </div>
+            <div
+              class="mt-10 inline-flex items-center gap-2 rounded-xl border border-surface-border bg-slate-950 px-4 py-3 font-mono text-sm text-slate-100"
+            >
+              <span class="text-slate-400">$</span>
+              <span>npm install -D dslinter</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="py-16 lg:py-24">
+        <div class="mx-auto max-w-6xl px-6 lg:px-8">
+          <div class="mx-auto max-w-2xl text-center">
+            <h2 class="text-3xl font-bold tracking-tight text-slate-900">Everything you need to govern UI code</h2>
+            <p class="mt-4 text-muted-foreground">
+              Storybook-style visibility without story files. Powered by Oxc for fast JS/TS/JSX parsing.
+            </p>
+          </div>
+
+          <ul class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <li class="rounded-2xl border border-surface-border bg-surface-elevated p-6 shadow-sm">
+              <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round" />
+                </svg>
+              </div>
+              <h3 class="mt-4 text-base font-semibold text-slate-900">Usage counts</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Discover how often each component is used across JSX and Vue templates with prop hints.
+              </p>
+            </li>
+            <li class="rounded-2xl border border-surface-border bg-surface-elevated p-6 shadow-sm">
+              <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M12 3v18M3 12h18" stroke-linecap="round" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </div>
+              <h3 class="mt-4 text-base font-semibold text-slate-900">Accessibility checks</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Catch missing alt text, unnamed buttons, and other a11y issues scoped to each component module.
+              </p>
+            </li>
+            <li class="rounded-2xl border border-surface-border bg-surface-elevated p-6 shadow-sm">
+              <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 0 1 0 2.828l-7 7a2 2 0 0 1-2.828 0l-7-7A2 2 0 0 1 3 12V7a4 4 0 0 1 4-4z" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3 class="mt-4 text-base font-semibold text-slate-900">Token governance</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Flag hardcoded colors, Tailwind arbitrary values, and unused CSS custom properties.
+              </p>
+            </li>
+            <li class="rounded-2xl border border-surface-border bg-surface-elevated p-6 shadow-sm">
+              <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M3 3v18h18M7 16l4-4 4 4 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3 class="mt-4 text-base font-semibold text-slate-900">CI and dashboard</h3>
+              <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Run one-shot reports in CI with JSON output, or watch locally with the live governance dashboard.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="quick-start" class="border-y border-surface-border bg-surface-elevated py-16 lg:py-24">
+        <div class="mx-auto max-w-6xl px-6 lg:px-8">
+          <div class="grid gap-10 lg:grid-cols-2 lg:items-start">
+            <div>
+              <h2 class="text-3xl font-bold tracking-tight text-slate-900">Quick start</h2>
+              <p class="mt-4 text-muted-foreground">
+                Install the npm package, then run the CLI from your project root. Prebuilt native binaries ship
+                with the package — no Rust toolchain required.
+              </p>
+              <ul class="mt-6 space-y-3 text-sm text-slate-700">
+                <li class="flex gap-2">
+                  <span class="mt-1 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true"></span>
+                  <span>Local dev with watch mode and dashboard UI</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="mt-1 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true"></span>
+                  <span>One-shot JSON reports for CI pipelines</span>
+                </li>
+                <li class="flex gap-2">
+                  <span class="mt-1 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true"></span>
+                  <span>Optional <code class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs">.dslint.json</code> config</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-lg">
+              <div class="border-b border-slate-800 px-4 py-3 text-xs font-medium text-slate-400">Terminal</div>
+              <pre class="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-slate-100"><code>npm install -D dslinter
+npx dslinter init
+npx dslinter
+npx dslinter --report /path/to/repo --json
+npx dslinter --report --output public/dslint-report.json</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-surface-border bg-surface py-10">
+      <div class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 sm:flex-row sm:items-center lg:px-8">
+        <p class="text-sm text-muted-foreground">
+          DSLinter — design-system linter for JSX, TSX, and Vue.
+        </p>
+        <div class="flex items-center gap-6 text-sm font-medium text-slate-700">
+          <a
+            href="https://github.com/jrmybtlr/DSLinter"
+            class="transition-colors hover:text-slate-900"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </a>
+          <span class="text-slate-300" aria-hidden="true">·</span>
+          <span class="text-muted-foreground">MIT License</span>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
