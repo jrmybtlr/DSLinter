@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { KitchenSinkModal } from "./KitchenSinkModal";
 import { LegacyButton } from "./TestingButton";
 
-/** Intentionally awful: exercise DSLint smells, tokens, deprecation, variant explosion, and intrinsic a11y rules. */
+/** Intentionally awful: exercise DSLinter smells, tokens, deprecation, variant explosion, and intrinsic a11y rules. */
 export function SmellyInput(): JSX.Element {
   // token-hardcoded-color (keep off the same source line as `[#…]` / `[…px]` arbitrary classes — dedupe drops hex there)
   const HARDCODED_CHART_COLOR = "#ff00ff";

@@ -1,4 +1,4 @@
-/** Intentional duplicate component name — triggers duplicate-component in DSLint. */
+/** Intentional duplicate component name — triggers duplicate-component in DSLinter. */
 export function Card() {
   return (
     <div className="rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">

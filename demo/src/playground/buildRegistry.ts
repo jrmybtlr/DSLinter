@@ -95,7 +95,7 @@ const buildWithSkips = createPlaygroundRegistry(modules, {
   staticDefaults: playgroundStaticDefaults,
 });
 
-/** Build playground entries from `dslint-report.json` + eager component modules. */
+/** Build playground entries from `dslinter-report.json` + eager component modules. */
 export function buildPlaygroundEntries(
   report: WorkspaceReport | null | undefined,
 ): PlaygroundEntry[] {

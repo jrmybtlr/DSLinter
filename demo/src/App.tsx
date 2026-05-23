@@ -12,11 +12,11 @@ const IS_SERVE_MODE = import.meta.env.MODE === "serve";
 
 export default function App() {
   const dslinterReport = useWorkspaceReport({
-    reportUrl: "/dslint-report.json",
+    reportUrl: "/dslinter-report.json",
     // In serve mode subscribe to the SSE stream from `dslint --serve 7878`.
     watchUrl: IS_SERVE_MODE ? "/events" : undefined,
     // Fall back to 5-second polling when not in serve mode (so a manual
-    // `npm run dslint:report` + page-save still updates automatically).
+    // `npm run dslinter:report` + page-save still updates automatically).
     refreshIntervalMs: IS_SERVE_MODE ? 0 : 5000,
   });
 
@@ -38,7 +38,7 @@ export default function App() {
       playgroundJoinSkips={playgroundJoinSkips}
       tokenCatalog={tokenCatalog}
       dslinterReport={dslinterReport}
-      dslinterReportHint="npm run dslint:report (from demo/)"
+      dslinterReportHint="npm run dslinter:report (from demo/)"
       formatModulePath={(modulePath) => `demo/${modulePath.replace(/^\.\.\//, "")}`}
     />
   );

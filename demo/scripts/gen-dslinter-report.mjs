@@ -9,14 +9,14 @@ const dslinterBin = join(demoRoot, "..", "packages", "dashboard", "bin", "dslint
 
 if (!existsSync(dslinterBin)) {
   process.stderr.write(
-    "dslint:report failed — run `npm install` in demo/ (installs dslinter).\n",
+    "dslinter:report failed — run `npm install` in demo/ (installs dslinter).\n",
   );
   process.exit(1);
 }
 
 const result = spawnSync(
   process.execPath,
-  [dslinterBin, "--report", ".", "-p", "--output", "public/dslint-report.json"],
+  [dslinterBin, "--report", ".", "-p", "--output", "public/dslinter-report.json"],
   { cwd: demoRoot, stdio: "inherit" },
 );
 
@@ -24,5 +24,5 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 
-console.log("Wrote public/dslint-report.json");
+console.log("Wrote public/dslinter-report.json");
 execSync("node scripts/merge-playgrounds.mjs", { cwd: demoRoot, stdio: "inherit" });

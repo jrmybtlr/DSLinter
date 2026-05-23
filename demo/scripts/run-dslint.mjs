@@ -2,7 +2,7 @@
 /**
  * Run DSLint using either:
  *  - the `dslinter` npm CLI (NAPI binding from node_modules/dslinter)
- *  - `DSLINT_BIN` / PATH `dslinter` (cargo-built binary)
+ *  - `DSLINTER_BIN` / PATH `dslinter` (cargo-built binary)
  *  - `cargo run --bin dslinter` from this repo (Rust development)
  *
  * Does not use crates.io `dslint` (different project).
@@ -32,7 +32,7 @@ function npmDslinterBin() {
 }
 
 function findScannerBin() {
-  const fromEnv = process.env.DSLINT_BIN?.trim();
+  const fromEnv = process.env.DSLINTER_BIN?.trim();
   if (fromEnv && cmdOk(fromEnv, ["--help"]) && isOurScanner(fromEnv)) {
     return { kind: "bin", cmd: fromEnv };
   }
@@ -77,7 +77,7 @@ const shouldPrintCmd = printCmdIdx !== -1;
 if (shouldPrintCmd) argv.splice(printCmdIdx, 1);
 
 const flavor =
-  (process.env.DSLINT_DEV_FLAVOR ?? "auto").toLowerCase() ?? "auto";
+  (process.env.DSLINTER_DEV_FLAVOR ?? "auto").toLowerCase() ?? "auto";
 
 const scanner = findScannerBin();
 const cargoOk = cmdOk("cargo");
@@ -105,13 +105,13 @@ if (!resolved) {
     [
       "",
       "[dslinter] Could not find the design-system scanner.",
-      `        DSLINT_DEV_FLAVOR=${flavor}`,
+      `        DSLINTER_DEV_FLAVOR=${flavor}`,
       "",
       "        Do not use: cargo install dslint  (different crates.io project)",
       "",
       "        Options:",
       "          - npm install dslinter (installs platform NAPI binding)",
-      "          - DSLINT_BIN=/path/to/dslinter",
+      "          - DSLINTER_BIN=/path/to/dslinter",
       "          - Contributors: cargo build --release --bin dslinter (repo root)",
       "          - Contributors: pnpm run build:napi && node packages/dashboard/bin/dslinter.mjs",
       "",

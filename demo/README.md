@@ -18,10 +18,10 @@ The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in
 
 The demo app wires **data** as follows:
 
-- **`playground/buildRegistry.ts`** — merges `dslint-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.{tsx,jsx}")` via `createPlaygroundRegistry` from **dslinter** (covers nested paths like `src/components/ui/button.tsx`). Passes `playgroundJoinSkips` to the dashboard for inspect-pane hints when a preview fails to load.
+- **`playground/buildRegistry.ts`** — merges `dslinter-report.json` → `playgrounds[]` with `import.meta.glob("../components/**/*.{tsx,jsx}")` via `createPlaygroundRegistry` from **dslinter** (covers nested paths like `src/components/ui/button.tsx`). Passes `playgroundJoinSkips` to the dashboard for inspect-pane hints when a preview fails to load.
 - **`playground/playgroundDefaults.ts`** — optional static defaults for previews (e.g. demo image URLs).
-- **`tokenCatalog.ts`** — optional Tailwind utility hints for the token wall; CSS variables are discovered automatically from `dslint-report.json` → `css_tokens`.
-- **`useWorkspaceReport()`** — loads `public/dslint-report.json` and passes `dslinterReport` into `DashboardLayout`.
+- **`tokenCatalog.ts`** — optional Tailwind utility hints for the token wall; CSS variables are discovered automatically from `dslinter-report.json` → `css_tokens`.
+- **`useWorkspaceReport()`** — loads `public/dslinter-report.json` and passes `dslinterReport` into `DashboardLayout`.
 
 ## Run the UI
 
@@ -35,7 +35,7 @@ npm install && cd demo && npm run dev
 pnpm install && cd demo && pnpm dev
 ```
 
-`npm run dev` runs **`dslinter`** ([scripts/dev.mjs](./scripts/dev.mjs)): watch + scanner HTTP on **7878** + Vite (`--mode serve`). Vite proxies `/dslint-report.json` and `/events` (see [vite.config.ts](./vite.config.ts)) so the dashboard updates over **SSE**.
+`npm run dev` runs **`dslinter`** ([scripts/dev.mjs](./scripts/dev.mjs)): watch + scanner HTTP on **7878** + Vite (`--mode serve`). Vite proxies `/dslinter-report.json` and `/events` (see [vite.config.ts](./vite.config.ts)) so the dashboard updates over **SSE**.
 
 Equivalent from `demo/`: `npx dslinter .`
 
@@ -60,22 +60,22 @@ cd demo && npm run build
 
 The dev app is a single **dashboard**: a left sidebar lists isolated component previews, **Design tokens**, and **Governance** (DSLinter inventory). Navigation uses the URL hash, for example:
 
-- `#!/governance` — default landing: package intro plus scores, catalog, tokens, and findings from `public/dslint-report.json`
-- `#!/component/PrimaryButton` — preview id matches the **file stem** listed in `dslint-report.json` → `playgrounds[].id`
+- `#!/governance` — default landing: package intro plus scores, catalog, tokens, and findings from `public/dslinter-report.json`
+- `#!/component/PrimaryButton` — preview id matches the **file stem** listed in `dslinter-report.json` → `playgrounds[].id`
 - `#!/tokens` — token wall (scanned from `src/index.css` + `dslinter/theme.css`; `tokenCatalog.ts` enriches utility names when present)
 
-### Playgrounds from the dslint CLI (no per-file registration)
+### Playgrounds from the dslinter CLI (no per-file registration)
 
-The `dslint` scanner emits a **`playgrounds`** array on the workspace report. Each entry includes **`id`** (file stem), **`export_name`**, **`rel_path`**, **`declared_props`**, and optional **`group`** from **`playground_groups`** in [`.dslint.json`](./.dslint.json) (prefix map — longest prefix wins).
+The `dslinter` scanner emits a **`playgrounds`** array on the workspace report. Each entry includes **`id`** (file stem), **`export_name`**, **`rel_path`**, **`declared_props`**, and optional **`group`** from **`playground_groups`** in [`.dslinter.json`](./.dslinter.json) (prefix map — longest prefix wins).
 
 The demo joins those rows to Vite modules under `src/components/**` and builds controls from **`declared_props`** (string / boolean heuristics). Optional **`definePlayground()`** from **dslinter** remains for edge cases, but normal components stay free of dashboard package imports.
 
-### Workspace report (`dslint-report.json`)
+### Workspace report (`dslinter-report.json`)
 
-Governance and the component sidebar read `public/dslint-report.json`. `npm run dev` keeps it fresh automatically (SSE) — `npm run dslint:report` only matters when `dev` isn't running, e.g. for one-off CI builds, committing a refreshed snapshot, or seeding the file before opening the UI under `dev:vite-only`:
+Governance and the component sidebar read `public/dslinter-report.json`. `npm run dev` keeps it fresh automatically (SSE) — `npm run dslinter:report` only matters when `dev` isn't running, e.g. for one-off CI builds, committing a refreshed snapshot, or seeding the file before opening the UI under `dev:vite-only`:
 
 ```bash
-npm run dslint:report
+npm run dslinter:report
 ```
 
 (uses [run-dslint.mjs](./scripts/run-dslint.mjs) — prebuilt `dslinter` or `cargo run` for contributors — then `merge-playgrounds` so `playgrounds` is always present.)
@@ -100,7 +100,7 @@ npx dslinter -p demo
 
 Contributors without npm can use `cargo run --release --bin dslinter -- demo --json`.
 
-Configuration for this tree lives in `demo/.dslint.json` (deprecated component names, token substring hints for adoption scoring, **`playground_groups`** for the dashboard sidebar).
+Configuration for this tree lives in `demo/.dslinter.json` (deprecated component names, token substring hints for adoption scoring, **`playground_groups`** for the dashboard sidebar).
 
 ## What you should see
 

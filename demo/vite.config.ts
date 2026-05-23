@@ -5,7 +5,7 @@ import dslinter from "../packages/dashboard/vite/plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-const DSLINT_SERVE_PORT = 7878;
+const DSLINTER_SERVE_PORT = 7878;
 const demoDir = path.dirname(fileURLToPath(import.meta.url));
 const dashboardPkg = path.resolve(demoDir, "../packages/dashboard");
 const dashboardSrc = path.join(dashboardPkg, "src");
@@ -50,12 +50,12 @@ export default defineConfig(({ mode }) => ({
         ? {
             // Proxy the JSON report and SSE stream from the Rust server so
             // the browser doesn't hit CORS when using `npm run dev:serve`.
-            "/dslint-report.json": {
-              target: `http://127.0.0.1:${DSLINT_SERVE_PORT}`,
+            "/dslinter-report.json": {
+              target: `http://127.0.0.1:${DSLINTER_SERVE_PORT}`,
               changeOrigin: true,
             },
             "/events": {
-              target: `http://127.0.0.1:${DSLINT_SERVE_PORT}`,
+              target: `http://127.0.0.1:${DSLINTER_SERVE_PORT}`,
               changeOrigin: true,
             },
           }

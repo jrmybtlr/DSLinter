@@ -1,7 +1,7 @@
 /**
- * Adds `playgrounds` to `public/dslint-report.json` using the same rules as dslint Rust
- * (`playground_groups` in `.dslint.json`). Use after `cargo run … --json` when playgrounds
- * are not yet in the CLI output, or run `npm run dslint:report` once Rust is available.
+ * Adds `playgrounds` to `public/dslinter-report.json` using the same rules as the dslinter Rust
+ * (`playground_groups` in `.dslinter.json`). Use after `cargo run … --json` when playgrounds
+ * are not yet in the CLI output, or run `npm run dslinter:report` once Rust is available.
  *
  * Also normalizes legacy nested `src/components/…` paths in older reports to the flat tree,
  * and when `declared_props` is empty, infers binding names from the TSX file via TypeScript.
@@ -16,8 +16,8 @@ import ts from "typescript";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const demoRoot = join(__dirname, "..");
-const reportPath = join(demoRoot, "public/dslint-report.json");
-const configPath = join(demoRoot, ".dslint.json");
+const reportPath = join(demoRoot, "public/dslinter-report.json");
+const configPath = join(demoRoot, ".dslinter.json");
 
 function patchLegacyComponentPathsInReport(report) {
   const raw = JSON.stringify(report);
