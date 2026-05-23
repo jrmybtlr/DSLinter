@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveServePort } from "./constants.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -110,12 +111,7 @@ export function defaultReportPath(scanPath, outputFlag) {
  * @returns {number}
  */
 export function defaultServePort() {
-  const fromEnv = process.env.DSLINT_SERVE_PORT?.trim();
-  if (fromEnv) {
-    const n = Number.parseInt(fromEnv, 10);
-    if (Number.isFinite(n) && n > 0 && n <= 65535) return n;
-  }
-  return 7878;
+  return resolveServePort();
 }
 
 /**

@@ -1,5 +1,6 @@
 import { readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+import { embedGlobKeyFromRelPath } from "../src/playground/embedGlobKey";
 
 const SKIP_DIR_NAMES = new Set([
   "node_modules",
@@ -51,10 +52,4 @@ export function collectScanModuleRelPaths(scanRoot: string): string[] {
   return out;
 }
 
-/**
- * Virtual module map key for a scanner `rel_path` (embed convention).
- */
-export function embedGlobKeyFromRelPath(relPath: string): string {
-  const trimmed = relPath.replace(/^\/+/, "");
-  return `@dslint-scan/${trimmed}`;
-}
+export { embedGlobKeyFromRelPath };

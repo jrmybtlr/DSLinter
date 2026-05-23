@@ -56,6 +56,7 @@ npx dslinter --watch --output public/dslint-report.json
 ```
 
 Set `DSLINT_SERVE_PORT` to override the default scanner port (`7878`).
+When dev mode prints both a **Dashboard** URL and a **Scanner API** URL, open the Dashboard URL for the UI (port 7878 is the API; embedded browser previews may fail if the scanner is not listening yet).
 On first local run, `npx dslinter` scaffolds `.dslint.json` automatically if missing.
 
 ### Zero-config live previews (recommended)
