@@ -11,7 +11,7 @@ use crate::watch;
 #[command(
     name = "dslinter",
     version,
-    about = "DSLint — design system linting & component governance (MVP)",
+    about = "DSLinter — design system linting & component governance (MVP)",
     after_help = "Long-running dev with Vite is provided by the npm `dslinter` CLI (default locally).\n\
 Use --watch or --serve for watch + JSON file without Vite.\n\
 With --serve, optional --dashboard-static <dir> serves a built SPA from the same port (GET / + assets)."
@@ -48,12 +48,12 @@ struct Cli {
     watch: bool,
 
     /// Path to write the JSON report file.
-    /// Defaults to `<root>/public/dslint-report.json`.
+    /// Defaults to `<root>/public/dslinter-report.json`.
     #[arg(long, value_name = "PATH")]
     output: Option<PathBuf>,
 
     /// Start an HTTP server on the given port that serves the JSON report at
-    /// `/dslint-report.json` and an SSE update stream at `/events`.
+    /// `/dslinter-report.json` and an SSE update stream at `/events`.
     /// Implies --watch.
     #[arg(long, value_name = "PORT")]
     serve: Option<u16>,
@@ -85,13 +85,13 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
     if cli.watch || cli.serve.is_some() {
         let output = cli
             .output
-            .unwrap_or_else(|| root.join("public").join("dslint-report.json"));
+            .unwrap_or_else(|| root.join("public").join("dslinter-report.json"));
 
         let dashboard_static = if let Some(dir) = cli.dashboard_static {
             let canonical = std::fs::canonicalize(&dir).unwrap_or(dir);
             if !canonical.is_dir() {
                 eprintln!(
-                    "dslint: --dashboard-static must be a directory: {}",
+                    "dslinter: --dashboard-static must be a directory: {}",
                     canonical.display()
                 );
                 return 1;
@@ -99,7 +99,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
             let index = canonical.join("index.html");
             if !index.is_file() {
                 eprintln!(
-                    "dslint: --dashboard-static missing index.html: {}",
+                    "dslinter: --dashboard-static missing index.html: {}",
                     index.display()
                 );
                 return 1;
@@ -110,7 +110,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
         };
 
         if dashboard_static.is_some() && cli.serve.is_none() {
-            eprintln!("dslint: --dashboard-static requires --serve <port>");
+            eprintln!("dslinter: --dashboard-static requires --serve <port>");
             return 1;
         }
 
@@ -157,7 +157,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
             return 1;
         }
         if !cli.json {
-            eprintln!("dslint: wrote {}", output_path.display());
+            eprintln!("dslinter: wrote {}", output_path.display());
         }
     }
 
@@ -175,7 +175,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
 
     if cli.fail_on_warnings && warn_count > 0 {
         eprintln!(
-            "dslint: {warn_count} warning-level finding(s); exiting non-zero (--fail-on-warnings)."
+            "dslinter: {warn_count} warning-level finding(s); exiting non-zero (--fail-on-warnings)."
         );
         return 1;
     }
@@ -183,7 +183,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
     if let Some(max) = cli.max_warnings {
         if warn_count > max {
             eprintln!(
-                "dslint: {warn_count} warning-level finding(s) exceed --max-warnings {max}."
+                "dslinter: {warn_count} warning-level finding(s) exceed --max-warnings {max}."
             );
             return 1;
         }

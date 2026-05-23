@@ -25,7 +25,7 @@ describe("formatDevBanner", () => {
   it("includes logo, scan path, report, bundled UI, and API URLs", () => {
     const text = formatDevBanner({
       scanPath: "/tmp/components",
-      reportPath: "/tmp/components/public/dslint-report.json",
+      reportPath: "/tmp/components/public/dslinter-report.json",
       apiPort: 7878,
       apiAvailable: true,
       dashboardUrl: "http://localhost:5173/",
@@ -40,7 +40,7 @@ describe("formatDevBanner", () => {
     expect(text).not.toContain("http://localhost:5173/");
     expect(text).not.toMatch(/\bDashboard\b/);
     expect(text).toContain("7878");
-    expect(text).toContain("dslint-report.json");
+    expect(text).toContain("dslinter-report.json");
     expect(text).toContain("polling every 150 ms");
     expect(text).toContain("Open the Bundled UI URL");
   });
@@ -48,7 +48,7 @@ describe("formatDevBanner", () => {
   it("shows dashboard URL when bundled UI is not served", () => {
     const text = formatDevBanner({
       scanPath: "/tmp/components",
-      reportPath: "/tmp/components/public/dslint-report.json",
+      reportPath: "/tmp/components/public/dslinter-report.json",
       apiPort: 7878,
       apiAvailable: true,
       dashboardUrl: "http://localhost:5173/",
@@ -62,7 +62,7 @@ describe("formatDevBanner", () => {
   it("marks API unavailable when port is busy", () => {
     const text = formatDevBanner({
       scanPath: ".",
-      reportPath: "./public/dslint-report.json",
+      reportPath: "./public/dslinter-report.json",
       apiPort: 7878,
       apiAvailable: false,
       dashboardUrl: "http://localhost:5174/",
@@ -74,7 +74,7 @@ describe("formatDevBanner", () => {
   it("keeps right border aligned on every row", () => {
     const text = formatDevBanner({
       scanPath: "/very/long/path/that/could/push/the/box/wider/than/usual/Components",
-      reportPath: "/very/long/path/public/dslint-report.json",
+      reportPath: "/very/long/path/public/dslinter-report.json",
       apiPort: 7878,
       apiAvailable: false,
       dashboardUrl: "http://localhost:5175/",

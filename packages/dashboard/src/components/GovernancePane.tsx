@@ -14,8 +14,8 @@ type Props = {
 
 export function GovernancePane({
   landing,
-  reportUrl: _reportUrl = "/dslint-report.json",
-  dslinterReportHint = "npm run dslint:report",
+  reportUrl: _reportUrl = "/dslinter-report.json",
+  dslinterReportHint = "npm run dslinter:report",
   dslinterReport,
   onOpenComponent,
 }: Props) {

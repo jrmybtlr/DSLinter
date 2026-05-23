@@ -1,7 +1,9 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-
-const CONFIG_NAMES = [".dslint.json", "dslint.json"];
+import {
+  CONFIG_FILE_NAMES,
+  DEFAULT_CONFIG_FILE_NAME,
+} from "./paths.mjs";
 
 /**
  * @param {string} targetDir
@@ -17,7 +19,7 @@ export function detectInitLayout(targetDir) {
  * @returns {string | null}
  */
 export function findDslintConfigPath(targetDir) {
-  for (const name of CONFIG_NAMES) {
+  for (const name of CONFIG_FILE_NAMES) {
     const candidate = join(targetDir, name);
     if (existsSync(candidate)) return candidate;
   }
@@ -66,19 +68,36 @@ function buildStarterConfig(targetDir, layout) {
 }
 
 /**
+ * @param {string} targetDir
+ * @returns {{ exists: boolean; path: string | null }}
+ */
+export function assessDslintConfig(targetDir) {
+  const existing = findDslintConfigPath(resolve(targetDir));
+  return { exists: Boolean(existing), path: existing };
+}
+
+/**
  * @param {{ targetDir: string; layout: "laravel" | "default" }} opts
  * @returns {{ created: boolean; path: string; existed: boolean }}
  */
-export function ensureDslintConfig(opts) {
+export function writeDslintConfig(opts) {
   const targetDir = resolve(opts.targetDir);
   const existing = findDslintConfigPath(targetDir);
   if (existing) {
     return { created: false, path: existing, existed: true };
   }
 
-  const configPath = join(targetDir, ".dslint.json");
+  const configPath = join(targetDir, DEFAULT_CONFIG_FILE_NAME);
   mkdirSync(targetDir, { recursive: true });
   const payload = buildStarterConfig(targetDir, opts.layout);
   writeFileSync(configPath, `${JSON.stringify(payload, null, 2)}\n`);
   return { created: true, path: configPath, existed: false };
+}
+
+/**
+ * @param {{ targetDir: string; layout: "laravel" | "default" }} opts
+ * @returns {{ created: boolean; path: string; existed: boolean }}
+ */
+export function ensureDslintConfig(opts) {
+  return writeDslintConfig(opts);
 }

@@ -8,16 +8,19 @@ import dslinter from "./vite/plugin";
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = path.join(packageRoot, "src");
 const defaultScanRoot = path.resolve(packageRoot, "../../demo");
-const scanRoot = process.env.DSLINT_SCAN_ROOT
-  ? path.resolve(process.env.DSLINT_SCAN_ROOT)
+const scanRoot = process.env.DSLINTER_SCAN_ROOT
+  ? path.resolve(process.env.DSLINTER_SCAN_ROOT)
   : defaultScanRoot;
+const consumerViteRoot = process.env.DSLINTER_CONSUMER_VITE_ROOT?.trim()
+  ? path.resolve(process.env.DSLINTER_CONSUMER_VITE_ROOT)
+  : undefined;
 
 export default defineConfig(() => ({
   root: packageRoot,
   plugins: [
     tailwindcss(),
     react(),
-    dslinter({ scanRoot }),
+    dslinter({ scanRoot, consumerViteRoot }),
   ],
   resolve: {
     alias: {

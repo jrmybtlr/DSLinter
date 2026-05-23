@@ -244,7 +244,7 @@ pub fn analyze_vue_file(path: &Path, source: &str) -> FileScan {
 
     if caps.is_empty() {
         scan.parse_errors
-            .push("dslint: Vue SFC has no <script> block".into());
+            .push("dslinter: Vue SFC has no <script> block".into());
     } else {
         for cap in &caps {
             let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");

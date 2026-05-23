@@ -13,7 +13,7 @@ export default function DashboardLayoutAuto(props: DashboardLayoutProps) {
       playgroundJoinSkips={autoPlaygroundBuild.skipped}
       formatModulePath={
         props.formatModulePath ??
-        ((modulePath: string) => modulePath.replace(/^@dslint-scan\//, ""))
+        ((modulePath: string) => modulePath.replace(/^@dslinter-scan\//, ""))
       }
     />
   );

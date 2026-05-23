@@ -4,8 +4,8 @@ import {
   defaultReportPath,
   findViteRoot,
   resolveViteBin,
-  warnIfSubdirectoryScan,
 } from "../lib/project-root.mjs";
+import { ensureMinimalSetup } from "../lib/setup-readiness.mjs";
 import { runScannerSync } from "../lib/run-scanner.mjs";
 
 /**
@@ -13,12 +13,18 @@ import { runScannerSync } from "../lib/run-scanner.mjs";
  *   scanPath: string;
  *   outputPath: string | null;
  *   scannerArgs: string[];
+ *   yes?: boolean;
  * }}
  */
-export function runBuildMode({ scanPath, outputPath, scannerArgs }) {
+export async function runBuildMode({ scanPath, outputPath, scannerArgs, yes = false }) {
   const scanAbs = resolve(scanPath);
-  warnIfSubdirectoryScan(scanAbs, { outputPath });
-  const reportPath = defaultReportPath(scanPath, outputPath);
+  const reportPath = defaultReportPath(scanAbs, outputPath);
+  const viteRootForConfig = findViteRoot(scanAbs) ?? scanAbs;
+  await ensureMinimalSetup({
+    targetDir: viteRootForConfig,
+    reportPath,
+    yes,
+  });
   const args = ["--report", ...scannerArgs];
   if (!args.some((a) => a === "--output" || a.startsWith("--output="))) {
     args.push("--output", reportPath);
@@ -45,7 +51,7 @@ export function runBuildMode({ scanPath, outputPath, scannerArgs }) {
     stdio: "inherit",
     env: {
       ...process.env,
-      DSLINT_SCAN_ROOT: scanAbs,
+      DSLINTER_SCAN_ROOT: scanAbs,
     },
   });
   process.exit(child.status === null ? 1 : child.status);

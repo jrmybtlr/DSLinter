@@ -4,6 +4,8 @@ import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveServePort } from "./constants.mjs";
+import { readEnv } from "./env.mjs";
+import { REPORT_FILE_NAME } from "./paths.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -107,13 +109,24 @@ export function defaultReportPath(scanPath, outputFlag) {
   const scanAbs = resolve(scanPath);
   const viteRoot = findViteRoot(scanAbs);
   if (viteRoot && resolve(viteRoot) !== scanAbs) {
-    return resolve(viteRoot, "public", "dslint-report.json");
+    return resolve(viteRoot, "public", REPORT_FILE_NAME);
   }
-  return resolve(scanAbs, "public", "dslint-report.json");
+  return resolve(scanAbs, "public", REPORT_FILE_NAME);
 }
 
 /**
- * Warn when the scan path is a subdirectory of the Vite project root (shortened rel_path breaks previews).
+ * Log when scan was promoted from a subdirectory to the project root.
+ * @param {{ promoted: boolean; originalPath?: string; scanPath: string }} info
+ */
+export function logScanRootPromotion(info) {
+  if (!info.promoted || !info.originalPath) return;
+  process.stderr.write(
+    `dslinter: using project root ${info.scanPath} (was ${info.originalPath}).\n`,
+  );
+}
+
+/**
+ * @deprecated Use {@link logScanRootPromotion} after {@link promoteScanToProjectRoot}.
  * @param {string} scanPath absolute or relative scan path
  * @param {{ outputPath?: string | null }} [opts]
  */
@@ -125,13 +138,11 @@ export function warnIfSubdirectoryScan(scanPath, opts = {}) {
   if (scanAbs === viteAbs) return;
 
   process.stderr.write(
-    "dslinter: warning: scanning a subdirectory — playground rel_path values will be shortened. Run from the project root (npx dslinter .) for live previews.\n",
+    "dslinter: using project root for scan (subdirectory paths shorten playground rel_path).\n",
   );
   if (!opts.outputPath) {
-    const reportAt = defaultReportPath(scanPath, null);
-    process.stderr.write(
-      `dslinter: writing report to ${reportAt} (project public/).\n`,
-    );
+    const reportAt = defaultReportPath(viteAbs, null);
+    process.stderr.write(`dslinter: report → ${reportAt}\n`);
   }
 }
 
@@ -161,7 +172,7 @@ function dashboardDirIfReady(dir) {
  *
  * Resolution order:
  * 1. Skip when `DSLINTER_NO_BUNDLED_DASHBOARD=1`
- * 2. `DSLINT_DASHBOARD_STATIC` — absolute or cwd-relative (temp/gitignored dirs ok)
+ * 2. `DSLINTER_DASHBOARD_STATIC` — absolute or cwd-relative (temp/gitignored dirs ok)
  * 3. `dashboard-dist/` next to the installed `dslinter` package
  *
  * @returns {string | null}
@@ -170,7 +181,7 @@ export function resolveBundledDashboardDir() {
   const optOut = process.env.DSLINTER_NO_BUNDLED_DASHBOARD?.trim();
   if (optOut === "1" || optOut?.toLowerCase() === "true") return null;
 
-  const fromEnv = process.env.DSLINT_DASHBOARD_STATIC?.trim();
+  const fromEnv = readEnv("DASHBOARD_STATIC");
   if (fromEnv) {
     const dir = isAbsolute(fromEnv) ? normalize(fromEnv) : resolve(process.cwd(), fromEnv);
     return dashboardDirIfReady(dir);

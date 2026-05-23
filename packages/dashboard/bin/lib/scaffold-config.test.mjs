@@ -22,7 +22,7 @@ describe("ensureDslintConfig", () => {
 
   it("does not overwrite an existing config", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-scaffold-existing-"));
-    const existing = join(root, ".dslint.json");
+    const existing = join(root, ".dslinter.json");
     writeFileSync(existing, "{\n  \"ignore_globs\": [\"custom/**\"]\n}\n");
 
     const result = ensureDslintConfig({ targetDir: root, layout: "default" });

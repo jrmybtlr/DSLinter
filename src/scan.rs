@@ -1,6 +1,6 @@
 //! Repository file discovery for JSX / TSX / Vue sources.
 //!
-//! Ignore rules merge `.gitignore`, `.dslintignore`, and config `exclude_globs` using **last-match
+//! Ignore rules merge `.gitignore`, `.dslinterignore`, and config `exclude_globs` using **last-match
 //! wins** semantics (including `!` negation), best-effort vs canonical Git.
 
 use std::path::{Path, PathBuf};
@@ -33,7 +33,7 @@ fn is_skipped_dir(entry: &DirEntry) -> bool {
 fn build_ignore_engine(root: &Path, config: &DslintConfig) -> anyhow::Result<Option<IgnoreEngine>> {
     let mut lines = Vec::new();
     lines.extend(load_ignore_file_lines(&root.join(".gitignore"))?);
-    lines.extend(load_ignore_file_lines(&root.join(".dslintignore"))?);
+    lines.extend(load_ignore_file_lines(&root.join(".dslinterignore"))?);
     lines.extend(config.ignore_globs.iter().cloned());
     lines.extend(config.exclude_globs.iter().cloned());
     IgnoreEngine::from_patterns(&lines)
@@ -84,7 +84,7 @@ where
 }
 
 /// Collect component-related source paths under `root`, respecting `.gitignore`,
-/// `.dslintignore`, and configured ignore globs (`ignore_globs`/`exclude_globs`).
+/// `.dslinterignore`, and configured ignore globs (`ignore_globs`/`exclude_globs`).
 pub fn collect_component_files(root: &Path, config: &DslintConfig) -> anyhow::Result<Vec<PathBuf>> {
     walk_files(root, config, |path| {
         if !in_include_scope(root, path, config) {

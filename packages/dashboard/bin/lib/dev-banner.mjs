@@ -192,14 +192,14 @@ export function formatDevBanner(opts) {
   }
   plainWidths.push(14 + 2 + `${apiBase}  (${apiStatusPlain})`.length);
   if (opts.apiAvailable) {
-    plainWidths.push(14 + 2 + `${apiBase}/dslint-report.json`.length);
+    plainWidths.push(14 + 2 + `${apiBase}/dslinter-report.json`.length);
     plainWidths.push(14 + 2 + `${apiBase}/events`.length);
   }
   if (opts.pollMs) plainWidths.push(14 + 2 + `polling every ${opts.pollMs} ms`.length);
   const footerPlain = opts.bundledUrl
     ? "  Open the Bundled UI URL in your browser. Ctrl+C to stop."
     : opts.dashboardUrl
-      ? "  Open the Dashboard URL (UI), not the Scanner API port. Ctrl+C to stop."
+      ? "  Open the Dashboard URL for previews and governance (not the Scanner API port). Ctrl+C to stop."
       : "  Open the Dashboard URL in your browser. Ctrl+C to stop.";
   plainWidths.push(visibleLength(footerPlain));
 
@@ -245,7 +245,7 @@ export function formatDevBanner(opts) {
   );
   if (opts.apiAvailable) {
     styledRows.push(
-      ...row("", `${apiBase}/dslint-report.json`, contentWidth, color.dim),
+      ...row("", `${apiBase}/dslinter-report.json`, contentWidth, color.dim),
     );
     styledRows.push(...row("", `${apiBase}/events`, contentWidth, color.dim));
   }

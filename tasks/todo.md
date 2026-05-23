@@ -10,8 +10,8 @@
 ## Review
 
 - `cargo test` passes; CLI smoke-tested on empty tree
-- dashboard: playgrounds from `dslint-report.json` (`playgrounds`) + glob; `definePlayground()` optional escape hatch; `npm run build` in `demo/` passes
-- Unified demo `src/components/` layout: run `npm run dslint:report` (needs `cargo`) for a full rescan; `merge-playgrounds.mjs` patches legacy paths and infers empty `declared_props` from TSX when needed
+- dashboard: playgrounds from `dslinter-report.json` (`playgrounds`) + glob; `definePlayground()` optional escape hatch; `npm run build` in `demo/` passes
+- Unified demo `src/components/` layout: run `npm run dslinter:report` (needs `cargo`) for a full rescan; `merge-playgrounds.mjs` patches legacy paths and infers empty `declared_props` from TSX when needed
 
 - `ignore` crate omitted (pinned `globset` incompatible with Cargo 1.83); walker skips common vendor dirs
 
@@ -28,14 +28,14 @@
   - [x] Update `demo/scripts/dev.mjs` to enable live mode when either `dslint` or `cargo` exists
   - [ ] Verification: `npm run dslint:print-cmd` and `npm run build` in `demo/`
 - [ ] Debug: LegacyButton prop/controls not updating in dashboard
-  - [ ] Trace how `dslint-report.json` builds `playgrounds[].controls` and `declared_props`
-  - [ ] Confirm whether the dashboard is serving a stale `dslint-report.json` (or not regenerating it)
+  - [ ] Trace how `dslinter-report.json` builds `playgrounds[].controls` and `declared_props`
+  - [ ] Confirm whether the dashboard is serving a stale `dslinter-report.json` (or not regenerating it)
   - [ ] Make minimal fix so updated prop options appear for `LegacyButton`
   - [ ] Verify in running dashboard page that controls/options match updated unions
 - [ ] Verification
   - [ ] Run `cargo test`
   - [ ] Run `npm run build` in `demo/` to confirm TypeScript + UI compile
-  - [ ] Run the report generator and confirm `dslint-report.json` changes as expected
+  - [ ] Run the report generator and confirm `dslinter-report.json` changes as expected
 
 ## Review (to fill)
 

@@ -62,7 +62,7 @@ function resolveMeta(
 
 /**
  * Optional escape hatch: declare dashboard playground exports manually. Prefer driving
- * playgrounds from `dslint-report.json` (`playgrounds`) so component files stay free of
+ * playgrounds from `dslinter-report.json` (`playgrounds`) so component files stay free of
  * dashboard package imports.
  */
 export function definePlayground<P extends Record<string, unknown>>(

@@ -26,6 +26,7 @@ import {
   PlaygroundTokenStyleSection,
   PlaygroundUsageSection,
 } from "./PlaygroundA11yAndCode";
+import { PlaygroundPreviewErrorBoundary } from "./PlaygroundPreviewErrorBoundary";
 import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
 import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
 import { Section } from "./Section";
@@ -310,7 +311,9 @@ export function ComponentPlaygroundPane({
                   />
                 </button>
                 <div className="ds-playground-preview-canvas min-w-0 p-8">
-                  {renderPreview(values)}
+                  <PlaygroundPreviewErrorBoundary componentName={entry.meta.title}>
+                    {renderPreview(values)}
+                  </PlaygroundPreviewErrorBoundary>
                 </div>
               </div>
             </div>

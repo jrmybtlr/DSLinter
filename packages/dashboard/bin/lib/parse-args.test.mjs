@@ -24,8 +24,14 @@ describe("parseDslinterArgs", () => {
     const p = parseDslinterArgs(["--report", "demo", "-p", "--json"]);
     expect(p.mode).toBe("report");
     expect(p.scannerArgs).toEqual(["demo", "-p", "--json"]);
-    expect(p.scanPath).toBe("demo");
+    expect(p.scanPath).toContain("demo");
   });
+
+  it("parses --yes flag", () => {
+    const p = parseDslinterArgs(["--yes"]);
+    expect(p.yes).toBe(true);
+  });
+
 
   it("uses scanner mode for --serve only", () => {
     expect(parseDslinterArgs([".", "--serve", "7878"]).mode).toBe("scanner");

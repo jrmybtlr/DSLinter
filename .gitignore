@@ -9,7 +9,14 @@ demo/dist/
 website/dist/
 website/node_modules/
 packages/dashboard/dashboard-dist/
-demo/public/dslint-report.json
+demo/public/dslinter-report.json
+demo-inertia/vendor/
+demo-inertia/node_modules/
+demo-inertia/.env
+demo-inertia/database/database.sqlite
+demo-inertia/public/hot
+demo-inertia/public/build/
+demo-inertia/public/dslinter-report.json
 packages/dashboard/vendor/
 packages/dashboard/*.node
 /index.cjs

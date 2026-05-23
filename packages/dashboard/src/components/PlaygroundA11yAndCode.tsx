@@ -90,7 +90,7 @@ export function PlaygroundTokenStyleSection({
       ) : (
         <EmptyCard>
           Token findings update when{" "}
-          <span className="font-mono">dslint-report.json</span> is available
+          <span className="font-mono">dslinter-report.json</span> is available
           (same fetch as Governance).
         </EmptyCard>
       )}
@@ -143,7 +143,7 @@ export function PlaygroundCodeScoreSection({
       ) : (
         <EmptyCard>
           Code score updates when{" "}
-          <span className="font-mono">dslint-report.json</span> is available
+          <span className="font-mono">dslinter-report.json</span> is available
           (same fetch as Governance).
         </EmptyCard>
       )}
@@ -189,7 +189,7 @@ export function PlaygroundA11ySection({ a11y, reportReady }: A11yProps) {
       ) : (
         <EmptyCard>
           A11y score updates when{" "}
-          <span className="font-mono">dslint-report.json</span> is available
+          <span className="font-mono">dslinter-report.json</span> is available
           (same fetch as Governance).
         </EmptyCard>
       )}
@@ -206,7 +206,7 @@ type ApiProps = {
   reportUsage?: UsageSummary;
   /** Declared prop names from the scan (definitions + playground specs), used for “never passed” hints. */
   declaredPropsFromScan?: string[];
-  /** True when `dslint-report.json` is loaded (even if this component has no usage row). */
+  /** True when `dslinter-report.json` is loaded (even if this component has no usage row). */
   governanceReportLoaded?: boolean;
 };
 

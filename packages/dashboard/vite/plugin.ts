@@ -1,17 +1,36 @@
-import { resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { loadConfigFromFile } from "vite";
 import type { Plugin, UserConfig } from "vite";
 import { resolveServePort } from "../shared/servePort";
+import {
+  REPORT_URL_PATH,
+} from "../shared/paths";
 import {
   collectScanModuleRelPaths,
   embedGlobKeyFromRelPath,
 } from "./collectScanModules";
+import {
+  flattenViteAlias,
+  INERTIA_SHIM_IDS,
+  resolveWithConsumerAliases,
+  ZIGGY_SHIM_ID,
+  type FlatAlias,
+} from "./consumerAlias";
 
 export const VIRTUAL_PLAYGROUND_MODULES_ID = "virtual:dslinter/playground-modules";
 const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_PLAYGROUND_MODULES_ID}`;
 
+const pluginDir = dirname(fileURLToPath(import.meta.url));
+const inertiaShimPath = resolve(pluginDir, "shims/inertia-react.tsx");
+const ziggyShimPath = resolve(pluginDir, "shims/ziggy-js.ts");
+
 export type DslinterVitePluginOptions = {
-  /** Scan root (repo root passed to `npx dslinter`). Defaults to `DSLINT_SCAN_ROOT` or `process.cwd()`. */
+  /** Scan root (repo root passed to `npx dslinter`). Defaults to `DSLINTER_SCAN_ROOT` or `process.cwd()`. */
   scanRoot?: string;
+  /** Host Vite project root for `@/` aliases (Laravel/Inertia). */
+  consumerViteRoot?: string;
   /** Scanner HTTP port for report + SSE proxy in `serve` mode. */
   servePort?: number;
 };
@@ -55,11 +74,17 @@ export default function dslinter(
 ): Plugin {
   const scanRoot = resolve(
     options.scanRoot ??
-      process.env.DSLINT_SCAN_ROOT ??
+      process.env.DSLINTER_SCAN_ROOT ??
       process.cwd(),
+  );
+  const consumerViteRoot = resolve(
+    options.consumerViteRoot ??
+      process.env.DSLINTER_CONSUMER_VITE_ROOT ??
+      "",
   );
   const servePort = options.servePort ?? resolveServePort();
   let relPaths: string[] = [];
+  let consumerAliases: FlatAlias[] = [];
 
   return {
     name: "dslinter",
@@ -69,7 +94,7 @@ export default function dslinter(
       const proxy =
         mode === "serve"
           ? {
-              "/dslint-report.json": {
+              [REPORT_URL_PATH]: {
                 target: `http://127.0.0.1:${servePort}`,
                 changeOrigin: true,
               },
@@ -80,10 +105,14 @@ export default function dslinter(
             }
           : undefined;
 
+      const allowRoots = [scanRoot];
+      if (consumerViteRoot && existsSync(consumerViteRoot)) {
+        allowRoots.push(consumerViteRoot);
+      }
       const existingAllow = config.server?.fs?.allow;
       const fsAllow = Array.isArray(existingAllow)
-        ? [...existingAllow, scanRoot]
-        : [scanRoot];
+        ? [...existingAllow, ...allowRoots]
+        : allowRoots;
 
       return {
         resolve: {
@@ -101,14 +130,51 @@ export default function dslinter(
       };
     },
 
-    configResolved() {
+    async configResolved(config) {
       relPaths = collectScanModuleRelPaths(scanRoot);
+      consumerAliases = [];
+      const root =
+        consumerViteRoot && existsSync(consumerViteRoot)
+          ? consumerViteRoot
+          : null;
+      if (!root) return;
+      try {
+        const loaded = await loadConfigFromFile(
+          { command: config.command, mode: config.mode },
+          undefined,
+          root,
+        );
+        consumerAliases = flattenViteAlias(
+          loaded?.config?.resolve?.alias,
+          root,
+        );
+      } catch {
+        consumerAliases = [];
+      }
     },
 
-    resolveId(id) {
+    resolveId(id, importer) {
       if (id === VIRTUAL_PLAYGROUND_MODULES_ID) {
         return RESOLVED_VIRTUAL_ID;
       }
+
+      if (!importer || !isPlaygroundModuleImporter(importer, scanRoot, relPaths)) {
+        return null;
+      }
+
+      if (INERTIA_SHIM_IDS.has(id) || id.startsWith("@inertiajs/react/")) {
+        return inertiaShimPath;
+      }
+      if (id === ZIGGY_SHIM_ID || id === "ziggy") {
+        return ziggyShimPath;
+      }
+
+      if (consumerAliases.length > 0) {
+        const resolved = resolveWithConsumerAliases(id, consumerAliases);
+        if (resolved) return resolved;
+      }
+
+      return null;
     },
 
     load(id) {
@@ -130,3 +196,17 @@ export default function dslinter(
 }
 
 export { collectScanModuleRelPaths, embedGlobKeyFromRelPath };
+
+/** True when `importer` is a scanned playground module (per `include_dirs` / walk). */
+function isPlaygroundModuleImporter(
+  importer: string,
+  scanRoot: string,
+  relPaths: string[],
+): boolean {
+  const norm = importer.replace(/\\/g, "/");
+  const root = resolve(scanRoot).replace(/\\/g, "/");
+  const rootPrefix = root.endsWith("/") ? root : `${root}/`;
+  if (!norm.startsWith(rootPrefix) && norm !== root) return false;
+  const suffix = norm.startsWith(rootPrefix) ? norm.slice(rootPrefix.length) : "";
+  return relPaths.some((rel) => rel === suffix);
+}

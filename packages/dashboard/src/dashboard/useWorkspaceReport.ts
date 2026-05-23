@@ -33,11 +33,11 @@ export type UseWorkspaceReportOptions = {
 };
 
 export function useWorkspaceReport(
-  reportUrlOrOptions: string | UseWorkspaceReportOptions = "/dslint-report.json",
+  reportUrlOrOptions: string | UseWorkspaceReportOptions = "/dslinter-report.json",
 ): DslinterReportState {
   // Accept either the legacy string overload or the options object.
   const {
-    reportUrl = "/dslint-report.json",
+    reportUrl = "/dslinter-report.json",
     watchUrl,
     refreshIntervalMs = 0,
   }: UseWorkspaceReportOptions = typeof reportUrlOrOptions === "string"

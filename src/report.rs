@@ -3,7 +3,7 @@
 use crate::model::{Severity, WorkspaceReport};
 
 pub fn print_human(report: &WorkspaceReport) {
-    println!("DSLint — {}", report.root.display());
+    println!("DSLinter — {}", report.root.display());
     println!(
         "Scanned {} component sources · {} findings · {} duplicate definition names\n",
         report.files.len(),
@@ -39,7 +39,7 @@ pub fn print_human(report: &WorkspaceReport) {
     }
 
     if !report.ownership.is_empty() {
-        println!("\nOwnership (from `.dslint.json`, prefix match)");
+        println!("\nOwnership (from `.dslinter.json`, prefix match)");
         for row in &report.ownership {
             println!(
                 "  {:20}  {:4} files  {:4} definitions",

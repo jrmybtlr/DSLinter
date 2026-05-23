@@ -3,7 +3,7 @@
  * `npx dslinter` merges the plugin automatically when a consumer Vite app exists.
  */
 function resolveServePort(): number {
-  const rawPort = process.env.DSLINT_SERVE_PORT ?? process.env.PORT;
+  const rawPort = process.env.DSLINTER_SERVE_PORT ?? process.env.PORT;
   const parsedPort = Number(rawPort);
 
   if (Number.isInteger(parsedPort) && parsedPort > 0) {
@@ -13,7 +13,7 @@ function resolveServePort(): number {
   return 3210;
 }
 
-const DSLINT_SERVE_PORT = resolveServePort();
+const DSLINTER_SERVE_PORT = resolveServePort();
 
 export const dslinterViteSnippet = {
   resolve: {
@@ -24,12 +24,12 @@ export const dslinterViteSnippet = {
   },
   server: {
     proxy: {
-      "/dslint-report.json": {
-        target: `http://127.0.0.1:${DSLINT_SERVE_PORT}`,
+      "/dslinter-report.json": {
+        target: `http://127.0.0.1:${DSLINTER_SERVE_PORT}`,
         changeOrigin: true,
       },
       "/events": {
-        target: `http://127.0.0.1:${DSLINT_SERVE_PORT}`,
+        target: `http://127.0.0.1:${DSLINTER_SERVE_PORT}`,
         changeOrigin: true,
       },
     },

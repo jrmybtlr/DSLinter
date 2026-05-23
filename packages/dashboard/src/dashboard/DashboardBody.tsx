@@ -34,7 +34,7 @@ export function DashboardBody({
         <Section
           id="ownership"
           title="Ownership"
-          description="Prefix match from <span className='font-mono'>.dslint.json</span> — useful for adoption rollups."
+          description="Prefix match from <span className='font-mono'>.dslinter.json</span> — useful for adoption rollups."
         >
           <Table>
             <TableHeader>

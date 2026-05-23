@@ -78,11 +78,11 @@ export function ComponentInspectPane({
       const subdirHint = !rel_path.includes("/")
         ? " This usually means the scanner was run from a subdirectory. Re-run from the project root: npx dslinter ."
         : "";
-      if (globKey.startsWith("@dslint-scan/")) {
+      if (globKey.startsWith("@dslinter-scan/")) {
         return [
           `Expected module key "${globKey}" but the dslinter Vite plugin did not load it.`,
           `Use <DashboardLayout autoPlayground /> and run via npx dslinter (zero vite.config changes), or add plugins: [dslinter()] from dslinter/vite to vite.config.ts.`,
-          `Run the scanner from the project root so rel_path "${rel_path}" matches files under DSLINT_SCAN_ROOT.`,
+          `Run the scanner from the project root so rel_path "${rel_path}" matches files under DSLINTER_SCAN_ROOT.`,
         ].join(" ");
       }
       return [

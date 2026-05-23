@@ -32,7 +32,7 @@ describe("defaultReportPath", () => {
     writeFileSync(join(root, "vite.config.js"), "export default {};\n");
 
     const reportPath = defaultReportPath(components, null);
-    expect(reportPath).toBe(join(root, "public", "dslint-report.json"));
+    expect(reportPath).toBe(join(root, "public", "dslinter-report.json"));
   });
 
   it("uses scan path public/ when scan path is the vite root", () => {
@@ -41,7 +41,7 @@ describe("defaultReportPath", () => {
     writeFileSync(join(root, "vite.config.ts"), "export default {};\n");
 
     const reportPath = defaultReportPath(root, null);
-    expect(reportPath).toBe(join(root, "public", "dslint-report.json"));
+    expect(reportPath).toBe(join(root, "public", "dslinter-report.json"));
   });
 
   it("honors explicit --output", () => {

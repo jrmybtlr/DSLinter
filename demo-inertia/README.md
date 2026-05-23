@@ -23,14 +23,20 @@ Scaffolded with the [official Laravel React starter kit](https://laravel.com/doc
 
 ## First-time setup
 
+From the **repository root** (links `dslinter` via pnpm workspace):
+
 ```bash
-cd demo-inertia
+pnpm install
+```
+
+Then in `demo-inertia`:
+
+```bash
 composer install
 cp .env.example .env   # if .env is missing
 php artisan key:generate
 touch database/database.sqlite
 php artisan migrate --force
-npm install
 npm run build
 ```
 
@@ -56,11 +62,12 @@ Open **http://127.0.0.1:8000/** (Laravel — not the Vite port).
 
 ## DSLint (governance + component previews)
 
-No `dslinter` npm dependency, Vite plugin line, or Inertia route is required in this demo. From the project root:
+`dslinter` is linked from the monorepo (`"dslinter": "workspace:*"`), same as [`demo/`](../demo/). From `demo-inertia/`:
 
 ```bash
-cd demo-inertia
 npx dslinter
+# or
+pnpm run dslinter:dev
 ```
 
 The CLI merges `dslinter/vite` automatically, writes `public/dslinter-report.json`, and opens the dashboard UI (see the terminal banner for the URL, typically port **5175**).
@@ -85,5 +92,7 @@ npx shadcn@latest add switch
 |--------|---------|
 | `composer run dev` | Laravel + queue + logs + Vite |
 | `npm run dev` | Vite only |
+| `npx dslinter` / `pnpm run dslinter:dev` | DSLint dashboard + scanner |
+| `pnpm run dslinter:report` | One-off scan |
 | `npm run build` | Production assets |
 | `php artisan test` | Pest tests |

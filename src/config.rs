@@ -1,4 +1,4 @@
-//! Optional `.dslint.json` configuration.
+//! Optional `.dslinter.json` configuration.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -6,7 +6,7 @@ use std::path::Path;
 use anyhow::Context;
 use serde::Deserialize;
 
-const DEFAULT_CONFIG_NAMES: &[&str] = &[".dslint.json", "dslint.json"];
+const DEFAULT_CONFIG_NAMES: &[&str] = &[".dslinter.json", "dslinter.json"];
 
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct CodeQualityConfig {
@@ -28,12 +28,12 @@ pub struct DslintConfig {
     /// When empty, all directories are eligible (subject to ignores).
     #[serde(default)]
     pub include_dirs: Vec<String>,
-    /// File/directory glob ignores (same semantics as `.gitignore` / `.dslintignore`).
+    /// File/directory glob ignores (same semantics as `.gitignore` / `.dslinterignore`).
     /// This is the preferred field name; `exclude_globs` remains supported for compatibility.
     #[serde(default)]
     pub ignore_globs: Vec<String>,
     /// Optional main CSS entry files (relative to repo root) used for token analysis.
-    /// When empty, DSLint discovers CSS files automatically.
+    /// When empty, DSLinter discovers CSS files automatically.
     #[serde(default)]
     pub css_entrypoints: Vec<String>,
     /// Component names (exact JSX identifiers) that should not be used.
@@ -48,7 +48,7 @@ pub struct DslintConfig {
     /// Playground sidebar groups: group id → path prefixes (longest prefix wins per file).
     #[serde(default)]
     pub playground_groups: HashMap<String, Vec<String>>,
-    /// Extra glob lines merged with `.gitignore` / `.dslintignore` semantics.
+    /// Extra glob lines merged with `.gitignore` / `.dslinterignore` semantics.
     #[serde(default)]
     pub exclude_globs: Vec<String>,
     #[serde(default, alias = "smell")]

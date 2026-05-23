@@ -18,7 +18,7 @@
 //! - The number of concurrent SSE connections is capped at `MAX_SSE_CLIENTS`.
 //!   New connections beyond this limit receive a `503` response immediately.
 //! - Atomic file writes use a temp file name that includes the process ID so
-//!   that concurrent `dslint` processes writing the same output path do not
+//!   that concurrent `dslinter` processes writing the same output path do not
 //!   overwrite each other's temp file.
 
 use std::collections::HashMap;
@@ -86,7 +86,7 @@ pub fn run_watch(
     }
     write_atomic(&output, &json)?;
     if !quiet_logs() {
-        eprintln!("dslint: initial scan done — wrote {}", output.display());
+        eprintln!("dslinter: initial scan done — wrote {}", output.display());
     }
 
     // Shared state for the HTTP server (if --serve).
@@ -101,15 +101,15 @@ pub fn run_watch(
         thread::spawn(move || {
             if let Err(e) = run_http_server(port, json_clone, version_clone, static_root) {
                 if !quiet_logs() {
-                    eprintln!("dslint: serve error: {e}");
+                    eprintln!("dslinter: serve error: {e}");
                 }
             }
         });
         if !quiet_logs() {
             if has_dashboard {
-                eprintln!("dslint: serving dashboard + API on http://127.0.0.1:{port}");
+                eprintln!("dslinter: serving dashboard + API on http://127.0.0.1:{port}");
             } else {
-                eprintln!("dslint: serving on http://127.0.0.1:{port}");
+                eprintln!("dslinter: serving on http://127.0.0.1:{port}");
             }
         }
     }
@@ -121,7 +121,7 @@ pub fn run_watch(
         .collect();
 
     if !quiet_logs() {
-        eprintln!("dslint: watching {} (poll every {POLL_MS} ms) …", root.display());
+        eprintln!("dslinter: watching {} (poll every {POLL_MS} ms) …", root.display());
     }
 
     loop {
@@ -186,18 +186,18 @@ pub fn run_watch(
         let new_json = match serde_json::to_string_pretty(&new_report) {
             Ok(j) => j,
             Err(e) => {
-                eprintln!("dslint: serialize error: {e}");
+                eprintln!("dslinter: serialize error: {e}");
                 continue;
             }
         };
 
         if let Err(e) = write_atomic(&output, &new_json) {
-            eprintln!("dslint: write error: {e}");
+            eprintln!("dslinter: write error: {e}");
             continue;
         }
 
         eprintln!(
-            "dslint: rescanned {} file(s) → {}",
+            "dslinter: rescanned {} file(s) → {}",
             changed.len(),
             output.display()
         );
@@ -215,12 +215,12 @@ pub fn run_watch(
 /// Write `content` atomically by first writing to a PID-qualified temp file in
 /// the same directory as `path`, then renaming it over the destination.
 ///
-/// Including the process ID in the temp-file name prevents concurrent `dslint`
+/// Including the process ID in the temp-file name prevents concurrent `dslinter`
 /// processes from colliding on the same temp file.
 pub(crate) fn write_atomic(path: &Path, content: &str) -> anyhow::Result<()> {
     let pid = std::process::id();
     let tmp = path.with_file_name(format!(
-        ".dslint-{pid}.tmp",
+        ".dslinter-{pid}.tmp",
     ));
     fs::write(&tmp, content).with_context(|| format!("write {}", tmp.display()))?;
 
@@ -308,7 +308,7 @@ Content-Length: 0\r\n\r\n",
     }
 
     match path.trim_end_matches('/') {
-        "/dslint-report.json" => {
+        "/dslinter-report.json" => {
             let body = json.read().map(|g| g.clone()).unwrap_or_default();
             let response = format!(
                 "HTTP/1.1 200 OK\r\n\

@@ -2,7 +2,7 @@ import type { PlaygroundEntry, WorkspaceReport } from "dslinter";
 import { createPlaygroundRegistry } from "dslinter";
 
 /**
- * Eager Vite glob — must cover every path in `dslint-report.json` → `playgrounds[].rel_path`.
+ * Eager Vite glob — must cover every path in `dslinter-report.json` → `playgrounds[].rel_path`.
  * Nested paths (e.g. `src/components/ui/button.tsx`) require `**`, not a single `*`.
  */
 const modules = import.meta.glob("../components/**/*.{tsx,jsx}", {

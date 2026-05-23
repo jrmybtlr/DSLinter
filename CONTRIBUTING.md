@@ -1,4 +1,4 @@
-# Contributing to DSLint
+# Contributing to DSLinter
 
 ## Rust scanner
 
@@ -37,7 +37,7 @@ pnpm run build:napi
 node packages/dashboard/bin/dslinter.mjs --version
 ```
 
-Override with a cargo-built binary: `DSLINT_BIN=/path/to/target/release/dslinter`.
+Override with a cargo-built binary: `DSLINTER_BIN=/path/to/target/release/dslinter`.
 
 ## Release workflow
 

@@ -1,4 +1,4 @@
-//! `.gitignore` / `.dslintignore`-style patterns using globset (Rust 1.83–compatible).
+//! `.gitignore` / `.dslinterignore`-style patterns using globset (Rust 1.83–compatible).
 //!
 //! Semantics are **best-effort** vs canonical Git: patterns are applied in file order with the
 //! **last matching rule winning**, so negated patterns (`!`) can re-include paths.

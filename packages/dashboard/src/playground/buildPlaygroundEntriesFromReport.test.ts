@@ -12,7 +12,7 @@ const entries: PlaygroundEntry[] = [
   {
     id: "PrimaryButton",
     meta: { id: "PrimaryButton", title: "PrimaryButton" },
-    modulePath: "@dslint-scan/src/components/PrimaryButton.tsx",
+    modulePath: "@dslinter-scan/src/components/PrimaryButton.tsx",
     controls: [],
     renderPreview: () => null,
     Preview: () => null,

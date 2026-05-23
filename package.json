@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "demo",
+    "demo-inertia",
     "packages/dashboard",
     "website"
   ],

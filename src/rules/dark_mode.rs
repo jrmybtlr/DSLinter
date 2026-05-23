@@ -78,7 +78,7 @@ fn has_dark_mode_contrast_issue(classes: &str) -> bool {
 }
 
 fn dark_mode_contrast_message() -> &'static str {
-    "Class tokens set text/background colors without an explicit `dark:` color variant; verify dark-mode contrast or disable this check in `.dslint.json`."
+    "Class tokens set text/background colors without an explicit `dark:` color variant; verify dark-mode contrast or disable this check in `.dslinter.json`."
 }
 
 fn push_dark_mode_finding(out: &mut Vec<LintFinding>, path: &Path, line: u32) {

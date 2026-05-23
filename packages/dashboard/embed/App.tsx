@@ -6,7 +6,7 @@ import { tokenCatalog } from "./tokenCatalog";
 
 export default function App() {
   const dslinterReport = useWorkspaceReport({
-    reportUrl: "/dslint-report.json",
+    reportUrl: "/dslinter-report.json",
     watchUrl: "/events",
     refreshIntervalMs: 0,
   });

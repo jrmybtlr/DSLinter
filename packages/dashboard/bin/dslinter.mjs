@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 /**
- * DSLinter CLI: mode routing (dev / report / watch / build) + scanner (NAPI or DSLINT_BIN).
+ * DSLinter CLI: mode routing (dev / report / watch / build) + scanner (NAPI or DSLINTER_BIN).
  */
 import { parseDslinterArgs } from "./lib/parse-args.mjs";
+import {
+  promoteScanToProjectRoot,
+  withScannerScanPath,
+} from "./lib/resolve-project.mjs";
+import { logScanRootPromotion } from "./lib/project-root.mjs";
 import { runScannerInternal } from "./lib/run-scanner.mjs";
 import { runBuildMode } from "./modes/build.mjs";
 import { runDevMode } from "./modes/dev.mjs";
@@ -36,11 +41,15 @@ try {
   process.exit(1);
 }
 
-const { mode, scannerArgs } = parsed;
+const { mode } = parsed;
+const promoted = promoteScanToProjectRoot(parsed.scanPath);
+logScanRootPromotion(promoted);
+const scannerArgs = withScannerScanPath(parsed.scannerArgs, promoted.scanPath);
+const runParsed = { ...parsed, scanPath: promoted.scanPath, scannerArgs };
 
 switch (mode) {
   case "dev":
-    await runDevMode(parsed);
+    await runDevMode(runParsed);
     break;
   case "report":
     runReportMode(["--report", ...scannerArgs]);
@@ -52,7 +61,7 @@ switch (mode) {
     runScannerInternal(scannerArgs);
     break;
   case "build":
-    runBuildMode(parsed);
+    await runBuildMode(runParsed);
     break;
   default:
     process.stderr.write(`dslinter: unknown mode ${mode}\n`);

@@ -8,12 +8,12 @@ import {
   hasEmbedDashboard,
   resolveBundledDashboardDir,
   resolveViteBin,
-  warnIfSubdirectoryScan,
 } from "../lib/project-root.mjs";
 import { writeDevBanner } from "../lib/dev-banner.mjs";
 import { findAvailablePort, warnIfPortBusy } from "../lib/port-check.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
-import { detectInitLayout, ensureDslintConfig } from "../lib/scaffold-config.mjs";
+import { shouldUseConsumerViteDev } from "../lib/scan-host.mjs";
+import { ensureMinimalSetup } from "../lib/setup-readiness.mjs";
 import { waitForPort } from "../lib/wait-for-port.mjs";
 
 const POLL_MS = 150;
@@ -52,32 +52,38 @@ function printDevBanner(banner) {
  *   outputPath: string | null;
  *   scannerArgs: string[];
  *   servePort: number | null;
+ *   yes?: boolean;
+ *   explicitScanPath?: string | null;
  * }}
  */
-export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort }) {
+export async function runDevMode({
+  scanPath,
+  outputPath,
+  scannerArgs,
+  servePort,
+  yes = false,
+}) {
   const port = servePort ?? defaultServePort();
-  const reportPath = defaultReportPath(scanPath, outputPath);
   const scanAbs = resolve(scanPath);
-  warnIfSubdirectoryScan(scanAbs, { outputPath });
+  const reportPath = defaultReportPath(scanAbs, outputPath);
   const viteRootForConfig = findViteRoot(scanAbs) ?? scanAbs;
-  const configResult = ensureDslintConfig({
+
+  await ensureMinimalSetup({
     targetDir: viteRootForConfig,
-    layout: detectInitLayout(viteRootForConfig),
+    reportPath,
+    yes,
   });
-  if (configResult.created) {
-    process.stderr.write(`dslinter: scaffolded ${configResult.path}\n`);
-  }
-  const consumerViteRoot = findViteRoot(process.cwd());
+
+  const consumerViteRoot = findViteRoot(scanAbs);
   const embedRoot = getDashboardPackageRoot();
   const embedViteBin = hasEmbedDashboard() ? resolveViteBin(embedRoot) : null;
-  /** Prefer the host Vite app (live dashboard source + HMR) when detected. */
+
   const useConsumerViteDev =
-    consumerViteRoot != null &&
-    process.env.DSLINTER_NO_CONSUMER_VITE?.trim() !== "1";
-  /** Live embed UI from source (proxies report/SSE to the scanner port). */
+    consumerViteRoot != null && shouldUseConsumerViteDev(scanAbs);
+
   const useEmbedViteDev =
     embedViteBin != null &&
-    consumerViteRoot == null &&
+    !useConsumerViteDev &&
     process.env.DSLINTER_NO_EMBED_VITE?.trim() !== "1";
 
   const bundledDist =
@@ -149,6 +155,8 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
     bundledUrl,
   };
 
+  const consumerViteRootForEnv = consumerViteRoot ?? findViteRoot(scanAbs);
+
   if (useEmbedViteDev) {
     const uiPort = await resolveUiPort(
       Number.parseInt(process.env.DSLINTER_DEV_UI_PORT?.trim() || "5175", 10) || 5175,
@@ -172,8 +180,11 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
         stdio: "inherit",
         env: {
           ...process.env,
-          DSLINT_SERVE_PORT: String(port),
-          DSLINT_SCAN_ROOT: scanAbs,
+          DSLINTER_SERVE_PORT: String(port),
+          DSLINTER_SCAN_ROOT: scanAbs,
+          ...(consumerViteRootForEnv
+            ? { DSLINTER_CONSUMER_VITE_ROOT: consumerViteRootForEnv }
+            : {}),
         },
       },
     );
@@ -223,9 +234,10 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
         stdio: "inherit",
         env: {
           ...process.env,
-          DSLINT_SERVE_PORT: String(port),
-          DSLINT_SCAN_ROOT: scanAbs,
-          DSLINT_VITE_ROOT: consumerViteRoot,
+          DSLINTER_SERVE_PORT: String(port),
+          DSLINTER_SCAN_ROOT: scanAbs,
+          DSLINTER_VITE_ROOT: consumerViteRoot,
+          DSLINTER_CONSUMER_VITE_ROOT: consumerViteRoot,
         },
       },
     );
@@ -259,7 +271,7 @@ export async function runDevMode({ scanPath, outputPath, scannerArgs, servePort 
  */
 function maybeOpenBrowser(url) {
   if (process.env.CI === "true" || process.env.CI === "1") return;
-  if (process.env.DSLINT_OPEN_BROWSER !== "1") return;
+  if (process.env.DSLINTER_OPEN_BROWSER !== "1") return;
 
   const platform = process.platform;
   if (platform === "darwin") {

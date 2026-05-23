@@ -1,4 +1,4 @@
-//! DSLint — design-system component inventory and governance signals (MVP).
+//! DSLinter — design-system component inventory and governance signals (MVP).
 
 pub mod class_strings;
 pub mod code_quality;

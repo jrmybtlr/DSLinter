@@ -1,4 +1,5 @@
 packages:
   - "demo"
+  - "demo-inertia"
   - "packages/dashboard"
   - "website"

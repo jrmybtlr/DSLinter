@@ -47,7 +47,7 @@ export function ComponentUsageDetails({
   if (!report) {
     return (
       <p className="text-sm text-muted-foreground">
-        Load <span className="font-mono">dslint-report.json</span> to see where
+        Load <span className="font-mono">dslinter-report.json</span> to see where
         this component is used in the workspace.
       </p>
     );

@@ -1,4 +1,4 @@
-//! `// dslint-ignore-next-line rule-id,...` and block suppressions.
+//! `// dslinter-ignore-next-line rule-id,...` and block suppressions.
 
 use std::collections::HashMap;
 
@@ -7,15 +7,24 @@ use crate::util::rule_match::rule_suppressed_by_patterns;
 
 fn parse_ignore_comment(line: &str) -> Option<Vec<String>> {
     let trimmed = line.trim();
-    let prefix = "// dslint-ignore-next-line";
-    let prefix_block = "/* dslint-ignore-next-line";
-    let rest = if let Some(r) = trimmed.strip_prefix(prefix) {
-        r.trim()
-    } else if let Some(r) = trimmed.strip_prefix(prefix_block) {
-        r.trim().trim_end_matches("*/").trim()
-    } else {
-        return None;
-    };
+    let prefixes = ["// dslinter-ignore-next-line"];
+    let block_prefixes = ["/* dslinter-ignore-next-line"];
+    let mut rest = None;
+    for prefix in prefixes {
+        if let Some(r) = trimmed.strip_prefix(prefix) {
+            rest = Some(r.trim());
+            break;
+        }
+    }
+    if rest.is_none() {
+        for prefix in block_prefixes {
+            if let Some(r) = trimmed.strip_prefix(prefix) {
+                rest = Some(r.trim().trim_end_matches("*/").trim());
+                break;
+            }
+        }
+    }
+    let rest = rest?;
     if rest.is_empty() {
         return Some(vec!["*".to_string()]);
     }
@@ -71,7 +80,7 @@ mod tests {
 
     #[test]
     fn suppresses_next_line() {
-        let src = "// dslint-ignore-next-line foo\nconst x = 1;\n";
+        let src = "// dslinter-ignore-next-line foo\nconst x = 1;\n";
         let mut m = HashMap::new();
         m.insert(PathBuf::from("a.ts"), src.to_string());
         let findings = vec![LintFinding::new(

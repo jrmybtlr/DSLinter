@@ -1,4 +1,4 @@
-# DSLint
+# DSLinter
 
 A design-system linter that scans repos for **JSX, TSX, and Vue** components, counts **how often each is used** (Storybook-style visibility without story files), and reports **design-system health** signals for the terminal, CI, or a dashboard.
 
@@ -11,29 +11,29 @@ Prebuilt native binaries ship with the **`dslinter`** npm package — you do not
 ```bash
 npm install -D dslinter
 npx dslinter                    # local dev: watch + dashboard (Vite app required)
-npx dslinter init               # scaffold baseline .dslint.json + optional playground registry files
+npx dslinter init               # scaffold baseline .dslinter.json + optional playground registry files
 npx dslinter --report /path/to/repo
 npx dslinter --report /path/to/repo --json
 npx dslinter --report -p /path/to/repo --fail-on-warnings
-npx dslinter --report --output public/dslint-report.json
-npx dslinter --watch --output public/dslint-report.json
+npx dslinter --report --output public/dslinter-report.json
+npx dslinter --watch --output public/dslinter-report.json
 npx dslinter --build            # write report + vite build (in a Vite project)
 ```
 
 In **CI** (`CI=true`), bare `npx dslinter` runs **`--report`** (one-shot stdout). Use `--report` explicitly if your CI does not set `CI`.
-On local first run, `npx dslinter` auto-creates a starter **`.dslint.json`** when no config exists.
+On local first run, `npx dslinter` auto-creates a starter **`.dslinter.json`** when no config exists.
 
 The CLI binary is named **`dslinter`** (not `dslint`) to avoid collision with an unrelated [crates.io `dslint`](https://crates.io/crates/dslint) package.
 
 ## What gets scanned
 
-- **Respects ignores:** `.gitignore` and `.dslintignore` at the repo root (globset semantics; **last matching rule wins**, including `!` negation; use `\!` for a literal `!`). Optional `exclude_globs` in config apply too.
-- **Inline suppressions:** On the line above a finding, use `// dslint-ignore-next-line rule-id` (comma-separated rules; `*` or `prefix*` allowed). That line only suppresses the **next** source line.
+- **Respects ignores:** `.gitignore` and `.dslinterignore` at the repo root (globset semantics; **last matching rule wins**, including `!` negation; use `\!` for a literal `!`). Optional `exclude_globs` in config apply too.
+- **Inline suppressions:** On the line above a finding, use `// dslinter-ignore-next-line rule-id` (comma-separated rules; `*` or `prefix*` allowed). That line only suppresses the **next** source line.
 - **Overlap:** If **`token-hardcoded-color`** and **`token-tailwind-arbitrary`** both hit the same line, only the Tailwind rule is reported.
 
 ## Config (optional)
 
-Put `.dslint.json` or `dslint.json` at the repository root:
+Put `.dslinter.json` at the repository root:
 
 ```json
 {
@@ -56,7 +56,7 @@ Put `.dslint.json` or `dslint.json` at the repository root:
 ```
 
 `include_dirs` restricts component discovery to those directory prefixes.  
-`ignore_globs` uses the same ignore semantics as `.gitignore`/`.dslintignore`.  
+`ignore_globs` uses the same ignore semantics as `.gitignore`/`.dslinterignore`.  
 `css_entrypoints` scopes token analysis to selected CSS entry files (+ their `@import` graph).
 
 `smell.disabled_rules` accepts `code-*` rule ids (and legacy `smell-*` aliases). `check_dark_mode_contrast` is **heuristic**: it inspects static `class` / `className` strings and string arguments to `cn(...)`, `clsx(...)`, and `classnames(...)` extracted from the AST where possible.
@@ -64,15 +64,15 @@ Legacy `exclude_globs` remains supported for backwards compatibility.
 
 ## Demo app
 
-The [`demo/`](demo/) folder is a **Vite + React + TypeScript + Tailwind** sample with a flat `src/components/` layout and [`demo/.dslint.json`](demo/.dslint.json).
+The [`demo/`](demo/) folder is a **Vite + React + TypeScript + Tailwind** sample with a flat `src/components/` layout and [`demo/.dslinter.json`](demo/.dslinter.json).
 
 ```bash
 cd demo && npm install && npm run dev
 ```
 
-The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on npm). Component previews are driven by **`playgrounds`** in `dslint-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
+The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on npm). Component previews are driven by **`playgrounds`** in `dslinter-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
 
-`npm run dev` runs **`dslinter`** (same as `npx dslinter` in `demo/`): scanner on port **7878** plus Vite with proxy to `/dslint-report.json` and `/events` (SSE live updates). Requires the NAPI binding from `npm install` or `DSLINT_BIN`.
+`npm run dev` runs **`dslinter`** (same as `npx dslinter` in `demo/`): scanner on port **7878** plus Vite with proxy to `/dslinter-report.json` and `/events` (SSE live updates). Requires the NAPI binding from `npm install` or `DSLINTER_BIN`.
 
 | Script | Behavior |
 |--------|----------|
@@ -80,7 +80,17 @@ The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on
 | `npm run dev:serve` | Scanner HTTP only (`--serve 7878`) |
 | `npm run dev:watch` | Watch JSON file only (no Vite) |
 | `npm run dev:vite-only` | Vite only (static committed report) |
-| `npm run dslint:report` | One-shot report file + merge playgrounds |
+| `npm run dslinter:report` | One-shot report file + merge playgrounds |
+
+## Laravel + Inertia demo
+
+The [`demo-inertia/`](demo-inertia/) folder is a **Laravel 13 + Inertia + React + shadcn/ui** app scaffolded with the [official React starter kit](https://laravel.com/docs/13.x/starter-kits#react). It includes a `/components` showcase (15 shadcn `.tsx` components) and an embedded DSLinter governance page at `/governance`.
+
+```bash
+cd demo-inertia && composer install && npm install && npm run dev
+```
+
+See [`demo-inertia/README.md`](demo-inertia/README.md) for setup and scripts.
 
 For CI or a terminal-only report:
 

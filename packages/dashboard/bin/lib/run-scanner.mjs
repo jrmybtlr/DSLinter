@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readEnv, envIs } from "./env.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(__dirname, "../..");
@@ -21,13 +22,13 @@ function isOurScanner(binary) {
  * @returns {Promise<import("node:child_process").ChildProcess>}
  */
 export async function spawnScanner(scannerArgs, options = {}) {
-  const fromEnv = process.env.DSLINT_BIN?.trim();
+  const fromEnv = readEnv("BIN");
   if (fromEnv) {
     if (!existsSync(fromEnv)) {
-      throw new Error(`dslinter: DSLINT_BIN not found: ${fromEnv}`);
+      throw new Error(`dslinter: DSLINTER_BIN not found: ${fromEnv}`);
     }
     if (!isOurScanner(fromEnv)) {
-      throw new Error("dslinter: DSLINT_BIN does not look like the DSLint scanner");
+      throw new Error("dslinter: DSLINTER_BIN does not look like the DSLinter scanner");
     }
     return spawn(fromEnv, scannerArgs, {
       stdio: "inherit",
@@ -53,7 +54,7 @@ export async function spawnScanner(scannerArgs, options = {}) {
  * @returns {number}
  */
 export function runScannerSync(scannerArgs, opts = {}) {
-  const fromEnv = process.env.DSLINT_BIN?.trim();
+  const fromEnv = readEnv("BIN");
   if (fromEnv) {
     const child = spawnSync(fromEnv, scannerArgs, {
       stdio: opts.captureStdout ? ["ignore", "pipe", "inherit"] : "inherit",
@@ -105,13 +106,13 @@ export function runScannerSync(scannerArgs, opts = {}) {
  * @param {string[]} args
  */
 export function runScannerInternal(args) {
-  const fromEnv = process.env.DSLINT_BIN?.trim();
+  const fromEnv = readEnv("BIN");
   if (fromEnv) {
     const child = spawnSync(fromEnv, args, { stdio: "inherit" });
     process.exit(child.status === null ? 1 : child.status);
   }
 
-  if (process.env.DSLINT_ALLOW_PATH === "1") {
+  if (envIs("ALLOW_PATH")) {
     const onPath = spawnSync("dslinter", ["--help"], { encoding: "utf8" });
     const out = `${onPath.stdout ?? ""}${onPath.stderr ?? ""}`;
     if (onPath.status === 0 && out.includes(SCANNER_VERSION_MARKER)) {

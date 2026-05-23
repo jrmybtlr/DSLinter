@@ -106,7 +106,7 @@ fn resolve_css_entry_paths(root: &Path, config: &DslintConfig) -> Vec<PathBuf> {
             out.push(path);
         } else {
             eprintln!(
-                "dslint: css_entrypoints entry not found: {}",
+                "dslinter: css_entrypoints entry not found: {}",
                 path.display()
             );
         }
