@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import {
   detectDefaultIncludeDir,
   detectInitLayout,
@@ -7,7 +7,6 @@ import {
   writeDslintConfig,
 } from "./scaffold-config.mjs";
 import { resolveProjectRoot } from "./resolve-project.mjs";
-import { resolveServePort } from "./constants.mjs";
 import { readEnv } from "./env.mjs";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";

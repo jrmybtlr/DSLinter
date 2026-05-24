@@ -119,3 +119,72 @@ export function enrichReportFileBestEffort(reportPath, projectRoot) {
     }
   }
 }
+
+/** @typedef {{ projectRoot: string; reportPath: string; logPrefix?: string }} EnrichOptions */
+
+/**
+ * @param {EnrichOptions} opts
+ * @returns {Promise<boolean>}
+ */
+export async function enrichPlaygroundsFromTs({
+  projectRoot,
+  reportPath,
+  logPrefix = "dslinter",
+}) {
+  try {
+    return enrichReportFile(reportPath, projectRoot);
+  } catch (err) {
+    if (process.env.DSLINTER_DEBUG?.trim() === "1") {
+      process.stderr.write(
+        `${logPrefix}: skip playground TS enrichment (${err instanceof Error ? err.message : err})\n`,
+      );
+    }
+    return false;
+  }
+}
+
+/**
+ * Poll the report file and re-run TS enrichment after Rust writes JSON.
+ *
+ * @param {EnrichOptions & { pollMs?: number }} opts
+ * @returns {() => void}
+ */
+export function watchEnrichPlaygroundsFromTs({
+  projectRoot,
+  reportPath,
+  logPrefix = "dslinter",
+  pollMs = 300,
+}) {
+  let lastMtimeMs = 0;
+  let running = false;
+  let stopped = false;
+
+  const tick = async () => {
+    if (stopped || running) return;
+    running = true;
+    try {
+      const { statSync } = await import("node:fs");
+      let mtimeMs;
+      try {
+        mtimeMs = statSync(reportPath).mtimeMs;
+      } catch {
+        return;
+      }
+      if (mtimeMs <= lastMtimeMs) return;
+      lastMtimeMs = mtimeMs;
+      await enrichPlaygroundsFromTs({ projectRoot, reportPath, logPrefix });
+    } finally {
+      running = false;
+    }
+  };
+
+  const interval = setInterval(() => {
+    void tick();
+  }, pollMs);
+  void tick();
+
+  return () => {
+    stopped = true;
+    clearInterval(interval);
+  };
+}

@@ -13,7 +13,7 @@
     "lint": "oxlint --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo packages/dashboard website",
     "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo packages/dashboard website",
     "build:napi": "pnpm --filter dslinter run build:napi",
-    "test": "cargo test && pnpm run build:napi && pnpm run lint && pnpm --filter dslinter test && node packages/dashboard/bin/dslinter.mjs --version && pnpm --filter dslint-demo run build",
+    "test": "cargo test && pnpm run build:napi && pnpm run lint && pnpm --filter dslinter test && node packages/dashboard/bin/dslinter.mjs --version && pnpm --filter dslinter-demo run build",
     "release:major": "node scripts/release.mjs --major",
     "release:minor": "node scripts/release.mjs --minor",
     "release:patch": "node scripts/release.mjs --patch"

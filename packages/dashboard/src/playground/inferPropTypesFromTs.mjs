@@ -289,9 +289,9 @@ export function enrichPlaygroundSpecFromTs(spec, checker, program, projectRoot) 
   const paramType = findComponentParamType(checker, sf, spec.export_name);
   if (!paramType) return spec;
 
-  const declaredPropOptions = { ...(spec.declared_prop_options ?? {}) };
-  const declaredPropKinds = { ...(spec.declared_prop_kinds ?? {}) };
-  const declaredPropDefaults = { ...(spec.declared_prop_defaults ?? {}) };
+  const declaredPropOptions = { ...spec.declared_prop_options };
+  const declaredPropKinds = { ...spec.declared_prop_kinds };
+  const declaredPropDefaults = { ...spec.declared_prop_defaults };
 
   for (const prop of spec.declared_props) {
     if (prop === "key" || prop === "ref") continue;

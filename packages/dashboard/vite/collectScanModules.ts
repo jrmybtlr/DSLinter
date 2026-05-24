@@ -72,7 +72,6 @@ function matchesIncludeDirs(
 
 function walkDir(
   dir: string,
-  scanAbs: string,
   projectRoot: string,
   includeDirs: string[] | null,
   out: string[],
@@ -88,7 +87,7 @@ function walkDir(
     const full = join(dir, ent.name);
     if (ent.isDirectory()) {
       if (SKIP_DIR_NAMES.has(ent.name)) continue;
-      walkDir(full, scanAbs, projectRoot, includeDirs, out);
+      walkDir(full, projectRoot, includeDirs, out);
     } else if (ent.isFile() && SOURCE_EXT.test(ent.name)) {
       const relFromProject = relative(projectRoot, full).replace(/\\/g, "/");
       if (!matchesIncludeDirs(relFromProject, includeDirs)) continue;
@@ -108,7 +107,7 @@ export function collectScanModuleRelPaths(scanRoot: string): string[] {
   const includeDirs = readIncludeDirs(projectRoot);
   const out: string[] = [];
 
-  walkDir(scanAbs, scanAbs, projectRoot, includeDirs, out);
+  walkDir(scanAbs, projectRoot, includeDirs, out);
 
   out.sort();
   return out;

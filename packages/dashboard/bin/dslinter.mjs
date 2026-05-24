@@ -10,7 +10,6 @@ import { runBuildMode } from "./modes/build.mjs";
 import { runDevMode } from "./modes/dev.mjs";
 import { runInitMode } from "./modes/init.mjs";
 import { runReportMode } from "./modes/report.mjs";
-import { runWatchMode } from "./modes/watch.mjs";
 
 const rawArgs = process.argv.slice(2);
 

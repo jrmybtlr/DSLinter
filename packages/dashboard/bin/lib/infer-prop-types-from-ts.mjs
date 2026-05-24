@@ -306,11 +306,11 @@ export function inferPlaygroundPropMetadata(
   }
 
   /** @type {Record<string, DeclaredPropKind>} */
-  const kinds = { ...(existing.declared_prop_kinds ?? {}) };
+  const kinds = { ...existing.declared_prop_kinds };
   /** @type {Record<string, string[]>} */
-  const options = { ...(existing.declared_prop_options ?? {}) };
+  const options = { ...existing.declared_prop_options };
   /** @type {Record<string, string>} */
-  const defaults = { ...(existing.declared_prop_defaults ?? {}) };
+  const defaults = { ...existing.declared_prop_defaults };
 
   for (const key of declaredProps) {
     if (key === "key" || key === "ref") continue;
