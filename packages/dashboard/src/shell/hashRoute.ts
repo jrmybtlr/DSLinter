@@ -3,10 +3,18 @@ export type HashRoute =
   | { view: "governance" }
   | { view: "component"; componentId: string };
 
+function trimTrailingSlashes(path: string): string {
+  let end = path.length;
+  while (end > 1 && path[end - 1] === "/") {
+    end--;
+  }
+  return path.slice(0, end);
+}
+
 function normalizePath(input: string): string {
   const raw = input.trim();
   if (raw.startsWith("/")) {
-    return raw.replace(/\/+$/, "") || "/";
+    return trimTrailingSlashes(raw);
   }
   return raw.length > 0 ? `/${raw}` : "/";
 }
