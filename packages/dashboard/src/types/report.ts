@@ -102,8 +102,8 @@ export interface PlaygroundSpec {
   declared_props: string[];
   group?: string | null;
   /**
-   * Optional map from prop name to simplified TS kind, filled by tooling that runs the TS checker
-   * (demo: `merge-playgrounds.mjs`). Omitted when empty or unavailable.
+   * Optional map from prop name to simplified TS kind, filled by the TS enrich step
+   * after scanning (`bin/lib/enrich-playgrounds-from-ts.mjs`). Omitted when empty or unavailable.
    */
   declared_prop_kinds?: Partial<Record<string, DeclaredPropKind>>;
   /** CVA variant option keys per prop (dashboard renders as `<Select>`). */

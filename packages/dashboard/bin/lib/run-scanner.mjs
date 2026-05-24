@@ -8,9 +8,32 @@ import { readEnv, envIs } from "./env.mjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(__dirname, "../..");
 const binScript = join(__dirname, "../dslinter.mjs");
+const enrichScript = join(__dirname, "enrich-report-cli.mjs");
 const require = createRequire(import.meta.url);
 
 const SCANNER_VERSION_MARKER = "design system linting";
+
+/** Env vars for the Rust watch post-write TS enrich hook. */
+export function scannerEnrichEnv(projectRoot) {
+  if (process.env.DSLINTER_SKIP_TS_ENRICH === "1") {
+    return {};
+  }
+  /** @type {Record<string, string>} */
+  const env = {
+    DSLINTER_ENRICH_SCRIPT: enrichScript,
+    DSLINTER_NODE: process.execPath,
+  };
+  if (projectRoot) {
+    env.DSLINTER_PROJECT_ROOT = projectRoot;
+  }
+  return env;
+}
+
+function applyEnrichEnv(projectRoot) {
+  for (const [key, value] of Object.entries(scannerEnrichEnv(projectRoot))) {
+    process.env[key] = value;
+  }
+}
 
 function isOurScanner(binary) {
   const help = spawnSync(binary, ["--help"], { encoding: "utf8" });
@@ -22,6 +45,8 @@ function isOurScanner(binary) {
  * @returns {Promise<import("node:child_process").ChildProcess>}
  */
 export async function spawnScanner(scannerArgs, options = {}) {
+  const projectRoot = options.projectRoot ?? process.env.DSLINTER_PROJECT_ROOT;
+  const enrichEnv = scannerEnrichEnv(projectRoot);
   const fromEnv = readEnv("BIN");
   if (fromEnv) {
     if (!existsSync(fromEnv)) {
@@ -33,6 +58,11 @@ export async function spawnScanner(scannerArgs, options = {}) {
     return spawn(fromEnv, scannerArgs, {
       stdio: "inherit",
       ...options,
+      env: {
+        ...process.env,
+        ...enrichEnv,
+        ...options.env,
+      },
     });
   }
 
@@ -42,6 +72,7 @@ export async function spawnScanner(scannerArgs, options = {}) {
     env: {
       ...process.env,
       DSLINTER_INTERNAL: "1",
+      ...enrichEnv,
       ...options.env,
     },
   });
@@ -54,6 +85,7 @@ export async function spawnScanner(scannerArgs, options = {}) {
  * @returns {number}
  */
 export function runScannerSync(scannerArgs, opts = {}) {
+  applyEnrichEnv(opts.projectRoot);
   const fromEnv = readEnv("BIN");
   if (fromEnv) {
     const child = spawnSync(fromEnv, scannerArgs, {
@@ -106,6 +138,7 @@ export function runScannerSync(scannerArgs, opts = {}) {
  * @param {string[]} args
  */
 export function runScannerInternal(args) {
+  applyEnrichEnv(process.env.DSLINTER_PROJECT_ROOT);
   const fromEnv = readEnv("BIN");
   if (fromEnv) {
     const child = spawnSync(fromEnv, args, { stdio: "inherit" });

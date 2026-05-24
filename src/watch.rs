@@ -85,6 +85,7 @@ pub fn run_watch(
         })?;
     }
     write_atomic(&output, &json)?;
+    let json = enrich_report_json_if_configured(&output, &project_root, json);
     if !quiet_logs() {
         eprintln!("dslinter: initial scan done — wrote {}", output.display());
     }
@@ -197,6 +198,8 @@ pub fn run_watch(
             continue;
         }
 
+        let served_json = enrich_report_json_if_configured(&output, &project_root, new_json);
+
         eprintln!(
             "dslinter: rescanned {} file(s) → {}",
             changed.len(),
@@ -205,13 +208,59 @@ pub fn run_watch(
 
         // Update shared JSON and bump version for SSE clients.
         if let Ok(mut guard) = json_arc.write() {
-            *guard = new_json;
+            *guard = served_json;
         }
         version.fetch_add(1, Ordering::Release);
     }
 }
 
 // ── Atomic file write ────────────────────────────────────────────────────────
+
+/// When `DSLINTER_ENRICH_SCRIPT` is set, run the Node enrich CLI on the report file
+/// and return the enriched JSON (falling back to `fallback` on any failure).
+fn enrich_report_json_if_configured(
+    output: &Path,
+    project_root: &Path,
+    fallback: String,
+) -> String {
+    let Some(script) = std::env::var("DSLINTER_ENRICH_SCRIPT").ok() else {
+        return fallback;
+    };
+    let node = std::env::var("DSLINTER_NODE").unwrap_or_else(|_| "node".to_string());
+    let enrich_root = std::env::var("DSLINTER_PROJECT_ROOT")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| project_root.to_path_buf());
+
+    match std::process::Command::new(&node)
+        .arg(&script)
+        .arg(output)
+        .arg(&enrich_root)
+        .status()
+    {
+        Ok(status) if status.success() => match fs::read_to_string(output) {
+            Ok(enriched) => enriched,
+            Err(e) => {
+                if !quiet_logs() {
+                    eprintln!("dslinter: TS enrich read failed: {e}");
+                }
+                fallback
+            }
+        },
+        Ok(status) => {
+            if !quiet_logs() {
+                eprintln!("dslinter: TS enrich exited with status {status}");
+            }
+            fallback
+        }
+        Err(e) => {
+            if !quiet_logs() {
+                eprintln!("dslinter: TS enrich spawn failed: {e}");
+            }
+            fallback
+        }
+    }
+}
 
 /// Write `content` atomically by first writing to a PID-qualified temp file in
 /// the same directory as `path`, then renaming it over the destination.

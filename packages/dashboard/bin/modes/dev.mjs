@@ -115,9 +115,11 @@ export async function runDevMode({
   const apiAvailable = !(await warnIfPortBusy(port, { silent: true }));
 
   const scanner = await spawnScanner(args, {
+    projectRoot: projectAbs,
     env: {
       ...process.env,
       DSLINTER_QUIET: "1",
+      DSLINTER_PROJECT_ROOT: projectAbs,
     },
   });
   const children = [scanner];

@@ -55,11 +55,7 @@ export function ComponentUsageDetails({
   }
 
   if (!usage) {
-    return (
-      <EmptyCard>
-        No found usage for <InlineCode>{componentId}</InlineCode>.
-      </EmptyCard>
-    );
+    return <EmptyCard>0 imports of {componentId} found in codebase</EmptyCard>;
   }
 
   const rows = sortedLocations(usage.usage_locations);

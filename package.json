@@ -24,10 +24,14 @@
     "oxfmt": "^0.50.0",
     "oxlint": "^1.65.0"
   },
+  "overrides": {
+    "qs": "6.15.2"
+  },
   "pnpm": {
     "overrides": {
       "react": "19.2.6",
-      "react-dom": "19.2.6"
+      "react-dom": "19.2.6",
+      "qs": "6.15.2"
     },
     "publicHoistPattern": ["*react", "*react-dom"]
   }

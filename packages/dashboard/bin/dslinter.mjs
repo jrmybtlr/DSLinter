@@ -52,12 +52,18 @@ switch (mode) {
     await runDevMode(runParsed);
     break;
   case "report":
-    runReportMode(["--report", ...scannerArgs]);
+    runReportMode(["--report", ...scannerArgs], {
+      scanPath: runParsed.scanPath,
+      projectRoot: runParsed.projectRoot,
+      outputPath: runParsed.outputPath,
+    });
     break;
   case "watch":
+    process.env.DSLINTER_PROJECT_ROOT = runParsed.projectRoot;
     runScannerInternal(["--watch", ...scannerArgs]);
     break;
   case "scanner":
+    process.env.DSLINTER_PROJECT_ROOT = runParsed.projectRoot;
     runScannerInternal(scannerArgs);
     break;
   case "build":

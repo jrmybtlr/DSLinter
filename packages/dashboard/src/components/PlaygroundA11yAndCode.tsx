@@ -37,11 +37,7 @@ export function PlaygroundUsageSection({ entry, values }: UsageProps) {
     `// Pass usageSnippet on this PlaygroundEntry, or derive snippets from dslint controls.\n<${entry.id} />`;
 
   return (
-    <Section
-      id="usage"
-      title="Usage"
-      description="Example usage for the current playground values."
-    >
+    <Section id="usage" title="Usage">
       <PlaygroundUsageCode source={usage} />
     </Section>
   );
@@ -185,7 +181,9 @@ export function PlaygroundA11ySection({
           </TableHeader>
           <TableBody>
             {a11y.findings.map((f, i) => (
-              <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${f.variantLabel ?? ""}-${i}`}>
+              <TableRow
+                key={`${f.rule_id}-${f.line ?? "x"}-${f.variantLabel ?? ""}-${i}`}
+              >
                 {showVariantColumn ? (
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {f.variantLabel ?? "—"}
