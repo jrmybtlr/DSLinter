@@ -61,8 +61,8 @@ Put `.dslinter.json` at the repository root:
 `include_dirs` restricts component discovery to those directory prefixes.  
 `ignore_globs` uses the same ignore semantics as `.gitignore`/`.dslinterignore`.  
 `css_entrypoints` scopes token analysis to selected CSS entry files (+ their `@import` graph).
-`check_unused_props` enables `unused-prop` findings for declared props that have no call-site usage.  
-`local_import_prefixes` marks import path prefixes as local (in-repo) modules.  
+`check_unused_props` enables `unused-prop` findings for declared props that have no call-site usage.
+`local_import_prefixes` marks import path prefixes as local (in-repo) modules.
 `external_import_patterns` excludes matching third-party modules from the component catalog.
 
 `smell.disabled_rules` accepts `code-*` rule ids (and legacy `smell-*` aliases). `check_dark_mode_contrast` is **heuristic**: it inspects static `class` / `className` strings and string arguments to `cn(...)`, `clsx(...)`, and `classnames(...)` extracted from the AST where possible.
