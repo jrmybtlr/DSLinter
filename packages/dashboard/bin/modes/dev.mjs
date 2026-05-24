@@ -10,6 +10,7 @@ import {
   resolveViteBin,
 } from "../lib/project-root.mjs";
 import { writeDevBanner } from "../lib/dev-banner.mjs";
+import { watchEnrichPlaygroundsFromTs } from "../lib/enrich-playgrounds-from-ts.mjs";
 import { findAvailablePort, warnIfPortBusy } from "../lib/port-check.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
 import { shouldUseConsumerViteDev } from "../lib/scan-host.mjs";
@@ -114,6 +115,11 @@ export async function runDevMode({
 
   const apiAvailable = !(await warnIfPortBusy(port, { silent: true }));
 
+  const stopEnrich = watchEnrichPlaygroundsFromTs({
+    projectRoot: projectAbs,
+    reportPath,
+  });
+
   const scanner = await spawnScanner(args, {
     env: {
       ...process.env,
@@ -123,6 +129,7 @@ export async function runDevMode({
   const children = [scanner];
 
   const cleanup = (signal) => {
+    stopEnrich();
     for (const child of children) {
       if (child && !child.killed) child.kill(signal);
     }
