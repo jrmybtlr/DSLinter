@@ -1,4 +1,8 @@
-//! Build dashboard playground rows from scanned components + config (no TS boilerplate).
+//! Build dashboard playground rows from scanned components + config (Rust AST only).
+//!
+//! `declared_prop_kinds` and `declared_prop_options` may be enriched post-scan by the
+//! Node CLI TypeScript checker (`enrich-playgrounds-from-ts.mjs`) when `tsconfig.json`
+//! is available. Rust still emits empty kinds and only CVA-derived options.
 
 use std::collections::BTreeMap;
 use std::path::Path;

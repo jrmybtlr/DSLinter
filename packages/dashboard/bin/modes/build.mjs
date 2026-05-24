@@ -5,7 +5,7 @@ import {
   findViteRoot,
   resolveViteBin,
 } from "../lib/project-root.mjs";
-import { enrichReportFileBestEffort } from "../lib/enrich-playgrounds-from-ts.mjs";
+import { enrichPlaygroundsFromTs } from "../lib/enrich-playgrounds-from-ts.mjs";
 import { ensureMinimalSetup } from "../lib/setup-readiness.mjs";
 import { runScannerSync } from "../lib/run-scanner.mjs";
 
@@ -41,7 +41,10 @@ export async function runBuildMode({
   const code = runScannerSync(args, { projectRoot: projectAbs });
   if (code !== 0) process.exit(code);
 
-  enrichReportFileBestEffort(reportPath, projectAbs);
+  await enrichPlaygroundsFromTs({
+    projectRoot: projectAbs,
+    reportPath,
+  });
 
   const viteRoot = findViteRoot(process.cwd());
   if (!viteRoot) {

@@ -89,7 +89,8 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
-    "dependencies": {
+  "dependencies": {
+    "typescript": "~6.0.3",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
