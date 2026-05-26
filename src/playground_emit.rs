@@ -9,6 +9,7 @@ use std::path::Path;
 
 use crate::config::DslintConfig;
 use crate::model::{ComponentDefinition, DefinitionKind, FileScan, PlaygroundSpec};
+use crate::util::kebab::kebab_to_pascal;
 use crate::util::paths::{longest_matching_group, rel_path_under_root};
 
 /// Longest matching prefix wins (nested groups).
@@ -57,10 +58,21 @@ fn pick_definition<'a>(
     if let Some(d) = playable.iter().find(|d| d.name == stem) {
         return Some(d);
     }
+    let pascal = kebab_to_pascal(stem);
+    if !pascal.is_empty() {
+        if let Some(d) = playable.iter().find(|d| d.name == pascal) {
+            return Some(d);
+        }
+    }
     if playable.len() == 1 {
         return Some(playable[0]);
     }
     None
+}
+
+/// Example files (`dropdown-menu.playground.tsx`) are not component sources.
+fn is_playground_example_file(stem: &str) -> bool {
+    stem.ends_with(".playground")
 }
 
 /// One playground row per eligible TSX/JSX file in the scan (whole repo when `playground_groups` is unset).
@@ -89,6 +101,9 @@ pub fn build_playground_specs(
             .and_then(|s| s.to_str())
             .unwrap_or("")
             .to_string();
+        if is_playground_example_file(&stem) {
+            continue;
+        }
         let Some(def) = pick_definition(&file.definitions, &stem) else {
             continue;
         };
@@ -150,6 +165,30 @@ mod tests {
         }];
         let picked = pick_definition(&defs, "DuplicateCardA").unwrap();
         assert_eq!(picked.name, "Card");
+    }
+
+    #[test]
+    fn picks_kebab_stem_as_pascal_export() {
+        let defs = vec![
+            ComponentDefinition {
+                name: "DropdownMenu".into(),
+                kind: DefinitionKind::Function,
+                line: 1,
+                declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
+            },
+            ComponentDefinition {
+                name: "DropdownMenuContent".into(),
+                kind: DefinitionKind::Function,
+                line: 2,
+                declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
+            },
+        ];
+        let picked = pick_definition(&defs, "dropdown-menu").unwrap();
+        assert_eq!(picked.name, "DropdownMenu");
     }
 
     #[test]
@@ -217,6 +256,29 @@ mod tests {
         assert_eq!(specs.len(), 1);
         assert_eq!(specs[0].export_name, "ActionItem");
         assert_eq!(specs[0].rel_path, "src/views/ActionItem.tsx");
+    }
+
+    #[test]
+    fn build_skips_playground_example_files() {
+        let root = PathBuf::from("/repo");
+        let config = cfg_single_components();
+        let files = vec![FileScan {
+            path: PathBuf::from("/repo/src/components/ui/dropdown-menu.playground.tsx"),
+            definitions: vec![ComponentDefinition {
+                name: "dropdownMenuPlayground".into(),
+                kind: DefinitionKind::ConstArrow,
+                line: 1,
+                declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
+            }],
+            usages: vec![],
+            parse_errors: vec![],
+            findings: vec![],
+            ast_extracts: Default::default(),
+        }];
+        let specs = build_playground_specs(&root, &files, &config);
+        assert!(specs.is_empty());
     }
 
     #[test]
