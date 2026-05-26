@@ -8,6 +8,7 @@ import {
   buildPlaygroundEntriesFromReportWithSkips,
   resolvePlaygroundEntry,
 } from "./buildPlaygroundEntriesFromReport";
+import { definePlayground } from "./definePlayground";
 
 const entries: PlaygroundEntry[] = [
   {
@@ -241,5 +242,48 @@ describe("playground preview props", () => {
     expect(lastProps).toMatchObject({ children: "Example" });
     const defaultValues = defaultArgsFromControls(entry!.controls);
     expect(entry!.usageSnippet?.(defaultValues)).toBe("<Badge>Example</Badge>");
+  });
+
+  it("manual definePlayground entries override auto-generated previews", () => {
+    const dropdownReport: WorkspaceReport = {
+      ...report,
+      playgrounds: [
+        {
+          id: "DropdownMenu",
+          export_name: "DropdownMenu",
+          rel_path: "resources/js/components/ui/dropdown-menu.tsx",
+          declared_props: [],
+        },
+      ],
+    };
+    const defined = definePlayground({
+      id: "DropdownMenu",
+      group: "ui",
+      render: () => createElement("nav", null, "manual menu"),
+    });
+    const modules = {
+      "../components/ui/dropdown-menu.tsx": {
+        DropdownMenu: () => createElement("div", null, "auto menu"),
+      },
+      "../components/ui/dropdown-menu.playground.tsx": {
+        dropdownMenuPlayground: defined,
+      },
+    };
+    const { entries } = buildPlaygroundEntriesFromReportWithSkips(
+      dropdownReport,
+      modules,
+      {
+        globKeyFromRelPath: (rel) => {
+          const name = rel.split("/").pop()!;
+          return `../components/ui/${name}`;
+        },
+        logJoinSkips: false,
+      },
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.meta.group).toBe("ui");
+    expect(renderToStaticMarkup(createElement(entries[0]!.Preview, { values: {} }))).toBe(
+      "<nav>manual menu</nav>",
+    );
   });
 });

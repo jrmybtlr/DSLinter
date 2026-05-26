@@ -1,12 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react';
-import {
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { toUrl } from '@/lib/utils';
+import { SidebarNavSection } from '@/components/sidebar-nav';
+import { SidebarGroup } from '@/components/ui/sidebar';
 import type { NavItem } from '@/types';
 
 export function NavFooter({
@@ -17,33 +11,13 @@ export function NavFooter({
     items: NavItem[];
 }) {
     return (
-        <SidebarGroup
+        <SidebarNavSection
             {...props}
+            showLabel={false}
+            items={items}
+            buttonClassName="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
+            iconClassName="h-5 w-5"
             className={`group-data-[collapsible=icon]:p-0 ${className || ''}`}
-        >
-            <SidebarGroupContent>
-                <SidebarMenu>
-                    {items.map((item) => (
-                        <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton
-                                asChild
-                                className="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
-                            >
-                                <a
-                                    href={toUrl(item.href)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    {item.icon && (
-                                        <item.icon className="h-5 w-5" />
-                                    )}
-                                    <span>{item.title}</span>
-                                </a>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                </SidebarMenu>
-            </SidebarGroupContent>
-        </SidebarGroup>
+        />
     );
 }

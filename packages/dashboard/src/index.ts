@@ -14,6 +14,8 @@ export type {
 } from "./types/controls";
 export { defaultArgsFromControls } from "./types/controls";
 export { definePlayground } from "./playground/definePlayground";
+export { collectDefinedPlaygrounds } from "./playground/collectDefinedPlaygrounds";
+export { mergePlaygroundEntries } from "./playground/mergePlaygroundEntries";
 export {
   buildPlaygroundEntriesFromReport,
   buildPlaygroundEntriesFromReportWithSkips,

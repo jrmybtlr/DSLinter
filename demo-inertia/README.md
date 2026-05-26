@@ -82,6 +82,22 @@ Components live under `resources/js/components/ui/` as TypeScript TSX files.
 
 The `/components` page demonstrates: Button, Card, Input, Label, Checkbox, Select, Dialog, Alert, Badge, Avatar, Dropdown Menu, Tooltip, Separator, Toggle, and Skeleton.
 
+### Live preview examples (DSLinter dashboard)
+
+Compound shadcn components (menus, dialogs, selects, etc.) need composed examples for the DSLinter live preview. Add a co-located `*.playground.tsx` file next to the component:
+
+```
+resources/js/components/ui/
+  dropdown-menu.tsx
+  dropdown-menu.playground.tsx   ← definePlayground() example
+```
+
+Each playground file exports a `definePlayground()` result from `dslinter`. Shared composition helpers live in [`resources/js/playground/preview-kits.tsx`](resources/js/playground/preview-kits.tsx).
+
+Example files are excluded from the component catalog via `ignore_globs` in [`.dslinter.json`](./.dslinter.json). Manual previews override auto-generated ones with the same `id` (e.g. `DropdownMenu`).
+
+Run `npx dslinter` and open `/component/DropdownMenu` in the dashboard to see the live preview.
+
 ```bash
 npx shadcn@latest add switch
 ```

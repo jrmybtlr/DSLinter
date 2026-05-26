@@ -123,14 +123,25 @@ export function enrichReportFileBestEffort(reportPath, projectRoot) {
 /** @typedef {{ projectRoot: string; reportPath: string; logPrefix?: string }} EnrichOptions */
 
 /**
+ * CLI-facing enrichment used by report, build, dev, and watch modes.
+ *
  * @param {EnrichOptions} opts
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean>} true when enrichment ran and wrote the report
  */
 export async function enrichPlaygroundsFromTs({
   projectRoot,
   reportPath,
   logPrefix = "dslinter",
 }) {
+  if (!createCheckerProgram(projectRoot)) {
+    if (process.env.DSLINTER_DEBUG?.trim() === "1") {
+      process.stderr.write(
+        `${logPrefix}: skip playground TS enrichment (no tsconfig.json)\n`,
+      );
+    }
+    return false;
+  }
+
   try {
     return enrichReportFile(reportPath, projectRoot);
   } catch (err) {
@@ -144,10 +155,10 @@ export async function enrichPlaygroundsFromTs({
 }
 
 /**
- * Poll the report file and re-run TS enrichment after Rust writes JSON.
+ * Poll the report file and re-run TS enrichment after the scanner writes JSON.
  *
  * @param {EnrichOptions & { pollMs?: number }} opts
- * @returns {() => void}
+ * @returns {() => void} stop function
  */
 export function watchEnrichPlaygroundsFromTs({
   projectRoot,

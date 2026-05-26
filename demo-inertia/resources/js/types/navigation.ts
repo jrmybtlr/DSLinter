@@ -11,4 +11,8 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    /** Internal Inertia route vs external anchor */
+    external?: boolean;
+    badge?: string | number;
+    children?: NavItem[];
 };
