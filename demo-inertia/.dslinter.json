@@ -2,7 +2,9 @@
   "include_dirs": [
     "resources/js/components"
   ],
-  "ignore_globs": [],
+  "ignore_globs": [
+    "**/*.playground.tsx"
+  ],
   "css_entrypoints": [
     "resources/css/app.css"
   ],

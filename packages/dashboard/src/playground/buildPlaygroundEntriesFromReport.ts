@@ -9,6 +9,8 @@ import {
   resolveModuleKeyForRelPath,
   type PlaygroundJoinSkip,
 } from "./playgroundJoin";
+import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
+import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
 
 export type BuildPlaygroundModules = Record<string, Record<string, unknown>>;
 
@@ -378,22 +380,28 @@ export function buildPlaygroundEntriesFromReportWithSkips(
   options: BuildPlaygroundOptions = {},
 ): BuildPlaygroundResult {
   const specs = report?.playgrounds;
-  if (!specs?.length) return { entries: [], skipped: [] };
-
   const globKeyFromRelPath =
     options.globKeyFromRelPath ?? defaultGlobKeyFromRelPath;
   const controlOverrides = options.controlOverrides ?? {};
   const staticDefaultsMap = options.staticDefaults ?? {};
 
-  const skipped = diagnosePlaygroundJoinSkips(report, modules, {
-    globKeyFromRelPath,
-  });
+  const skipped =
+    specs?.length ?
+      diagnosePlaygroundJoinSkips(report, modules, {
+        globKeyFromRelPath,
+      })
+    : [];
   const shouldLog =
     options.logJoinSkips ??
     (typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV));
   if (shouldLog) logPlaygroundJoinSkips(skipped);
 
-  const out: PlaygroundEntry[] = [];
+  const autoEntries: PlaygroundEntry[] = [];
+  if (!specs?.length) {
+    const manualOnly = collectDefinedPlaygrounds(modules);
+    return { entries: mergePlaygroundEntries([], manualOnly), skipped };
+  }
+
   for (const spec of specs) {
     const globKey = globKeyFromRelPath(spec.rel_path);
     const resolvedKey = resolveModuleKeyForRelPath(
@@ -447,7 +455,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       ...(spec.group ? { group: spec.group } : {}),
     };
 
-    out.push({
+    autoEntries.push({
       id: catalogId,
       meta,
       modulePath: resolvedKey ?? globKey,
@@ -459,13 +467,11 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     });
   }
 
-  out.sort((a, b) => {
-    const ga = a.meta.group ?? "";
-    const gb = b.meta.group ?? "";
-    if (ga !== gb) return ga.localeCompare(gb);
-    return a.meta.title.localeCompare(b.meta.title);
-  });
-  return { entries: out, skipped };
+  const manualEntries = collectDefinedPlaygrounds(modules);
+  return {
+    entries: mergePlaygroundEntries(autoEntries, manualEntries),
+    skipped,
+  };
 }
 
 /** Build playground entries from report specs + eager Vite modules. */
