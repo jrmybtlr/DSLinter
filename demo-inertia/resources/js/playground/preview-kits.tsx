@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/collapsible';
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -136,7 +137,9 @@ export function dialogPreview({
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button variant="outline">{cancelLabel}</Button>
+                    <DialogClose asChild>
+                        <Button variant="outline">{cancelLabel}</Button>
+                    </DialogClose>
                     <Button>{confirmLabel}</Button>
                 </DialogFooter>
             </DialogContent>

@@ -64,10 +64,28 @@ fn pick_definition<'a>(
             return Some(d);
         }
     }
+    let normalized_stem = normalized_name(stem);
+    if !normalized_stem.is_empty() {
+        let mut normalized_matches = playable
+            .iter()
+            .filter(|d| normalized_name(&d.name) == normalized_stem);
+        let first = normalized_matches.next();
+        if first.is_some() && normalized_matches.next().is_none() {
+            return first.copied();
+        }
+    }
     if playable.len() == 1 {
         return Some(playable[0]);
     }
     None
+}
+
+fn normalized_name(value: &str) -> String {
+    value
+        .chars()
+        .filter(|c| *c != '-' && *c != '_')
+        .flat_map(char::to_lowercase)
+        .collect()
 }
 
 /// Example files (`dropdown-menu.playground.tsx`) are not component sources.
@@ -189,6 +207,30 @@ mod tests {
         ];
         let picked = pick_definition(&defs, "dropdown-menu").unwrap();
         assert_eq!(picked.name, "DropdownMenu");
+    }
+
+    #[test]
+    fn picks_kebab_stem_with_acronym_export() {
+        let defs = vec![
+            ComponentDefinition {
+                name: "InputOTP".into(),
+                kind: DefinitionKind::Function,
+                line: 1,
+                declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
+            },
+            ComponentDefinition {
+                name: "InputOTPGroup".into(),
+                kind: DefinitionKind::Function,
+                line: 2,
+                declared_props: vec![],
+                declared_prop_options: BTreeMap::new(),
+                declared_prop_defaults: BTreeMap::new(),
+            },
+        ];
+        let picked = pick_definition(&defs, "input-otp").unwrap();
+        assert_eq!(picked.name, "InputOTP");
     }
 
     #[test]

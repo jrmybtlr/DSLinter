@@ -31,4 +31,17 @@ describe("collectDefinedPlaygrounds", () => {
     };
     expect(collectDefinedPlaygrounds(modules)).toEqual([]);
   });
+
+  it("ignores malformed definePlayground-like exports", () => {
+    const modules = {
+      "../components/ui/dropdown-menu.playground.tsx": {
+        invalid: {
+          playgroundMeta: { id: "DropdownMenu", title: 123 },
+          playgroundControls: [],
+          PlaygroundPreview: () => createElement("span", null, "menu"),
+        },
+      },
+    };
+    expect(collectDefinedPlaygrounds(modules)).toEqual([]);
+  });
 });
