@@ -23,12 +23,14 @@ export function SidebarNavMenu({ className, ...props }: SidebarNavMenuProps) {
 type SidebarNavLinkProps = {
     item: NavItem;
     buttonClassName?: string;
+    iconClassName?: string;
     showTooltip?: boolean;
 };
 
 export function SidebarNavLink({
     item,
     buttonClassName,
+    iconClassName,
     showTooltip = true,
 }: SidebarNavLinkProps) {
     const { isCurrentUrl } = useCurrentUrl();
@@ -37,7 +39,7 @@ export function SidebarNavLink({
 
     const linkContent = (
         <>
-            {item.icon && <item.icon />}
+            {item.icon && <item.icon className={iconClassName} />}
             <span>{item.title}</span>
         </>
     );
@@ -76,12 +78,14 @@ export function SidebarNavLink({
 type SidebarNavListProps = {
     items: NavItem[];
     buttonClassName?: string;
+    iconClassName?: string;
     showTooltip?: boolean;
 } & Omit<SidebarNavMenuProps, 'children'>;
 
 export function SidebarNavList({
     items,
     buttonClassName,
+    iconClassName,
     showTooltip = true,
     className,
     ...props
@@ -93,6 +97,7 @@ export function SidebarNavList({
                     key={item.title}
                     item={item}
                     buttonClassName={buttonClassName}
+                    iconClassName={iconClassName}
                     showTooltip={showTooltip}
                 />
             ))}
@@ -105,6 +110,7 @@ type SidebarNavSectionProps = ComponentPropsWithoutRef<typeof SidebarGroup> & {
     showLabel?: boolean;
     items: NavItem[];
     buttonClassName?: string;
+    iconClassName?: string;
     showTooltip?: boolean;
 };
 
@@ -113,6 +119,7 @@ export function SidebarNavSection({
     showLabel = true,
     items,
     buttonClassName,
+    iconClassName,
     showTooltip = true,
     className,
     children,
@@ -122,6 +129,7 @@ export function SidebarNavSection({
         <SidebarNavList
             items={items}
             buttonClassName={buttonClassName}
+            iconClassName={iconClassName}
             showTooltip={showTooltip}
         />
     );

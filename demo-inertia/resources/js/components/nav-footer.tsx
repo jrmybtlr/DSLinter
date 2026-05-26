@@ -16,6 +16,7 @@ export function NavFooter({
             showLabel={false}
             items={items}
             buttonClassName="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
+            iconClassName="h-5 w-5"
             className={`group-data-[collapsible=icon]:p-0 ${className || ''}`}
         />
     );
