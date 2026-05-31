@@ -164,7 +164,9 @@ export function PlaygroundA11ySection({
   variantScanPending = false,
 }: A11yProps) {
   const hasFindingRows = reportReady && a11y.findings.length > 0;
-  const showVariantColumn = a11y.findings.some((f) => f.variantLabel);
+  const showVariantColumn = a11y.findings.some(
+    (f) => f.variant_label != null && f.variant_label !== "",
+  );
 
   return (
     <>
@@ -182,11 +184,11 @@ export function PlaygroundA11ySection({
           <TableBody>
             {a11y.findings.map((f, i) => (
               <TableRow
-                key={`${f.rule_id}-${f.line ?? "x"}-${f.variantLabel ?? ""}-${i}`}
+                key={`${f.rule_id}-${f.line ?? "x"}-${f.variant_label ?? ""}-${i}`}
               >
                 {showVariantColumn ? (
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    {f.variantLabel ?? "—"}
+                    {f.variant_label ?? "—"}
                   </TableCell>
                 ) : null}
                 <TableCell>{f.rule_id}</TableCell>

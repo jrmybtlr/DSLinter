@@ -166,6 +166,7 @@ mod tests {
             declared_props: vec!["children".into()],
             declared_prop_options: BTreeMap::new(),
             declared_prop_defaults: BTreeMap::new(),
+            cva_binding_name: None,
         }];
         let picked = pick_definition(&defs, "PrimaryButton").unwrap();
         assert_eq!(picked.name, "PrimaryButton");
@@ -180,6 +181,7 @@ mod tests {
             declared_props: vec![],
             declared_prop_options: BTreeMap::new(),
             declared_prop_defaults: BTreeMap::new(),
+            cva_binding_name: None,
         }];
         let picked = pick_definition(&defs, "DuplicateCardA").unwrap();
         assert_eq!(picked.name, "Card");
@@ -195,6 +197,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             },
             ComponentDefinition {
                 name: "DropdownMenuContent".into(),
@@ -203,6 +206,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             },
         ];
         let picked = pick_definition(&defs, "dropdown-menu").unwrap();
@@ -219,6 +223,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             },
             ComponentDefinition {
                 name: "InputOTPGroup".into(),
@@ -227,6 +232,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             },
         ];
         let picked = pick_definition(&defs, "input-otp").unwrap();
@@ -243,6 +249,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             },
             ComponentDefinition {
                 name: "B".into(),
@@ -251,6 +258,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             },
         ];
         assert!(pick_definition(&defs, "OtherStem").is_none());
@@ -288,6 +296,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             }],
             usages: vec![],
             parse_errors: vec![],
@@ -313,6 +322,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             }],
             usages: vec![],
             parse_errors: vec![],
@@ -336,6 +346,7 @@ mod tests {
                 declared_props: vec![],
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             }],
             usages: vec![],
             parse_errors: vec![],

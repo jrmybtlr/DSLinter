@@ -264,6 +264,7 @@ mod prop_tests {
                     declared_props: props.into_iter().map(|s| s.to_string()).collect(),
                     declared_prop_options: BTreeMap::new(),
                     declared_prop_defaults: BTreeMap::new(),
+                    cva_binding_name: None,
                 })
                 .collect(),
             usages: usages

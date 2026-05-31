@@ -2,6 +2,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hideComponentInDslintConfig } from "../bin/lib/config-hide-component.mjs";
+import { openFileInEditor } from "./openFileInEditor.mjs";
 import { loadConfigFromFile } from "vite";
 import type { Plugin, UserConfig } from "vite";
 import { resolveServePort } from "../shared/servePort";
@@ -214,9 +215,36 @@ export default function dslinter(
     configureServer(server) {
       const reportFile = resolveReportFilePath(scanRoot);
       const configHidePath = "/dslinter-config/hide-component";
+      const openFilePath = "/dslinter/open-file";
 
       server.middlewares.use(async (req, res, next) => {
-        const path = req.url?.split("?")[0];
+        const url = new URL(req.url ?? "/", "http://localhost");
+        const path = url.pathname;
+        if (path === openFilePath && (req.method === "POST" || req.method === "GET")) {
+          try {
+            const file = url.searchParams.get("path")?.trim();
+            if (!file) {
+              throw new Error("Missing path query parameter");
+            }
+            const line = Number(url.searchParams.get("line") ?? "1");
+            const column = Number(url.searchParams.get("column") ?? "1");
+            openFileInEditor({
+              file,
+              line: Number.isFinite(line) ? line : 1,
+              column: Number.isFinite(column) ? column : 1,
+              scanRoot,
+            });
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.statusCode = 200;
+            res.end(JSON.stringify({ ok: true }));
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ ok: false, error: message }));
+          }
+          return;
+        }
         if (path === configHidePath && req.method === "POST") {
           try {
             const chunks: Buffer[] = [];

@@ -42,9 +42,6 @@ pub struct DslintConfig {
     /// Arbitrary token names your design system defines (for adoption metrics).
     #[serde(default)]
     pub known_tokens: Vec<String>,
-    /// Map of owner label → path prefixes (slash-normalized, relative to repo root).
-    #[serde(default)]
-    pub ownership: HashMap<String, Vec<String>>,
     /// Playground sidebar groups: group id → path prefixes (longest prefix wins per file).
     #[serde(default)]
     pub playground_groups: HashMap<String, Vec<String>>,
@@ -79,6 +76,11 @@ pub struct DslintConfig {
     /// patterns document common packages and apply when `local_import_prefixes` is widened.
     #[serde(default = "default_external_import_patterns")]
     pub external_import_patterns: Vec<String>,
+    /// Shell command used by the dashboard dev server to open source files.
+    /// Supports `{file}`, `{line}`, and `{column}` placeholders (e.g.
+    /// `"cursor --goto {file}:{line}:{column}"`).
+    #[serde(default)]
+    pub editor_open_command: Option<String>,
 }
 
 fn default_local_import_prefixes() -> Vec<String> {

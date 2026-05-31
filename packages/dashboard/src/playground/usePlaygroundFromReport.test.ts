@@ -20,7 +20,6 @@ describe("autoPlayground join (embed glob keys)", () => {
       findings: [],
       duplicate_components: [],
       usage_by_component: [],
-      ownership: [],
       scores: {
         design_system_health: 0,
         ux_consistency: 0,

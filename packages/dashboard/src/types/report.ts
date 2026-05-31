@@ -21,6 +21,7 @@ export interface ComponentDefinition {
   declared_prop_options?: Record<string, string[]>;
   /** Default values from CVA `defaultVariants`. */
   declared_prop_defaults?: Record<string, string>;
+  cva_binding_name?: string;
 }
 
 export interface JsxUsage {
@@ -37,6 +38,8 @@ export interface LintFinding {
   path: string;
   line: number | null;
   severity: Severity;
+  /** Prop combo label from CVA matrix scan (CI or playground). */
+  variant_label?: string;
 }
 
 export interface FileScan {
@@ -80,12 +83,6 @@ export interface UsageSummary {
   prop_value_frequencies?: Record<string, Record<string, number>>;
   /** Every individual call-site with its file, line, and passed props. */
   usage_locations?: UsageLocation[];
-}
-
-export interface OwnershipSummary {
-  owner: string;
-  files: number;
-  definitions: number;
 }
 
 /**
@@ -150,15 +147,26 @@ export interface ReportConfig {
   hidden_paths?: string[];
 }
 
+/** Agent/MCP-friendly slice of `.dslinter.json` embedded in each scan report. */
+export interface ConfigSnapshot {
+  deprecated_components?: string[];
+  known_tokens?: string[];
+  include_dirs?: string[];
+}
+
 export interface WorkspaceReport {
+  /** Report JSON schema version (1+). Omitted in legacy reports. */
+  schema_version?: number;
+  /** ISO 8601 UTC timestamp when the report was generated. */
+  generated_at?: string;
   root: string;
   files: FileScan[];
   findings: LintFinding[];
   duplicate_components: DuplicateComponent[];
   usage_by_component: UsageSummary[];
-  ownership: OwnershipSummary[];
   scores: GovernanceScores;
   playgrounds?: PlaygroundSpec[];
   css_tokens?: CssTokenSummary;
   config?: ReportConfig;
+  config_snapshot?: ConfigSnapshot;
 }

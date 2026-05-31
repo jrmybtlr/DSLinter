@@ -6,8 +6,7 @@ import {
     NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 
-export const navigationMenuPlayground = definePlayground({
-    render: () => (
+export const navigationMenuPlayground = definePlayground(() => (
         <NavigationMenu>
             <NavigationMenuList>
                 <NavigationMenuItem>
@@ -21,5 +20,4 @@ export const navigationMenuPlayground = definePlayground({
                 </NavigationMenuItem>
             </NavigationMenuList>
         </NavigationMenu>
-    ),
-});
+));

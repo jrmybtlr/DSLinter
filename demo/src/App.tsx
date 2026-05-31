@@ -39,7 +39,6 @@ export default function App() {
       tokenCatalog={tokenCatalog}
       dslinterReport={dslinterReport}
       dslinterReportHint="npm run dslinter:report (from demo/)"
-      formatModulePath={(modulePath) => `demo/${modulePath.replace(/^\.\.\//, "")}`}
     />
   );
 }

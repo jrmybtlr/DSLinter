@@ -5,16 +5,20 @@ import {
     BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbPage,
+    BreadcrumbEllipsis,
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 
-export const breadcrumbPlayground = definePlayground({
-    render: () => (
+export const breadcrumbPlayground = definePlayground(() => (
         <Breadcrumb>
             <BreadcrumbList>
                 <BreadcrumbItem>
                     <BreadcrumbLink href="#">Home</BreadcrumbLink>
-                </BreadcrumbItem>
+            </BreadcrumbItem>
+            
+            <BreadcrumbSeparator />
+            <BreadcrumbEllipsis />
+            
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                     <BreadcrumbLink href="#">Components</BreadcrumbLink>
@@ -25,5 +29,4 @@ export const breadcrumbPlayground = definePlayground({
                 </BreadcrumbItem>
             </BreadcrumbList>
         </Breadcrumb>
-    ),
-});
+));

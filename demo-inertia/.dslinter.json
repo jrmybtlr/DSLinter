@@ -12,5 +12,8 @@
     "components": [
       "resources/js/components"
     ]
-  }
+  },
+  "hidden_components": [
+    "AppShell"
+  ]
 }

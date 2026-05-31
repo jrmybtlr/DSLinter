@@ -1,4 +1,4 @@
-import { createElement, type ComponentType } from "react";
+import { createElement } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { PlaygroundSpec, UsageSummary, WorkspaceReport } from "../types/report";
 import type { PlaygroundEntry, PlaygroundMeta } from "../types/playground";
@@ -15,11 +15,14 @@ import {
   isCatalogComponentHidden,
 } from "../dashboard/catalogVisibility";
 import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
+import { catalogIdFromPlaygroundExport } from "./catalogIdFromPlaygroundExport";
 import {
   buildCompoundPlaygroundEntries,
   upgradeRootEntriesWithCompoundPreview,
 } from "./buildCompoundPlaygroundEntries";
 import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
+import { getModuleExport } from "./playgroundModuleExport";
+import { mergeReportControlsForKit, type PlaygroundKitHints } from "./enrichKitControls";
 import {
   componentAcceptsChildren,
   controlsForSpec,
@@ -27,6 +30,79 @@ import {
 } from "./controls";
 import { genericUsageSnippet } from "./snippet";
 import { mergeStaticDefaults, normalizedPropKinds, valuesToComponentProps } from "./propCoerce";
+
+function isDefinedPlayground(value: unknown): value is import("./definePlayground").DefinedPlayground {
+  if (!value || typeof value !== "object") return false;
+  const o = value as Record<string, unknown>;
+  if (typeof o.playgroundMeta !== "object" || o.playgroundMeta === null) return false;
+  const meta = o.playgroundMeta as { id?: unknown; title?: unknown; group?: unknown };
+  return (
+    typeof meta.id === "string" &&
+    typeof meta.title === "string" &&
+    (meta.group === undefined || typeof meta.group === "string") &&
+    Array.isArray(o.playgroundControls) &&
+    typeof o.PlaygroundPreview === "function"
+  );
+}
+
+function specForCatalogEntry(
+  report: WorkspaceReport,
+  catalogId: string,
+): PlaygroundSpec | undefined {
+  return report.playgrounds?.find(
+    (spec) => spec.export_name === catalogId || spec.id === catalogId,
+  );
+}
+
+/** When JSX inference fails, still merge CVA props whose keys match kit control params. */
+function fallbackRootPropBindings(
+  entry: PlaygroundEntry,
+  hints: PlaygroundKitHints | undefined,
+  report: WorkspaceReport,
+): PlaygroundKitHints["rootPropBindings"] {
+  const fromKit = hints?.rootPropBindings ?? [];
+  if (fromKit.length > 0) return fromKit;
+
+  const spec = specForCatalogEntry(report, entry.id);
+  if (!spec) return [];
+
+  const paramKeys = new Set(entry.controls.map((control) => control.key));
+  return (spec.declared_props ?? [])
+    .filter((prop) => paramKeys.has(prop))
+    .map((prop) => ({ component: spec.export_name, prop, param: prop }));
+}
+
+function enrichManualEntriesFromReport(
+  entries: PlaygroundEntry[],
+  modules: BuildPlaygroundModules,
+  report: WorkspaceReport | null | undefined,
+): PlaygroundEntry[] {
+  if (!report) return entries;
+
+  const definedById = new Map<string, import("./definePlayground").DefinedPlayground>();
+  for (const mod of Object.values(modules)) {
+    if (!mod || typeof mod !== "object") continue;
+    for (const [exportName, value] of Object.entries(mod)) {
+      if (!isDefinedPlayground(value)) continue;
+      const catalogId =
+        value.playgroundMeta.id || catalogIdFromPlaygroundExport(exportName) || "";
+      if (!catalogId) continue;
+      definedById.set(catalogId, value);
+    }
+  }
+
+  return entries.map((entry) => {
+    const defined = definedById.get(entry.id);
+    const bindings = fallbackRootPropBindings(
+      entry,
+      defined?.playgroundKitHints,
+      report,
+    );
+    if (!bindings.length) return entry;
+    const controls = mergeReportControlsForKit(entry.controls, bindings, report, entry.id);
+    return controls === entry.controls ? entry : { ...entry, controls };
+  });
+}
 
 export type BuildPlaygroundModules = Record<string, Record<string, unknown>>;
 
@@ -61,15 +137,6 @@ export {
   findPlaygroundSpec,
   logPlaygroundJoinSkips,
 } from "./playgroundJoin";
-
-function getExport(
-  mod: Record<string, unknown>,
-  exportName: string,
-): ComponentType<Record<string, unknown>> | undefined {
-  const x = mod[exportName];
-  if (typeof x === "function") return x as ComponentType<Record<string, unknown>>;
-  return undefined;
-}
 
 /** Sidebar / URL id — matches catalog component names (`export_name`). */
 export function playgroundCatalogId(spec: PlaygroundSpec): string {
@@ -113,7 +180,11 @@ export function buildPlaygroundEntriesFromReportWithSkips(
 
   const autoEntries: PlaygroundEntry[] = [];
   if (!specs?.length) {
-    const manualOnly = collectDefinedPlaygrounds(modules);
+    const manualOnly = enrichManualEntriesFromReport(
+      collectDefinedPlaygrounds(modules),
+      modules,
+      report,
+    );
     return { entries: mergePlaygroundEntries([], manualOnly), skipped };
   }
 
@@ -122,7 +193,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     const resolvedKey = resolveModuleKeyForRelPath(spec.rel_path, modules, globKeyFromRelPath);
     const mod = resolvedKey ? modules[resolvedKey] : undefined;
     if (!mod) continue;
-    const Cmp = getExport(mod, spec.export_name);
+    const Cmp = getModuleExport(mod, spec.export_name);
     if (!Cmp) continue;
 
     const catalogId = playgroundCatalogId(spec);
@@ -191,7 +262,11 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     staticDefaults: staticDefaultsMap,
     existingIds: new Set(autoEntries.map((entry) => entry.id)),
   });
-  const manualEntries = collectDefinedPlaygrounds(modules);
+  const manualEntries = enrichManualEntriesFromReport(
+    collectDefinedPlaygrounds(modules),
+    modules,
+    report,
+  );
   const merged = mergePlaygroundEntries(
     [...autoEntries, ...compoundEntries],
     manualEntries,

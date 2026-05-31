@@ -16,6 +16,25 @@ describe("playgroundModuleExport", () => {
     expect(getModuleExport(mod, "DropdownMenu")).toBe(Forward);
   });
 
+  it("getModuleExport falls back to default export when named export is missing", () => {
+    function AppLogoIcon() {
+      return null;
+    }
+    const mod = { default: AppLogoIcon };
+    expect(getModuleExport(mod, "AppLogoIcon")).toBe(AppLogoIcon);
+  });
+
+  it("getModuleExport prefers named export over default", () => {
+    function Named() {
+      return null;
+    }
+    function DefaultOnly() {
+      return null;
+    }
+    const mod = { Button: Named, default: DefaultOnly };
+    expect(getModuleExport(mod, "Button")).toBe(Named);
+  });
+
   it("rejects non-components", () => {
     expect(isPlaygroundComponent(null)).toBe(false);
     expect(isPlaygroundComponent({ foo: 1 })).toBe(false);

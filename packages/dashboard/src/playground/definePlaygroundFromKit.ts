@@ -1,41 +1,17 @@
-import type { ReactNode } from "react";
-import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
-import { definePlayground, type DefinedPlayground } from "./definePlayground";
+import type { PlaygroundArgs } from "../types/controls";
 import {
-  expandPlaygroundControls,
-  propsFromControls,
-  type PlaygroundControlsInput,
-} from "./expandPlaygroundControls";
+  definePlayground,
+  type DefinedPlayground,
+  type DefinePlaygroundKitOptions,
+} from "./definePlayground";
 
-export type DefinePlaygroundFromKitOptions<T extends PlaygroundArgs> = {
-  /**
-   * Catalog id (matches component `export_name`). Omit when the module export is
-   * `{name}Playground` (e.g. `alertPlayground` → `Alert`).
-   */
-  id?: string;
-  title?: string;
-  group?: string;
-  /** Preview renderer receiving mapped control values. */
-  kit: (args: T) => ReactNode;
-  controls?: PlaygroundControlsInput;
-  /** Extra defaults merged after control defaults. */
-  defaults?: Partial<T>;
-};
+/** @deprecated Use `definePlayground({ kit, controls })` instead. */
+export type DefinePlaygroundFromKitOptions<T extends PlaygroundArgs> =
+  DefinePlaygroundKitOptions<T>;
 
-/**
- * Shorthand for `definePlayground({ render })` + preview-kit wiring.
- * Control keys are passed to `kit` without repeating defaults in `render`.
- */
+/** @deprecated Use `definePlayground({ kit, controls })` instead. */
 export function definePlaygroundFromKit<T extends PlaygroundArgs>(
   options: DefinePlaygroundFromKitOptions<T>,
 ): DefinedPlayground {
-  const controls = expandPlaygroundControls(options.controls);
-  return definePlayground({
-    id: options.id,
-    title: options.title,
-    group: options.group,
-    controls,
-    render: (values) =>
-      options.kit(propsFromControls<T>(controls, values, options.defaults)),
-  });
+  return definePlayground(options);
 }

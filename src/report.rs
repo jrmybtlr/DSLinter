@@ -38,16 +38,6 @@ pub fn print_human(report: &WorkspaceReport) {
         }
     }
 
-    if !report.ownership.is_empty() {
-        println!("\nOwnership (from `.dslinter.json`, prefix match)");
-        for row in &report.ownership {
-            println!(
-                "  {:20}  {:4} files  {:4} definitions",
-                row.owner, row.files, row.definitions,
-            );
-        }
-    }
-
     println!("\nFindings");
     if report.findings.is_empty() {
         println!("  (none)");

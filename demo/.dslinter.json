@@ -13,9 +13,6 @@
     "p-layout-",
     "gap-layout-"
   ],
-  "ownership": {
-    "design-system": ["src/components/"]
-  },
   "playground_groups": {
     "components": ["src/components"]
   },

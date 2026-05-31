@@ -14,6 +14,9 @@ export function getModuleExport(
   mod: Record<string, unknown>,
   exportName: string,
 ): ComponentType<Record<string, unknown>> | undefined {
-  const x = mod[exportName];
-  return isPlaygroundComponent(x) ? x : undefined;
+  const named = mod[exportName];
+  if (isPlaygroundComponent(named)) return named;
+  const fallback = mod.default;
+  if (isPlaygroundComponent(fallback)) return fallback;
+  return undefined;
 }

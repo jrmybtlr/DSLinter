@@ -9,7 +9,7 @@ import {
   resolvePlaygroundEntry,
 } from "./buildPlaygroundEntriesFromReport";
 import { definePlayground } from "./definePlayground";
-import { definePlaygroundFromKit } from "./definePlaygroundFromKit";
+import { inferKitRootPropBindings } from "./inferKitJsx";
 
 const entries: PlaygroundEntry[] = [
   {
@@ -44,7 +44,6 @@ describe("playground catalog id alignment", () => {
         accessibility: 0,
         maintainability: 0,
       },
-      ownership: [],
       duplicate_components: [],
       usage_by_component: [],
       playgrounds: [
@@ -72,7 +71,6 @@ describe("playground preview props", () => {
       accessibility: 0,
       maintainability: 0,
     },
-    ownership: [],
     duplicate_components: [],
     usage_by_component: [],
     playgrounds: [
@@ -233,7 +231,73 @@ describe("playground preview props", () => {
     expect(entry!.usageSnippet?.(defaultValues)).toBe("<Badge>Example</Badge>");
   });
 
-  it("definePlaygroundFromKit manual entries override auto previews with inferred id", () => {
+  it("manual kit playground merges CVA variant select from report", () => {
+    function Alert(props: { variant?: string; children?: ReactNode }) {
+      return createElement("div", { "data-slot": "alert", "data-variant": props.variant }, props.children);
+    }
+    function AlertTitle(props: { children?: ReactNode }) {
+      return createElement("div", { "data-slot": "alert-title" }, props.children);
+    }
+    function AlertDescription(props: { children?: ReactNode }) {
+      return createElement("div", { "data-slot": "alert-description" }, props.children);
+    }
+
+    const kit = ({ title, description, variant }: { title: string; description: string; variant: string }) =>
+      createElement(
+        Alert,
+        { variant },
+        createElement(AlertTitle, null, title),
+        createElement(AlertDescription, null, description),
+      );
+    expect(inferKitRootPropBindings(kit)).toEqual([
+      { component: "Alert", prop: "variant", param: expect.stringMatching(/^variant\d*$/) },
+    ]);
+    const defined = definePlayground(kit);
+
+    const alertReport: WorkspaceReport = {
+      ...report,
+      playgrounds: [
+        {
+          id: "Alert",
+          export_name: "Alert",
+          rel_path: "resources/js/components/ui/alert.tsx",
+          declared_props: ["variant"],
+          declared_prop_options: {
+            variant: ["default", "destructive"],
+          },
+          declared_prop_defaults: {
+            variant: "default",
+          },
+        },
+      ],
+    };
+    const modules = {
+      "../components/ui/alert.tsx": {
+        Alert: () => createElement("div", null, "auto alert"),
+      },
+      "../components/ui/alert.playground.tsx": {
+        alertPlayground: defined,
+      },
+    };
+    const { entries } = buildPlaygroundEntriesFromReportWithSkips(alertReport, modules, {
+      globKeyFromRelPath: (rel) => {
+        const name = rel.split("/").pop()!;
+        return `../components/ui/${name}`;
+      },
+      logJoinSkips: false,
+    });
+    const entry = entries.find((e) => e.id === "Alert");
+    expect(entry).toBeDefined();
+    const variant = entry!.controls.find((c) => c.key === "variant");
+    expect(variant?.type).toBe("select");
+    if (variant?.type === "select") {
+      expect(variant.options.map((o) => o.value)).toEqual(["default", "destructive"]);
+    }
+    const title = entry!.controls.find((c) => c.key === "title");
+    expect(title?.label).toBe("Title");
+  });
+
+  it("definePlayground kit manual entries override auto previews with inferred id", () => {
     const alertReport: WorkspaceReport = {
       ...report,
       playgrounds: [
@@ -245,10 +309,9 @@ describe("playground preview props", () => {
         },
       ],
     };
-    const defined = definePlaygroundFromKit({
-      controls: { title: "Heads up" },
-      kit: ({ title }) => createElement("div", { "data-slot": "alert" }, String(title)),
-    });
+    const defined = definePlayground(({ title = "Heads up" }) =>
+      createElement("div", { "data-slot": "alert" }, String(title)),
+    );
     const modules = {
       "../components/ui/alert.tsx": {
         Alert: () => createElement("div", null, "auto alert"),
@@ -376,11 +439,10 @@ describe("playground preview props", () => {
         },
       ],
     };
-    const defined = definePlayground({
-      id: "DropdownMenu",
-      group: "ui",
-      render: () => createElement("nav", null, "manual menu"),
-    });
+    const defined = definePlayground(
+      () => createElement("nav", null, "manual menu"),
+      { id: "DropdownMenu", group: "ui" },
+    );
     const modules = {
       "../components/ui/dropdown-menu.tsx": {
         DropdownMenu: () => createElement("div", null, "auto menu"),

@@ -1,8 +1,7 @@
 import { definePlayground } from 'dslinter';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-export const toggleGroupPlayground = definePlayground({
-    render: () => (
+export const toggleGroupPlayground = definePlayground(() => (
         <ToggleGroup type="single" defaultValue="left">
             <ToggleGroupItem value="left" aria-label="Align left">
                 Left
@@ -14,5 +13,4 @@ export const toggleGroupPlayground = definePlayground({
                 Right
             </ToggleGroupItem>
         </ToggleGroup>
-    ),
-});
+));

@@ -547,6 +547,7 @@ pub fn unused_css_var_findings(
                 path: def.path.clone(),
                 line: Some(def.line),
                 severity: Severity::Info,
+                variant_label: None,
             })
         })
         .collect()

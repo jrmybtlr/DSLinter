@@ -1,0 +1,156 @@
+[
+  {
+    "rule_id": "a11y-img-alt",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "`<img>` must include an `alt` attribute for screen readers.",
+    "fix_hint": "Add alt=\"\" for decorative images or a descriptive alt for meaningful images."
+  },
+  {
+    "rule_id": "a11y-button-name",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "`<button>` must have an accessible name (text content or aria-label).",
+    "fix_hint": "Add visible text, aria-label, or aria-labelledby."
+  },
+  {
+    "rule_id": "a11y-input-label",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "`<input>` should have an associated label or aria-label.",
+    "fix_hint": "Wrap with <Label htmlFor=...> or add aria-label."
+  },
+  {
+    "rule_id": "a11y-anchor-href",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "`<a>` should have a meaningful href.",
+    "fix_hint": "Use a valid href or replace with <button> for actions."
+  },
+  {
+    "rule_id": "a11y-anchor-placeholder-href",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "`<a href=\"#\">` is a placeholder link pattern.",
+    "fix_hint": "Use <button type=\"button\"> or a real destination URL."
+  },
+  {
+    "rule_id": "a11y-dark-mode-contrast",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "Light-mode color classes may lack a dark: variant.",
+    "fix_hint": "Add matching dark: text/background utilities or theme tokens."
+  },
+  {
+    "rule_id": "token-hardcoded-color",
+    "pillar": "token",
+    "default_severity": "warning",
+    "description": "Hardcoded hex/rgb color instead of design tokens.",
+    "fix_hint": "Replace with a CSS variable or Tailwind theme utility from css_tokens."
+  },
+  {
+    "rule_id": "token-tailwind-arbitrary",
+    "pillar": "token",
+    "default_severity": "warning",
+    "description": "Tailwind arbitrary value (e.g. bg-[#fff]) bypasses the token system.",
+    "fix_hint": "Use a named theme utility or CSS custom property."
+  },
+  {
+    "rule_id": "token-unused-css-var",
+    "pillar": "token",
+    "default_severity": "info",
+    "description": "CSS custom property defined but never referenced.",
+    "fix_hint": "Remove unused token or reference it via var(--name) or Tailwind."
+  },
+  {
+    "rule_id": "deprecated-component",
+    "pillar": "usage",
+    "default_severity": "warning",
+    "description": "Component is listed as deprecated in .dslinter.json.",
+    "fix_hint": "Replace with the canonical component from the catalog (check usage_by_component)."
+  },
+  {
+    "rule_id": "duplicate-component",
+    "pillar": "usage",
+    "default_severity": "warning",
+    "description": "Same component name is defined in multiple files.",
+    "fix_hint": "Consolidate into one definition and update imports."
+  },
+  {
+    "rule_id": "unused-prop",
+    "pillar": "usage",
+    "default_severity": "info",
+    "description": "Declared prop is never passed at any call site.",
+    "fix_hint": "Remove unused prop from the API or document why it exists."
+  },
+  {
+    "rule_id": "variant-explosion",
+    "pillar": "usage",
+    "default_severity": "info",
+    "description": "Component has an unusually large prop surface at call sites.",
+    "fix_hint": "Split into smaller components or reduce optional props."
+  },
+  {
+    "rule_id": "code-console",
+    "pillar": "code",
+    "default_severity": "info",
+    "description": "console.log (or similar) left in component code.",
+    "fix_hint": "Remove debug logging before shipping."
+  },
+  {
+    "rule_id": "code-console-error",
+    "pillar": "code",
+    "default_severity": "warning",
+    "description": "console.error in component code.",
+    "fix_hint": "Use proper error handling or remove."
+  },
+  {
+    "rule_id": "code-debugger",
+    "pillar": "code",
+    "default_severity": "error",
+    "description": "debugger statement in source.",
+    "fix_hint": "Remove debugger."
+  },
+  {
+    "rule_id": "code-inline-style",
+    "pillar": "code",
+    "default_severity": "warning",
+    "description": "Inline JSX style={{}} bypasses token/Tailwind conventions.",
+    "fix_hint": "Use className with theme utilities."
+  },
+  {
+    "rule_id": "code-empty-catch",
+    "pillar": "code",
+    "default_severity": "warning",
+    "description": "Empty catch block swallows errors.",
+    "fix_hint": "Handle or rethrow the error."
+  },
+  {
+    "rule_id": "code-large-file",
+    "pillar": "code",
+    "default_severity": "info",
+    "description": "File exceeds size heuristic for maintainability.",
+    "fix_hint": "Split into smaller modules."
+  },
+  {
+    "rule_id": "code-redundant-fragment",
+    "pillar": "code",
+    "default_severity": "info",
+    "description": "Redundant React fragment wrapper.",
+    "fix_hint": "Remove unnecessary <>...</>."
+  },
+  {
+    "rule_id": "code-suppression-comment",
+    "pillar": "code",
+    "default_severity": "info",
+    "description": "Lint/TS suppression comment present.",
+    "fix_hint": "Fix the underlying issue instead of suppressing."
+  },
+  {
+    "rule_id": "code-todo-marker",
+    "pillar": "code",
+    "default_severity": "info",
+    "description": "TODO/FIXME marker in source.",
+    "fix_hint": "Resolve or track in issue tracker."
+  }
+]

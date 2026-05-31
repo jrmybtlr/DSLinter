@@ -577,3 +577,4 @@ if (!nativeBinding) {
 
 module.exports = nativeBinding
 module.exports.runCli = nativeBinding.runCli
+module.exports.scanWorkspaceJson = nativeBinding.scanWorkspaceJson

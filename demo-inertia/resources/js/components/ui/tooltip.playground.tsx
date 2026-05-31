@@ -1,4 +1,4 @@
-import { definePlaygroundFromKit } from 'dslinter';
+import { definePlayground } from 'dslinter';
 import { Button } from '@/components/ui/button';
 import {
     Tooltip,
@@ -6,16 +6,13 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-export const tooltipPlayground = definePlaygroundFromKit({
-    controls: ['triggerLabel', 'content'],
-    kit: ({ triggerLabel, content }) => (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Button variant="ghost">{triggerLabel}</Button>
-            </TooltipTrigger>
-            <TooltipContent>
-                <p>{content}</p>
-            </TooltipContent>
-        </Tooltip>
-    ),
-});
+export const tooltipPlayground = definePlayground(({ triggerLabel, content }) => (
+    <Tooltip>
+        <TooltipTrigger asChild>
+            <Button variant="ghost">{triggerLabel}</Button>
+        </TooltipTrigger>
+        <TooltipContent>
+            <p>{content}</p>
+        </TooltipContent>
+    </Tooltip>
+));

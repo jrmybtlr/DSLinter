@@ -6,6 +6,7 @@ export default defineConfig({
     include: [
       "src/**/*.test.ts",
       "vite/**/*.test.ts",
+      "vite/**/*.test.mjs",
       "bin/**/*.test.mjs",
     ],
   },

@@ -1,4 +1,4 @@
-import { definePlaygroundFromKit } from 'dslinter';
+import { definePlayground } from 'dslinter';
 import { UserInfo } from '@/components/user-info';
 import type { User } from '@/types';
 
@@ -11,9 +11,6 @@ const sampleUser: User = {
     updated_at: '',
 };
 
-export const userInfoPlayground = definePlaygroundFromKit({
-    controls: [{ key: 'showEmail', type: 'boolean', default: false }],
-    kit: ({ showEmail }) => (
-        <UserInfo user={sampleUser} showEmail={showEmail} />
-    ),
-});
+export const userInfoPlayground = definePlayground(({ showEmail = false }) => (
+    <UserInfo user={sampleUser} showEmail={showEmail} />
+));

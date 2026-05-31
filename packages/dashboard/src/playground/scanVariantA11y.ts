@@ -2,10 +2,7 @@ import type { PlaygroundArgs } from "../types/controls";
 import type { LintFinding, Severity } from "../types/report";
 import { a11yScoreFromFindings } from "../report/a11yScoring";
 
-export type PlaygroundA11yFinding = LintFinding & {
-  /** Prop combo label when the finding comes from the variant matrix scan. */
-  variantLabel?: string;
-};
+export type PlaygroundA11yFinding = LintFinding;
 
 export type VariantPreviewTarget = {
   element: Element;
@@ -68,7 +65,7 @@ export async function scanElementA11y(
         path: "",
         line: null,
         severity,
-        variantLabel,
+        variant_label: variantLabel,
       });
     }
   }

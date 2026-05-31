@@ -42,9 +42,6 @@ Put `.dslinter.json` at the repository root:
   "css_entrypoints": ["src/index.css"],
   "deprecated_components": ["LegacyButton"],
   "known_tokens": ["--color-", "spacing.", "theme."],
-  "ownership": {
-    "design-system": ["packages/ui/", "src/ds/"]
-  },
   "exclude_globs": ["fixtures/**", "*.generated.tsx"],
   "smell": {
     "disabled_rules": ["code-todo-marker"],
@@ -111,11 +108,67 @@ npx dslinter --report /path/to/repo --json --fail-on-warnings
 - **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` and `<input>` accessible names (JSX AST + Vue `<template>` heuristics); governance scoring weights all `a11y-*` rules
 - **Code quality (`code-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
 - **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`), CSS custom-property inventory with used/unused tracking (`css_tokens` in `--json`)
-- **Ownership:** rollups in `--json` and the dashboard when `ownership` is set
 - **Scores:** heuristic governance scores (token pillar uses CSS token adoption when `css_tokens` is present, else `known_tokens` substring match); `--json` for dashboards and CI
 - **CSS tokens (`css_tokens` in JSON):** scans source `.css` (plus `@import` targets like `dslinter/theme.css`), classifies `--color-*` / `--spacing-*` / etc., and reports references from `var(--*)` and Tailwind utilities; optional `token-unused-css-var` when `check_unused_css_tokens` is true
 
 Roadmap follows phased governance (tokens, deeper a11y, drift, AI compliance) described elsewhere in the project docs.
+
+## MCP for AI agents
+
+DSLinter ships a **Model Context Protocol** server so Cursor, Claude Code, and other agents can query the component catalog, usage patterns, findings, and governance policy without parsing the full report JSON.
+
+### Setup (Cursor)
+
+Add to `.cursor/mcp.json` in your app root:
+
+```json
+{
+  "mcpServers": {
+    "dslinter": {
+      "command": "npx",
+      "args": ["dslinter", "mcp"],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}
+```
+
+For monorepos, set `cwd` to the app directory (e.g. `demo/` or `demo-inertia/`) or set `DSLINTER_SCAN_ROOT`.
+
+### Tools
+
+| Tool | Purpose |
+|------|---------|
+| `dslinter_scan` | Refresh report; return scores and finding counts |
+| `dslinter_get_catalog` | Components sorted by usage |
+| `dslinter_get_component` | Props, variants, findings, example JSX |
+| `dslinter_get_findings` | Filter findings by component, rule, severity, path |
+| `dslinter_get_usage_examples` | Call sites and prop value frequencies |
+| `dslinter_get_tokens` | CSS token definitions and unused tokens |
+| `dslinter_get_agent_context` | Compact context pack for system prompts |
+| `dslinter_get_policy` | Config snapshot + rule catalog |
+| `dslinter_check_paths` | Findings for specific files after edits |
+| `dslinter_diff_since` | Drift vs saved baseline |
+| `dslinter_suggest_fix` | Heuristic fix suggestions |
+
+### Environment
+
+| Variable | Purpose |
+|----------|---------|
+| `DSLINTER_SCAN_ROOT` | Scan boundary override |
+| `DSLINTER_REPORT_PATH` | Report file override |
+| `DSLINTER_MCP_DEV_URL` | Dev server URL (default `http://127.0.0.1:7878`) |
+| `DSLINTER_MCP_TTL_MS` | Report cache TTL (default 60000) |
+
+When `npx dslinter` dev mode is running, the MCP server prefers the live report from port 7878.
+
+### Self-test
+
+```bash
+cd demo && npx dslinter mcp --self-test
+```
+
+See [`.cursor/skills/dslinter/SKILL.md`](.cursor/skills/dslinter/SKILL.md) for agent workflow guidance.
 
 ## Contributing (Rust scanner)
 

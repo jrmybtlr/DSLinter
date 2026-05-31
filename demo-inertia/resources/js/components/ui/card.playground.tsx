@@ -8,8 +8,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 
-export const cardPlayground = definePlayground({
-    render: () => (
+export const cardPlayground = definePlayground(() => (
         <Card className="w-[320px]">
             <CardHeader>
                 <CardTitle>Card</CardTitle>
@@ -24,5 +23,4 @@ export const cardPlayground = definePlayground({
                 Card footer
             </CardFooter>
         </Card>
-    ),
-});
+));

@@ -1,6 +1,6 @@
 //! Tailwind dark-mode contrast heuristics.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use crate::config::DslintConfig;
@@ -54,7 +54,7 @@ fn utility_segment(token: &str) -> &str {
     token.rsplit(':').next().unwrap_or(token)
 }
 
-fn has_dark_mode_contrast_issue(classes: &str) -> bool {
+pub fn has_dark_mode_contrast_issue(classes: &str) -> bool {
     let mut has_text_color = false;
     let mut has_bg_color = false;
     let mut has_dark_color_variant = false;
@@ -77,7 +77,7 @@ fn has_dark_mode_contrast_issue(classes: &str) -> bool {
     has_text_color && has_bg_color && !has_dark_color_variant
 }
 
-fn dark_mode_contrast_message() -> &'static str {
+pub fn dark_mode_contrast_message() -> &'static str {
     "Class tokens set text/background colors without an explicit `dark:` color variant; verify dark-mode contrast or disable this check in `.dslinter.json`."
 }
 
@@ -95,6 +95,7 @@ pub fn dark_mode_contrast_findings(
     files: &[FileScan],
     sources: &HashMap<PathBuf, String>,
     config: &DslintConfig,
+    skip_class_fragments: &HashSet<String>,
 ) -> Vec<LintFinding> {
     if !config.check_dark_mode_contrast {
         return Vec::new();
@@ -102,6 +103,9 @@ pub fn dark_mode_contrast_findings(
 
     let mut out = Vec::new();
     for_each_class_string(files, sources, |path, line, classes| {
+        if skip_class_fragments.contains(classes) {
+            return;
+        }
         if has_dark_mode_contrast_issue(classes) {
             push_dark_mode_finding(&mut out, path, line);
         }
@@ -128,7 +132,7 @@ mod dark_mode_contrast_tests {
             r#"<div className="bg-slate-100 text-slate-900" />"#.to_string(),
         );
         let config = DslintConfig::default();
-        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        let findings = dark_mode_contrast_findings(&files, &sources, &config, &HashSet::new());
         assert!(findings.is_empty(), "{findings:?}");
     }
 
@@ -144,7 +148,7 @@ mod dark_mode_contrast_tests {
             check_dark_mode_contrast: true,
             ..Default::default()
         };
-        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        let findings = dark_mode_contrast_findings(&files, &sources, &config, &HashSet::new());
         assert!(
             findings
                 .iter()
@@ -165,7 +169,7 @@ mod dark_mode_contrast_tests {
             check_dark_mode_contrast: true,
             ..Default::default()
         };
-        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        let findings = dark_mode_contrast_findings(&files, &sources, &config, &HashSet::new());
         assert!(findings.is_empty(), "{findings:?}");
     }
 
@@ -181,7 +185,7 @@ mod dark_mode_contrast_tests {
             check_dark_mode_contrast: true,
             ..Default::default()
         };
-        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        let findings = dark_mode_contrast_findings(&files, &sources, &config, &HashSet::new());
         assert!(findings.is_empty(), "{findings:?}");
     }
 
@@ -197,7 +201,7 @@ mod dark_mode_contrast_tests {
             check_dark_mode_contrast: true,
             ..Default::default()
         };
-        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        let findings = dark_mode_contrast_findings(&files, &sources, &config, &HashSet::new());
         assert!(
             findings
                 .iter()
@@ -218,7 +222,7 @@ mod dark_mode_contrast_tests {
             check_dark_mode_contrast: true,
             ..Default::default()
         };
-        let findings = dark_mode_contrast_findings(&files, &sources, &config);
+        let findings = dark_mode_contrast_findings(&files, &sources, &config, &HashSet::new());
         assert!(
             findings
                 .iter()

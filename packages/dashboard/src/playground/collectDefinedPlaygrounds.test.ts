@@ -5,11 +5,10 @@ import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
 
 describe("collectDefinedPlaygrounds", () => {
   it("collects definePlayground exports from eager modules", () => {
-    const defined = definePlayground({
-      id: "DropdownMenu",
-      group: "ui",
-      render: () => createElement("span", null, "menu"),
-    });
+    const defined = definePlayground(
+      () => createElement("span", null, "menu"),
+      { id: "DropdownMenu", group: "ui" },
+    );
     const modules = {
       "../components/ui/dropdown-menu.playground.tsx": {
         dropdownMenuPlayground: defined,
@@ -33,9 +32,7 @@ describe("collectDefinedPlaygrounds", () => {
   });
 
   it("infers catalog id from *Playground export name when id is omitted", () => {
-    const defined = definePlayground({
-      render: () => createElement("span", null, "alert"),
-    });
+    const defined = definePlayground(() => createElement("span", null, "alert"));
     const modules = {
       "../components/ui/alert.playground.tsx": {
         alertPlayground: defined,

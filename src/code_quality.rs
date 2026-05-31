@@ -29,6 +29,7 @@ fn push_quality_finding(
         path: path.to_path_buf(),
         line,
         severity,
+        variant_label: None,
     });
 }
 

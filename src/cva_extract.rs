@@ -7,9 +7,13 @@ use oxc_ast::ast::{
     Statement, TSType, TSTypeName, TSTypeQueryExprName, VariableDeclarator,
 };
 
-/// Parsed `cva` config: variant option keys per prop and `defaultVariants` values.
+/// Parsed `cva` config: variant option keys per prop, class literals, and `defaultVariants`.
 #[derive(Debug, Clone, Default)]
 pub struct CvaBinding {
+    /// First `cva("...")` base class string when a static literal.
+    pub base_classes: String,
+    /// Per-axis option → Tailwind class literal from `variants.{axis}.{option}`.
+    pub variant_classes: BTreeMap<String, BTreeMap<String, String>>,
     pub variant_options: BTreeMap<String, Vec<String>>,
     pub default_variants: BTreeMap<String, String>,
 }
@@ -70,11 +74,14 @@ fn parse_cva_call(expr: &Expression<'_>) -> Option<CvaBinding> {
     if ident.name.as_str() != "cva" {
         return None;
     }
+    let mut binding = CvaBinding::default();
+    if let Some(Argument::StringLiteral(base)) = call.arguments.first() {
+        binding.base_classes = base.value.to_string();
+    }
     let config = call.arguments.get(1)?;
     let Argument::ObjectExpression(obj) = config else {
         return None;
     };
-    let mut binding = CvaBinding::default();
     for prop in &obj.properties {
         let ObjectPropertyKind::ObjectProperty(p) = prop else {
             continue;
@@ -94,16 +101,23 @@ fn parse_cva_call(expr: &Expression<'_>) -> Option<CvaBinding> {
                         continue;
                     };
                     let mut options = Vec::new();
+                    let mut classes_by_option = BTreeMap::new();
                     for op in &options_obj.properties {
                         let ObjectPropertyKind::ObjectProperty(oprop) = op else {
                             continue;
                         };
                         if let Some(opt_key) = static_property_key(&oprop.key) {
-                            options.push(opt_key);
+                            options.push(opt_key.clone());
+                            if let Some(classes) = string_literal_value(&oprop.value) {
+                                classes_by_option.insert(opt_key, classes);
+                            }
                         }
                     }
                     if options.len() >= 2 {
-                        binding.variant_options.insert(prop_name, options);
+                        binding.variant_options.insert(prop_name.clone(), options);
+                        if !classes_by_option.is_empty() {
+                            binding.variant_classes.insert(prop_name, classes_by_option);
+                        }
                     }
                 }
             }
@@ -145,6 +159,13 @@ fn string_literal_value(expr: &Expression<'_>) -> Option<String> {
     }
 }
 
+/// Binding name from `VariantProps<typeof binding>` on the component's first parameter.
+pub fn cva_binding_name_from_params(params: &FormalParameters<'_>) -> Option<String> {
+    let first = params.items.first()?;
+    let note = first.pattern.type_annotation.as_ref()?;
+    cva_binding_from_type(&note.type_annotation)
+}
+
 /// Resolve CVA variant options for a component from `VariantProps<typeof binding>` in its param type.
 pub fn prop_options_from_params(
     params: &FormalParameters<'_>,
@@ -160,12 +181,6 @@ pub fn prop_options_from_params(
         cva.variant_options.clone(),
         cva.default_variants.clone(),
     )
-}
-
-fn cva_binding_name_from_params(params: &FormalParameters<'_>) -> Option<String> {
-    let first = params.items.first()?;
-    let note = first.pattern.type_annotation.as_ref()?;
-    cva_binding_from_type(&note.type_annotation)
 }
 
 fn cva_binding_from_type(ty: &TSType<'_>) -> Option<String> {
@@ -244,6 +259,21 @@ export function Placeholder() { return null; }
         let size_opts = cva.variant_options.get("size").unwrap();
         assert_eq!(size_opts, &["default", "sm", "lg"]);
         assert_eq!(cva.default_variants.get("variant").map(String::as_str), Some("default"));
+        assert_eq!(cva.base_classes, "base");
+        assert_eq!(
+            cva.variant_classes
+                .get("variant")
+                .and_then(|m| m.get("destructive"))
+                .map(String::as_str),
+            Some("b")
+        );
+        assert_eq!(
+            cva.variant_classes
+                .get("size")
+                .and_then(|m| m.get("sm"))
+                .map(String::as_str),
+            Some("e")
+        );
         let btn = scan
             .definitions
             .iter()

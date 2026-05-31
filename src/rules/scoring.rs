@@ -97,3 +97,37 @@ pub fn compute_scores(
         maintainability,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn finding(severity: Severity) -> LintFinding {
+        LintFinding::new("a11y-test", PathBuf::from("x.tsx"), Some(1), severity, "msg")
+    }
+
+    #[test]
+    fn a11y_penalty_sums_severity_weights() {
+        let findings = vec![
+            finding(Severity::Error),
+            finding(Severity::Warning),
+            finding(Severity::Info),
+        ];
+        let scores = compute_scores(&findings, &[], &[], &DslintConfig::default(), &HashMap::new(), None);
+        assert_eq!(scores.accessibility, 100 - (6 + 4 + 2));
+    }
+
+    #[test]
+    fn a11y_penalty_ignores_non_a11y_rules() {
+        let findings = vec![LintFinding::new(
+            "duplicate-component",
+            PathBuf::from("x.tsx"),
+            Some(1),
+            Severity::Warning,
+            "msg",
+        )];
+        let scores = compute_scores(&findings, &[], &[], &DslintConfig::default(), &HashMap::new(), None);
+        assert_eq!(scores.accessibility, 100);
+    }
+}

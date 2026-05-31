@@ -14,9 +14,12 @@ export type {
 } from "./types/controls";
 export { defaultArgsFromControls } from "./types/controls";
 export { definePlayground } from "./playground/definePlayground";
+export type { DefinePlaygroundKitOptions } from "./playground/definePlayground";
+/** @deprecated Use `definePlayground({ kit, controls })` instead. */
 export { definePlaygroundFromKit } from "./playground/definePlaygroundFromKit";
 export {
   expandPlaygroundControls,
+  exampleProps,
   propsFromControls,
   type CompactPlaygroundControl,
   type PlaygroundControlKeys,

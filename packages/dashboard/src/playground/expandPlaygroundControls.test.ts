@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expandPlaygroundControls, propsFromControls } from "./expandPlaygroundControls";
+import { expandPlaygroundControls, exampleProps, propsFromControls } from "./expandPlaygroundControls";
 
 describe("expandPlaygroundControls", () => {
   it("expands string shorthand to string controls", () => {
@@ -30,6 +30,13 @@ describe("expandPlaygroundControls", () => {
       },
     ]);
     expect(propsFromControls(controls, {})).toEqual({
+      title: "title",
+      description: "description",
+    });
+  });
+
+  it("exampleProps builds prop-name defaults", () => {
+    expect(exampleProps("title", "description")).toEqual({
       title: "title",
       description: "description",
     });

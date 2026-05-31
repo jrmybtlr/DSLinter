@@ -296,6 +296,7 @@ pub fn analyze_vue_file(path: &Path, source: &str, import_filter: &ImportFilter)
                 declared_props: vue_declared_props,
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             });
         }
     }
@@ -418,6 +419,32 @@ const x = 1
         let scan = analyze_vue_file(&PathBuf::from("Bad.vue"), src, &ImportFilter::default());
         assert!(
             scan.findings.iter().any(|f| f.rule_id == "a11y-img-alt"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn vue_template_anchor_requires_href() {
+        let src = r#"<template><a>link</a></template><script setup>const x=1</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("Link.vue"), src, &ImportFilter::default());
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-anchor-href"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn vue_template_input_label() {
+        let src = r#"<template><input type="text" /></template><script setup>const x=1</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("Field.vue"), src, &ImportFilter::default());
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-input-label"),
             "{:?}",
             scan.findings
         );

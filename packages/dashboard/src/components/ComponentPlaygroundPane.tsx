@@ -40,12 +40,14 @@ import {
   type PlaygroundA11yFinding,
 } from "../playground/scanVariantA11y";
 import { HideFromCatalogButton } from "./HideFromCatalogButton";
+import { OpenInEditorButton } from "./OpenInEditorButton";
 import { Section } from "./Section";
-import { TruncatedPath } from "./TruncatedPath";
+import {
+  resolveModuleAbsolutePath,
+} from "../dashboard/editorLink";
 
 type Props = {
   entry: PlaygroundEntry;
-  formatModulePath?: (modulePath: string) => string;
   workspaceReport: WorkspaceReport | null;
   reportReady: boolean;
   onOpenComponent: (componentId: string) => void;
@@ -135,16 +137,15 @@ function TocLink({ href, children }: { href: string; children: ReactNode }) {
 
 export function ComponentPlaygroundPane({
   entry,
-  formatModulePath,
   workspaceReport,
   reportReady,
   onOpenComponent,
   onHideFromCatalog,
 }: Props) {
   const { renderPreview } = entry;
-  const rel = formatModulePath
-    ? formatModulePath(entry.modulePath)
-    : entry.modulePath.replace(/^\.\.\//, "");
+  const sourceAbsolutePath = workspaceReport?.root
+    ? resolveModuleAbsolutePath(workspaceReport.root, entry.modulePath)
+    : undefined;
 
   const [values, setValues] = useState<PlaygroundArgs>(() =>
     defaultArgsFromControls(entry.controls),
@@ -419,17 +420,18 @@ export function ComponentPlaygroundPane({
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 {entry.meta.title}
               </h1>
-              <TruncatedPath
-                path={rel}
-                className="mt-1 text-xs text-muted-foreground"
-              />
             </div>
-            {onHideFromCatalog ? (
-              <HideFromCatalogButton
-                componentName={entry.meta.id}
-                onHidden={onHideFromCatalog}
-              />
-            ) : null}
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {sourceAbsolutePath ? (
+                <OpenInEditorButton filePath={sourceAbsolutePath} />
+              ) : null}
+              {onHideFromCatalog ? (
+                <HideFromCatalogButton
+                  componentName={entry.meta.id}
+                  onHidden={onHideFromCatalog}
+                />
+              ) : null}
+            </div>
           </div>
         </header>
 

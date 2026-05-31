@@ -9,6 +9,7 @@ import { runScannerInternal } from "./lib/run-scanner.mjs";
 import { runBuildMode } from "./modes/build.mjs";
 import { runDevMode } from "./modes/dev.mjs";
 import { runInitMode } from "./modes/init.mjs";
+import { runMcpMode } from "./modes/mcp.mjs";
 import { runReportMode } from "./modes/report.mjs";
 
 const rawArgs = process.argv.slice(2);
@@ -16,6 +17,10 @@ const rawArgs = process.argv.slice(2);
 if (rawArgs[0] === "init") {
   runInitMode({ argv: rawArgs.slice(1) });
   process.exit(0);
+}
+
+if (rawArgs[0] === "mcp") {
+  await runMcpMode({ argv: rawArgs.slice(1) });
 }
 
 if (process.env.DSLINTER_INTERNAL === "1") {

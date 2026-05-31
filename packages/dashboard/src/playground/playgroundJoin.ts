@@ -4,6 +4,7 @@ import type {
   BuildPlaygroundOptions,
 } from "./buildPlaygroundEntriesFromReport";
 import { defaultEmbedGlobKeyFromRelPath } from "./embedGlobKey";
+import { getModuleExport } from "./playgroundModuleExport";
 
 export type PlaygroundJoinSkipReason = "module_not_found" | "export_not_found";
 
@@ -59,11 +60,6 @@ export function defaultConsumerGlobKeyFromRelPath(relPath: string): string {
 }
 
 export { defaultEmbedGlobKeyFromRelPath } from "./embedGlobKey";
-
-function getExport(mod: Record<string, unknown>, exportName: string): unknown {
-  const x = mod[exportName];
-  return typeof x === "function" ? x : undefined;
-}
 
 /**
  * When `rel_path` is a bare filename (subdirectory scan), find a unique module key
@@ -122,7 +118,7 @@ export function diagnosePlaygroundJoinSkips(
       });
       continue;
     }
-    if (!getExport(mod, spec.export_name)) {
+    if (!getModuleExport(mod, spec.export_name)) {
       skipped.push({
         export_name: spec.export_name,
         rel_path: spec.rel_path,

@@ -16,10 +16,7 @@ fn demo_workspace_has_inventory_and_rules() {
             .any(|f| f.rule_id.starts_with("a11y-")),
         "expected at least one a11y finding in shaped demo"
     );
-    assert!(
-        !report.ownership.is_empty(),
-        "ownership rollup should include at least one bucket"
-    );
+    assert_eq!(report.schema_version, 2);
     assert!(
         report.css_tokens.is_some(),
         "demo should emit css_tokens from stylesheets"

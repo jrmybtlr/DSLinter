@@ -1,5 +1,6 @@
 //! Governance rules (MVP): duplicates, deprecation, tokens, accessibility, and code-quality heuristics.
 
+mod a11y_cva;
 mod config_filter;
 mod dark_mode;
 mod extracts;
@@ -8,16 +9,19 @@ mod tokens;
 mod usage;
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::config::DslintConfig;
 use crate::css_tokens::{analyze_css_tokens, unused_css_var_findings};
 use crate::directives::apply_inline_suppressions;
-use crate::model::{FileScan, OwnershipSummary, ReportConfig, WorkspaceReport};
+use crate::model::{
+    ConfigSnapshot, FileScan, ReportConfig, WorkspaceReport, WORKSPACE_REPORT_SCHEMA_VERSION,
+    utc_rfc3339_now,
+};
 use crate::playground_emit::build_playground_specs;
-use crate::util::paths::{path_matches_prefix, rel_path_from_canon_root};
 
 use config_filter::filter_code_quality_config;
+use a11y_cva::{cva_composed_dark_mode_findings, cva_skip_fragments_for_files};
 use dark_mode::dark_mode_contrast_findings;
 use scoring::compute_scores;
 use tokens::{
@@ -40,7 +44,14 @@ pub fn evaluate_workspace(
     }
     findings.extend(hardcoded_hex_colors(&files, &sources));
     findings.extend(tailwind_arbitrary_tokens(&files, &sources));
-    findings.extend(dark_mode_contrast_findings(&files, &sources, config));
+    let cva_skip = cva_skip_fragments_for_files(&files, &sources);
+    findings.extend(cva_composed_dark_mode_findings(&files, &sources, config));
+    findings.extend(dark_mode_contrast_findings(
+        &files,
+        &sources,
+        config,
+        &cva_skip,
+    ));
     dedupe_token_color_overlap(&mut findings);
     findings.extend(deprecated_usage(&files, config));
 
@@ -59,7 +70,6 @@ pub fn evaluate_workspace(
     findings = apply_inline_suppressions(findings, &sources);
     findings = filter_code_quality_config(findings, config);
 
-    let ownership = compute_ownership(&root, &files, config);
     let scores = compute_scores(
         &findings,
         &duplicate_components,
@@ -75,70 +85,24 @@ pub fn evaluate_workspace(
         hidden_paths: config.hidden_paths.clone(),
     };
 
+    let config_snapshot = ConfigSnapshot {
+        deprecated_components: config.deprecated_components.clone(),
+        known_tokens: config.known_tokens.clone(),
+        include_dirs: config.include_dirs.clone(),
+    };
+
     WorkspaceReport {
+        schema_version: WORKSPACE_REPORT_SCHEMA_VERSION,
+        generated_at: utc_rfc3339_now(),
         root,
         files,
         findings,
         duplicate_components,
         usage_by_component,
-        ownership,
         scores,
         playgrounds,
         css_tokens,
         config: report_config,
-    }
-}
-
-fn compute_ownership(
-    root: &Path,
-    files: &[FileScan],
-    config: &DslintConfig,
-) -> Vec<OwnershipSummary> {
-    let root_canon = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
-    let mut buckets: HashMap<String, (usize, usize)> = HashMap::new();
-
-    for file in files {
-        let rel = rel_path_from_canon_root(&root_canon, &file.path);
-        let owner_label = config
-            .ownership
-            .iter()
-            .find_map(|(label, prefixes)| {
-                prefixes
-                    .iter()
-                    .find(|pre| path_matches_prefix(&rel, pre))
-                    .map(|_| label.clone())
-            })
-            .unwrap_or_else(|| "unowned".to_string());
-
-        let e = buckets.entry(owner_label).or_insert((0, 0));
-        e.0 += 1;
-        e.1 += file.definitions.len();
-    }
-
-    let mut out: Vec<OwnershipSummary> = buckets
-        .into_iter()
-        .map(|(owner, (files, definitions))| OwnershipSummary {
-            owner,
-            files,
-            definitions,
-        })
-        .collect();
-    out.sort_by(|a, b| a.owner.cmp(&b.owner));
-    out
-}
-
-#[cfg(test)]
-mod ownership_tests {
-    use std::collections::HashMap;
-
-    use crate::util::paths::longest_matching_group;
-
-    #[test]
-    fn longest_matching_group_picks_nested_prefix() {
-        let mut groups = HashMap::new();
-        groups.insert("outer".into(), vec!["src/components".into()]);
-        groups.insert("inner".into(), vec!["src/components/nested".into()]);
-        let g = longest_matching_group("src/components/nested/Foo.tsx", &groups).unwrap();
-        assert_eq!(g, "inner");
+        config_snapshot,
     }
 }

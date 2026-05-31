@@ -34,7 +34,7 @@ describe("playgroundA11yScore", () => {
         path: "",
         line: null,
         severity: "error" as const,
-        variantLabel: "variant=destructive size=default",
+        variant_label: "variant=destructive size=default",
       },
     ];
 

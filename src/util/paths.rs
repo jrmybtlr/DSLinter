@@ -50,3 +50,19 @@ pub fn longest_matching_group(rel: &str, groups: &HashMap<String, Vec<String>>) 
     }
     best.map(|(_, g)| g)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::longest_matching_group;
+
+    #[test]
+    fn longest_matching_group_picks_nested_prefix() {
+        let mut groups = HashMap::new();
+        groups.insert("outer".into(), vec!["src/components".into()]);
+        groups.insert("inner".into(), vec!["src/components/nested".into()]);
+        let g = longest_matching_group("src/components/nested/Foo.tsx", &groups).unwrap();
+        assert_eq!(g, "inner");
+    }
+}

@@ -1,4 +1,5 @@
 {
+  "schema_version": 2,
   "root": "/Users/jeremy/Development/DSLint/demo",
   "files": [
     {
@@ -1845,18 +1846,6 @@
           ]
         }
       ]
-    }
-  ],
-  "ownership": [
-    {
-      "owner": "design-system",
-      "files": 36,
-      "definitions": 38
-    },
-    {
-      "owner": "unowned",
-      "files": 10,
-      "definitions": 1
     }
   ],
   "scores": {

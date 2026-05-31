@@ -1,4 +1,4 @@
-import { definePlaygroundFromKit } from 'dslinter';
+import { definePlayground } from 'dslinter';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -9,19 +9,16 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 
-export const sheetPlayground = definePlaygroundFromKit({
-    controls: ['triggerLabel', 'title', 'description'],
-    kit: ({ triggerLabel, title, description }) => (
-        <Sheet>
-            <SheetTrigger asChild>
-                <Button variant="outline">{triggerLabel}</Button>
-            </SheetTrigger>
-            <SheetContent>
-                <SheetHeader>
-                    <SheetTitle>{title}</SheetTitle>
-                    <SheetDescription>{description}</SheetDescription>
-                </SheetHeader>
-            </SheetContent>
-        </Sheet>
-    ),
-});
+export const sheetPlayground = definePlayground(({ triggerLabel, title, description }) => (
+    <Sheet>
+        <SheetTrigger asChild>
+            <Button variant="outline">{triggerLabel}</Button>
+        </SheetTrigger>
+        <SheetContent>
+            <SheetHeader>
+                <SheetTitle>{title}</SheetTitle>
+                <SheetDescription>{description}</SheetDescription>
+            </SheetHeader>
+        </SheetContent>
+    </Sheet>
+));

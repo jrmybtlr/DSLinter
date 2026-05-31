@@ -144,8 +144,6 @@ export type DashboardLayoutProps = {
   reportUrl?: string;
   /** Shown next to the governance refresh hint. */
   dslinterReportHint?: string;
-  /** Maps Vite `import.meta.glob` path to a label in the component header. */
-  formatModulePath?: (modulePath: string) => string;
   /** Workspace report fetch state (shared by governance + component a11y). */
   dslinterReport: DslinterReportState;
 };
@@ -165,7 +163,6 @@ export function DashboardLayoutInner({
   overview,
   reportUrl,
   dslinterReportHint,
-  formatModulePath,
   dslinterReport,
 }: DashboardLayoutInnerProps) {
   const [route, navigate] = useHashRoute();
@@ -248,7 +245,6 @@ export function DashboardLayoutInner({
       main = (
         <ComponentPlaygroundPane
           entry={entry}
-          formatModulePath={formatModulePath}
           workspaceReport={dslinterReport.report}
           reportReady={reportReady}
           onOpenComponent={(name) =>

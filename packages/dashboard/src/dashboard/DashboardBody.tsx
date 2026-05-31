@@ -1,12 +1,4 @@
 import { Section } from "../components/Section";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
 import type { WorkspaceReport } from "../types/report";
 import { ComponentCatalog } from "./ComponentCatalog";
 import { FindingsList } from "./FindingsList";
@@ -28,33 +20,6 @@ export function DashboardBody({
           <span className="font-semibold">Duplicate component names: </span>
           {report.duplicate_components.map((d) => d.name).join(", ")}
         </div>
-      ) : null}
-
-      {report.ownership.length > 0 ? (
-        <Section
-          id="ownership"
-          title="Ownership"
-          description="Prefix match from <span className='font-mono'>.dslinter.json</span> — useful for adoption rollups."
-        >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Owner</TableHead>
-                <TableHead>Files</TableHead>
-                <TableHead>Definitions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {report.ownership.map((row) => (
-                <TableRow key={row.owner}>
-                  <TableCell>{row.owner}</TableCell>
-                  <TableCell>{row.files}</TableCell>
-                  <TableCell>{row.definitions}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Section>
       ) : null}
 
       <Section

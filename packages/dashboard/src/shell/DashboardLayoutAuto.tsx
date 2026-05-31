@@ -11,10 +11,6 @@ export default function DashboardLayoutAuto(props: DashboardLayoutProps) {
       {...props}
       playgroundEntries={autoPlaygroundBuild.entries}
       playgroundJoinSkips={autoPlaygroundBuild.skipped}
-      formatModulePath={
-        props.formatModulePath ??
-        ((modulePath: string) => modulePath.replace(/^@dslinter-scan\//, ""))
-      }
     />
   );
 }

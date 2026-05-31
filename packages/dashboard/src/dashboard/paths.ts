@@ -1,6 +1,6 @@
 const ELLIPSIS = "/.../";
 
-function normalizePath(p: string): string {
+export function normalizePath(p: string): string {
   return p.replace(/\\/g, "/").replace(/\/$/, "");
 }
 

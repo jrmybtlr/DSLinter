@@ -60,6 +60,11 @@ function expandPropNameControl(key: string): PlaygroundControl {
   };
 }
 
+/** Shorthand defaults where each value equals the prop key (panel placeholder text). */
+export function exampleProps(...keys: string[]): Record<string, string> {
+  return Object.fromEntries(keys.map((key) => [key, key]));
+}
+
 /** Expand shorthand `controls` into full `PlaygroundControl` objects. */
 export function expandPlaygroundControls(
   input: PlaygroundControlsInput | undefined,

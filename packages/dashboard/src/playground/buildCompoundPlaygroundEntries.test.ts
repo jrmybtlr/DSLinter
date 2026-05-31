@@ -192,7 +192,6 @@ describe("buildCompoundPlaygroundEntries", () => {
       accessibility: 0,
       maintainability: 0,
     },
-    ownership: [],
     duplicate_components: [],
     usage_by_component: [
       {
@@ -295,7 +294,6 @@ describe("buildCompoundPlaygroundEntries", () => {
         accessibility: 0,
         maintainability: 0,
       },
-      ownership: [],
       duplicate_components: [],
       usage_by_component: [
         {

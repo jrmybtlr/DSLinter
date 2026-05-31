@@ -6,6 +6,9 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 
+/// Current JSON schema version for [`WorkspaceReport`].
+pub const WORKSPACE_REPORT_SCHEMA_VERSION: u32 = 2;
+
 /// How a UI component binding was discovered in source.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -33,6 +36,9 @@ pub struct ComponentDefinition {
     /// Default variant values from CVA `defaultVariants`.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub declared_prop_defaults: BTreeMap<String, String>,
+    /// Resolved `VariantProps<typeof binding>` CVA binding name, when present.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cva_binding_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -56,6 +62,9 @@ pub struct LintFinding {
     pub path: PathBuf,
     pub line: Option<u32>,
     pub severity: Severity,
+    /// Prop combo label when the finding applies to a specific CVA variant matrix entry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variant_label: Option<String>,
 }
 
 impl LintFinding {
@@ -72,7 +81,13 @@ impl LintFinding {
             path,
             line,
             severity,
+            variant_label: None,
         }
+    }
+
+    pub fn with_variant_label(mut self, label: impl Into<String>) -> Self {
+        self.variant_label = Some(label.into());
+        self
     }
 }
 
@@ -201,13 +216,6 @@ pub struct UsageSummary {
     pub usage_locations: Vec<UsageLocation>,
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct OwnershipSummary {
-    pub owner: String,
-    pub files: usize,
-    pub definitions: usize,
-}
-
 /// Dashboard playground row from scan (all TSX/JSX under the repo when `playground_groups` is unset).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -287,14 +295,40 @@ pub struct ReportConfig {
     pub hidden_paths: Vec<String>,
 }
 
+/// Agent/MCP-friendly slice of `.dslinter.json` embedded in each report.
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct ConfigSnapshot {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub deprecated_components: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub known_tokens: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub include_dirs: Vec<String>,
+}
+
+impl ConfigSnapshot {
+    fn is_empty(&self) -> bool {
+        self.deprecated_components.is_empty()
+            && self.known_tokens.is_empty()
+            && self.include_dirs.is_empty()
+    }
+}
+
+pub fn utc_rfc3339_now() -> String {
+    time::OffsetDateTime::now_utc()
+        .format(&time::format_description::well_known::Rfc3339)
+        .unwrap_or_else(|_| "1970-01-01T00:00:00Z".to_string())
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct WorkspaceReport {
+    pub schema_version: u32,
+    pub generated_at: String,
     pub root: PathBuf,
     pub files: Vec<FileScan>,
     pub findings: Vec<LintFinding>,
     pub duplicate_components: Vec<DuplicateComponent>,
     pub usage_by_component: Vec<UsageSummary>,
-    pub ownership: Vec<OwnershipSummary>,
     pub scores: GovernanceScores,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub playgrounds: Vec<PlaygroundSpec>,
@@ -302,6 +336,8 @@ pub struct WorkspaceReport {
     pub css_tokens: Option<CssTokenSummary>,
     #[serde(default, skip_serializing_if = "ReportConfig::is_empty")]
     pub config: ReportConfig,
+    #[serde(default, skip_serializing_if = "ConfigSnapshot::is_empty")]
+    pub config_snapshot: ConfigSnapshot,
 }
 
 impl ReportConfig {

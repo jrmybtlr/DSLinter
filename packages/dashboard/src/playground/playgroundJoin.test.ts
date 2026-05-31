@@ -34,7 +34,6 @@ describe("diagnosePlaygroundJoinSkips", () => {
       accessibility: 0,
       maintainability: 0,
     },
-    ownership: [],
     duplicate_components: [],
     usage_by_component: [],
     playgrounds: [
@@ -76,6 +75,41 @@ describe("diagnosePlaygroundJoinSkips", () => {
     expect(skipped).toHaveLength(0);
     expect(entries).toHaveLength(1);
     expect(entries[0]?.id).toBe("Button");
+  });
+
+  it("joins default-exported components by export_name", () => {
+    const defaultExportReport: WorkspaceReport = {
+      ...report,
+      playgrounds: [
+        {
+          id: "AppLogoIcon",
+          export_name: "AppLogoIcon",
+          rel_path: "resources/js/components/app-logo-icon.tsx",
+          declared_props: [],
+        },
+      ],
+    };
+    const key = defaultConsumerGlobKeyFromRelPath(
+      "resources/js/components/app-logo-icon.tsx",
+    );
+    const modules = {
+      [key]: {
+        default: function AppLogoIcon() {
+          return null;
+        },
+      },
+    };
+    const { entries, skipped } = buildPlaygroundEntriesFromReportWithSkips(
+      defaultExportReport,
+      modules,
+      {
+        globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath,
+        logJoinSkips: false,
+      },
+    );
+    expect(skipped).toHaveLength(0);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.id).toBe("AppLogoIcon");
   });
 
   it("joins bare rel_path via unique suffix when subdirectory scan shortened the path", () => {

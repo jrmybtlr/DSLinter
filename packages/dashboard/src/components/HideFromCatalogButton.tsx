@@ -38,7 +38,7 @@ export function HideFromCatalogButton({ componentName, onHidden }: Props) {
       disabled={pending}
       onClick={() => void handleClick()}
     >
-      {pending ? "Hiding…" : "Hide from catalog"}
+      {pending ? "Hiding…" : "Hide Component"}
     </Button>
   );
 }

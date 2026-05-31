@@ -76,6 +76,24 @@ Configuration: [`.dslinter.json`](./.dslinter.json) scopes scans and playground 
 
 Optional embed in your own Inertia app: set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground />` — see [`packages/dashboard/README.md`](../packages/dashboard/README.md).
 
+### MCP (AI agents)
+
+From `demo-inertia/` (or set `cwd` in `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "dslinter": {
+      "command": "npx",
+      "args": ["dslinter", "mcp"],
+      "cwd": "${workspaceFolder}/demo-inertia"
+    }
+  }
+}
+```
+
+The MCP server scans `resources/js/components/` per [`.dslinter.json`](./.dslinter.json).
+
 ## shadcn/ui components
 
 Components live under `resources/js/components/ui/` as TypeScript TSX files.
@@ -95,12 +113,12 @@ For components that need a custom demo, add a co-located playground file:
 ```
 resources/js/components/ui/
   alert.tsx
-  alert.playground.tsx   ← definePlaygroundFromKit() escape hatch
+  alert.playground.tsx   ← definePlayground({ kit }) escape hatch
 ```
 
 Playground files are excluded from the component catalog via `ignore_globs` in [`.dslinter.json`](./.dslinter.json). Manual previews override auto-generated ones with the same catalog id.
 
-For `definePlaygroundFromKit`, list control keys as an array to use each prop name as the default (e.g. `controls: ['title', 'description']`). Use a record when a prop needs a custom default (`controls: { placeholder: 'Pick a stack' }`).
+For `definePlayground`, pass the preview callback directly — control keys are inferred from destructured parameters. Use inline defaults for custom panel values (`({ placeholder = 'Pick a stack' }) => ...`). Pass `{ id }` as a second argument when the export name is not `{name}Playground`.
 
 ```bash
 npx shadcn@latest add switch

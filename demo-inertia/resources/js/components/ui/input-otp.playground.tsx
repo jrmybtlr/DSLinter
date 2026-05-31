@@ -5,9 +5,8 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 
-export const inputOtpPlayground = definePlayground({
-    id: 'InputOTP',
-    render: () => (
+export const inputOtpPlayground = definePlayground(
+    () => (
         <InputOTP maxLength={6} defaultValue="123456">
             <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -19,4 +18,5 @@ export const inputOtpPlayground = definePlayground({
             </InputOTPGroup>
         </InputOTP>
     ),
-});
+    { id: 'InputOTP' },
+);

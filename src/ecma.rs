@@ -217,6 +217,7 @@ fn component_definition_from_params(
     let declared_props = merge_declared_props(params, ts_shapes);
     let (declared_prop_options, declared_prop_defaults) =
         merge_prop_options_for_component(params, cva_bindings, &declared_props);
+    let cva_binding_name = cva_extract::cva_binding_name_from_params(params);
     ComponentDefinition {
         name,
         kind,
@@ -224,6 +225,7 @@ fn component_definition_from_params(
         declared_props,
         declared_prop_options,
         declared_prop_defaults,
+        cva_binding_name,
     }
 }
 
@@ -655,6 +657,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                         declared_props: Vec::new(),
                         declared_prop_options: BTreeMap::new(),
                         declared_prop_defaults: BTreeMap::new(),
+                        cva_binding_name: None,
                     });
                 }
             }
@@ -713,6 +716,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     declared_props: Vec::new(),
                     declared_prop_options: BTreeMap::new(),
                     declared_prop_defaults: BTreeMap::new(),
+                    cva_binding_name: None,
                 });
             }
             _ => {}
@@ -796,6 +800,7 @@ impl ExtractVisitor<'_> {
                 declared_props: Vec::new(),
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
+                cva_binding_name: None,
             });
         }
     }
@@ -873,6 +878,94 @@ const Panel = () => <aside />;
                 .any(|f| f.rule_id == "a11y-button-name"),
             "{:?}",
             scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_button_with_aria_label_ok() {
+        let src =
+            r#"export function X() { return <button type="button" aria-label="Close" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-button-name"));
+    }
+
+    #[test]
+    fn a11y_button_with_children_ok() {
+        let src = r#"export function X() { return <button type="button">Save</button>; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-button-name"));
+    }
+
+    #[test]
+    fn a11y_input_label_info() {
+        let src = r#"export function X() { return <input type="text" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-input-label"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_hidden_input_skips_label() {
+        let src = r#"export function X() { return <input type="hidden" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-input-label"));
+    }
+
+    #[test]
+    fn a11y_anchor_placeholder_href() {
+        let src = r##"export function X() { return <a href="#">link</a>; }"##;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-anchor-placeholder-href"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_anchor_valid_href_ok() {
+        let src = r#"export function X() { return <a href="/home">link</a>; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            !scan
+                .findings
+                .iter()
+                .any(|f| f.rule_id.starts_with("a11y-anchor")),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_spread_skips_intrinsic_checks() {
+        let src = r#"export function X() { return <img {...props} />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-img-alt"));
+    }
+
+    #[test]
+    fn cva_binding_name_on_variant_props_component() {
+        let src = r#"
+const buttonVariants = cva("base", {
+  variants: { variant: { default: "a", destructive: "b" } },
+  defaultVariants: { variant: "default" },
+});
+function Button({ variant }: VariantProps<typeof buttonVariants>) {
+  return null;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("button.tsx"), src);
+        let btn = scan.definitions.iter().find(|d| d.name == "Button").unwrap();
+        assert_eq!(
+            btn.cva_binding_name.as_deref(),
+            Some("buttonVariants")
         );
     }
 
