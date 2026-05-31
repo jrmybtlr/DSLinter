@@ -39,14 +39,23 @@ fn token_adoption_pct(
     }
     let mut hits = 0_u32;
     for file in files {
-        let Some(text) = sources.get(&file.path) else {
-            continue;
+        let has_token = if !file.ast_extracts.is_empty() {
+            // Fast path: search already-extracted string literals and class strings.
+            let in_strings = file.ast_extracts.string_literals.iter().any(|f| {
+                config.known_tokens.iter().any(|t| f.value.contains(t.as_str()))
+            });
+            let in_classes = file.ast_extracts.class_strings.iter().any(|f| {
+                config.known_tokens.iter().any(|t| f.text.contains(t.as_str()))
+            });
+            in_strings || in_classes
+        } else {
+            // Fallback: scan raw source text.
+            let Some(text) = sources.get(&file.path) else {
+                continue;
+            };
+            config.known_tokens.iter().any(|t| text.contains(t.as_str()))
         };
-        if config
-            .known_tokens
-            .iter()
-            .any(|t| text.contains(t.as_str()))
-        {
+        if has_token {
             hits += 1;
         }
     }
@@ -68,6 +77,10 @@ pub fn compute_scores(
         .iter()
         .filter(|f| f.severity == Severity::Warning)
         .count() as i32;
+    let err = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Error)
+        .count() as i32;
     let dup_penalty = duplicates.len() as i32 * 5;
 
     let token_adoption = css_tokens
@@ -76,7 +89,7 @@ pub fn compute_scores(
     let maintainability =
         (100_i32 - warn * 3 - dup_penalty - code_quality_penalty(findings)).clamp(0, 100) as u8;
     let accessibility = (100_i32 - a11y_penalty(findings)).clamp(0, 100) as u8;
-    let ux_consistency = (100_i32 - warn * 2).clamp(0, 100) as u8;
+    let ux_consistency = (100_i32 - warn * 2 - err * 3).clamp(0, 100) as u8;
 
     let mut pillars = vec![
         maintainability as i32,

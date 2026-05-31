@@ -2,38 +2,18 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
-
-use regex::Regex;
 
 use crate::config::DslintConfig;
+use crate::lazy_regex;
 use crate::model::{
     CssTokenCategory, CssTokenDefinition, CssTokenScope, CssTokenSummary, CssTokenUsage,
     FileScan, LintFinding, Severity, UsageLocation,
 };
 use crate::scan::collect_css_files;
 
-fn css_var_def_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"(--[a-zA-Z0-9][a-zA-Z0-9_-]*)\s*:\s*([^;]+);")
-            .expect("css var def regex")
-    })
-}
-
-fn css_var_use_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"var\(\s*(--[a-zA-Z0-9][a-zA-Z0-9_-]*)").expect("css var use regex")
-    })
-}
-
-fn css_import_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r#"@import\s+(?:url\()?['"]?([^'")\s;]+)['"]?\)?"#).expect("css import regex")
-    })
-}
+lazy_regex!(css_var_def_re, r"(--[a-zA-Z0-9][a-zA-Z0-9_-]*)\s*:\s*([^;]+);");
+lazy_regex!(css_var_use_re, r"var\(\s*(--[a-zA-Z0-9][a-zA-Z0-9_-]*)");
+lazy_regex!(css_import_re, r#"@import\s+(?:url\()?['"]?([^'")\s;]+)['"]?\)?"#);
 
 fn is_framework_noise(name: &str) -> bool {
     name.starts_with("--tw-")

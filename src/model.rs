@@ -128,40 +128,28 @@ pub struct FileScan {
 }
 
 impl FileScan {
-    pub fn empty(path: PathBuf) -> Self {
+    fn with_errors(path: PathBuf, parse_errors: Vec<String>) -> Self {
         Self {
             path,
             definitions: Vec::new(),
             usages: Vec::new(),
-            parse_errors: Vec::new(),
+            parse_errors,
             findings: Vec::new(),
             ast_extracts: AstExtracts::default(),
         }
+    }
+
+    pub fn empty(path: PathBuf) -> Self {
+        Self::with_errors(path, Vec::new())
     }
 
     pub fn read_error(path: PathBuf, err: impl Display) -> Self {
-        Self {
-            parse_errors: vec![format!(
-                "dslinter: could not read `{}`: {err}",
-                path.display()
-            )],
-            path,
-            definitions: Vec::new(),
-            usages: Vec::new(),
-            findings: Vec::new(),
-            ast_extracts: AstExtracts::default(),
-        }
+        let msg = format!("dslinter: could not read `{}`: {err}", path.display());
+        Self::with_errors(path, vec![msg])
     }
 
     pub fn unsupported_ext(path: PathBuf, ext: &str) -> Self {
-        Self {
-            parse_errors: vec![format!("dslinter: unsupported extension `{ext}`")],
-            path,
-            definitions: Vec::new(),
-            usages: Vec::new(),
-            findings: Vec::new(),
-            ast_extracts: AstExtracts::default(),
-        }
+        Self::with_errors(path, vec![format!("dslinter: unsupported extension `{ext}`")])
     }
 }
 

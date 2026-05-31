@@ -6,71 +6,77 @@ use std::path::{Path, PathBuf};
 use crate::config::DslintConfig;
 use crate::model::{DuplicateComponent, FileScan, LintFinding, Severity, UsageLocation, UsageSummary};
 
+/// Accumulator for all per-component data gathered during a single pass over usages.
+struct ComponentAccumulator {
+    files_map: HashMap<PathBuf, u32>,
+    max_props: usize,
+    prop_freqs: BTreeMap<String, u32>,
+    prop_value_freqs: BTreeMap<String, BTreeMap<String, u32>>,
+    locs: Vec<UsageLocation>,
+}
+
+impl ComponentAccumulator {
+    fn new() -> Self {
+        Self {
+            files_map: HashMap::new(),
+            max_props: 0,
+            prop_freqs: BTreeMap::new(),
+            prop_value_freqs: BTreeMap::new(),
+            locs: Vec::new(),
+        }
+    }
+}
+
 pub fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
-    let mut map: HashMap<String, HashMap<PathBuf, u32>> = HashMap::with_capacity(files.len());
-    let mut max_props: HashMap<String, usize> = HashMap::with_capacity(files.len());
-    let mut prop_freqs: HashMap<String, BTreeMap<String, u32>> =
-        HashMap::with_capacity(files.len());
-    let mut prop_value_freqs: HashMap<String, BTreeMap<String, BTreeMap<String, u32>>> =
-        HashMap::with_capacity(files.len());
-    let mut locs: HashMap<String, Vec<UsageLocation>> = HashMap::with_capacity(files.len());
+    let mut acc: HashMap<String, ComponentAccumulator> = HashMap::with_capacity(files.len());
 
     for file in files {
         for u in &file.usages {
-            let per_file = map.entry(u.component.clone()).or_default();
-            *per_file.entry(file.path.clone()).or_insert(0) += 1;
+            let entry = acc.entry(u.component.clone()).or_insert_with(ComponentAccumulator::new);
 
-            let entry = max_props.entry(u.component.clone()).or_insert(0);
-            *entry = (*entry).max(u.props.len());
+            *entry.files_map.entry(file.path.clone()).or_insert(0) += 1;
+            entry.max_props = entry.max_props.max(u.props.len());
 
-            let pf = prop_freqs.entry(u.component.clone()).or_default();
             for prop in &u.props {
-                *pf.entry(prop.clone()).or_insert(0) += 1;
+                *entry.prop_freqs.entry(prop.clone()).or_insert(0) += 1;
             }
 
             if !u.prop_values.is_empty() {
-                let pvf = prop_value_freqs.entry(u.component.clone()).or_default();
                 for (prop, value) in &u.prop_values {
-                    *pvf.entry(prop.clone())
+                    *entry
+                        .prop_value_freqs
+                        .entry(prop.clone())
                         .or_default()
                         .entry(value.clone())
                         .or_insert(0) += 1;
                 }
             }
 
-            locs.entry(u.component.clone())
-                .or_default()
-                .push(UsageLocation {
-                    path: file.path.clone(),
-                    line: u.line,
-                    props: u.props.clone(),
-                    prop_values: u.prop_values.clone(),
-                });
+            entry.locs.push(UsageLocation {
+                path: file.path.clone(),
+                line: u.line,
+                props: u.props.clone(),
+                prop_values: u.prop_values.clone(),
+            });
         }
     }
 
-    let mut rows: Vec<UsageSummary> = map
+    let mut rows: Vec<UsageSummary> = acc
         .into_iter()
-        .map(|(component, files_map)| {
-            let mut paths: Vec<PathBuf> = files_map.keys().cloned().collect();
+        .map(|(component, mut a)| {
+            let mut paths: Vec<PathBuf> = a.files_map.keys().cloned().collect();
             paths.sort();
-            let reference_count: u32 = files_map.values().sum();
-            let prop_frequencies = prop_freqs.remove(&component).unwrap_or_default();
-            let prop_value_frequencies =
-                prop_value_freqs.remove(&component).unwrap_or_default();
-            let mut usage_locations = locs.remove(&component).unwrap_or_default();
-            usage_locations.sort_by(|a, b| {
-                a.path.cmp(&b.path).then_with(|| a.line.cmp(&b.line))
-            });
+            let reference_count: u32 = a.files_map.values().sum();
+            a.locs.sort_by(|x, y| x.path.cmp(&y.path).then_with(|| x.line.cmp(&y.line)));
             UsageSummary {
-                component: component.clone(),
+                component,
                 reference_count,
                 file_count: paths.len(),
-                max_props_on_single_use: max_props.remove(&component).unwrap_or(0),
+                max_props_on_single_use: a.max_props,
                 files: paths,
-                prop_frequencies,
-                prop_value_frequencies,
-                usage_locations,
+                prop_frequencies: a.prop_freqs,
+                prop_value_frequencies: a.prop_value_freqs,
+                usage_locations: a.locs,
             }
         })
         .collect();
