@@ -16,7 +16,7 @@ export type PlaygroundJoinSkip = {
 
 const DEFAULT_CONSUMER_STRIP_PREFIXES = ["src/", "resources/js/"] as const;
 
-function viteDevMode(): boolean {
+export function viteDevMode(): boolean {
   return Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
 }
 
@@ -135,7 +135,8 @@ export function diagnosePlaygroundJoinSkips(
 }
 
 /**
- * Dev-only: log skipped playground joins (module glob / export name mismatches).
+ * Log skipped playground joins (module glob / export name mismatches).
+ * Opt-in via `logJoinSkips: true` on {@link buildPlaygroundEntriesFromReportWithSkips}.
  */
 export function logPlaygroundJoinSkips(
   skipped: PlaygroundJoinSkip[],

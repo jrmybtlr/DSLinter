@@ -35,7 +35,7 @@ export type BuildPlaygroundOptions = {
   globKeyFromRelPath?: (relPath: string) => string;
   controlOverrides?: Record<string, PlaygroundControl[]>;
   staticDefaults?: Record<string, Record<string, unknown>>;
-  /** When true (default in Vite dev), log specs that failed to join to `modules`. */
+  /** When true, log specs that failed to join to `modules` (inspect pane still shows skips). */
   logJoinSkips?: boolean;
 };
 
@@ -109,8 +109,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
         globKeyFromRelPath,
       })
     : [];
-  const shouldLog = options.logJoinSkips ?? viteDevMode();
-  if (shouldLog) logPlaygroundJoinSkips(skipped);
+  if (options.logJoinSkips) logPlaygroundJoinSkips(skipped);
 
   const autoEntries: PlaygroundEntry[] = [];
   if (!specs?.length) {
@@ -138,13 +137,21 @@ export function buildPlaygroundEntriesFromReportWithSkips(
         spec.declared_prop_options,
         spec.declared_prop_defaults,
         controlOverrides,
+        spec.export_name,
       ),
       componentAcceptsChildren(declared, repoUsage),
+      spec.export_name,
     );
     const staticDefaults = staticDefaultsMap[catalogId] ?? staticDefaultsMap[spec.id] ?? {};
 
     const renderPreview = (values: PlaygroundArgs) => {
-      const fromValues = valuesToComponentProps(controls, declared, values, propKinds);
+      const fromValues = valuesToComponentProps(
+        controls,
+        declared,
+        values,
+        propKinds,
+        spec.export_name,
+      );
       const merged = mergeStaticDefaults(fromValues, staticDefaults);
       return createElement(Cmp, merged);
     };

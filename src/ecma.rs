@@ -137,6 +137,25 @@ fn extract_props_from_params(params: &FormalParameters<'_>) -> Vec<String> {
     props
 }
 
+fn first_param_object_pattern<'a>(
+    params: &'a FormalParameters<'_>,
+) -> Option<&'a oxc_ast::ast::ObjectPattern<'a>> {
+    let first = params.items.first()?;
+    let BindingPatternKind::ObjectPattern(obj) = &first.pattern.kind else {
+        return None;
+    };
+    Some(obj)
+}
+
+fn rest_binding_name(params: &FormalParameters<'_>) -> Option<String> {
+    let obj = first_param_object_pattern(params)?;
+    let rest = obj.rest.as_ref()?;
+    let BindingPatternKind::BindingIdentifier(id) = &rest.argument.kind else {
+        return None;
+    };
+    Some(binding_name(id))
+}
+
 /// Drop duplicate prop names while keeping the first occurrence (destructure order, then type keys).
 fn dedupe_props_preserve_order(keys: &mut Vec<String>) {
     let mut seen = HashSet::new();
@@ -147,14 +166,19 @@ fn merge_declared_props(
     params: &FormalParameters<'_>,
     ts_shapes: &HashMap<String, Vec<String>>,
 ) -> Vec<String> {
+    let rest_name = rest_binding_name(params);
     let mut keys = extract_props_from_params(params);
-    keys.extend(crate::ts_shape_map::props_from_first_param_type_annotation(
-        params, ts_shapes,
-    ));
-    if crate::ts_shape_map::children_from_first_param_type_annotation(params)
-        && !keys.iter().any(|k| k == "children")
-    {
-        keys.push("children".to_string());
+    // When the param uses `...rest`, only explicit destructured names are API surface
+    // (the rest binding is an object passthrough, not a string prop consumers pass).
+    if rest_name.is_none() {
+        keys.extend(crate::ts_shape_map::props_from_first_param_type_annotation(
+            params, ts_shapes,
+        ));
+        if crate::ts_shape_map::children_from_first_param_type_annotation(params)
+            && !keys.iter().any(|k| k == "children")
+        {
+            keys.push("children".to_string());
+        }
     }
     dedupe_props_preserve_order(&mut keys);
     keys
@@ -850,6 +874,29 @@ const Panel = () => <aside />;
             "{:?}",
             scan.findings
         );
+    }
+
+    #[test]
+    fn declared_props_keeps_classname_and_rest_binding_without_type_expansion() {
+        let src = r#"
+function Checkbox({
+  className,
+  checked,
+  ...props
+}: React.ComponentProps<"input">) {
+  return null;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("Checkbox.tsx"), src);
+        let cb = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Checkbox")
+            .expect("Checkbox definition");
+        assert!(cb.declared_props.contains(&"className".to_string()));
+        assert!(cb.declared_props.contains(&"checked".to_string()));
+        assert!(!cb.declared_props.contains(&"props".to_string()));
+        assert!(!cb.declared_props.contains(&"type".to_string()));
     }
 
     #[test]

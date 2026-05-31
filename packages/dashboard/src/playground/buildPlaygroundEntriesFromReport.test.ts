@@ -179,6 +179,10 @@ describe("playground preview props", () => {
     expect(lastProps).toMatchObject({ children: "Example" });
     const defaultValues = defaultArgsFromControls(entry!.controls);
     expect(entry!.usageSnippet?.(defaultValues)).toBe("<Button>Example</Button>");
+
+    renderToStaticMarkup(createElement(entry!.Preview, { values: { children: "" } }));
+    expect(lastProps).toMatchObject({ children: "" });
+    expect(entry!.usageSnippet?.({ ...defaultValues, children: "" })).toBe("<Button />");
   });
 
   it("adds children control from repo usage when declared_props omits it", () => {

@@ -3,9 +3,38 @@ import type { DeclaredPropKind, UsageSummary } from "../types/report";
 
 export const CHILDREN_SLOT_DEFAULT = "Example";
 
+/** Never surfaced as playground controls or preview props. */
+export const SKIP_PLAYGROUND_PROPS = new Set(["key", "ref", "props"]);
+
+/** Styling props kept in the panel but without generated placeholder defaults. */
+export const PASSTHROUGH_STRING_PROPS = new Set(["className", "style"]);
+
+export function isPassthroughStringProp(key: string): boolean {
+  return PASSTHROUGH_STRING_PROPS.has(key);
+}
+
+export function stringDefaultForProp(key: string): string {
+  if (isPassthroughStringProp(key)) return "";
+  return defaultStringForProp(key);
+}
+
 export type PlaygroundStringControl = Extract<PlaygroundControl, { type: "string" }>;
 
-export function childrenControl(): PlaygroundStringControl {
+/** Parts like BreadcrumbSeparator default to an icon when children is omitted. */
+export function usesIconChildrenFallback(exportName: string): boolean {
+  return exportName.endsWith("Separator");
+}
+
+export function childrenControl(exportName?: string): PlaygroundStringControl {
+  if (exportName && usesIconChildrenFallback(exportName)) {
+    return {
+      key: "children",
+      label: "children",
+      type: "string",
+      default: "",
+      placeholder: "Custom separator (chevron when empty)",
+    };
+  }
   return {
     key: "children",
     label: "children",
@@ -13,6 +42,18 @@ export function childrenControl(): PlaygroundStringControl {
     default: CHILDREN_SLOT_DEFAULT,
     placeholder: "Slot content",
   };
+}
+
+export function childrenPropForPreview(
+  exportName: string | undefined,
+  raw: unknown,
+): unknown | undefined {
+  if (exportName && usesIconChildrenFallback(exportName)) {
+    if (raw === undefined || raw === null || String(raw).length === 0) return undefined;
+    return String(raw);
+  }
+  if (raw === undefined || raw === null) return CHILDREN_SLOT_DEFAULT;
+  return String(raw);
 }
 
 export function componentAcceptsChildren(
@@ -28,11 +69,12 @@ export function componentAcceptsChildren(
 export function ensureChildrenControl(
   controls: PlaygroundControl[],
   acceptsChildren: boolean,
+  exportName?: string,
 ): PlaygroundControl[] {
   if (!acceptsChildren || controls.some((c) => c.key === "children")) {
     return controls;
   }
-  return [...controls, childrenControl()];
+  return [...controls, childrenControl(exportName)];
 }
 
 export function isLikelyBooleanProp(name: string): boolean {
@@ -63,13 +105,13 @@ export function controlsFromDeclaredProps(
   propKinds?: Partial<Record<string, DeclaredPropKind>>,
   propOptions?: Record<string, string[]>,
   propDefaults?: Record<string, string>,
+  exportName?: string,
 ): PlaygroundControl[] {
-  const skip = new Set(["key", "ref"]);
   const out: PlaygroundControl[] = [];
   for (const key of declaredProps) {
-    if (skip.has(key)) continue;
+    if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
     if (key === "children") {
-      out.push(childrenControl());
+      out.push(childrenControl(exportName));
       continue;
     }
     const options = propOptions?.[key];
@@ -96,8 +138,8 @@ export function controlsFromDeclaredProps(
         key,
         label: key,
         type: "string",
-        default: defaultStringForProp(key),
-        placeholder: key,
+        default: stringDefaultForProp(key),
+        placeholder: isPassthroughStringProp(key) ? undefined : key,
       });
     } else if (isLikelyBooleanProp(key)) {
       out.push({ key, label: key, type: "boolean", default: false });
@@ -106,8 +148,8 @@ export function controlsFromDeclaredProps(
         key,
         label: key,
         type: "string",
-        default: defaultStringForProp(key),
-        placeholder: key,
+        default: stringDefaultForProp(key),
+        placeholder: isPassthroughStringProp(key) ? undefined : key,
       });
     }
   }
@@ -121,6 +163,7 @@ export function controlsForSpec(
   propOptions: Record<string, string[]> | undefined,
   propDefaults: Record<string, string> | undefined,
   controlOverrides: Record<string, PlaygroundControl[]>,
+  exportName?: string,
 ): PlaygroundControl[] {
   const override = controlOverrides[catalogId];
   if (override) return override;
@@ -129,5 +172,6 @@ export function controlsForSpec(
     propKinds,
     propOptions,
     propDefaults,
+    exportName,
   );
 }

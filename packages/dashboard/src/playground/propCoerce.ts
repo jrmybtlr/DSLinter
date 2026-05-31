@@ -1,6 +1,11 @@
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { DeclaredPropKind, PlaygroundSpec } from "../types/report";
-import { CHILDREN_SLOT_DEFAULT, isLikelyBooleanProp } from "./controls";
+import {
+  childrenPropForPreview,
+  isLikelyBooleanProp,
+  isPassthroughStringProp,
+  SKIP_PLAYGROUND_PROPS,
+} from "./controls";
 
 export function coerceDeclaredPropKind(v: unknown): DeclaredPropKind | undefined {
   if (v === "boolean" || v === "string" || v === "number" || v === "unknown")
@@ -33,16 +38,20 @@ export function valuesToComponentProps(
   declaredProps: string[],
   values: PlaygroundArgs,
   propKinds?: Partial<Record<string, DeclaredPropKind>>,
+  exportName?: string,
 ): Record<string, unknown> {
   const o: Record<string, unknown> = {};
   for (const key of propKeysForPreview(controls, declaredProps)) {
-    if (key === "key" || key === "ref") continue;
+    if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
+    if (isPassthroughStringProp(key)) {
+      const raw = values[key];
+      if (raw === undefined || raw === null || String(raw).length === 0) continue;
+      o[key] = String(raw);
+      continue;
+    }
     if (key === "children") {
-      const v = values.children;
-      o[key] =
-        v !== undefined && v !== null && String(v).length > 0
-          ? String(v)
-          : CHILDREN_SLOT_DEFAULT;
+      const coerced = childrenPropForPreview(exportName, values.children);
+      if (coerced !== undefined) o[key] = coerced;
       continue;
     }
     const kind = propKinds?.[key];
@@ -76,7 +85,7 @@ export function mergeStaticDefaults(
   const o = { ...fromValues };
   for (const [k, v] of Object.entries(staticDefaults)) {
     const cur = o[k];
-    if (cur === undefined || cur === "") o[k] = v;
+    if (cur === undefined || (cur === "" && k !== "children")) o[k] = v;
   }
   return o;
 }

@@ -12,6 +12,13 @@ import type { PlaygroundPreviewComponent } from "../types/preview";
 import type { BuildPlaygroundModules } from "./buildPlaygroundEntriesFromReport";
 import { getModuleExport } from "./playgroundModuleExport";
 import { resolveModuleKeyForRelPath } from "./playgroundJoin";
+import {
+  childrenControl,
+  childrenPropForPreview,
+  isPassthroughStringProp,
+  SKIP_PLAYGROUND_PROPS,
+  stringDefaultForProp,
+} from "./controls";
 
 const PLAYABLE_KINDS = new Set<DefinitionKind>([
   "function",
@@ -180,15 +187,6 @@ function isLikelyBooleanProp(name: string): boolean {
   return false;
 }
 
-function defaultStringForProp(key: string): string {
-  if (key === "href") return "/governance";
-  const k = key.toLowerCase();
-  if (k === "title" || k === "label" || k === "text" || k === "name" || k === "heading") {
-    return "Label";
-  }
-  return key;
-}
-
 function controlsFromDefinitionAndUsage(
   def: ComponentDefinition,
   usage: UsageSummary | undefined,
@@ -199,7 +197,7 @@ function controlsFromDefinitionAndUsage(
   if (override) return override;
 
   const declared = def.declared_props ?? [];
-  const skip = new Set(["key", "ref", "as", "asChild"]);
+  const skip = new Set([...SKIP_PLAYGROUND_PROPS, "as", "asChild"]);
   const propKeys = new Set<string>(declared);
 
   // Include props observed in usage when the scanner did not declare them.
@@ -214,14 +212,7 @@ function controlsFromDefinitionAndUsage(
   for (const key of [...propKeys].sort((a, b) => a.localeCompare(b))) {
     if (skip.has(key)) continue;
     if (key === "children") {
-      out.push({
-        key: "children",
-        label: "children",
-        type: "string",
-        default: "Example",
-        defaultSource: "example",
-        placeholder: "Slot content",
-      });
+      out.push({ ...childrenControl(catalogId), defaultSource: "example" });
       continue;
     }
 
@@ -263,9 +254,9 @@ function controlsFromDefinitionAndUsage(
         key,
         label: key,
         type: "string",
-        default: defaultStringForProp(key),
+        default: stringDefaultForProp(key),
         defaultSource: "example",
-        placeholder: key,
+        placeholder: isPassthroughStringProp(key) ? undefined : key,
       });
     }
   }
@@ -274,14 +265,7 @@ function controlsFromDefinitionAndUsage(
     !out.some((c) => c.key === "children") &&
     (propKeys.has("children") || (usage?.prop_frequencies?.children ?? 0) > 0)
   ) {
-    out.push({
-      key: "children",
-      label: "children",
-      type: "string",
-      default: "Example",
-      defaultSource: "example",
-      placeholder: "Slot content",
-    });
+    out.push({ ...childrenControl(catalogId), defaultSource: "example" });
   }
 
   return out;
@@ -290,14 +274,21 @@ function controlsFromDefinitionAndUsage(
 function valuesToProps(
   controls: PlaygroundControl[],
   values: PlaygroundArgs,
+  exportName?: string,
 ): Record<string, unknown> {
   const o: Record<string, unknown> = {};
   for (const control of controls) {
     const key = control.key;
-    if (key === "key" || key === "ref") continue;
+    if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
     if (key === "children") {
-      const v = values.children;
-      o[key] = v !== undefined && v !== null && String(v).length > 0 ? String(v) : "Example";
+      const coerced = childrenPropForPreview(exportName, values.children);
+      if (coerced !== undefined) o[key] = coerced;
+      continue;
+    }
+    if (isPassthroughStringProp(key)) {
+      const raw = values[key];
+      if (raw === undefined || raw === null || String(raw).length === 0) continue;
+      o[key] = String(raw);
       continue;
     }
     if (control.type === "boolean") {
@@ -320,7 +311,7 @@ function mergeStaticDefaults(
   const o = { ...fromValues };
   for (const [k, v] of Object.entries(staticDefaults)) {
     const cur = o[k];
-    if (cur === undefined || cur === "") o[k] = v;
+    if (cur === undefined || (cur === "" && k !== "children")) o[k] = v;
   }
   return o;
 }
@@ -494,7 +485,10 @@ export function buildCompoundPlaygroundEntryForTarget(
   const staticDefaults = options.staticDefaults?.[targetName] ?? {};
 
   const renderPreview = (values: PlaygroundArgs) => {
-    const props = mergeStaticDefaults(valuesToProps(controls, values), staticDefaults);
+    const props = mergeStaticDefaults(
+      valuesToProps(controls, values, targetName),
+      staticDefaults,
+    );
     return renderCompoundPreview(family, targetName, mod, props);
   };
 

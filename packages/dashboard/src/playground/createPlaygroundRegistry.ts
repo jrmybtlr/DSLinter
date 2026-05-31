@@ -51,7 +51,7 @@ export function createPlaygroundRegistry(
     });
 }
 
-/** Convenience when you only need entries (skips are still logged in dev). */
+/** Convenience when you only need entries. */
 export function createPlaygroundRegistryEntriesOnly(
   modules: BuildPlaygroundModules,
   options: CreatePlaygroundRegistryOptions = {},
