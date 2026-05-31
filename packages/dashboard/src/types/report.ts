@@ -144,6 +144,12 @@ export interface CssTokenSummary {
   unused_tokens?: string[];
 }
 
+/** Dashboard-relevant slice of `.dslinter.json` embedded in each scan report. */
+export interface ReportConfig {
+  hidden_components?: string[];
+  hidden_paths?: string[];
+}
+
 export interface WorkspaceReport {
   root: string;
   files: FileScan[];
@@ -154,4 +160,5 @@ export interface WorkspaceReport {
   scores: GovernanceScores;
   playgrounds?: PlaygroundSpec[];
   css_tokens?: CssTokenSummary;
+  config?: ReportConfig;
 }

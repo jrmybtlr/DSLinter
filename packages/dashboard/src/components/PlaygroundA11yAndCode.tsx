@@ -32,9 +32,7 @@ type UsageProps = {
 };
 
 export function PlaygroundUsageSection({ entry, values }: UsageProps) {
-  const usage =
-    entry.usageSnippet?.(values) ??
-    `// Pass usageSnippet on this PlaygroundEntry, or derive snippets from dslint controls.\n<${entry.id} />`;
+  const usage = entry.usageSnippet?.(values) ?? `<${entry.id} />`;
 
   return (
     <Section id="usage" title="Usage">
@@ -153,7 +151,9 @@ export function PlaygroundCodeScoreSection({
 }
 
 type A11yProps = {
-  a11y: A11yModuleSummary & { findings: PlaygroundA11yFinding[] };
+  a11y: Omit<A11yModuleSummary, "findings"> & {
+    findings: PlaygroundA11yFinding[];
+  };
   reportReady: boolean;
   variantScanPending?: boolean;
 };
@@ -243,7 +243,6 @@ function formatRepoLiteralChips(
 }
 
 export function PlaygroundApiReference({
-  entry,
   controls,
   values,
   onChange,
@@ -274,10 +273,6 @@ export function PlaygroundApiReference({
   const repoUsageProps = showRepo
     ? [...rows.map((r) => r.prop), ...extraRepoProps]
     : [];
-  const usage =
-    entry.usageSnippet?.(values) ??
-    `// Pass usageSnippet on this PlaygroundEntry, or derive snippets from dslint controls.\n<${entry.id} />`;
-
   return (
     <Section
       id="api-reference"
@@ -338,9 +333,9 @@ export function PlaygroundApiReference({
                   ) : (
                     <span className="font-mono text-xs flex items-center gap-1">
                       {r.type}
-                      {r.default !== "—" ? (
+                      {r.defaultBadge ? (
                         <Badge variant="secondary" size="sm">
-                          {r.default}
+                          {r.defaultBadge}
                         </Badge>
                       ) : null}
                     </span>
@@ -360,11 +355,6 @@ export function PlaygroundApiReference({
           })}
         </TableBody>
       </Table>
-
-      {/* Example Code Based on Prop */}
-      <Section id="example-code" title="Example code" className="mt-4">
-        <PlaygroundUsageCode source={usage} />
-      </Section>
 
       {showRepo ? (
         <Section id="repo-usage" title="Repo usage" className="mt-4">

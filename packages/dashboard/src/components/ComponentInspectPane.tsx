@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { Button } from "./ui/button";
 import {
   Table,
   TableBody,
@@ -11,6 +10,7 @@ import {
 import {
   aggregateDeclaredProps,
   aggregateDefinitions,
+  componentCatalogFamilyForName,
 } from "../dashboard/aggregate";
 import {
   buildUnusedPropSetForComponent,
@@ -23,6 +23,7 @@ import { findingsForComponent } from "../report/findingsForComponent";
 import type { WorkspaceReport } from "../types/report";
 import type { PlaygroundJoinSkip } from "../playground/playgroundJoin";
 import { findPlaygroundSpec } from "../playground/playgroundJoin";
+import { HideFromCatalogButton } from "./HideFromCatalogButton";
 import { Section } from "./Section";
 import { TruncatedPath } from "./TruncatedPath";
 
@@ -34,6 +35,8 @@ type Props = {
   /** When the report row exists but Vite could not load the module/export. */
   playgroundJoinSkip?: PlaygroundJoinSkip;
   onBackToGovernance: () => void;
+  onOpenComponent: (componentId: string) => void;
+  onHideFromCatalog?: (componentId: string) => void;
 };
 
 export function ComponentInspectPane({
@@ -42,7 +45,8 @@ export function ComponentInspectPane({
   reportReady,
   hasPlaygroundSpec,
   playgroundJoinSkip,
-  onBackToGovernance,
+  onOpenComponent,
+  onHideFromCatalog,
 }: Props) {
   const playgroundSpec = findPlaygroundSpec(workspaceReport, componentId);
   const definitions = useMemo(() => {
@@ -68,6 +72,11 @@ export function ComponentInspectPane({
     () => findingsForComponent(workspaceReport, componentId),
     [workspaceReport, componentId],
   );
+  const family = useMemo(
+    () => componentCatalogFamilyForName(workspaceReport, componentId),
+    [workspaceReport, componentId],
+  );
+  const childComponents = family?.parent === componentId ? family.children : [];
 
   const previewNote = hasPlaygroundSpec
     ? "A preview was expected for this component but the module could not be loaded in the dashboard bundle (check the file path, export name, or that npx dslinter was run from the project root)."
@@ -124,14 +133,14 @@ export function ComponentInspectPane({
                 </p>
               ) : null}
             </div>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onBackToGovernance}
-            >
-              Back to governance
-            </Button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {onHideFromCatalog ? (
+                <HideFromCatalogButton
+                  componentName={componentId}
+                  onHidden={onHideFromCatalog}
+                />
+              ) : null}
+            </div>
           </div>
         </header>
 
@@ -178,6 +187,27 @@ export function ComponentInspectPane({
               </p>
             )}
           </Section>
+
+          {childComponents.length > 0 ? (
+            <Section
+              id="subcomponents"
+              title="Subcomponents"
+              description="Related exports detected in the same compound component module."
+            >
+              <div className="grid gap-2 sm:grid-cols-2">
+                {childComponents.map((child) => (
+                  <button
+                    key={child}
+                    type="button"
+                    onClick={() => onOpenComponent(child)}
+                    className="rounded-md border border-border bg-card px-3 py-2 text-left text-sm font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {child}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          ) : null}
 
           <Section
             id="props"

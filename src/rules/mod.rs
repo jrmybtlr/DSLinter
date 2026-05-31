@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use crate::config::DslintConfig;
 use crate::css_tokens::{analyze_css_tokens, unused_css_var_findings};
 use crate::directives::apply_inline_suppressions;
-use crate::model::{FileScan, OwnershipSummary, WorkspaceReport};
+use crate::model::{FileScan, OwnershipSummary, ReportConfig, WorkspaceReport};
 use crate::playground_emit::build_playground_specs;
 use crate::util::paths::{path_matches_prefix, rel_path_from_canon_root};
 
@@ -70,6 +70,11 @@ pub fn evaluate_workspace(
     );
     let playgrounds = build_playground_specs(&root, &files, config);
 
+    let report_config = ReportConfig {
+        hidden_components: config.hidden_components.clone(),
+        hidden_paths: config.hidden_paths.clone(),
+    };
+
     WorkspaceReport {
         root,
         files,
@@ -80,6 +85,7 @@ pub fn evaluate_workspace(
         scores,
         playgrounds,
         css_tokens,
+        config: report_config,
     }
 }
 

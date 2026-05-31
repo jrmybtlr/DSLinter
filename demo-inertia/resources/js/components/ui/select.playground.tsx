@@ -1,19 +1,26 @@
-import { definePlayground } from 'dslinter';
-import { selectPreview } from '@/playground/preview-kits';
+import { definePlaygroundFromKit } from 'dslinter';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
-export const selectPlayground = definePlayground({
-    id: 'Select',
-    group: 'ui',
-    controls: [
-        {
-            key: 'placeholder',
-            label: 'Placeholder',
-            type: 'string',
-            default: 'Pick a stack',
-        },
-    ],
-    render: (values) =>
-        selectPreview({
-            placeholder: String(values.placeholder ?? 'Pick a stack'),
-        }),
+export const selectPlayground = definePlaygroundFromKit({
+    controls: {
+        placeholder: 'Pick a stack',
+    },
+    kit: ({ placeholder }) => (
+        <Select defaultValue="react">
+            <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="react">React</SelectItem>
+                <SelectItem value="vue">Vue</SelectItem>
+                <SelectItem value="svelte">Svelte</SelectItem>
+            </SelectContent>
+        </Select>
+    ),
 });

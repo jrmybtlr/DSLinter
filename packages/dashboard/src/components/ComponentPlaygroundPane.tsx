@@ -14,7 +14,11 @@ import { a11ySummaryForModule } from "../report/a11yForModule";
 import { codeScoreSummaryForModule } from "../report/codeScoreForModule";
 import { tokenStyleFindingsForModule } from "../report/tokenStyleFindingsForModule";
 import type { WorkspaceReport } from "../types/report";
-import { aggregateDeclaredProps, usageMap } from "../dashboard/aggregate";
+import {
+  aggregateDeclaredProps,
+  componentCatalogFamilyForName,
+  usageMap,
+} from "../dashboard/aggregate";
 import { defaultArgsFromControls } from "../types/controls";
 import type { PlaygroundArgs } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
@@ -26,6 +30,7 @@ import {
   PlaygroundTokenStyleSection,
   PlaygroundUsageSection,
 } from "./PlaygroundA11yAndCode";
+import { PlaygroundAppThemeWrapper } from "./PlaygroundAppThemeWrapper";
 import { PlaygroundPreviewErrorBoundary } from "./PlaygroundPreviewErrorBoundary";
 import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
 import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
@@ -34,6 +39,7 @@ import {
   playgroundA11yScore,
   type PlaygroundA11yFinding,
 } from "../playground/scanVariantA11y";
+import { HideFromCatalogButton } from "./HideFromCatalogButton";
 import { Section } from "./Section";
 import { TruncatedPath } from "./TruncatedPath";
 
@@ -42,6 +48,8 @@ type Props = {
   formatModulePath?: (modulePath: string) => string;
   workspaceReport: WorkspaceReport | null;
   reportReady: boolean;
+  onOpenComponent: (componentId: string) => void;
+  onHideFromCatalog?: (componentId: string) => void;
 };
 
 const MIN_PREVIEW_PX = 280;
@@ -130,6 +138,8 @@ export function ComponentPlaygroundPane({
   formatModulePath,
   workspaceReport,
   reportReady,
+  onOpenComponent,
+  onHideFromCatalog,
 }: Props) {
   const { renderPreview } = entry;
   const rel = formatModulePath
@@ -362,11 +372,22 @@ export function ComponentPlaygroundPane({
       : "—";
 
   const report = reportReady ? workspaceReport : null;
-  const resetControls = () => setValues(defaultArgsFromControls(entry.controls));
+  const family = useMemo(
+    () => componentCatalogFamilyForName(report, entry.id),
+    [report, entry.id],
+  );
+  const childComponents = family?.parent === entry.id ? family.children : [];
+  const resetControls = () =>
+    setValues(defaultArgsFromControls(entry.controls));
 
   const tocItems: { href: string; label: string; show?: boolean }[] = [
     { href: "#api-reference", label: "API reference", show: hasControls },
     { href: "#usage", label: "Usage" },
+    {
+      href: "#subcomponents",
+      label: "Subcomponents",
+      show: childComponents.length > 0,
+    },
     { href: "#repo-usage", label: "Repo usage" },
     { href: "#design-tokens", label: "Design tokens" },
     { href: "#code-score", label: "Code score" },
@@ -377,27 +398,38 @@ export function ComponentPlaygroundPane({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <div className="min-h-0 flex-1 overflow-auto">
-        <header id="source" className="scroll-mt-20 border-b border-border bg-card p-6">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-muted-foreground">
-              Components
-              {entry.meta.group ? (
-                <>
-                  {" "}
-                  <span className="text-muted-foreground/40">/</span>{" "}
-                  <span className="capitalize text-foreground/80">
-                    {entry.meta.group}
-                  </span>
-                </>
-              ) : null}
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              {entry.meta.title}
-            </h1>
-            <TruncatedPath
-              path={rel}
-              className="mt-1 text-xs text-muted-foreground"
-            />
+        <header
+          id="source"
+          className="scroll-mt-20 border-b border-border bg-card p-6"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-muted-foreground">
+                Components
+                {entry.meta.group ? (
+                  <>
+                    {" "}
+                    <span className="text-muted-foreground/40">/</span>{" "}
+                    <span className="capitalize text-foreground/80">
+                      {entry.meta.group}
+                    </span>
+                  </>
+                ) : null}
+              </p>
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                {entry.meta.title}
+              </h1>
+              <TruncatedPath
+                path={rel}
+                className="mt-1 text-xs text-muted-foreground"
+              />
+            </div>
+            {onHideFromCatalog ? (
+              <HideFromCatalogButton
+                componentName={entry.meta.id}
+                onHidden={onHideFromCatalog}
+              />
+            ) : null}
           </div>
         </header>
 
@@ -420,11 +452,16 @@ export function ComponentPlaygroundPane({
                   side="right"
                   onPointerDown={attachSymmetricWidthDrag("right")}
                 />
-                <div className="ds-playground-preview-canvas min-w-0 p-8">
-                  <PlaygroundPreviewErrorBoundary componentName={entry.meta.title}>
+                <PlaygroundAppThemeWrapper
+                  workspaceReport={report}
+                  className="min-w-0 p-8 backdrop-blur-2xl"
+                >
+                  <PlaygroundPreviewErrorBoundary
+                    componentName={entry.meta.title}
+                  >
                     {renderPreview(values)}
                   </PlaygroundPreviewErrorBoundary>
-                </div>
+                </PlaygroundAppThemeWrapper>
               </div>
             </div>
             {maxOuterPx > 0 ? (
@@ -435,7 +472,10 @@ export function ComponentPlaygroundPane({
                 <span className="p-2.5" title="usemods detectBreakpoint">
                   Screen: {windowBreakpoint ?? "—"}
                 </span>
-                <span className="p-2.5" title="usemods detectContainerBreakpoint">
+                <span
+                  className="p-2.5"
+                  title="usemods detectContainerBreakpoint"
+                >
                   Container: {containerBreakpoint ?? "—"}
                 </span>
               </div>

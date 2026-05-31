@@ -285,9 +285,9 @@ fn parse_definitions(_path: &Path, content: &str) -> Vec<RawDefinition> {
         }
     }
 
-    // Deduplicate: first definition wins (theme before root overrides in file order).
+    // Deduplicate per (name, scope) so :root and .dark can both define --background.
     let mut seen = HashSet::new();
-    defs.retain(|d| seen.insert(d.name.clone()));
+    defs.retain(|d| seen.insert((d.name.clone(), d.scope)));
     defs
 }
 
@@ -622,6 +622,29 @@ mod tests {
         assert!(names.contains("--spacing-layout-md"));
         assert!(names.contains("--background"));
         assert!(!names.contains("--btn-bg"));
+    }
+
+    #[test]
+    fn keeps_dark_selector_overrides_alongside_root() {
+        let css = r#"
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+}
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+}
+"#;
+        let defs = parse_definitions(Path::new("t.css"), css);
+        let background: Vec<_> = defs
+            .iter()
+            .filter(|d| d.name == "--background")
+            .map(|d| (d.scope, d.value.as_str()))
+            .collect();
+        assert_eq!(background.len(), 2);
+        assert!(background.contains(&(CssTokenScope::Root, "oklch(1 0 0)")));
+        assert!(background.contains(&(CssTokenScope::Selector, "oklch(0.145 0 0)")));
     }
 
     #[test]

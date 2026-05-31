@@ -4,7 +4,15 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
 use crate::config::DslintConfig;
-use crate::model::{DuplicateComponent, FileScan, LintFinding, Severity, UsageLocation, UsageSummary};
+use crate::model::{
+    DuplicateComponent, FileScan, LintFinding, Severity, UsageLocation, UsageSummary,
+};
+
+fn is_playground_file(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.contains(".playground."))
+}
 
 /// Accumulator for all per-component data gathered during a single pass over usages.
 struct ComponentAccumulator {
@@ -31,6 +39,9 @@ pub fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
     let mut acc: HashMap<String, ComponentAccumulator> = HashMap::with_capacity(files.len());
 
     for file in files {
+        if is_playground_file(&file.path) {
+            continue;
+        }
         for u in &file.usages {
             let entry = acc.entry(u.component.clone()).or_insert_with(ComponentAccumulator::new);
 
@@ -311,6 +322,26 @@ mod prop_tests {
         let card = rows.iter().find(|r| r.component == "Card").unwrap();
         assert_eq!(card.usage_locations.len(), 2);
         assert_eq!(card.usage_locations[0].props, vec!["title"]);
+    }
+
+    #[test]
+    fn rollup_ignores_playground_files() {
+        let files = vec![
+            make_file(
+                "components/alert.playground.tsx",
+                vec![],
+                vec![("Alert", vec!["children", "variant"])],
+            ),
+            make_file("pages/settings.tsx", vec![], vec![("Alert", vec!["title"])]),
+        ];
+
+        let rows = rollup_usage(&files);
+        let alert = rows.iter().find(|r| r.component == "Alert").unwrap();
+        assert_eq!(alert.reference_count, 1);
+        assert_eq!(alert.files, vec![PathBuf::from("pages/settings.tsx")]);
+        assert_eq!(*alert.prop_frequencies.get("title").unwrap(), 1);
+        assert!(!alert.prop_frequencies.contains_key("variant"));
+        assert!(!alert.prop_frequencies.contains_key("children"));
     }
 
     #[test]

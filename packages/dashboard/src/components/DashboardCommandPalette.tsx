@@ -12,7 +12,7 @@ import {
 import type { HashRoute } from "../shell/hashRoute";
 
 type Props = {
-  catalogNames: string[];
+  catalogEntries: { name: string; label: string }[];
   onNavigate: (next: HashRoute) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -25,12 +25,7 @@ function eventTargetIsEditable(target: EventTarget | null): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-export function DashboardCommandPalette({
-  catalogNames,
-  onNavigate,
-  open,
-  onOpenChange,
-}: Props) {
+export function DashboardCommandPalette({ catalogEntries, onNavigate, open, onOpenChange }: Props) {
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   useEffect(() => {
@@ -65,18 +60,18 @@ export function DashboardCommandPalette({
             Governance
           </CommandItem>
         </CommandGroup>
-        {catalogNames.length > 0 ? (
+        {catalogEntries.length > 0 ? (
           <CommandGroup heading="Components">
-            {catalogNames.map((name) => (
+            {catalogEntries.map(({ name, label }) => (
               <CommandItem
                 key={name}
-                value={name}
+                value={`${name} ${label}`}
                 onSelect={() => {
                   onNavigate({ view: "component", componentId: name });
                   close();
                 }}
               >
-                {name}
+                {label}
               </CommandItem>
             ))}
           </CommandGroup>

@@ -32,6 +32,21 @@ describe("collectDefinedPlaygrounds", () => {
     expect(collectDefinedPlaygrounds(modules)).toEqual([]);
   });
 
+  it("infers catalog id from *Playground export name when id is omitted", () => {
+    const defined = definePlayground({
+      render: () => createElement("span", null, "alert"),
+    });
+    const modules = {
+      "../components/ui/alert.playground.tsx": {
+        alertPlayground: defined,
+      },
+    };
+    const entries = collectDefinedPlaygrounds(modules);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.id).toBe("Alert");
+    expect(entries[0]?.meta.title).toBe("Alert");
+  });
+
   it("ignores malformed definePlayground-like exports", () => {
     const modules = {
       "../components/ui/dropdown-menu.playground.tsx": {

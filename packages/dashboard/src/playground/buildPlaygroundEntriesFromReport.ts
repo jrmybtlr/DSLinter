@@ -1,7 +1,8 @@
 import { createElement, type ComponentType } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { PlaygroundSpec, UsageSummary, WorkspaceReport } from "../types/report";
-import type { PlaygroundEntry, PlaygroundMeta, PlaygroundPreviewComponent } from "../types/playground";
+import type { PlaygroundEntry, PlaygroundMeta } from "../types/playground";
+import type { PlaygroundPreviewComponent } from "../types/preview";
 import {
   defaultEmbedGlobKeyFromRelPath,
   diagnosePlaygroundJoinSkips,
@@ -9,7 +10,15 @@ import {
   resolveModuleKeyForRelPath,
   type PlaygroundJoinSkip,
 } from "./playgroundJoin";
+import {
+  definitionPathsForName,
+  isCatalogComponentHidden,
+} from "../dashboard/catalogVisibility";
 import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
+import {
+  buildCompoundPlaygroundEntries,
+  upgradeRootEntriesWithCompoundPreview,
+} from "./buildCompoundPlaygroundEntries";
 import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
 import {
   componentAcceptsChildren,
@@ -58,8 +67,7 @@ function getExport(
   exportName: string,
 ): ComponentType<Record<string, unknown>> | undefined {
   const x = mod[exportName];
-  if (typeof x === "function")
-    return x as ComponentType<Record<string, unknown>>;
+  if (typeof x === "function") return x as ComponentType<Record<string, unknown>>;
   return undefined;
 }
 
@@ -96,15 +104,12 @@ export function buildPlaygroundEntriesFromReportWithSkips(
   const controlOverrides = options.controlOverrides ?? {};
   const staticDefaultsMap = options.staticDefaults ?? {};
 
-  const skipped =
-    specs?.length ?
-      diagnosePlaygroundJoinSkips(report, modules, {
+  const skipped = specs?.length
+    ? diagnosePlaygroundJoinSkips(report, modules, {
         globKeyFromRelPath,
       })
     : [];
-  const shouldLog =
-    options.logJoinSkips ??
-    (typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV));
+  const shouldLog = options.logJoinSkips ?? viteDevMode();
   if (shouldLog) logPlaygroundJoinSkips(skipped);
 
   const autoEntries: PlaygroundEntry[] = [];
@@ -115,11 +120,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
 
   for (const spec of specs) {
     const globKey = globKeyFromRelPath(spec.rel_path);
-    const resolvedKey = resolveModuleKeyForRelPath(
-      spec.rel_path,
-      modules,
-      globKeyFromRelPath,
-    );
+    const resolvedKey = resolveModuleKeyForRelPath(spec.rel_path, modules, globKeyFromRelPath);
     const mod = resolvedKey ? modules[resolvedKey] : undefined;
     if (!mod) continue;
     const Cmp = getExport(mod, spec.export_name);
@@ -140,18 +141,10 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       ),
       componentAcceptsChildren(declared, repoUsage),
     );
-    const staticDefaults =
-      staticDefaultsMap[catalogId] ??
-      staticDefaultsMap[spec.id] ??
-      {};
+    const staticDefaults = staticDefaultsMap[catalogId] ?? staticDefaultsMap[spec.id] ?? {};
 
     const renderPreview = (values: PlaygroundArgs) => {
-      const fromValues = valuesToComponentProps(
-        controls,
-        declared,
-        values,
-        propKinds,
-      );
+      const fromValues = valuesToComponentProps(controls, declared, values, propKinds);
       const merged = mergeStaticDefaults(fromValues, staticDefaults);
       return createElement(Cmp, merged);
     };
@@ -171,18 +164,59 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       meta,
       modulePath: resolvedKey ?? globKey,
       controls,
-      usageSnippet: (values) =>
-        genericUsageSnippet(spec.export_name, values, controls),
+      usageSnippet: (values) => genericUsageSnippet(spec.export_name, values, controls),
       renderPreview,
       Preview: Preview as PlaygroundPreviewComponent,
     });
   }
 
+  if (report) {
+    upgradeRootEntriesWithCompoundPreview(autoEntries, report, modules, {
+      globKeyFromRelPath,
+      controlOverrides,
+      staticDefaults: staticDefaultsMap,
+    });
+  }
+
+  const compoundEntries = buildCompoundPlaygroundEntries(report, modules, {
+    globKeyFromRelPath,
+    controlOverrides,
+    staticDefaults: staticDefaultsMap,
+    existingIds: new Set(autoEntries.map((entry) => entry.id)),
+  });
   const manualEntries = collectDefinedPlaygrounds(modules);
+  const merged = mergePlaygroundEntries(
+    [...autoEntries, ...compoundEntries],
+    manualEntries,
+  );
   return {
-    entries: mergePlaygroundEntries(autoEntries, manualEntries),
+    entries: filterCatalogVisiblePlaygroundEntries(report, merged),
     skipped,
   };
+}
+
+function entryPathsForCatalog(
+  report: WorkspaceReport | null | undefined,
+  entry: PlaygroundEntry,
+): string[] {
+  if (!report) return [entry.modulePath];
+  const fromReport = definitionPathsForName(report, entry.meta.id);
+  return fromReport.length > 0 ? fromReport : [entry.modulePath];
+}
+
+function filterCatalogVisiblePlaygroundEntries(
+  report: WorkspaceReport | null | undefined,
+  entries: PlaygroundEntry[],
+): PlaygroundEntry[] {
+  if (!report) return entries;
+  return entries.filter(
+    (entry) =>
+      !isCatalogComponentHidden(
+        entry.meta.id,
+        report,
+        entryPathsForCatalog(report, entry),
+      ),
+  );
 }
 
 /** Build playground entries from report specs + eager Vite modules. */
@@ -191,6 +225,5 @@ export function buildPlaygroundEntriesFromReport(
   modules: BuildPlaygroundModules,
   options: BuildPlaygroundOptions = {},
 ): PlaygroundEntry[] {
-  return buildPlaygroundEntriesFromReportWithSkips(report, modules, options)
-    .entries;
+  return buildPlaygroundEntriesFromReportWithSkips(report, modules, options).entries;
 }
