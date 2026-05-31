@@ -1,36 +1,39 @@
-import { definePlayground } from 'dslinter';
-import { dialogPreview } from '@/playground/preview-kits';
+import { definePlaygroundFromKit } from 'dslinter';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 
-export const dialogPlayground = definePlayground({
-    id: 'Dialog',
-    group: 'ui',
-    controls: [
-        {
-            key: 'triggerLabel',
-            label: 'Trigger label',
-            type: 'string',
-            default: 'Open dialog',
-        },
-        {
-            key: 'title',
-            label: 'Title',
-            type: 'string',
-            default: 'Dialog',
-        },
-        {
-            key: 'description',
-            label: 'Description',
-            type: 'string',
-            default: 'Modal content built with Radix Dialog primitives.',
-        },
-    ],
-    render: (values) =>
-        dialogPreview({
-            triggerLabel: String(values.triggerLabel ?? 'Open dialog'),
-            title: String(values.title ?? 'Dialog'),
-            description: String(
-                values.description ??
-                    'Modal content built with Radix Dialog primitives.',
-            ),
-        }),
+export const dialogPlayground = definePlaygroundFromKit({
+    controls: {
+        triggerLabel: 'Open dialog',
+        title: 'Dialog',
+        description: 'Modal content built with Radix Dialog primitives.',
+    },
+    kit: ({ triggerLabel, title, description }) => (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline">{triggerLabel}</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>{description}</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button>Continue</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    ),
 });

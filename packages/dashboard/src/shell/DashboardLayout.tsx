@@ -19,12 +19,13 @@ import { GovernancePane } from "../components/GovernancePane";
 import { Sidebar } from "../components/Sidebar";
 import { TokensPane } from "../components/TokensPane";
 import { DashboardCommandPalette } from "../components/DashboardCommandPalette";
-import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
-import { resolvePlaygroundEntry } from "../playground/buildPlaygroundEntriesFromReport";
 import {
-  findPlaygroundJoinSkip,
-  type PlaygroundJoinSkip,
-} from "../playground/playgroundJoin";
+  componentCatalogNamesFromReport,
+  componentCatalogTreeFromReport,
+} from "../dashboard/aggregate";
+import { reportWithExtraHidden } from "../dashboard/catalogVisibility";
+import { resolvePlaygroundEntry } from "../playground/buildPlaygroundEntriesFromReport";
+import { findPlaygroundJoinSkip, type PlaygroundJoinSkip } from "../playground/playgroundJoin";
 import { useHashRoute } from "./useHashRoute";
 
 const DashboardLayoutAuto = lazy(() => import("./DashboardLayoutAuto"));
@@ -69,14 +70,10 @@ type DashboardThemeContextValue = {
   resolvedTheme: DashboardResolvedTheme;
 };
 
-const DashboardThemeContext = createContext<DashboardThemeContextValue | null>(
-  null,
-);
+const DashboardThemeContext = createContext<DashboardThemeContextValue | null>(null);
 
 export function DashboardThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<DashboardThemePreference>(() =>
-    readInitialTheme(),
-  );
+  const [theme, setThemeState] = useState<DashboardThemePreference>(() => readInitialTheme());
 
   const setTheme = useCallback((next: DashboardThemePreference) => {
     setThemeState(next);
@@ -101,24 +98,15 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const value = useMemo(
-    () => ({ theme, setTheme, resolvedTheme: theme }),
-    [theme, setTheme],
-  );
+  const value = useMemo(() => ({ theme, setTheme, resolvedTheme: theme }), [theme, setTheme]);
 
-  return (
-    <DashboardThemeContext.Provider value={value}>
-      {children}
-    </DashboardThemeContext.Provider>
-  );
+  return <DashboardThemeContext.Provider value={value}>{children}</DashboardThemeContext.Provider>;
 }
 
 export function useDashboardTheme(): DashboardThemeContextValue {
   const ctx = useContext(DashboardThemeContext);
   if (!ctx) {
-    throw new Error(
-      "useDashboardTheme must be used within DashboardThemeProvider",
-    );
+    throw new Error("useDashboardTheme must be used within DashboardThemeProvider");
   }
   return ctx;
 }
@@ -167,26 +155,49 @@ export function DashboardLayoutInner({
 }: DashboardLayoutInnerProps) {
   const [route, navigate] = useHashRoute();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [optimisticHidden, setOptimisticHidden] = useState<string[]>([]);
   const { theme, setTheme, resolvedTheme } = useDashboardTheme();
 
-  const catalogNames = useMemo(
-    () => componentCatalogNamesFromReport(dslinterReport.report),
-    [dslinterReport.report],
+  const catalogReport = useMemo(
+    () => reportWithExtraHidden(dslinterReport.report, optimisticHidden),
+    [dslinterReport.report, optimisticHidden],
   );
 
+  const catalogNames = useMemo(
+    () => componentCatalogNamesFromReport(catalogReport),
+    [catalogReport],
+  );
+  const catalogEntries = useMemo(() => {
+    const tree = componentCatalogTreeFromReport(catalogReport);
+    return tree.flatMap((item) => {
+      if (item.type === "component") {
+        return [{ name: item.name, label: item.name }];
+      }
+      return [
+        { name: item.parent, label: item.parent },
+        ...item.children.map((child) => ({
+          name: child,
+          label: `${item.parent} / ${child}`,
+        })),
+      ];
+    });
+  }, [catalogReport]);
+
+  const handleHideFromCatalog = useCallback((componentName: string) => {
+    setOptimisticHidden((prev) =>
+      prev.includes(componentName) ? prev : [...prev, componentName],
+    );
+    if (route.view === "component" && route.componentId === componentName) {
+      navigate({ view: "governance" });
+    }
+  }, [route, navigate]);
+
   const reportReady =
-    !dslinterReport.loading &&
-    dslinterReport.error == null &&
-    dslinterReport.report != null;
+    !dslinterReport.loading && dslinterReport.error == null && dslinterReport.report != null;
 
   let main: ReactNode;
   if (route.view === "tokens") {
-    main = (
-      <TokensPane
-        tokenCatalog={tokenCatalog}
-        dslinterReport={dslinterReport.report}
-      />
-    );
+    main = <TokensPane tokenCatalog={tokenCatalog} dslinterReport={dslinterReport.report} />;
   } else if (route.view === "governance") {
     main = (
       <GovernancePane
@@ -194,9 +205,7 @@ export function DashboardLayoutInner({
         reportUrl={reportUrl}
         dslinterReportHint={dslinterReportHint}
         dslinterReport={dslinterReport}
-        onOpenComponent={(name) =>
-          navigate({ view: "component", componentId: name })
-        }
+        onOpenComponent={(name) => navigate({ view: "component", componentId: name })}
       />
     );
   } else {
@@ -215,6 +224,8 @@ export function DashboardLayoutInner({
           formatModulePath={formatModulePath}
           workspaceReport={dslinterReport.report}
           reportReady={reportReady}
+          onOpenComponent={(name) => navigate({ view: "component", componentId: name })}
+          onHideFromCatalog={handleHideFromCatalog}
         />
       );
     } else if (inCatalog) {
@@ -224,11 +235,10 @@ export function DashboardLayoutInner({
           workspaceReport={dslinterReport.report}
           reportReady={reportReady}
           hasPlaygroundSpec={hasPlaygroundSpec}
-          playgroundJoinSkip={findPlaygroundJoinSkip(
-            playgroundJoinSkips,
-            componentId,
-          )}
+          playgroundJoinSkip={findPlaygroundJoinSkip(playgroundJoinSkips, componentId)}
           onBackToGovernance={() => navigate({ view: "governance" })}
+          onOpenComponent={(name) => navigate({ view: "component", componentId: name })}
+          onHideFromCatalog={handleHideFromCatalog}
         />
       );
     } else {
@@ -236,14 +246,9 @@ export function DashboardLayoutInner({
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-muted/40 px-8 text-center">
           <p className="text-sm font-medium text-foreground">Unknown component</p>
           <p className="max-w-md text-xs text-muted-foreground">
-            <span className="font-mono">{componentId}</span> is not in the
-            latest scan catalog.
+            <span className="font-mono">{componentId}</span> is not in the latest scan catalog.
           </p>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => navigate({ view: "governance" })}
-          >
+          <Button type="button" size="sm" onClick={() => navigate({ view: "governance" })}>
             Back to governance
           </Button>
         </div>
@@ -257,13 +262,13 @@ export function DashboardLayoutInner({
       className="flex h-screen min-h-0 bg-background text-foreground"
     >
       <DashboardCommandPalette
-        catalogNames={catalogNames}
+        catalogEntries={catalogEntries}
         onNavigate={navigate}
         open={commandPaletteOpen}
         onOpenChange={setCommandPaletteOpen}
       />
       <Sidebar
-        report={dslinterReport.report}
+        report={catalogReport}
         reportLoading={dslinterReport.loading}
         reportError={dslinterReport.error}
         route={route}
@@ -272,9 +277,7 @@ export function DashboardLayoutInner({
         theme={theme}
         onThemeChange={setTheme}
       />
-      <div className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">
-        {main}
-      </div>
+      <div className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">{main}</div>
     </div>
   );
 }

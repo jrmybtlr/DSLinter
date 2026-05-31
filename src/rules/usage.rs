@@ -4,7 +4,15 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
 use crate::config::DslintConfig;
-use crate::model::{DuplicateComponent, FileScan, LintFinding, Severity, UsageLocation, UsageSummary};
+use crate::model::{
+    DuplicateComponent, FileScan, LintFinding, Severity, UsageLocation, UsageSummary,
+};
+
+fn is_playground_file(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.contains(".playground."))
+}
 
 pub fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
     let mut map: HashMap<String, HashMap<PathBuf, u32>> = HashMap::with_capacity(files.len());
@@ -16,6 +24,9 @@ pub fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
     let mut locs: HashMap<String, Vec<UsageLocation>> = HashMap::with_capacity(files.len());
 
     for file in files {
+        if is_playground_file(&file.path) {
+            continue;
+        }
         for u in &file.usages {
             let per_file = map.entry(u.component.clone()).or_default();
             *per_file.entry(file.path.clone()).or_insert(0) += 1;
@@ -56,12 +67,9 @@ pub fn rollup_usage(files: &[FileScan]) -> Vec<UsageSummary> {
             paths.sort();
             let reference_count: u32 = files_map.values().sum();
             let prop_frequencies = prop_freqs.remove(&component).unwrap_or_default();
-            let prop_value_frequencies =
-                prop_value_freqs.remove(&component).unwrap_or_default();
+            let prop_value_frequencies = prop_value_freqs.remove(&component).unwrap_or_default();
             let mut usage_locations = locs.remove(&component).unwrap_or_default();
-            usage_locations.sort_by(|a, b| {
-                a.path.cmp(&b.path).then_with(|| a.line.cmp(&b.line))
-            });
+            usage_locations.sort_by(|a, b| a.path.cmp(&b.path).then_with(|| a.line.cmp(&b.line)));
             UsageSummary {
                 component: component.clone(),
                 reference_count,
@@ -305,6 +313,26 @@ mod prop_tests {
         let card = rows.iter().find(|r| r.component == "Card").unwrap();
         assert_eq!(card.usage_locations.len(), 2);
         assert_eq!(card.usage_locations[0].props, vec!["title"]);
+    }
+
+    #[test]
+    fn rollup_ignores_playground_files() {
+        let files = vec![
+            make_file(
+                "components/alert.playground.tsx",
+                vec![],
+                vec![("Alert", vec!["children", "variant"])],
+            ),
+            make_file("pages/settings.tsx", vec![], vec![("Alert", vec!["title"])]),
+        ];
+
+        let rows = rollup_usage(&files);
+        let alert = rows.iter().find(|r| r.component == "Alert").unwrap();
+        assert_eq!(alert.reference_count, 1);
+        assert_eq!(alert.files, vec![PathBuf::from("pages/settings.tsx")]);
+        assert_eq!(*alert.prop_frequencies.get("title").unwrap(), 1);
+        assert!(!alert.prop_frequencies.contains_key("variant"));
+        assert!(!alert.prop_frequencies.contains_key("children"));
     }
 
     #[test]

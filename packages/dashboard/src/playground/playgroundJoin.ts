@@ -1,5 +1,9 @@
 import type { PlaygroundSpec, WorkspaceReport } from "../types/report";
-import type { BuildPlaygroundModules, BuildPlaygroundOptions } from "./buildPlaygroundEntriesFromReport";
+import type {
+  BuildPlaygroundModules,
+  BuildPlaygroundOptions,
+} from "./buildPlaygroundEntriesFromReport";
+import { defaultEmbedGlobKeyFromRelPath } from "./embedGlobKey";
 
 export type PlaygroundJoinSkipReason = "module_not_found" | "export_not_found";
 
@@ -11,6 +15,10 @@ export type PlaygroundJoinSkip = {
 };
 
 const DEFAULT_CONSUMER_STRIP_PREFIXES = ["src/", "resources/js/"] as const;
+
+function viteDevMode(): boolean {
+  return Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
+}
 
 /**
  * Build `globKeyFromRelPath` for a registry file one level below a source root
@@ -52,10 +60,7 @@ export function defaultConsumerGlobKeyFromRelPath(relPath: string): string {
 
 export { defaultEmbedGlobKeyFromRelPath } from "./embedGlobKey";
 
-function getExport(
-  mod: Record<string, unknown>,
-  exportName: string,
-): unknown {
+function getExport(mod: Record<string, unknown>, exportName: string): unknown {
   const x = mod[exportName];
   return typeof x === "function" ? x : undefined;
 }
@@ -101,17 +106,12 @@ export function diagnosePlaygroundJoinSkips(
   const specs = report?.playgrounds;
   if (!specs?.length) return [];
 
-  const globKeyFromRelPath =
-    options.globKeyFromRelPath ?? defaultEmbedGlobKeyFromRelPath;
+  const globKeyFromRelPath = options.globKeyFromRelPath ?? defaultEmbedGlobKeyFromRelPath;
 
   const skipped: PlaygroundJoinSkip[] = [];
   for (const spec of specs) {
     const globKey = globKeyFromRelPath(spec.rel_path);
-    const resolvedKey = resolveModuleKeyForRelPath(
-      spec.rel_path,
-      modules,
-      globKeyFromRelPath,
-    );
+    const resolvedKey = resolveModuleKeyForRelPath(spec.rel_path, modules, globKeyFromRelPath);
     const mod = resolvedKey ? modules[resolvedKey] : undefined;
     if (!mod) {
       skipped.push({
@@ -142,12 +142,10 @@ export function logPlaygroundJoinSkips(
   options?: { label?: string },
 ): void {
   if (!skipped.length) return;
-  if (typeof import.meta !== "undefined" && !import.meta.env?.DEV) return;
+  if (!viteDevMode()) return;
 
   const label = options?.label ?? "[dslinter] playground preview";
-  console.warn(
-    `${label}: ${skipped.length} component(s) have a scan row but no live preview.`,
-  );
+  console.warn(`${label}: ${skipped.length} component(s) have a scan row but no live preview.`);
   for (const s of skipped.slice(0, 12)) {
     const hint =
       s.reason === "module_not_found"
@@ -164,9 +162,7 @@ export function findPlaygroundSpec(
   report: WorkspaceReport | null | undefined,
   componentId: string,
 ): PlaygroundSpec | undefined {
-  return report?.playgrounds?.find(
-    (p) => p.export_name === componentId || p.id === componentId,
-  );
+  return report?.playgrounds?.find((p) => p.export_name === componentId || p.id === componentId);
 }
 
 export function findPlaygroundJoinSkip(

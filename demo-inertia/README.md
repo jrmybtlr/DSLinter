@@ -82,21 +82,23 @@ Components live under `resources/js/components/ui/` as TypeScript TSX files.
 
 The `/components` page demonstrates: Button, Card, Input, Label, Checkbox, Select, Dialog, Alert, Badge, Avatar, Dropdown Menu, Tooltip, Separator, Toggle, and Skeleton.
 
-### Live preview examples (DSLinter dashboard)
+### Live preview (DSLinter dashboard)
 
-Compound shadcn components (menus, dialogs, selects, etc.) need composed examples for the DSLinter live preview. Add a co-located `*.playground.tsx` file next to the component:
+Compound shadcn components (dropdown menus, dialogs, sheets, selects, etc.) **do not need** co-located `*.playground.tsx` files when the scanner report is available. The dashboard detects compound families (root + trigger + content exports) and builds composed previews automatically.
+
+Controls are inferred from `declared_props` in the scan plus real repo usage (`usage_by_component`). For example, `DropdownMenuContent` picks up an `align` select when call sites use `align="end"` and `align="start"`.
+
+Run `pnpm run dslinter:report` (or `npx dslinter`) and open `/component/DropdownMenu` to see the live preview.
+
+For components that need a custom demo, add a co-located playground file:
 
 ```
 resources/js/components/ui/
-  dropdown-menu.tsx
-  dropdown-menu.playground.tsx   ← definePlayground() example
+  alert.tsx
+  alert.playground.tsx   ← definePlaygroundFromKit() escape hatch
 ```
 
-Each playground file exports a `definePlayground()` result from `dslinter`. Shared composition helpers live in [`resources/js/playground/preview-kits.tsx`](resources/js/playground/preview-kits.tsx).
-
-Example files are excluded from the component catalog via `ignore_globs` in [`.dslinter.json`](./.dslinter.json). Manual previews override auto-generated ones with the same `id` (e.g. `DropdownMenu`).
-
-Run `npx dslinter` and open `/component/DropdownMenu` in the dashboard to see the live preview.
+Playground files are excluded from the component catalog via `ignore_globs` in [`.dslinter.json`](./.dslinter.json). Manual previews override auto-generated ones with the same catalog id.
 
 ```bash
 npx shadcn@latest add switch

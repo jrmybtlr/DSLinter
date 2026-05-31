@@ -1,5 +1,9 @@
 import type { ComponentType, ReactNode } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
+import {
+  expandPlaygroundControls,
+  type CompactPlaygroundControl,
+} from "./expandPlaygroundControls";
 import type { PlaygroundMeta } from "../types/playground";
 import type { PlaygroundPreviewComponent, PlaygroundPreviewProps } from "../types/preview";
 
@@ -12,7 +16,8 @@ export type DefinedPlayground = {
 type PlaygroundDefinitionBase = {
   /**
    * Stable sidebar / URL id. Defaults to the component’s `displayName` or function `name`
-   * (dev builds). Required for `render`-only definitions or when the name is unreliable.
+   * (dev builds). For `render`-only definitions, omit when the module export is
+   * `{name}Playground` (resolved at collect time).
    */
   id?: string;
   title?: string;
@@ -20,7 +25,7 @@ type PlaygroundDefinitionBase = {
   group?: string;
   /** @deprecated Use `group` — kept for older call sites. */
   section?: string;
-  controls?: PlaygroundControl[];
+  controls?: PlaygroundControl[] | Record<string, CompactPlaygroundControl>;
 };
 
 type DefineWithComponent<P> = PlaygroundDefinitionBase & {
@@ -50,8 +55,8 @@ function resolveMeta(
   base: PlaygroundDefinitionBase,
   nameFallback: string | undefined,
 ): PlaygroundMeta {
-  const id = base.id ?? inferId(nameFallback);
-  const title = base.title ?? id;
+  const id = base.id ?? (nameFallback ? inferId(nameFallback) : "");
+  const title = base.title ?? (id || "");
   const group = base.group ?? base.section;
   return {
     id,
@@ -80,7 +85,7 @@ export function definePlayground<P extends Record<string, unknown>>(
     const Component = componentOrOptions as ComponentType<P>;
     const opts = options;
     const meta = resolveMeta(opts, getComponentLabel(Component));
-    const controls = opts.controls ?? [];
+    const controls = expandPlaygroundControls(opts.controls);
     function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
       return <Component {...opts.props(values)} />;
     }
@@ -90,7 +95,7 @@ export function definePlayground<P extends Record<string, unknown>>(
 
   const opts = componentOrOptions as DefineWithRender;
   const meta = resolveMeta(opts, undefined);
-  const controls = opts.controls ?? [];
+  const controls = expandPlaygroundControls(opts.controls);
   function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
     return <>{opts.render(values)}</>;
   }

@@ -14,6 +14,22 @@ export type {
 } from "./types/controls";
 export { defaultArgsFromControls } from "./types/controls";
 export { definePlayground } from "./playground/definePlayground";
+export { definePlaygroundFromKit } from "./playground/definePlaygroundFromKit";
+export {
+  expandPlaygroundControls,
+  propsFromControls,
+  type CompactPlaygroundControl,
+} from "./playground/expandPlaygroundControls";
+export {
+  hideCatalogComponent,
+  type HideCatalogComponentResult,
+} from "./dashboard/updateDslintConfig";
+export {
+  isCatalogComponentHidden,
+  reportWithExtraHidden,
+  pathMatchesPrefix,
+  type ReportConfig,
+} from "./dashboard/catalogVisibility";
 export { collectDefinedPlaygrounds } from "./playground/collectDefinedPlaygrounds";
 export { mergePlaygroundEntries } from "./playground/mergePlaygroundEntries";
 export {
@@ -56,6 +72,7 @@ export type {
   ComponentDefinition,
   FileScan,
   PlaygroundSpec,
+  ReportConfig,
   DeclaredPropKind,
   CssTokenSummary,
   CssTokenDefinition,

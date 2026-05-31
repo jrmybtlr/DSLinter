@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WorkspaceReport } from "../types/report";
-import {
-  defaultConsumerGlobKeyFromRelPath,
-  diagnosePlaygroundJoinSkips,
-} from "./playgroundJoin";
+import { defaultConsumerGlobKeyFromRelPath, diagnosePlaygroundJoinSkips } from "./playgroundJoin";
 import { buildPlaygroundEntriesFromReportWithSkips } from "./buildPlaygroundEntriesFromReport";
 
 describe("defaultConsumerGlobKeyFromRelPath", () => {
@@ -20,11 +17,9 @@ describe("defaultConsumerGlobKeyFromRelPath", () => {
   });
 
   it("maps Laravel resources/js paths", () => {
-    expect(
-      defaultConsumerGlobKeyFromRelPath(
-        "resources/js/Components/Icons/Activity.tsx",
-      ),
-    ).toBe("../Components/Icons/Activity.tsx");
+    expect(defaultConsumerGlobKeyFromRelPath("resources/js/Components/Icons/Activity.tsx")).toBe(
+      "../Components/Icons/Activity.tsx",
+    );
   });
 });
 
@@ -34,10 +29,10 @@ describe("diagnosePlaygroundJoinSkips", () => {
     files: [],
     findings: [],
     scores: {
-      system_health: 0,
-      token_adoption: 0,
-      component_adoption: 0,
+      design_system_health: 0,
       ux_consistency: 0,
+      accessibility: 0,
+      maintainability: 0,
     },
     ownership: [],
     duplicate_components: [],
@@ -53,9 +48,13 @@ describe("diagnosePlaygroundJoinSkips", () => {
   };
 
   it("flags module_not_found when glob key is missing", () => {
-    const skipped = diagnosePlaygroundJoinSkips(report, {}, {
-      globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath,
-    });
+    const skipped = diagnosePlaygroundJoinSkips(
+      report,
+      {},
+      {
+        globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath,
+      },
+    );
     expect(skipped).toHaveLength(1);
     expect(skipped[0]?.reason).toBe("module_not_found");
     expect(skipped[0]?.globKey).toBe("../components/ui/button.tsx");
@@ -70,11 +69,10 @@ describe("diagnosePlaygroundJoinSkips", () => {
         },
       },
     };
-    const { entries, skipped } = buildPlaygroundEntriesFromReportWithSkips(
-      report,
-      modules,
-      { globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath, logJoinSkips: false },
-    );
+    const { entries, skipped } = buildPlaygroundEntriesFromReportWithSkips(report, modules, {
+      globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath,
+      logJoinSkips: false,
+    });
     expect(skipped).toHaveLength(0);
     expect(entries).toHaveLength(1);
     expect(entries[0]?.id).toBe("Button");
@@ -99,11 +97,10 @@ describe("diagnosePlaygroundJoinSkips", () => {
         },
       },
     };
-    const { entries, skipped } = buildPlaygroundEntriesFromReportWithSkips(
-      subdirReport,
-      modules,
-      { globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath, logJoinSkips: false },
-    );
+    const { entries, skipped } = buildPlaygroundEntriesFromReportWithSkips(subdirReport, modules, {
+      globKeyFromRelPath: defaultConsumerGlobKeyFromRelPath,
+      logJoinSkips: false,
+    });
     expect(skipped).toHaveLength(0);
     expect(entries).toHaveLength(1);
     expect(entries[0]?.modulePath).toBe("../Components/Button.tsx");

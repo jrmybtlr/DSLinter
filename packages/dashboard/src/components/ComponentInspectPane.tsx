@@ -1,16 +1,10 @@
 import { useMemo } from "react";
 import { Button } from "./ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import {
   aggregateDeclaredProps,
   aggregateDefinitions,
+  componentCatalogFamilyForName,
 } from "../dashboard/aggregate";
 import {
   buildUnusedPropSetForComponent,
@@ -23,6 +17,7 @@ import { findingsForComponent } from "../report/findingsForComponent";
 import type { WorkspaceReport } from "../types/report";
 import type { PlaygroundJoinSkip } from "../playground/playgroundJoin";
 import { findPlaygroundSpec } from "../playground/playgroundJoin";
+import { HideFromCatalogButton } from "./HideFromCatalogButton";
 import { Section } from "./Section";
 import { TruncatedPath } from "./TruncatedPath";
 
@@ -34,6 +29,8 @@ type Props = {
   /** When the report row exists but Vite could not load the module/export. */
   playgroundJoinSkip?: PlaygroundJoinSkip;
   onBackToGovernance: () => void;
+  onOpenComponent: (componentId: string) => void;
+  onHideFromCatalog?: (componentId: string) => void;
 };
 
 export function ComponentInspectPane({
@@ -43,6 +40,8 @@ export function ComponentInspectPane({
   hasPlaygroundSpec,
   playgroundJoinSkip,
   onBackToGovernance,
+  onOpenComponent,
+  onHideFromCatalog,
 }: Props) {
   const playgroundSpec = findPlaygroundSpec(workspaceReport, componentId);
   const definitions = useMemo(() => {
@@ -57,17 +56,18 @@ export function ComponentInspectPane({
 
   const unusedProps = useMemo(() => {
     if (!workspaceReport) return new Set<string>();
-    return buildUnusedPropSetForComponent(
-      workspaceReport,
-      componentId,
-      declared,
-    );
+    return buildUnusedPropSetForComponent(workspaceReport, componentId, declared);
   }, [workspaceReport, componentId, declared]);
 
   const findings = useMemo(
     () => findingsForComponent(workspaceReport, componentId),
     [workspaceReport, componentId],
   );
+  const family = useMemo(
+    () => componentCatalogFamilyForName(workspaceReport, componentId),
+    [workspaceReport, componentId],
+  );
+  const childComponents = family?.parent === componentId ? family.children : [];
 
   const previewNote = hasPlaygroundSpec
     ? "A preview was expected for this component but the module could not be loaded in the dashboard bundle (check the file path, export name, or that npx dslinter was run from the project root)."
@@ -109,29 +109,28 @@ export function ComponentInspectPane({
         <header className="border-b border-border bg-card px-8 py-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-muted-foreground">
-                Components
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Components</p>
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 {componentId}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                {previewNote}
-              </p>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{previewNote}</p>
               {joinDetail ? (
                 <p className="mt-2 max-w-2xl font-mono text-xs text-muted-foreground">
                   {joinDetail}
                 </p>
               ) : null}
             </div>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onBackToGovernance}
-            >
-              Back to governance
-            </Button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {onHideFromCatalog ? (
+                <HideFromCatalogButton
+                  componentName={componentId}
+                  onHidden={onHideFromCatalog}
+                />
+              ) : null}
+              <Button type="button" size="sm" variant="outline" onClick={onBackToGovernance}>
+                Back to governance
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -156,28 +155,44 @@ export function ComponentInspectPane({
                       <TableCell className="min-w-0 font-mono text-xs">
                         <TruncatedPath
                           path={
-                            workspaceReport
-                              ? shortPath(workspaceReport.root, site.path)
-                              : site.path
+                            workspaceReport ? shortPath(workspaceReport.root, site.path) : site.path
                           }
                           className="text-xs"
                         />
                       </TableCell>
                       <TableCell>{site.line}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {site.kind}
-                      </TableCell>
+                      <TableCell className="text-muted-foreground">{site.kind}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             ) : (
               <p className="text-sm text-muted-foreground">
-                No definition sites recorded — this name may appear only from
-                JSX usage.
+                No definition sites recorded — this name may appear only from JSX usage.
               </p>
             )}
           </Section>
+
+          {childComponents.length > 0 ? (
+            <Section
+              id="subcomponents"
+              title="Subcomponents"
+              description="Related exports detected in the same compound component module."
+            >
+              <div className="grid gap-2 sm:grid-cols-2">
+                {childComponents.map((child) => (
+                  <button
+                    key={child}
+                    type="button"
+                    onClick={() => onOpenComponent(child)}
+                    className="rounded-md border border-border bg-card px-3 py-2 text-left text-sm font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {child}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          ) : null}
 
           <Section
             id="props"
@@ -202,10 +217,7 @@ export function ComponentInspectPane({
             title="App usage"
             description="Where this component is used in the workspace."
           >
-            <ComponentUsageDetails
-              report={workspaceReport}
-              componentId={componentId}
-            />
+            <ComponentUsageDetails report={workspaceReport} componentId={componentId} />
           </Section>
 
           <Section

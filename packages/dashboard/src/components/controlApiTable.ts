@@ -6,6 +6,8 @@ export type ApiTableRow = {
   /** Select option values; Type column renders these as badges instead of a `|` string. */
   unionLiterals: string[] | null;
   default: string;
+  /** Default text that is API-sourced enough to show in the Type badge. */
+  defaultBadge: string | null;
 };
 
 function formatDefault(c: PlaygroundControl): string {
@@ -49,5 +51,6 @@ export function controlsToApiRows(controls: PlaygroundControl[]): ApiTableRow[] 
     type: formatType(c),
     unionLiterals: unionLiteralsForControl(c),
     default: formatDefault(c),
+    defaultBadge: c.defaultSource === "type" ? formatDefault(c) : null,
   }));
 }

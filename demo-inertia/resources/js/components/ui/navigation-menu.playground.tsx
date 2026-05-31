@@ -1,8 +1,25 @@
 import { definePlayground } from 'dslinter';
-import { navigationMenuPreview } from '@/playground/preview-kits';
+import {
+    NavigationMenu,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+} from '@/components/ui/navigation-menu';
 
 export const navigationMenuPlayground = definePlayground({
-    id: 'NavigationMenu',
-    group: 'ui',
-    render: () => navigationMenuPreview(),
+    render: () => (
+        <NavigationMenu>
+            <NavigationMenuList>
+                <NavigationMenuItem>
+                    <NavigationMenuLink href="#">Home</NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                    <NavigationMenuLink href="#">Docs</NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                    <NavigationMenuLink href="#">About</NavigationMenuLink>
+                </NavigationMenuItem>
+            </NavigationMenuList>
+        </NavigationMenu>
+    ),
 });
