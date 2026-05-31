@@ -50,11 +50,15 @@ export function useWorkspaceReport(
 
   // Ref tracking the last known ETag / Last-Modified for poll-based change detection.
   const etagRef = useRef<string | null>(null);
+  // Cancellation refs — one per effect, reset at the top of each effect.
+  const initialCancelledRef = useRef(false);
+  const sseCancelledRef = useRef(false);
+  const pollCancelledRef = useRef(false);
 
   // Core fetch function.
   const fetchReport = (
     url: string,
-    cancelled: { value: boolean },
+    cancelledRef: { current: boolean },
     options?: { showLoading?: boolean },
   ) => {
     const showLoading = options?.showLoading !== false;
@@ -64,22 +68,22 @@ export function useWorkspaceReport(
     }
     loadReport(url)
       .then((r) => {
-        if (!cancelled.value) setReport(r);
+        if (!cancelledRef.current) setReport(r);
       })
       .catch((e: unknown) => {
-        if (!cancelled.value) setError(e instanceof Error ? e.message : "Failed to load report");
+        if (!cancelledRef.current) setError(e instanceof Error ? e.message : "Failed to load report");
       })
       .finally(() => {
-        if (!cancelled.value && showLoading) setLoading(false);
+        if (!cancelledRef.current && showLoading) setLoading(false);
       });
   };
 
   // Initial load.
   useEffect(() => {
-    const cancelled = { value: false };
-    fetchReport(reportUrl, cancelled, { showLoading: true });
+    initialCancelledRef.current = false;
+    fetchReport(reportUrl, initialCancelledRef, { showLoading: true });
     return () => {
-      cancelled.value = true;
+      initialCancelledRef.current = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportUrl]);
@@ -88,12 +92,12 @@ export function useWorkspaceReport(
   useEffect(() => {
     if (!watchUrl) return;
     const source = new EventSource(watchUrl);
-    const cancelled = { value: false };
+    sseCancelledRef.current = false;
 
     source.onmessage = (e) => {
-      if (cancelled.value) return;
+      if (sseCancelledRef.current) return;
       if (e.data === "updated") {
-        fetchReport(reportUrl, cancelled, { showLoading: false });
+        fetchReport(reportUrl, sseCancelledRef, { showLoading: false });
       }
     };
 
@@ -102,7 +106,7 @@ export function useWorkspaceReport(
     };
 
     return () => {
-      cancelled.value = true;
+      sseCancelledRef.current = true;
       source.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,10 +116,10 @@ export function useWorkspaceReport(
   useEffect(() => {
     if (watchUrl || refreshIntervalMs <= 0) return;
 
-    const cancelled = { value: false };
+    pollCancelledRef.current = false;
 
     const id = setInterval(async () => {
-      if (cancelled.value) return;
+      if (pollCancelledRef.current) return;
       try {
         // Use HEAD to check for changes before fetching the full JSON.
         const head = await fetch(reportUrl, { method: "HEAD", cache: "no-store" });
@@ -125,7 +129,7 @@ export function useWorkspaceReport(
           return;
         }
         etagRef.current = etag;
-        fetchReport(reportUrl, cancelled, { showLoading: false });
+        fetchReport(reportUrl, pollCancelledRef, { showLoading: false });
       } catch {
         // Network error during poll — ignore silently; the user will see the
         // previous state.
@@ -133,7 +137,7 @@ export function useWorkspaceReport(
     }, refreshIntervalMs);
 
     return () => {
-      cancelled.value = true;
+      pollCancelledRef.current = true;
       clearInterval(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

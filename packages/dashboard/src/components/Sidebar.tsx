@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { IconMoon, IconSearch, IconSun } from "./icons";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 
-import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
 import type { WorkspaceReport } from "../types/report";
 import type { HashRoute } from "../shell/hashRoute";
 import type { DashboardThemePreference } from "../shell/DashboardLayout";
@@ -16,6 +15,7 @@ type Props = {
   onOpenCommandPalette: () => void;
   theme: DashboardThemePreference;
   onThemeChange: (next: DashboardThemePreference) => void;
+  catalogNames: string[];
 };
 
 function SearchShortcutBadge() {
@@ -56,11 +56,8 @@ export function Sidebar({
   onOpenCommandPalette,
   theme,
   onThemeChange,
+  catalogNames,
 }: Props) {
-  const catalogNames = useMemo(
-    () => componentCatalogNamesFromReport(report),
-    [report],
-  );
   const tokensActive = route.view === "tokens";
   const governanceActive = route.view === "governance";
 

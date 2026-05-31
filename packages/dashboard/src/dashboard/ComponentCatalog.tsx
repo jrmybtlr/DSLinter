@@ -28,21 +28,6 @@ import type { WorkspaceReport } from "../types/report";
 import { pluralize } from "usemods";
 import { TruncatedPath } from "../components/TruncatedPath";
 
-/** Set of `"ComponentName/propName"` keys for every declared prop with no recorded usage. */
-function buildUnusedPropSet(report: WorkspaceReport): Set<string> {
-  const s = new Set<string>();
-  const declaredByName = aggregateDeclaredProps(report);
-  for (const [componentName, declared] of declaredByName) {
-    const unused = buildUnusedPropSetForComponent(
-      report,
-      componentName,
-      declared,
-    );
-    for (const key of unused) s.add(key);
-  }
-  return s;
-}
-
 const catalogHoverTriggerClass =
   "cursor-default text-xs underline decoration-dotted underline-offset-2 hover:text-foreground";
 
@@ -127,11 +112,15 @@ export function ComponentCatalog({
   const defs = aggregateDefinitions(report);
   const usages = usageMap(report);
   const names = catalogComponentNames(defs, usages);
-  const unusedProps = useMemo(() => buildUnusedPropSet(report), [report]);
-  const declaredByName = useMemo(
-    () => aggregateDeclaredProps(report),
-    [report],
-  );
+  const { unusedProps, declaredByName } = useMemo(() => {
+    const declaredByName = aggregateDeclaredProps(report);
+    const unusedProps = new Set<string>();
+    for (const [componentName, declared] of declaredByName) {
+      const unused = buildUnusedPropSetForComponent(report, componentName, declared);
+      for (const key of unused) unusedProps.add(key);
+    }
+    return { unusedProps, declaredByName };
+  }, [report]);
 
   return (
     <Table>
