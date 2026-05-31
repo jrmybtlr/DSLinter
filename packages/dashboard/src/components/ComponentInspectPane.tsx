@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { Button } from "./ui/button";
 import {
   Table,
   TableBody,
@@ -46,7 +45,6 @@ export function ComponentInspectPane({
   reportReady,
   hasPlaygroundSpec,
   playgroundJoinSkip,
-  onBackToGovernance,
   onOpenComponent,
   onHideFromCatalog,
 }: Props) {

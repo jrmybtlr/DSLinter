@@ -12,7 +12,6 @@ import {
 import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
-import { Button } from "../components/ui/button";
 import { ComponentInspectPane } from "../components/ComponentInspectPane";
 import { ComponentPlaygroundPane } from "../components/ComponentPlaygroundPane";
 import { GovernancePane } from "../components/GovernancePane";
@@ -303,7 +302,7 @@ export function DashboardLayoutInner({
         onOpenChange={setCommandPaletteOpen}
       />
       <Sidebar
-        report={catalogReport}
+        report={catalogReport ?? null}
         reportLoading={dslinterReport.loading}
         reportError={dslinterReport.error}
         route={route}
