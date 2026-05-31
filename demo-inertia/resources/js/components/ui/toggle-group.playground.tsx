@@ -1,8 +1,18 @@
 import { definePlayground } from 'dslinter';
-import { toggleGroupPreview } from '@/playground/preview-kits';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export const toggleGroupPlayground = definePlayground({
-    id: 'ToggleGroup',
-    group: 'ui',
-    render: () => toggleGroupPreview(),
+    render: () => (
+        <ToggleGroup type="single" defaultValue="left">
+            <ToggleGroupItem value="left" aria-label="Align left">
+                Left
+            </ToggleGroupItem>
+            <ToggleGroupItem value="center" aria-label="Align center">
+                Center
+            </ToggleGroupItem>
+            <ToggleGroupItem value="right" aria-label="Align right">
+                Right
+            </ToggleGroupItem>
+        </ToggleGroup>
+    ),
 });

@@ -1,8 +1,10 @@
 import { createElement } from "react";
 import type { DefinedPlayground } from "./definePlayground";
-import type { PlaygroundEntry, PlaygroundPreviewComponent } from "../types/playground";
+import type { PlaygroundEntry } from "../types/playground";
+import type { PlaygroundPreviewComponent } from "../types/preview";
 import type { PlaygroundArgs } from "../types/controls";
 import type { BuildPlaygroundModules } from "./buildPlaygroundEntriesFromReport";
+import { catalogIdFromPlaygroundExport } from "./catalogIdFromPlaygroundExport";
 
 function isDefinedPlayground(value: unknown): value is DefinedPlayground {
   if (!value || typeof value !== "object") return false;
@@ -18,14 +20,22 @@ function isDefinedPlayground(value: unknown): value is DefinedPlayground {
   );
 }
 
-function definedPlaygroundToEntry(
+function resolveDefinedMeta(
   defined: DefinedPlayground,
-  modulePath: string,
-): PlaygroundEntry {
+  exportName: string | undefined,
+): DefinedPlayground["playgroundMeta"] | undefined {
+  const meta = defined.playgroundMeta;
+  if (meta.id) return meta;
+  if (!exportName) return undefined;
+  const id = catalogIdFromPlaygroundExport(exportName);
+  if (!id) return undefined;
+  return { ...meta, id, title: meta.title || id };
+}
+
+function definedPlaygroundToEntry(defined: DefinedPlayground, modulePath: string): PlaygroundEntry {
   const { playgroundMeta, playgroundControls, PlaygroundPreview } = defined;
   const Preview = PlaygroundPreview as PlaygroundPreviewComponent;
-  const renderPreview = (values: PlaygroundArgs) =>
-    createElement(Preview, { values });
+  const renderPreview = (values: PlaygroundArgs) => createElement(Preview, { values });
 
   return {
     id: playgroundMeta.id,
@@ -38,15 +48,20 @@ function definedPlaygroundToEntry(
 }
 
 /** Collect manual playground entries from `definePlayground()` exports in eager modules. */
-export function collectDefinedPlaygrounds(
-  modules: BuildPlaygroundModules,
-): PlaygroundEntry[] {
+export function collectDefinedPlaygrounds(modules: BuildPlaygroundModules): PlaygroundEntry[] {
   const out: PlaygroundEntry[] = [];
   for (const [modulePath, mod] of Object.entries(modules)) {
     if (!mod || typeof mod !== "object") continue;
-    for (const value of Object.values(mod)) {
+    for (const [exportName, value] of Object.entries(mod)) {
       if (!isDefinedPlayground(value)) continue;
-      out.push(definedPlaygroundToEntry(value, modulePath));
+      const meta = resolveDefinedMeta(value, exportName);
+      if (!meta) continue;
+      out.push(
+        definedPlaygroundToEntry(
+          meta === value.playgroundMeta ? value : { ...value, playgroundMeta: meta },
+          modulePath,
+        ),
+      );
     }
   }
   return out;

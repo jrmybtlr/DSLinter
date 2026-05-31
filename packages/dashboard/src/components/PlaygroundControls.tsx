@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { PlaygroundArgs, PlaygroundValuesUpdater } from "../types/controls";
+import type { PlaygroundArgs, PlaygroundControl, PlaygroundValuesUpdater } from "../types/controls";
 import { Button } from "./ui/button";
 import { PlaygroundControlField } from "./PlaygroundControlField";
 
@@ -12,13 +12,7 @@ type Props = {
   bare?: boolean;
 };
 
-export function PlaygroundControls({
-  controls,
-  values,
-  onChange,
-  onReset,
-  bare,
-}: Props) {
+export function PlaygroundControls({ controls, values, onChange, onReset, bare }: Props) {
   const patch = useCallback(
     (key: string, value: string | number | boolean) => {
       onChange((prev) => ({ ...prev, [key]: value }));

@@ -22,10 +22,7 @@ function formatValue(value: string | number | boolean): string {
   return JSON.stringify(value);
 }
 
-function variantKey(
-  combo: PlaygroundArgs,
-  axisKeys: string[],
-): string {
+function variantKey(combo: PlaygroundArgs, axisKeys: string[]): string {
   return axisKeys.map((k) => `${k}:${formatValue(combo[k] ?? "")}`).join("|");
 }
 
@@ -125,7 +122,7 @@ export function PlaygroundVariantMatrix({
                   if (el) previewRefs.current.set(key, el);
                   else previewRefs.current.delete(key);
                 }}
-                className="min-w-0 ds-playground-preview-canvas p-3"
+                className="min-w-0 p-3"
               >
                 {renderPreview(combo)}
               </div>

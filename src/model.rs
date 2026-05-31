@@ -231,7 +231,7 @@ pub enum CssTokenCategory {
     Other,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CssTokenScope {
     Theme,
@@ -290,6 +290,15 @@ pub struct PlaygroundSpec {
     pub group: Option<String>,
 }
 
+/// Dashboard-relevant slice of `.dslinter.json` embedded in each report.
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct ReportConfig {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub hidden_components: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub hidden_paths: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct WorkspaceReport {
     pub root: PathBuf,
@@ -303,4 +312,12 @@ pub struct WorkspaceReport {
     pub playgrounds: Vec<PlaygroundSpec>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub css_tokens: Option<CssTokenSummary>,
+    #[serde(default, skip_serializing_if = "ReportConfig::is_empty")]
+    pub config: ReportConfig,
+}
+
+impl ReportConfig {
+    fn is_empty(&self) -> bool {
+        self.hidden_components.is_empty() && self.hidden_paths.is_empty()
+    }
 }

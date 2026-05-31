@@ -192,13 +192,8 @@ html:has([data-dashboard-theme="dark"]) {
   [data-dashboard-theme="dark"] .ds-playground-dot-surface {
     background-image: radial-gradient(
       circle,
-      rgb(148 163 184 / 0.22) 1px,
+      rgb(148 163 184 / 0.15) 1px,
       transparent 1px
     );
-  }
-
-  /** Neutral stage so light- and dark-targeted component variants stay visible. */
-  .ds-playground-preview-canvas {
-    background-color: white;
   }
 }

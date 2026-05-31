@@ -5,11 +5,15 @@ export type PlaygroundValuesUpdater = (
   next: PlaygroundArgs | ((prev: PlaygroundArgs) => PlaygroundArgs),
 ) => void;
 
+/** Generated examples should not be presented as real API defaults. */
+export type PlaygroundDefaultSource = "type" | "example" | "manual";
+
 export type PlaygroundBooleanControl = {
   key: string;
   label: string;
   type: "boolean";
   default: boolean;
+  defaultSource?: PlaygroundDefaultSource;
   hint?: string;
 };
 
@@ -18,6 +22,7 @@ export type PlaygroundStringControl = {
   label: string;
   type: "string";
   default: string;
+  defaultSource?: PlaygroundDefaultSource;
   placeholder?: string;
 };
 
@@ -26,6 +31,7 @@ export type PlaygroundNumberControl = {
   label: string;
   type: "number";
   default: number;
+  defaultSource?: PlaygroundDefaultSource;
   min?: number;
   max?: number;
   step?: number;
@@ -36,6 +42,7 @@ export type PlaygroundSelectControl = {
   label: string;
   type: "select";
   default: string;
+  defaultSource?: PlaygroundDefaultSource;
   options: { value: string; label: string }[];
 };
 

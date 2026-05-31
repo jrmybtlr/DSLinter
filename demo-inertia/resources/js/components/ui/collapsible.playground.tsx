@@ -1,29 +1,23 @@
-import { definePlayground } from 'dslinter';
-import { collapsiblePreview } from '@/playground/preview-kits';
+import { definePlaygroundFromKit } from 'dslinter';
+import { Button } from '@/components/ui/button';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
-export const collapsiblePlayground = definePlayground({
-    id: 'Collapsible',
-    group: 'ui',
-    controls: [
-        {
-            key: 'triggerLabel',
-            label: 'Trigger label',
-            type: 'string',
-            default: 'Toggle details',
-        },
-        {
-            key: 'content',
-            label: 'Content',
-            type: 'string',
-            default: 'Collapsible content revealed when expanded.',
-        },
-    ],
-    render: (values) =>
-        collapsiblePreview({
-            triggerLabel: String(values.triggerLabel ?? 'Toggle details'),
-            content: String(
-                values.content ??
-                    'Collapsible content revealed when expanded.',
-            ),
-        }),
+export const collapsiblePlayground = definePlaygroundFromKit({
+    controls: ['triggerLabel', 'content'],
+    kit: ({ triggerLabel, content }) => (
+        <Collapsible className="w-[260px] space-y-2">
+            <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm">
+                    {triggerLabel}
+                </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="text-muted-foreground text-sm">
+                {content}
+            </CollapsibleContent>
+        </Collapsible>
+    ),
 });

@@ -99,6 +99,8 @@ function buildStarterConfig(targetDir, layout) {
   return {
     include_dirs: includeDirs,
     ignore_globs: [],
+    hidden_components: [],
+    hidden_paths: [],
     css_entrypoints: cssEntrypoints,
     ...(groupPrefix
       ? {

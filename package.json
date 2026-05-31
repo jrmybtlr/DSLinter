@@ -1,5 +1,5 @@
 {
-  "name": "dslinter",
+  "name": "dslinter-monorepo",
   "private": true,
   "workspaces": [
     "demo",
@@ -22,7 +22,8 @@
     "@napi-rs/cli": "^3.6.2",
     "changelogen": "^0.6.2",
     "oxfmt": "^0.50.0",
-    "oxlint": "^1.65.0"
+    "oxlint": "^1.65.0",
+    "typescript": "~6.0.3"
   },
   "overrides": {
     "qs": "6.15.2"

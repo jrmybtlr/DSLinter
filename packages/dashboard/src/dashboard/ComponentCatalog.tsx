@@ -126,7 +126,7 @@ export function ComponentCatalog({
 }) {
   const defs = aggregateDefinitions(report);
   const usages = usageMap(report);
-  const names = catalogComponentNames(defs, usages);
+  const names = catalogComponentNames(defs, usages, report);
   const unusedProps = useMemo(() => buildUnusedPropSet(report), [report]);
   const declaredByName = useMemo(
     () => aggregateDeclaredProps(report),

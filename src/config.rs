@@ -48,6 +48,13 @@ pub struct DslintConfig {
     /// Playground sidebar groups: group id → path prefixes (longest prefix wins per file).
     #[serde(default)]
     pub playground_groups: HashMap<String, Vec<String>>,
+    /// Component names hidden from the dashboard catalog (sidebar, palette, playgrounds).
+    /// Scan and governance data are unchanged.
+    #[serde(default)]
+    pub hidden_components: Vec<String>,
+    /// Path prefixes (repo-relative); components defined under these paths are hidden from the catalog.
+    #[serde(default)]
+    pub hidden_paths: Vec<String>,
     /// Extra glob lines merged with `.gitignore` / `.dslinterignore` semantics.
     #[serde(default)]
     pub exclude_globs: Vec<String>,

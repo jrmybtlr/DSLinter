@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { hideComponentInDslintConfig } from "../bin/lib/config-hide-component.mjs";
 import { loadConfigFromFile } from "vite";
 import type { Plugin, UserConfig } from "vite";
 import { resolveServePort } from "../shared/servePort";
@@ -212,9 +213,30 @@ export default function dslinter(
 
     configureServer(server) {
       const reportFile = resolveReportFilePath(scanRoot);
+      const configHidePath = "/dslinter-config/hide-component";
 
-      server.middlewares.use((req, res, next) => {
+      server.middlewares.use(async (req, res, next) => {
         const path = req.url?.split("?")[0];
+        if (path === configHidePath && req.method === "POST") {
+          try {
+            const chunks: Buffer[] = [];
+            for await (const chunk of req) {
+              chunks.push(chunk as Buffer);
+            }
+            const raw = Buffer.concat(chunks).toString("utf8");
+            const body = JSON.parse(raw || "{}") as { name?: string };
+            const result = hideComponentInDslintConfig(scanRoot, body.name ?? "");
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.statusCode = 200;
+            res.end(JSON.stringify({ ok: true, ...result }));
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ ok: false, error: message }));
+          }
+          return;
+        }
         if (path !== REPORT_URL_PATH) {
           next();
           return;

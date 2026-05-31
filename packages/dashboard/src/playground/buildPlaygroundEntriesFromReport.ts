@@ -1,7 +1,13 @@
 import { createElement, type ComponentType } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
-import type { DeclaredPropKind, PlaygroundSpec, UsageSummary, WorkspaceReport } from "../types/report";
-import type { PlaygroundEntry, PlaygroundMeta, PlaygroundPreviewComponent } from "../types/playground";
+import type {
+  DeclaredPropKind,
+  PlaygroundSpec,
+  UsageSummary,
+  WorkspaceReport,
+} from "../types/report";
+import type { PlaygroundEntry, PlaygroundMeta } from "../types/playground";
+import type { PlaygroundPreviewComponent } from "../types/preview";
 import {
   defaultEmbedGlobKeyFromRelPath,
   diagnosePlaygroundJoinSkips,
@@ -9,7 +15,15 @@ import {
   resolveModuleKeyForRelPath,
   type PlaygroundJoinSkip,
 } from "./playgroundJoin";
+import {
+  definitionPathsForName,
+  isCatalogComponentHidden,
+} from "../dashboard/catalogVisibility";
 import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
+import {
+  buildCompoundPlaygroundEntries,
+  upgradeRootEntriesWithCompoundPreview,
+} from "./buildCompoundPlaygroundEntries";
 import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
 
 export type BuildPlaygroundModules = Record<string, Record<string, unknown>>;
@@ -36,16 +50,14 @@ function childrenControl(): PlaygroundStringControl {
     label: "children",
     type: "string",
     default: CHILDREN_SLOT_DEFAULT,
+    defaultSource: "example",
     placeholder: "Slot content",
   };
 }
 
 type PlaygroundStringControl = Extract<PlaygroundControl, { type: "string" }>;
 
-function componentAcceptsChildren(
-  declaredProps: string[],
-  usage?: UsageSummary,
-): boolean {
+function componentAcceptsChildren(declaredProps: string[], usage?: UsageSummary): boolean {
   if (declaredProps.includes("children")) return true;
   if (declaredProps.includes("asChild")) return true;
   if ((usage?.prop_frequencies?.children ?? 0) > 0) return true;
@@ -73,6 +85,10 @@ function defaultGlobKeyFromRelPath(relPath: string): string {
   return defaultEmbedGlobKeyFromRelPath(relPath);
 }
 
+function viteDevMode(): boolean {
+  return Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
+}
+
 export type { PlaygroundJoinSkip, PlaygroundJoinSkipReason } from "./playgroundJoin";
 export {
   createConsumerGlobKeyFromRelPath,
@@ -85,8 +101,7 @@ export {
 } from "./playgroundJoin";
 
 function coerceDeclaredPropKind(v: unknown): DeclaredPropKind | undefined {
-  if (v === "boolean" || v === "string" || v === "number" || v === "unknown")
-    return v;
+  if (v === "boolean" || v === "string" || v === "number" || v === "unknown") return v;
   return undefined;
 }
 
@@ -113,13 +128,7 @@ function isLikelyBooleanProp(name: string): boolean {
 function defaultStringForProp(key: string): string {
   if (key === "href") return "/governance";
   const k = key.toLowerCase();
-  if (
-    k === "title" ||
-    k === "label" ||
-    k === "text" ||
-    k === "name" ||
-    k === "heading"
-  ) {
+  if (k === "title" || k === "label" || k === "text" || k === "name" || k === "heading") {
     return "Label";
   }
   return key;
@@ -142,38 +151,41 @@ function controlsFromDeclaredProps(
     const options = propOptions?.[key];
     if (options && options.length >= 2) {
       const defaultVal =
-        propDefaults?.[key] ??
-        (options.includes("default") ? "default" : options[0]!);
+        propDefaults?.[key] ?? (options.includes("default") ? "default" : options[0]!);
       out.push({
         key,
         label: key,
         type: "select",
         default: defaultVal,
+        defaultSource: propDefaults?.[key] == null ? "example" : "type",
         options: options.map((value) => ({ value, label: value })),
       });
       continue;
     }
     const kind = propKinds?.[key];
     if (kind === "boolean") {
-      out.push({ key, label: key, type: "boolean", default: false });
+      out.push({ key, label: key, type: "boolean", default: false, defaultSource: "example" });
     } else if (kind === "number") {
-      out.push({ key, label: key, type: "number", default: 0 });
+      out.push({ key, label: key, type: "number", default: 0, defaultSource: "example" });
     } else if (kind === "string") {
+      const typedDefault = propDefaults?.[key];
       out.push({
         key,
         label: key,
         type: "string",
-        default: defaultStringForProp(key),
+        default: typedDefault ?? defaultStringForProp(key),
+        defaultSource: typedDefault == null ? "example" : "type",
         placeholder: key,
       });
     } else if (isLikelyBooleanProp(key)) {
-      out.push({ key, label: key, type: "boolean", default: false });
+      out.push({ key, label: key, type: "boolean", default: false, defaultSource: "example" });
     } else {
       out.push({
         key,
         label: key,
         type: "string",
         default: defaultStringForProp(key),
+        defaultSource: "example",
         placeholder: key,
       });
     }
@@ -191,18 +203,10 @@ function controlsForSpec(
 ): PlaygroundControl[] {
   const override = controlOverrides[catalogId];
   if (override) return override;
-  return controlsFromDeclaredProps(
-    declaredProps,
-    propKinds,
-    propOptions,
-    propDefaults,
-  );
+  return controlsFromDeclaredProps(declaredProps, propKinds, propOptions, propDefaults);
 }
 
-function propKeysForPreview(
-  controls: PlaygroundControl[],
-  declaredProps: string[],
-): string[] {
+function propKeysForPreview(controls: PlaygroundControl[], declaredProps: string[]): string[] {
   if (controls.length > 0) return controls.map((c) => c.key);
   return declaredProps.filter((k) => k !== "key" && k !== "ref");
 }
@@ -219,9 +223,7 @@ function valuesToComponentProps(
     if (key === "children") {
       const v = values.children;
       o[key] =
-        v !== undefined && v !== null && String(v).length > 0
-          ? String(v)
-          : CHILDREN_SLOT_DEFAULT;
+        v !== undefined && v !== null && String(v).length > 0 ? String(v) : CHILDREN_SLOT_DEFAULT;
       continue;
     }
     const kind = propKinds?.[key];
@@ -265,8 +267,7 @@ function getExport(
   exportName: string,
 ): ComponentType<Record<string, unknown>> | undefined {
   const x = mod[exportName];
-  if (typeof x === "function")
-    return x as ComponentType<Record<string, unknown>>;
+  if (typeof x === "function") return x as ComponentType<Record<string, unknown>>;
   return undefined;
 }
 
@@ -307,22 +308,16 @@ function genericUsageSnippet(
     return !valueMatchesPlaygroundDefault(c, values[key]);
   };
 
-  const hasChildrenKey = Object.prototype.hasOwnProperty.call(
-    values,
-    "children",
-  );
+  const hasChildrenKey = Object.prototype.hasOwnProperty.call(values, "children");
   const childVal = hasChildrenKey ? values.children : undefined;
 
   const propKeys = Object.keys(values)
     .filter((k) => k !== "children")
     .filter(emitPropKey)
     .sort((a, b) => a.localeCompare(b));
-  const propsStr = propKeys
-    .map((k) => `${k}={${JSON.stringify(values[k])}}`)
-    .join(" ");
+  const propsStr = propKeys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
 
-  const openWithProps =
-    propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
+  const openWithProps = propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
 
   if (!hasChildrenKey) {
     return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
@@ -332,16 +327,11 @@ function genericUsageSnippet(
     const allKeys = Object.keys(values)
       .filter(emitPropKey)
       .sort((a, b) => a.localeCompare(b));
-    const allProps = allKeys
-      .map((k) => `${k}={${JSON.stringify(values[k])}}`)
-      .join(" ");
-    return allKeys.length === 0
-      ? `<${exportName} />`
-      : `<${exportName} ${allProps} />`;
+    const allProps = allKeys.map((k) => `${k}={${JSON.stringify(values[k])}}`).join(" ");
+    return allKeys.length === 0 ? `<${exportName} />` : `<${exportName} ${allProps} />`;
   }
 
-  const asText =
-    typeof childVal === "number" ? String(childVal) : String(childVal ?? "");
+  const asText = typeof childVal === "number" ? String(childVal) : String(childVal ?? "");
   if (asText.length === 0) {
     return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
   }
@@ -380,20 +370,16 @@ export function buildPlaygroundEntriesFromReportWithSkips(
   options: BuildPlaygroundOptions = {},
 ): BuildPlaygroundResult {
   const specs = report?.playgrounds;
-  const globKeyFromRelPath =
-    options.globKeyFromRelPath ?? defaultGlobKeyFromRelPath;
+  const globKeyFromRelPath = options.globKeyFromRelPath ?? defaultGlobKeyFromRelPath;
   const controlOverrides = options.controlOverrides ?? {};
   const staticDefaultsMap = options.staticDefaults ?? {};
 
-  const skipped =
-    specs?.length ?
-      diagnosePlaygroundJoinSkips(report, modules, {
+  const skipped = specs?.length
+    ? diagnosePlaygroundJoinSkips(report, modules, {
         globKeyFromRelPath,
       })
     : [];
-  const shouldLog =
-    options.logJoinSkips ??
-    (typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV));
+  const shouldLog = options.logJoinSkips ?? viteDevMode();
   if (shouldLog) logPlaygroundJoinSkips(skipped);
 
   const autoEntries: PlaygroundEntry[] = [];
@@ -404,11 +390,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
 
   for (const spec of specs) {
     const globKey = globKeyFromRelPath(spec.rel_path);
-    const resolvedKey = resolveModuleKeyForRelPath(
-      spec.rel_path,
-      modules,
-      globKeyFromRelPath,
-    );
+    const resolvedKey = resolveModuleKeyForRelPath(spec.rel_path, modules, globKeyFromRelPath);
     const mod = resolvedKey ? modules[resolvedKey] : undefined;
     if (!mod) continue;
     const Cmp = getExport(mod, spec.export_name);
@@ -429,18 +411,10 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       ),
       componentAcceptsChildren(declared, repoUsage),
     );
-    const staticDefaults =
-      staticDefaultsMap[catalogId] ??
-      staticDefaultsMap[spec.id] ??
-      {};
+    const staticDefaults = staticDefaultsMap[catalogId] ?? staticDefaultsMap[spec.id] ?? {};
 
     const renderPreview = (values: PlaygroundArgs) => {
-      const fromValues = valuesToComponentProps(
-        controls,
-        declared,
-        values,
-        propKinds,
-      );
+      const fromValues = valuesToComponentProps(controls, declared, values, propKinds);
       const merged = mergeStaticDefaults(fromValues, staticDefaults);
       return createElement(Cmp, merged);
     };
@@ -460,18 +434,59 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       meta,
       modulePath: resolvedKey ?? globKey,
       controls,
-      usageSnippet: (values) =>
-        genericUsageSnippet(spec.export_name, values, controls),
+      usageSnippet: (values) => genericUsageSnippet(spec.export_name, values, controls),
       renderPreview,
       Preview: Preview as PlaygroundPreviewComponent,
     });
   }
 
+  if (report) {
+    upgradeRootEntriesWithCompoundPreview(autoEntries, report, modules, {
+      globKeyFromRelPath,
+      controlOverrides,
+      staticDefaults: staticDefaultsMap,
+    });
+  }
+
+  const compoundEntries = buildCompoundPlaygroundEntries(report, modules, {
+    globKeyFromRelPath,
+    controlOverrides,
+    staticDefaults: staticDefaultsMap,
+    existingIds: new Set(autoEntries.map((entry) => entry.id)),
+  });
   const manualEntries = collectDefinedPlaygrounds(modules);
+  const merged = mergePlaygroundEntries(
+    [...autoEntries, ...compoundEntries],
+    manualEntries,
+  );
   return {
-    entries: mergePlaygroundEntries(autoEntries, manualEntries),
+    entries: filterCatalogVisiblePlaygroundEntries(report, merged),
     skipped,
   };
+}
+
+function entryPathsForCatalog(
+  report: WorkspaceReport | null | undefined,
+  entry: PlaygroundEntry,
+): string[] {
+  if (!report) return [entry.modulePath];
+  const fromReport = definitionPathsForName(report, entry.meta.id);
+  return fromReport.length > 0 ? fromReport : [entry.modulePath];
+}
+
+function filterCatalogVisiblePlaygroundEntries(
+  report: WorkspaceReport | null | undefined,
+  entries: PlaygroundEntry[],
+): PlaygroundEntry[] {
+  if (!report) return entries;
+  return entries.filter(
+    (entry) =>
+      !isCatalogComponentHidden(
+        entry.meta.id,
+        report,
+        entryPathsForCatalog(report, entry),
+      ),
+  );
 }
 
 /** Build playground entries from report specs + eager Vite modules. */
@@ -480,6 +495,5 @@ export function buildPlaygroundEntriesFromReport(
   modules: BuildPlaygroundModules,
   options: BuildPlaygroundOptions = {},
 ): PlaygroundEntry[] {
-  return buildPlaygroundEntriesFromReportWithSkips(report, modules, options)
-    .entries;
+  return buildPlaygroundEntriesFromReportWithSkips(report, modules, options).entries;
 }
