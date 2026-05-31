@@ -59,15 +59,27 @@ function normalizedName(value: string): string {
     .toLowerCase();
 }
 
+function trimLeadingSlashes(value: string): string {
+  let i = 0;
+  while (i < value.length && value.charCodeAt(i) === 47) i += 1;
+  return value.slice(i);
+}
+
+function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) end -= 1;
+  return value.slice(0, end);
+}
+
 function relPathFromAbsolute(filePath: string, reportRoot: string): string {
-  const normalizedRoot = reportRoot.replace(/\/+$/, "");
+  const normalizedRoot = trimTrailingSlashes(reportRoot);
   if (filePath.startsWith(normalizedRoot + "/")) {
     return filePath.slice(normalizedRoot.length + 1);
   }
   if (filePath.startsWith(normalizedRoot)) {
-    return filePath.slice(normalizedRoot.length).replace(/^\/+/, "");
+    return trimLeadingSlashes(filePath.slice(normalizedRoot.length));
   }
-  return filePath.replace(/^\/+/, "");
+  return trimLeadingSlashes(filePath);
 }
 
 /** Group playable definitions by scanner rel_path. */
