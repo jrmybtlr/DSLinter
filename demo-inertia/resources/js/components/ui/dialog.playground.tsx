@@ -12,11 +12,7 @@ import {
 } from '@/components/ui/dialog';
 
 export const dialogPlayground = definePlaygroundFromKit({
-    controls: {
-        triggerLabel: 'Open dialog',
-        title: 'Dialog',
-        description: 'Modal content built with Radix Dialog primitives.',
-    },
+    controls: ['triggerLabel', 'title', 'description'],
     kit: ({ triggerLabel, title, description }) => (
         <Dialog>
             <DialogTrigger asChild>

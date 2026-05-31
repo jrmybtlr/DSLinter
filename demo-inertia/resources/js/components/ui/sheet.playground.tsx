@@ -10,11 +10,7 @@ import {
 } from '@/components/ui/sheet';
 
 export const sheetPlayground = definePlaygroundFromKit({
-    controls: {
-        triggerLabel: 'Open sheet',
-        title: 'Sheet',
-        description: 'Side panel built with Radix Sheet primitives.',
-    },
+    controls: ['triggerLabel', 'title', 'description'],
     kit: ({ triggerLabel, title, description }) => (
         <Sheet>
             <SheetTrigger asChild>

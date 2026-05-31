@@ -100,6 +100,8 @@ resources/js/components/ui/
 
 Playground files are excluded from the component catalog via `ignore_globs` in [`.dslinter.json`](./.dslinter.json). Manual previews override auto-generated ones with the same catalog id.
 
+For `definePlaygroundFromKit`, list control keys as an array to use each prop name as the default (e.g. `controls: ['title', 'description']`). Use a record when a prop needs a custom default (`controls: { placeholder: 'Pick a stack' }`).
+
 ```bash
 npx shadcn@latest add switch
 ```

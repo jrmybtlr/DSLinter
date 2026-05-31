@@ -9,6 +9,32 @@ describe("expandPlaygroundControls", () => {
     ]);
   });
 
+  it("expands prop key list with prop-name defaults", () => {
+    const controls = expandPlaygroundControls(["title", "description"]);
+    expect(controls).toEqual([
+      {
+        key: "title",
+        label: "Title",
+        type: "string",
+        default: "title",
+        defaultSource: "example",
+        placeholder: "title",
+      },
+      {
+        key: "description",
+        label: "Description",
+        type: "string",
+        default: "description",
+        defaultSource: "example",
+        placeholder: "description",
+      },
+    ]);
+    expect(propsFromControls(controls, {})).toEqual({
+      title: "title",
+      description: "description",
+    });
+  });
+
   it("propsFromControls uses control defaults", () => {
     const controls = expandPlaygroundControls({ count: 2, enabled: true });
     expect(propsFromControls(controls, {})).toEqual({ count: 2, enabled: true });

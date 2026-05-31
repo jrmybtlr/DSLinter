@@ -7,10 +7,7 @@ import {
 } from '@/components/ui/collapsible';
 
 export const collapsiblePlayground = definePlaygroundFromKit({
-    controls: {
-        triggerLabel: 'Toggle details',
-        content: 'Collapsible content revealed when expanded.',
-    },
+    controls: ['triggerLabel', 'content'],
     kit: ({ triggerLabel, content }) => (
         <Collapsible className="w-[260px] space-y-2">
             <CollapsibleTrigger asChild>

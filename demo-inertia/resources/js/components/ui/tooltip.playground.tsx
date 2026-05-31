@@ -7,10 +7,7 @@ import {
 } from '@/components/ui/tooltip';
 
 export const tooltipPlayground = definePlaygroundFromKit({
-    controls: {
-        triggerLabel: 'Tooltip',
-        content: 'Helpful hint on hover',
-    },
+    controls: ['triggerLabel', 'content'],
     kit: ({ triggerLabel, content }) => (
         <Tooltip>
             <TooltipTrigger asChild>

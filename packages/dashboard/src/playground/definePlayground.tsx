@@ -2,7 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import {
   expandPlaygroundControls,
-  type CompactPlaygroundControl,
+  type PlaygroundControlsInput,
 } from "./expandPlaygroundControls";
 import type { PlaygroundMeta } from "../types/playground";
 import type { PlaygroundPreviewComponent, PlaygroundPreviewProps } from "../types/preview";
@@ -25,7 +25,7 @@ type PlaygroundDefinitionBase = {
   group?: string;
   /** @deprecated Use `group` — kept for older call sites. */
   section?: string;
-  controls?: PlaygroundControl[] | Record<string, CompactPlaygroundControl>;
+  controls?: PlaygroundControlsInput;
 };
 
 type DefineWithComponent<P> = PlaygroundDefinitionBase & {

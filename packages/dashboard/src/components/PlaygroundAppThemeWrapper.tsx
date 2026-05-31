@@ -24,6 +24,8 @@ export const PlaygroundAppThemeWrapper = forwardRef<HTMLDivElement, Props>(
       [workspaceReport],
     );
     const isDark = resolvedTheme === "dark";
+    const hasDarkTokens =
+      previewTheme != null && Object.keys(previewTheme.dark).length > 0;
 
     if (!previewTheme) {
       return (
@@ -37,12 +39,25 @@ export const PlaygroundAppThemeWrapper = forwardRef<HTMLDivElement, Props>(
       );
     }
 
+    // App CSS has light tokens only — don't inject them in dark mode; inherit
+    // dashboard dark tokens from the surrounding [data-dashboard-theme] tree.
+    if (isDark && !hasDarkTokens) {
+      return (
+        <div
+          ref={ref}
+          className={cn("ds-playground-app-preview", className)}
+          data-app-preview-theme={resolvedTheme}
+        >
+          {children}
+        </div>
+      );
+    }
+
     const vars = cssVariablesForPreviewTheme(
       previewTheme,
-      isDark && Object.keys(previewTheme.dark).length > 0 ? "dark" : "light",
+      isDark ? "dark" : "light",
     );
-    const usesDarkTokens =
-      isDark && Object.keys(previewTheme.dark).length > 0;
+    const usesDarkTokens = isDark && hasDarkTokens;
 
     const style = {
       ...vars,

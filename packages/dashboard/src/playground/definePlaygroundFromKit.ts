@@ -4,7 +4,7 @@ import { definePlayground, type DefinedPlayground } from "./definePlayground";
 import {
   expandPlaygroundControls,
   propsFromControls,
-  type CompactPlaygroundControl,
+  type PlaygroundControlsInput,
 } from "./expandPlaygroundControls";
 
 export type DefinePlaygroundFromKitOptions<T extends PlaygroundArgs> = {
@@ -17,7 +17,7 @@ export type DefinePlaygroundFromKitOptions<T extends PlaygroundArgs> = {
   group?: string;
   /** Preview renderer receiving mapped control values. */
   kit: (args: T) => ReactNode;
-  controls?: PlaygroundControl[] | Record<string, CompactPlaygroundControl>;
+  controls?: PlaygroundControlsInput;
   /** Extra defaults merged after control defaults. */
   defaults?: Partial<T>;
 };

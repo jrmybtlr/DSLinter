@@ -7,6 +7,18 @@ export type CompactPlaygroundControl =
   | boolean
   | Partial<PlaygroundControl> & { key?: string };
 
+/** Shorthand: list prop keys; defaults and placeholders use the key name. */
+export type PlaygroundControlKeys = readonly string[];
+
+export type PlaygroundControlsInput =
+  | PlaygroundControl[]
+  | Record<string, CompactPlaygroundControl>
+  | PlaygroundControlKeys;
+
+function isPropKeyList(input: readonly unknown[]): input is readonly string[] {
+  return input.length > 0 && input.every((item) => typeof item === "string");
+}
+
 function titleCase(key: string): string {
   return key
     .replace(/([A-Z])/g, " $1")
@@ -37,12 +49,28 @@ function expandOne(key: string, value: CompactPlaygroundControl): PlaygroundCont
   return { key, label: titleCase(key), type: "string", default: String(value) };
 }
 
-/** Expand shorthand `controls` records into full `PlaygroundControl` objects. */
+function expandPropNameControl(key: string): PlaygroundControl {
+  return {
+    key,
+    label: titleCase(key),
+    type: "string",
+    default: key,
+    defaultSource: "example",
+    placeholder: key,
+  };
+}
+
+/** Expand shorthand `controls` into full `PlaygroundControl` objects. */
 export function expandPlaygroundControls(
-  input: PlaygroundControl[] | Record<string, CompactPlaygroundControl> | undefined,
+  input: PlaygroundControlsInput | undefined,
 ): PlaygroundControl[] {
   if (!input) return [];
-  if (Array.isArray(input)) return input;
+  if (Array.isArray(input)) {
+    if (isPropKeyList(input)) {
+      return input.map((key) => expandPropNameControl(key));
+    }
+    return input;
+  }
   return Object.entries(input).map(([key, value]) => expandOne(key, value));
 }
 

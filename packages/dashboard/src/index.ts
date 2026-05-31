@@ -19,6 +19,8 @@ export {
   expandPlaygroundControls,
   propsFromControls,
   type CompactPlaygroundControl,
+  type PlaygroundControlKeys,
+  type PlaygroundControlsInput,
 } from "./playground/expandPlaygroundControls";
 export {
   hideCatalogComponent,
