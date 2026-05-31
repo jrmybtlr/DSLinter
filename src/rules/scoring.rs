@@ -39,22 +39,10 @@ fn token_adoption_pct(
     }
     let mut hits = 0_u32;
     for file in files {
-        let has_token = if !file.ast_extracts.is_empty() {
-            // Fast path: search already-extracted string literals and class strings.
-            let in_strings = file.ast_extracts.string_literals.iter().any(|f| {
-                config.known_tokens.iter().any(|t| f.value.contains(t.as_str()))
-            });
-            let in_classes = file.ast_extracts.class_strings.iter().any(|f| {
-                config.known_tokens.iter().any(|t| f.text.contains(t.as_str()))
-            });
-            in_strings || in_classes
-        } else {
-            // Fallback: scan raw source text.
-            let Some(text) = sources.get(&file.path) else {
-                continue;
-            };
-            config.known_tokens.iter().any(|t| text.contains(t.as_str()))
+        let Some(text) = sources.get(&file.path) else {
+            continue;
         };
+        let has_token = config.known_tokens.iter().any(|t| text.contains(t.as_str()));
         if has_token {
             hits += 1;
         }

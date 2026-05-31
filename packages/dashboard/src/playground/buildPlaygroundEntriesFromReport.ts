@@ -12,7 +12,6 @@ import {
 import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
 import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
 import {
-  childrenControl as _childrenControl,
   componentAcceptsChildren,
   controlsForSpec,
   ensureChildrenControl,
@@ -195,4 +194,3 @@ export function buildPlaygroundEntriesFromReport(
   return buildPlaygroundEntriesFromReportWithSkips(report, modules, options)
     .entries;
 }
-
