@@ -1,6 +1,9 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "dslinter-website",
-  "pages_build_output_dir": "./dist",
+  "main": "./src/worker.ts",
+  "assets": {
+    "directory": "./dist"
+  },
   "compatibility_date": "2026-05-22"
 }
