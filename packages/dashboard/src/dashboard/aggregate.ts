@@ -68,18 +68,16 @@ export function aggregateDefinitions(report: WorkspaceReport): Map<string, Defin
 
 /** Merges `declared_props` from scan definitions and playground rows (source order, then deduped). */
 export function aggregateDeclaredProps(report: WorkspaceReport): Map<string, string[]> {
-  const map = new Map<string, string[]>();
+  const sets = new Map<string, Set<string>>();
 
   const add = (name: string, props: readonly string[] | undefined) => {
     if (!props?.length) return;
-    let list = map.get(name);
-    if (!list) {
-      list = [];
-      map.set(name, list);
+    let set = sets.get(name);
+    if (!set) {
+      set = new Set();
+      sets.set(name, set);
     }
-    for (const p of props) {
-      if (!list.includes(p)) list.push(p);
-    }
+    for (const p of props) set.add(p);
   };
 
   for (const file of report.files ?? []) {
@@ -91,6 +89,10 @@ export function aggregateDeclaredProps(report: WorkspaceReport): Map<string, str
     add(pg.export_name, pg.declared_props);
   }
 
+  const map = new Map<string, string[]>();
+  for (const [name, set] of sets) {
+    map.set(name, [...set]);
+  }
   return map;
 }
 

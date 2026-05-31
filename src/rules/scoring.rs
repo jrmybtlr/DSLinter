@@ -42,11 +42,8 @@ fn token_adoption_pct(
         let Some(text) = sources.get(&file.path) else {
             continue;
         };
-        if config
-            .known_tokens
-            .iter()
-            .any(|t| text.contains(t.as_str()))
-        {
+        let has_token = config.known_tokens.iter().any(|t| text.contains(t.as_str()));
+        if has_token {
             hits += 1;
         }
     }
@@ -68,6 +65,10 @@ pub fn compute_scores(
         .iter()
         .filter(|f| f.severity == Severity::Warning)
         .count() as i32;
+    let err = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Error)
+        .count() as i32;
     let dup_penalty = duplicates.len() as i32 * 5;
 
     let token_adoption = css_tokens
@@ -76,7 +77,7 @@ pub fn compute_scores(
     let maintainability =
         (100_i32 - warn * 3 - dup_penalty - code_quality_penalty(findings)).clamp(0, 100) as u8;
     let accessibility = (100_i32 - a11y_penalty(findings)).clamp(0, 100) as u8;
-    let ux_consistency = (100_i32 - warn * 2).clamp(0, 100) as u8;
+    let ux_consistency = (100_i32 - warn * 2 - err * 3).clamp(0, 100) as u8;
 
     let mut pillars = vec![
         maintainability as i32,

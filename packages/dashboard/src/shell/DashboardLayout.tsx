@@ -310,6 +310,7 @@ export function DashboardLayoutInner({
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         theme={theme}
         onThemeChange={setTheme}
+        catalogNames={catalogNames}
       />
       <div className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">
         {main}
@@ -319,23 +320,19 @@ export function DashboardLayoutInner({
 }
 
 export function DashboardLayout(props: DashboardLayoutProps) {
-  if (props.autoPlayground) {
-    return (
-      <DashboardThemeProvider>
+  return (
+    <DashboardThemeProvider>
+      {props.autoPlayground ? (
         <Suspense fallback={null}>
           <DashboardLayoutAuto {...props} />
         </Suspense>
-      </DashboardThemeProvider>
-    );
-  }
-
-  return (
-    <DashboardThemeProvider>
-      <DashboardLayoutInner
-        {...props}
-        playgroundEntries={props.playgroundEntries ?? []}
-        playgroundJoinSkips={props.playgroundJoinSkips}
-      />
+      ) : (
+        <DashboardLayoutInner
+          {...props}
+          playgroundEntries={props.playgroundEntries ?? []}
+          playgroundJoinSkips={props.playgroundJoinSkips}
+        />
+      )}
     </DashboardThemeProvider>
   );
 }

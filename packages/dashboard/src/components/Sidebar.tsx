@@ -3,7 +3,6 @@ import { IconChevronDown, IconMoon, IconSearch, IconSun } from "./icons";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 
 import {
-  componentCatalogNamesFromReport,
   componentCatalogTreeFromReport,
 } from "../dashboard/aggregate";
 import type { WorkspaceReport } from "../types/report";
@@ -19,6 +18,7 @@ type Props = {
   onOpenCommandPalette: () => void;
   theme: DashboardThemePreference;
   onThemeChange: (next: DashboardThemePreference) => void;
+  catalogNames: string[];
 };
 
 function SearchShortcutBadge() {
@@ -75,8 +75,8 @@ export function Sidebar({
   onOpenCommandPalette,
   theme,
   onThemeChange,
+  catalogNames,
 }: Props) {
-  const catalogNames = useMemo(() => componentCatalogNamesFromReport(report), [report]);
   const catalogTree = useMemo(() => componentCatalogTreeFromReport(report), [report]);
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(() => new Set());
   const tokensActive = route.view === "tokens";

@@ -43,8 +43,10 @@ export function FindingsList({
     return c;
   }, [findings]);
 
-  const filtered =
-    filter === "all" ? findings : findings.filter((f) => f.severity === filter);
+  const filtered = useMemo(
+    () => (filter === "all" ? findings : findings.filter((f) => f.severity === filter)),
+    [findings, filter],
+  );
 
   if (findings.length === 0) {
     return (

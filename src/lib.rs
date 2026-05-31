@@ -53,31 +53,27 @@ pub fn scan_file(path: &Path, source: &str, config: &DslintConfig) -> FileScan {
     }
 }
 
-fn scan_and_evaluate(scan_root: &Path, parallel: bool) -> anyhow::Result<WorkspaceReport> {
-    let (project_root, config) = config::DslintConfig::load_nearest(scan_root)?;
+/// Scan `root` sequentially (deterministic ordering).
+pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
+    scan_workspace_auto(root, false)
+}
+
+/// Scan `root` in parallel for large repositories.
+pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
+    scan_workspace_auto(root, true)
+}
+
+/// Scan `root`, using parallel file reads when the tree is large (see [`PARALLEL_SCAN_THRESHOLD`]).
+pub fn scan_workspace_auto(root: &Path, explicit_parallel: bool) -> anyhow::Result<WorkspaceReport> {
+    let (project_root, config) = config::DslintConfig::load_nearest(root)?;
     let (files, sources) =
-        scan_pipeline::scan_workspace_files(scan_root, &project_root, &config, parallel)?;
+        scan_pipeline::scan_workspace_files(root, &project_root, &config, explicit_parallel)?;
     Ok(rules::evaluate_workspace(
         project_root,
         files,
         sources,
         &config,
     ))
-}
-
-/// Scan `root` sequentially (deterministic ordering).
-pub fn scan_workspace(root: &Path) -> anyhow::Result<WorkspaceReport> {
-    scan_and_evaluate(root, false)
-}
-
-/// Scan `root` in parallel for large repositories.
-pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
-    scan_and_evaluate(root, true)
-}
-
-/// Scan `root`, using parallel file reads when the tree is large (see [`PARALLEL_SCAN_THRESHOLD`]).
-pub fn scan_workspace_auto(root: &Path, explicit_parallel: bool) -> anyhow::Result<WorkspaceReport> {
-    scan_and_evaluate(root, explicit_parallel)
 }
 
 /// Re-scan a single file and update workspace caches (watch mode).

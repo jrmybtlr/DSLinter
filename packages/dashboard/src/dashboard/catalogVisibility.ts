@@ -4,12 +4,24 @@ export type ReportConfig = NonNullable<WorkspaceReport["config"]>;
 
 const BUILTIN_HIDDEN = new Set(["App", "React.StrictMode"]);
 
+function trimLeadingSlashes(value: string): string {
+  let i = 0;
+  while (i < value.length && value.charCodeAt(i) === 47) i += 1;
+  return value.slice(i);
+}
+
+function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) end -= 1;
+  return value.slice(0, end);
+}
+
 function normalizePath(path: string): string {
-  return path.replace(/\\/g, "/").replace(/^\/+/, "");
+  return trimLeadingSlashes(path.replaceAll("\\", "/"));
 }
 
 function normalizePrefix(prefix: string): string {
-  return prefix.trim().replace(/^\/+/, "").replace(/\/+$/, "");
+  return trimTrailingSlashes(trimLeadingSlashes(prefix.trim()));
 }
 
 export function pathMatchesPrefix(rel: string, prefix: string): boolean {

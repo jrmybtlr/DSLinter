@@ -43,22 +43,14 @@ pub fn tailwind_arbitrary_tokens(
 /// When Tailwind arbitrary brackets contain a hex (`[#rgb]`), both `token-tailwind-arbitrary` and
 /// `token-hardcoded-color` can fire on the same line — keep the Tailwind rule only.
 pub fn dedupe_token_color_overlap(findings: &mut Vec<LintFinding>) {
-    let mut tw_lines: HashSet<(PathBuf, u32)> = HashSet::new();
-    for f in findings.iter() {
-        if f.rule_id == "token-tailwind-arbitrary" {
-            if let Some(ln) = f.line {
-                tw_lines.insert((f.path.clone(), ln));
-            }
-        }
-    }
+    let tw_lines: HashSet<(PathBuf, u32)> = findings
+        .iter()
+        .filter(|f| f.rule_id == "token-tailwind-arbitrary")
+        .filter_map(|f| f.line.map(|ln| (f.path.clone(), ln)))
+        .collect();
     findings.retain(|f| {
-        if f.rule_id != "token-hardcoded-color" {
-            return true;
-        }
-        match f.line {
-            Some(ln) => !tw_lines.contains(&(f.path.clone(), ln)),
-            None => true,
-        }
+        f.rule_id != "token-hardcoded-color"
+            || f.line.map_or(true, |ln| !tw_lines.contains(&(f.path.clone(), ln)))
     });
 }
 
