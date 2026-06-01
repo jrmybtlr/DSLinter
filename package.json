@@ -21,6 +21,7 @@
   "devDependencies": {
     "@napi-rs/cli": "^3.6.2",
     "changelogen": "^0.6.2",
+    "semver": "^7.8.0",
     "oxfmt": "^0.50.0",
     "oxlint": "^1.65.0",
     "typescript": "~6.0.3"
