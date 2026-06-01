@@ -37,12 +37,12 @@ function findConfigPath(startDir: string): string | null {
   return null;
 }
 
-function projectRootForConfig(startDir: string): string {
+export function projectRootForConfig(startDir: string): string {
   const configPath = findConfigPath(startDir);
   return configPath ? dirname(configPath) : resolve(startDir);
 }
 
-function readIncludeDirs(projectRoot: string): string[] | null {
+export function readIncludeDirs(projectRoot: string): string[] | null {
   const configPath = findConfigPath(projectRoot);
   if (!configPath) return null;
   try {

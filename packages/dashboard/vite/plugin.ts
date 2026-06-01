@@ -15,6 +15,11 @@ import {
   embedGlobKeyFromRelPath,
 } from "./collectScanModules";
 import {
+  buildEmbedIndexCss,
+  embedSourcePathsRelativeToCss,
+  shouldInjectEmbedConsumerSources,
+} from "./embedTailwindSources";
+import {
   importerUnderScanRoot,
   INERTIA_SHIM_IDS,
   ZIGGY_SHIM_ID,
@@ -32,6 +37,8 @@ export const VIRTUAL_PLAYGROUND_MODULES_ID = "virtual:dslinter/playground-module
 const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_PLAYGROUND_MODULES_ID}`;
 
 const pluginDir = dirname(fileURLToPath(import.meta.url));
+const packageRoot = resolve(pluginDir, "..");
+const embedIndexCssPath = resolve(packageRoot, "embed", "index.css");
 const inertiaShimPath = resolve(pluginDir, "shims/inertia-react.tsx");
 const ziggyShimPath = resolve(pluginDir, "shims/ziggy-js.ts");
 const wayfinderRoutesShimPath = resolve(pluginDir, "shims/wayfinder-routes.ts");
@@ -210,6 +217,27 @@ export default function dslinter(
     load(id) {
       if (id !== RESOLVED_VIRTUAL_ID) return;
       return generatePlaygroundModulesSource(scanRoot, relPaths);
+    },
+
+    transform(code, id) {
+      const normalizedId = id.split("?")[0]!.replace(/\\/g, "/");
+      if (!normalizedId.endsWith("/embed/index.css")) return;
+
+      if (!shouldInjectEmbedConsumerSources(scanRoot, packageRoot)) {
+        return null;
+      }
+
+      const consumerSources = embedSourcePathsRelativeToCss(
+        scanRoot,
+        packageRoot,
+        embedIndexCssPath,
+      );
+      if (consumerSources.length === 0) return null;
+
+      return {
+        code: buildEmbedIndexCss(code, consumerSources),
+        map: null,
+      };
     },
 
     configureServer(server) {

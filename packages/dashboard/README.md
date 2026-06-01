@@ -75,6 +75,10 @@ Run **`npx dslinter`** from your repo (including `resources/js/Components` or ot
 
 Previews load your components with your Vite `@/` aliases and Inertia stubs (`usePage`, `<Link>`, etc.) so isolated components render without a full page visit.
 
+The embed dev server registers Tailwind `@source` paths for your `.dslinter.json` **`include_dirs`** (for example `resources/js/components`), so component utility classes like `px-3.5` are generated in preview CSS. For 100% parity with your app's full CSS pipeline (theme entry, `@custom-variant`, etc.), use `DSLINTER_USE_CONSUMER_VITE=1` instead.
+
+The prebuilt **`dashboard-dist`** bundle shipped on npm does not run this Vite transform; use embed dev mode (monorepo / git checkout) or consumer Vite for accurate preview styling.
+
 For apps that already embed the dashboard (like this repo's `demo/`), dev mode uses your app's Vite server when `src/App.tsx` imports `DashboardLayout` from `dslinter`.
 
 **Direct `vite --mode serve`:** add one line to `vite.config.ts`:
