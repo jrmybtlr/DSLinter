@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.2.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.13...v0.2.0)
+
+### 🚀 Enhancements
+
+- **website:** Switch deploy config from pages to workers ([22d7e35](https://github.com/jrmybtlr/DSLinter/commit/22d7e35))
+- **playground:** Add user info playground component and enhance controls handling ([625f7c2](https://github.com/jrmybtlr/DSLinter/commit/625f7c2))
+
+### 🔥 Performance
+
+- Precompute newline_offsets once in analyze_vue_file, pass to merge_template_usages ([a2839b3](https://github.com/jrmybtlr/DSLinter/commit/a2839b3))
+
+### 🩹 Fixes
+
+- **dashboard:** Address PR review feedback on publish files and API export ([d3a1f1b](https://github.com/jrmybtlr/DSLinter/commit/d3a1f1b))
+- Import website main stylesheet in entrypoint ([79fa1ec](https://github.com/jrmybtlr/DSLinter/commit/79fa1ec))
+- Remove duplicate typescript devDependency in dashboard package ([03e3dc1](https://github.com/jrmybtlr/DSLinter/commit/03e3dc1))
+- Address review comments - remove duplicate typescript dep, add .d.mts declaration, remove dead code ([cbfd7ab](https://github.com/jrmybtlr/DSLinter/commit/cbfd7ab))
+
+### 💅 Refactors
+
+- **rust:** Consolidate usage maps, DRY FileScan ctors, remove scan_and_evaluate, fix scoring bugs, use lazy_regex! ([5033b13](https://github.com/jrmybtlr/DSLinter/commit/5033b13))
+- **ts:** Split playground module, useRef cancellation, Set dedup, useMemo fixes, DashboardLayout, Sidebar, barrel index ([d57a673](https://github.com/jrmybtlr/DSLinter/commit/d57a673))
+
+### 📖 Documentation
+
+- Update README config options ([5f2be14](https://github.com/jrmybtlr/DSLinter/commit/5f2be14))
+- Remove trailing spaces in README ([1fc4c1d](https://github.com/jrmybtlr/DSLinter/commit/1fc4c1d))
+
+### 🏡 Chore
+
+- **release:** V0.1.13 ([3cd1a20](https://github.com/jrmybtlr/DSLinter/commit/3cd1a20))
+- **dashboard:** Remove dead code and dedupe helpers ([cb41bcd](https://github.com/jrmybtlr/DSLinter/commit/cb41bcd))
+- Begin optimisation pass over src/ and packages/dashboard ([8ec1a34](https://github.com/jrmybtlr/DSLinter/commit/8ec1a34))
+- Plan cloudflare workers website deploy ([affabf5](https://github.com/jrmybtlr/DSLinter/commit/affabf5))
+- Add semver as a dev dependency and update pnpm lockfile ([18afb12](https://github.com/jrmybtlr/DSLinter/commit/18afb12))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+- Cursor Agent ([@cursoragent](https://github.com/cursoragent))
+
 ## v0.1.13
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.12...v0.1.13)
