@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   CONFIG_FILE_NAMES,
@@ -44,10 +44,10 @@ function existingPaths(targetDir, candidates) {
  */
 function pickPlaygroundGroupPrefix(targetDir, layout, includeDirs) {
   if (layout === "laravel") {
-    const lower = "resources/js/components";
-    const upper = "resources/js/Components";
-    if (existsSync(join(targetDir, lower))) return lower;
-    if (existsSync(join(targetDir, upper))) return upper;
+    const lower = resolvePathOnDisk(targetDir, "resources/js/components");
+    const upper = resolvePathOnDisk(targetDir, "resources/js/Components");
+    if (lower) return lower;
+    if (upper) return upper;
   }
   return includeDirs[0];
 }
@@ -57,6 +57,36 @@ function pickPlaygroundGroupPrefix(targetDir, layout, includeDirs) {
  * @param {"laravel" | "default"} layout
  */
 /**
+ * Resolve a repo-relative path using on-disk directory casing.
+ * @param {string} targetDir
+ * @param {string} relPath
+ * @returns {string | null}
+ */
+export function resolvePathOnDisk(targetDir, relPath) {
+  const parts = relPath.split("/").filter(Boolean);
+  let current = targetDir;
+  const resolved = [];
+  for (const part of parts) {
+    let entries;
+    try {
+      entries = readdirSync(current);
+    } catch {
+      return null;
+    }
+    const match = entries.find((entry) => entry.toLowerCase() === part.toLowerCase());
+    if (!match) return null;
+    resolved.push(match);
+    current = join(current, match);
+  }
+  try {
+    if (!statSync(current).isDirectory()) return null;
+  } catch {
+    return null;
+  }
+  return resolved.join("/");
+}
+
+/**
  * Pick the narrowest existing directory from ordered candidates (first match wins).
  * @param {string} targetDir
  * @param {string[]} candidates ordered narrow → broad
@@ -64,7 +94,8 @@ function pickPlaygroundGroupPrefix(targetDir, layout, includeDirs) {
  */
 function narrowestIncludeDir(targetDir, candidates) {
   for (const rel of candidates) {
-    if (existsSync(join(targetDir, rel))) return [rel];
+    const resolved = resolvePathOnDisk(targetDir, rel);
+    if (resolved) return [resolved];
   }
   return [];
 }
