@@ -19,5 +19,5 @@ pub fn scan_workspace_json(root: String, parallel: Option<bool>) -> napi::Result
         crate::scan_workspace(&path)
     }
     .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    serde_json::to_string(&report).map_err(|e| napi::Error::from_reason(e.to_string()))
+    crate::report::report_to_json(&report).map_err(|e| napi::Error::from_reason(e.to_string()))
 }

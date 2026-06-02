@@ -34,7 +34,7 @@ use usage::{
 
 pub fn evaluate_workspace(
     root: PathBuf,
-    files: Vec<FileScan>,
+    mut files: Vec<FileScan>,
     sources: HashMap<PathBuf, String>,
     config: &DslintConfig,
 ) -> WorkspaceReport {
@@ -90,6 +90,11 @@ pub fn evaluate_workspace(
         known_tokens: config.known_tokens.clone(),
         include_dirs: config.include_dirs.clone(),
     };
+
+    for file in &mut files {
+        file.usages.clear();
+        file.findings.clear();
+    }
 
     WorkspaceReport {
         schema_version: WORKSPACE_REPORT_SCHEMA_VERSION,

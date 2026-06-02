@@ -45,7 +45,8 @@ export interface LintFinding {
 export interface FileScan {
   path: string;
   definitions: ComponentDefinition[];
-  usages: JsxUsage[];
+  /** Per-file JSX usages (schema v2 only; v3 rolls up into `usage_by_component`). */
+  usages?: JsxUsage[];
   parse_errors: string[];
   findings?: LintFinding[];
 }

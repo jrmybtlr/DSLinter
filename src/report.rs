@@ -1,6 +1,10 @@
-//! Human-readable CLI output.
+//! Human-readable CLI output and JSON serialization.
 
 use crate::model::{Severity, WorkspaceReport};
+
+pub fn report_to_json(report: &WorkspaceReport) -> serde_json::Result<String> {
+    serde_json::to_string(report)
+}
 
 pub fn print_human(report: &WorkspaceReport) {
     println!("DSLinter — {}", report.root.display());
