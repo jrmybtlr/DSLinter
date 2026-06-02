@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.2.1
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.0...v0.2.1)
+
+### 🩹 Fixes
+
+- **ci:** Build NAPI and demo report before publish tests ([fdf497d](https://github.com/jrmybtlr/DSLinter/commit/fdf497d))
+- **report-cache:** Improve report path validation by ensuring report root matches project root ([7510dde](https://github.com/jrmybtlr/DSLinter/commit/7510dde))
+
+### 💅 Refactors
+
+- Enhance path resolution for include directories and improve case sensitivity handling ([22c96fb](https://github.com/jrmybtlr/DSLinter/commit/22c96fb))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.2.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.13...v0.2.0)
