@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.2
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.1...v0.2.2)
+
+### ✅ Tests
+
+- **collectScanModules:** Enhance case sensitivity tests for include_dirs ([32c2065](https://github.com/jrmybtlr/DSLinter/commit/32c2065))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.2.1
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.0...v0.2.1)
