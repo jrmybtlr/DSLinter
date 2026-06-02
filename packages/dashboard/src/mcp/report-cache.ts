@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { enrichPlaygroundsFromTs } from "../../bin/lib/enrich-playgrounds-from-ts.mjs";
@@ -102,6 +102,9 @@ export class ReportCache {
       });
       if (!res.ok) return null;
       const report = normalizeReportPaths((await res.json()) as WorkspaceReport);
+      const reportRoot = resolve(report.root);
+      const projectRoot = resolve(this.config.projectRoot);
+      if (reportRoot !== projectRoot) return null;
       return report;
     } catch {
       return null;
