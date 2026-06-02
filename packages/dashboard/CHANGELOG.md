@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.2.3
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.2...v0.2.3)
+
+### 🚀 Enhancements
+
+- **report:** Upgrade schema version to 3 and refactor JSON serialization ([b53a3fb](https://github.com/jrmybtlr/DSLinter/commit/b53a3fb))
+
+### 🩹 Fixes
+
+- **requireNative:** Update expected version for native bindings to 0.2.1 ([c836736](https://github.com/jrmybtlr/DSLinter/commit/c836736))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.2.2
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.1...v0.2.2)
