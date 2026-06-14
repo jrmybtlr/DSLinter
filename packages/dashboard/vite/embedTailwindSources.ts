@@ -4,14 +4,16 @@ import { projectRootForConfig, readIncludeDirs } from "./collectScanModules";
 
 const FALLBACK_INCLUDE_DIRS = ["resources/js", "src", "app"];
 
-const DASHBOARD_SRC_MARKER = `${join("packages", "dashboard", "src")}`;
-
 function normalizePosixPath(path: string): string {
   return path.replace(/\\/g, "/").replace(/\/$/, "");
 }
 
-function isDashboardPackageSrc(absPath: string): boolean {
-  return normalizePosixPath(absPath).endsWith(DASHBOARD_SRC_MARKER);
+function isDashboardPackageSrc(absPath: string, packageRoot: string): boolean {
+  const dashboardSrc = normalizePosixPath(join(resolve(packageRoot), "src"));
+  const normalized = normalizePosixPath(absPath);
+  return (
+    normalized === dashboardSrc || normalized.startsWith(`${dashboardSrc}/`)
+  );
 }
 
 function resolveConsumerSourceAbsDirs(
@@ -34,7 +36,7 @@ function resolveConsumerSourceAbsDirs(
     if (!norm) continue;
     const abs = resolve(projectRoot, norm);
     if (!existsSync(abs)) continue;
-    if (isDashboardPackageSrc(abs)) continue;
+    if (isDashboardPackageSrc(abs, packageRoot)) continue;
     unique.add(abs);
   }
 
@@ -42,7 +44,7 @@ function resolveConsumerSourceAbsDirs(
     for (const dir of FALLBACK_INCLUDE_DIRS) {
       const abs = resolve(scanAbs, dir);
       if (!existsSync(abs)) continue;
-      if (isDashboardPackageSrc(abs)) continue;
+      if (isDashboardPackageSrc(abs, packageRoot)) continue;
       unique.add(abs);
     }
   }
