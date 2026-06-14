@@ -36,19 +36,17 @@ export function TokensPane({
         </p>
       </header>
       <div className="min-w-0 w-full px-8 py-8">
-        <div className="rounded-ds-lg border border-border bg-card p-6 text-card-foreground shadow-xs">
-          {hasScanned && merged ? (
-            <ScannedTokenWall view={merged} />
-          ) : hasManual ? (
-            <TokenWall catalog={tokenCatalog} />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Run <span className="font-mono">dslinter --json</span> on a
-              project with CSS token sources, or pass a{" "}
-              <span className="font-mono">tokenCatalog</span> prop.
-            </p>
-          )}
-        </div>
+        {hasScanned && merged ? (
+          <ScannedTokenWall view={merged} />
+        ) : hasManual ? (
+          <TokenWall catalog={tokenCatalog} />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Run <span className="font-mono">dslinter --json</span> on a project
+            with CSS token sources, or pass a{" "}
+            <span className="font-mono">tokenCatalog</span> prop.
+          </p>
+        )}
       </div>
     </div>
   );

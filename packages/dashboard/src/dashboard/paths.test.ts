@@ -1,8 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { truncatePathMiddle } from "./paths";
+import { resolveReportAbsolutePath, truncatePathMiddle } from "./paths";
 
 const SAMPLE =
   "resources/js/components/manage-two-factor.tsx";
+
+describe("resolveReportAbsolutePath", () => {
+  it("returns absolute paths unchanged when under root", () => {
+    expect(
+      resolveReportAbsolutePath(
+        "/repo",
+        "/repo/src/components/Button.tsx",
+      ),
+    ).toBe("/repo/src/components/Button.tsx");
+  });
+
+  it("joins root-relative paths", () => {
+    expect(
+      resolveReportAbsolutePath("/repo", "src/pages/Home.tsx"),
+    ).toBe("/repo/src/pages/Home.tsx");
+  });
+});
 
 describe("truncatePathMiddle", () => {
   it("returns the path unchanged when it fits", () => {

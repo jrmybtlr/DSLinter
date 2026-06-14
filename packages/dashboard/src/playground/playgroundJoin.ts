@@ -168,3 +168,37 @@ export function findPlaygroundJoinSkip(
 ): PlaygroundJoinSkip | undefined {
   return skipped?.find((s) => s.export_name === componentId);
 }
+
+/** User-facing hint when a playground spec cannot join to the Vite module graph. */
+export function playgroundJoinDetailMessage(
+  skip: PlaygroundJoinSkip | undefined,
+  spec: PlaygroundSpec | undefined,
+): string | null {
+  if (skip?.reason === "module_not_found") {
+    const { globKey, rel_path } = skip;
+    const subdirHint = !rel_path.includes("/")
+      ? " This usually means the scanner was run from a subdirectory. Re-run from the project root: npx dslinter ."
+      : "";
+    if (globKey.startsWith("@dslinter-scan/")) {
+      return [
+        `Expected module key "${globKey}" but the dslinter Vite plugin did not load it.`,
+        `Use <DashboardLayout autoPlayground /> and run via npx dslinter (zero vite.config changes), or add plugins: [dslinter()] from dslinter/vite to vite.config.ts.`,
+        `Run the scanner from the project root so rel_path "${rel_path}" matches files under DSLINTER_SCAN_ROOT.`,
+      ].join(" ");
+    }
+    return [
+      `Vite glob is missing key "${globKey}" for report path "${rel_path}".`,
+      `Prefer <DashboardLayout autoPlayground /> with plugins: [dslinter()] from dslinter/vite, or run npx dslinter init for a custom buildRegistry.ts glob.`,
+      subdirHint,
+    ]
+      .filter(Boolean)
+      .join("");
+  }
+  if (skip?.reason === "export_not_found") {
+    return `Module loaded but named export "${skip.export_name}" was not found. Use export function ${skip.export_name}(…) in ${skip.rel_path}.`;
+  }
+  if (spec) {
+    return `Report path: ${spec.rel_path} (export ${spec.export_name}). Use autoPlayground with dslinter/vite, or ensure buildRegistry.ts glob covers this file.`;
+  }
+  return null;
+}

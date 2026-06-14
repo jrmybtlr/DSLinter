@@ -7,7 +7,7 @@ import {
 import { findingsForComponent } from "../report/findingsForComponent";
 import { controlsForSpec } from "../playground/controls";
 import { genericUsageSnippet } from "../playground/snippet";
-import { pillarForRule, ruleById, ruleCatalog } from "./rule-catalog";
+import { pillarForRule, ruleCatalog } from "./rule-catalog";
 import { findingMatchesPath } from "./normalize-paths";
 import type {
   ConfigSnapshot,

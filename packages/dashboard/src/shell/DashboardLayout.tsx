@@ -14,6 +14,7 @@ import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 import { ComponentInspectPane } from "../components/ComponentInspectPane";
 import { ComponentPlaygroundPane } from "../components/ComponentPlaygroundPane";
+import { CatalogPane } from "../components/CatalogPane";
 import { GovernancePane } from "../components/GovernancePane";
 import { Sidebar } from "../components/Sidebar";
 import { TokensPane } from "../components/TokensPane";
@@ -21,6 +22,7 @@ import { DashboardCommandPalette } from "../components/DashboardCommandPalette";
 import {
   componentCatalogNamesFromReport,
   componentCatalogTreeFromReport,
+  resolveFamilyNavigationTarget,
 } from "../dashboard/aggregate";
 import { reportWithExtraHidden } from "../dashboard/catalogVisibility";
 import { resolvePlaygroundEntry } from "../playground/buildPlaygroundEntriesFromReport";
@@ -186,14 +188,17 @@ export function DashboardLayoutInner({
         return [{ name: item.name, label: item.name }];
       }
       return [
-        { name: item.parent, label: item.parent },
+        {
+          name: resolveFamilyNavigationTarget(item, catalogNames),
+          label: item.parent,
+        },
         ...item.children.map((child) => ({
           name: child,
           label: `${item.parent} / ${child}`,
         })),
       ];
     });
-  }, [catalogReport]);
+  }, [catalogReport, catalogNames]);
 
   const handleHideFromCatalog = useCallback(
     (componentName: string) => {
@@ -230,9 +235,22 @@ export function DashboardLayoutInner({
         onOpenComponent={(name) =>
           navigate({ view: "component", componentId: name })
         }
+        onOpenCatalog={() => navigate({ view: "catalog" })}
       />
     );
-  } else {
+  } else if (route.view === "catalog") {
+    main = (
+      <CatalogPane
+        landing={overview}
+        dslinterReportHint={dslinterReportHint}
+        dslinterReport={dslinterReport}
+        onOpenComponent={(name) =>
+          navigate({ view: "component", componentId: name })
+        }
+        onBackToGovernance={() => navigate({ view: "governance" })}
+      />
+    );
+  } else if (route.view === "component") {
     const componentId = route.componentId;
     const entry = resolvePlaygroundEntry(playgroundEntries, componentId);
     const inCatalog = catalogNames.includes(componentId);
@@ -264,7 +282,6 @@ export function DashboardLayoutInner({
             playgroundJoinSkips,
             componentId,
           )}
-          onBackToGovernance={() => navigate({ view: "governance" })}
           onOpenComponent={(name) =>
             navigate({ view: "component", componentId: name })
           }

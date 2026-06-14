@@ -1,0 +1,16 @@
+{
+  "include_dirs": [
+    "src/components"
+  ],
+  "ignore_globs": [],
+  "hidden_components": [
+    "Comp"
+  ],
+  "hidden_paths": [],
+  "css_entrypoints": [],
+  "playground_groups": {
+    "components": [
+      "src/components"
+    ]
+  }
+}

@@ -1,36 +1,27 @@
 import type { ReactNode } from "react";
-import {
-  componentCatalogNamesFromReport,
-  governanceTabCounts,
-  unusedComponentsFromReport,
-} from "../dashboard/aggregate";
-import { DashboardBody } from "../dashboard/DashboardBody";
+import { componentCatalogNamesFromReport } from "../dashboard/aggregate";
+import { ComponentCatalog } from "../dashboard/ComponentCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
 
 type Props = {
-  /** Intro / landing copy shown above the governance inventory. */
-  landing?: ReactNode;
-  reportUrl?: string;
-  dslinterReportHint?: string;
   dslinterReport: DslinterReportState;
+  dslinterReportHint?: string;
   onOpenComponent?: (name: string) => void;
-  onOpenCatalog?: () => void;
+  onBackToGovernance?: () => void;
+  landing?: ReactNode;
 };
 
-export function GovernancePane({
-  landing,
-  reportUrl: _reportUrl = "/dslinter-report.json",
-  dslinterReportHint = "npm run dslinter:report",
+export function CatalogPane({
   dslinterReport,
+  dslinterReportHint = "npm run dslinter:report",
   onOpenComponent,
-  onOpenCatalog,
+  onBackToGovernance,
+  landing,
 }: Props) {
   const { report, error, loading } = dslinterReport;
-  const componentCatalogCount = report
+  const componentCount = report
     ? componentCatalogNamesFromReport(report).length
     : 0;
-  const unusedCount = report ? unusedComponentsFromReport(report).length : 0;
-  const findingCount = report ? governanceTabCounts(report).all : 0;
 
   if (error) {
     return (
@@ -38,7 +29,7 @@ export function GovernancePane({
         {landing}
         <header className="border-b border-border bg-card px-8 py-6">
           <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Governance
+            All components
           </h1>
         </header>
         <div className="mx-auto max-w-lg px-8 py-16 text-center">
@@ -62,7 +53,7 @@ export function GovernancePane({
       <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-muted/40">
         {landing}
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-          Loading inventory…
+          Loading component catalog…
         </div>
       </div>
     );
@@ -72,28 +63,31 @@ export function GovernancePane({
     <div className="min-h-0 flex-1 overflow-auto bg-muted/40">
       {landing}
       <header className="border-b border-border bg-card px-8 py-6">
+        {onBackToGovernance ? (
+          <button
+            type="button"
+            onClick={onBackToGovernance}
+            className="mb-2 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            ← Governance
+          </button>
+        ) : null}
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Inventory
         </p>
         <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-          Governance
+          All components
           <span className="font-normal text-muted-foreground">
             {" "}
-            · {findingCount} {findingCount === 1 ? "issue" : "issues"} ·{" "}
-            {unusedCount} unused · {componentCatalogCount} total
+            · {componentCount} components
           </span>
         </h1>
         <p className="text-sm text-muted-foreground">
-          Governance scores, workspace findings, and components with no usage
-          from the latest DSLinter snapshot
+          Full catalog with prop usage and app references from the latest scan.
         </p>
       </header>
       <div className="min-w-0 w-full px-6 py-8">
-        <DashboardBody
-          report={report}
-          onOpenComponent={onOpenComponent}
-          onOpenCatalog={onOpenCatalog}
-        />
+        <ComponentCatalog report={report} onOpenComponent={onOpenComponent} />
       </div>
     </div>
   );

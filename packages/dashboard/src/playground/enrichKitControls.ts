@@ -102,12 +102,12 @@ function propMetadataForCatalog(
 
   const def = definitionForExport(report, spec.export_name);
   const propOptions = {
-    ...(def?.declared_prop_options ?? {}),
-    ...(spec.declared_prop_options ?? {}),
+    ...def?.declared_prop_options,
+    ...spec.declared_prop_options,
   };
   const propDefaults = {
-    ...(def?.declared_prop_defaults ?? {}),
-    ...(spec.declared_prop_defaults ?? {}),
+    ...def?.declared_prop_defaults,
+    ...spec.declared_prop_defaults,
   };
   const propKinds = { ...spec.declared_prop_kinds };
 

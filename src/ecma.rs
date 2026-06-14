@@ -7,10 +7,10 @@ use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPatternKind, Declaration, ExportDefaultDeclarationKind, Expression, FormalParameters,
-    Function, JSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
-    JSXElement, JSXElementName, JSXMemberExpressionObject, JSXOpeningElement, PropertyKey,
-    VariableDeclarator,
+    Argument, BindingPatternKind, Declaration, ExportDefaultDeclarationKind, Expression,
+    FormalParameters, Function, JSXAttribute, JSXAttributeItem, JSXAttributeName,
+    JSXAttributeValue, JSXChild, JSXElement, JSXElementName, JSXMemberExpressionObject,
+    JSXOpeningElement, PropertyKey, VariableDeclarator,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
@@ -369,17 +369,42 @@ fn expr_is_component_like(expr: &Expression<'_>) -> bool {
     )
 }
 
+fn wrapper_callee_name<'a>(callee: &'a Expression<'a>) -> Option<&'a str> {
+    match callee {
+        Expression::Identifier(ident) => Some(ident.name.as_str()),
+        Expression::StaticMemberExpression(mem) => Some(mem.property.name.as_str()),
+        _ => None,
+    }
+}
+
+fn is_wrapper_callee_name(name: &str) -> bool {
+    matches!(name, "forwardRef" | "memo" | "observer" | "connect")
+}
+
 fn expr_is_wrapper_call(expr: &Expression<'_>) -> bool {
     let Expression::CallExpression(call) = expr else {
         return false;
     };
-    let Expression::Identifier(ident) = &call.callee else {
-        return false;
+    wrapper_callee_name(&call.callee).is_some_and(is_wrapper_callee_name)
+}
+
+fn params_from_wrapper_argument<'a>(arg: &'a Argument<'a>) -> Option<&'a FormalParameters<'a>> {
+    match arg {
+        Argument::ArrowFunctionExpression(arrow) => Some(&arrow.params),
+        Argument::FunctionExpression(func) => Some(&func.params),
+        _ => None,
+    }
+}
+
+fn params_from_wrapper_call<'a>(expr: &'a Expression<'a>) -> Option<&'a FormalParameters<'a>> {
+    let Expression::CallExpression(call) = expr else {
+        return None;
     };
-    matches!(
-        ident.name.as_str(),
-        "forwardRef" | "memo" | "observer" | "connect"
-    )
+    if !expr_is_wrapper_call(expr) {
+        return None;
+    }
+    let first = call.arguments.first()?;
+    params_from_wrapper_argument(first)
 }
 
 fn has_spread_attribute(items: &[JSXAttributeItem<'_>]) -> bool {
@@ -793,15 +818,26 @@ impl ExtractVisitor<'_> {
                 &self.cva_bindings,
             ));
         } else if expr_is_wrapper_call(init) {
-            self.definitions.push(ComponentDefinition {
-                name,
-                kind: DefinitionKind::WrappedComponent,
-                line: self.line(decl.span.start),
-                declared_props: Vec::new(),
-                declared_prop_options: BTreeMap::new(),
-                declared_prop_defaults: BTreeMap::new(),
-                cva_binding_name: None,
-            });
+            if let Some(params) = params_from_wrapper_call(init) {
+                self.definitions.push(component_definition_from_params(
+                    name,
+                    DefinitionKind::WrappedComponent,
+                    self.line(decl.span.start),
+                    params,
+                    &self.ts_prop_shapes,
+                    &self.cva_bindings,
+                ));
+            } else {
+                self.definitions.push(ComponentDefinition {
+                    name,
+                    kind: DefinitionKind::WrappedComponent,
+                    line: self.line(decl.span.start),
+                    declared_props: Vec::new(),
+                    declared_prop_options: BTreeMap::new(),
+                    declared_prop_defaults: BTreeMap::new(),
+                    cva_binding_name: None,
+                });
+            }
         }
     }
 }
@@ -1098,6 +1134,79 @@ function Button({
             btn.declared_props.contains(&"children".to_string()),
             "ComponentProps<\"button\"> should imply children"
         );
+    }
+
+    #[test]
+    fn react_forward_ref_anonymous_arrow_extracts_props() {
+        let src = r#"
+const buttonVariants = cva("base", {
+  variants: {
+    variant: { default: "a", destructive: "b", outline: "c" },
+    size: { default: "d", sm: "e", lg: "f" },
+  },
+  defaultVariants: { variant: "default", size: "default" },
+});
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    return <button className={className} ref={ref} {...props} />;
+  },
+);
+export { Button };
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("button.tsx"), src);
+        let btn = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Button")
+            .expect("Button definition");
+        assert_eq!(btn.kind, DefinitionKind::WrappedComponent);
+        for prop in ["className", "variant", "size", "asChild"] {
+            assert!(
+                btn.declared_props.contains(&prop.to_string()),
+                "missing {prop}: {:?}",
+                btn.declared_props
+            );
+        }
+        assert!(
+            !btn.declared_props.contains(&"props".to_string()),
+            "rest binding should not become a declared prop"
+        );
+        assert_eq!(
+            btn.declared_prop_options.get("variant").map(|v| v.as_slice()),
+            Some(&["default".to_string(), "destructive".to_string(), "outline".to_string()][..])
+        );
+        assert_eq!(
+            btn.declared_prop_options.get("size").map(|v| v.as_slice()),
+            Some(&["default".to_string(), "sm".to_string(), "lg".to_string()][..])
+        );
+        assert_eq!(
+            btn.declared_prop_defaults.get("variant").map(String::as_str),
+            Some("default")
+        );
+    }
+
+    #[test]
+    fn forward_ref_import_extracts_props_from_inner_arrow() {
+        let src = r#"
+import { forwardRef } from "react";
+const Input = forwardRef(({ className, type, ...props }, ref) => {
+  return <input className={className} type={type} ref={ref} {...props} />;
+});
+export { Input };
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("input.tsx"), src);
+        let input = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Input")
+            .expect("Input definition");
+        assert_eq!(input.kind, DefinitionKind::WrappedComponent);
+        assert_eq!(input.declared_props, vec!["className", "type"]);
     }
 
     #[test]

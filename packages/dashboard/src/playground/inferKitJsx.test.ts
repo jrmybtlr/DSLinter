@@ -1,4 +1,3 @@
-import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 import {
   inferKitJsxSlots,
@@ -6,16 +5,6 @@ import {
   slotDefaultFromComponent,
   slotLabelFromComponent,
 } from "./inferKitJsx";
-
-function Alert(props: { variant?: string; children?: unknown }) {
-  return createElement("div", props);
-}
-function AlertTitle(props: { children?: unknown }) {
-  return createElement("div", props);
-}
-function AlertDescription(props: { children?: unknown }) {
-  return createElement("div", props);
-}
 
 describe("inferKitJsx", () => {
   it("reads createElement children bindings (including vite transforms)", () => {

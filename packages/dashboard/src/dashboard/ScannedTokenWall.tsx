@@ -8,6 +8,7 @@ import { cn } from "../lib/utils";
 import { TruncatedPath } from "../components/TruncatedPath";
 import {
   filterTokenRows,
+  scannedTokenRowKey,
   type MergedTokenView,
   type ScannedTokenRow,
   type TokenUsageFilter,
@@ -40,13 +41,13 @@ function TokenSection({
 function TokenUsageBadge({ row }: { row: ScannedTokenRow }) {
   if (row.isUnused) {
     return (
-      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         unused
       </span>
     );
   }
   return (
-    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
       {row.fileCount} {row.fileCount === 1 ? "file" : "files"}
     </span>
   );
@@ -95,7 +96,9 @@ function TokenRowBody({
 }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <p className="truncate font-mono text-xs text-foreground">{row.cssName}</p>
+      <p className="truncate font-mono text-xs text-foreground">
+        {row.cssName}
+      </p>
       <p className="truncate text-xs text-muted-foreground">{row.value}</p>
       {row.tw ? (
         <p className="truncate font-mono text-xs text-muted-foreground/70">
@@ -118,8 +121,8 @@ function ColorSection({ rows }: { rows: ScannedTokenRow[] }) {
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {colors.map((row) => (
           <li
-            key={row.cssName}
-            className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2"
+            key={scannedTokenRowKey(row)}
+            className="flex items-center gap-3 rounded-lg border border-border bg-card p-2 pr-3.5"
             title={row.value}
           >
             {row.displayValue &&
@@ -162,7 +165,7 @@ function ListSection({
       <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
         {items.map((row) => (
           <li
-            key={row.cssName}
+            key={scannedTokenRowKey(row)}
             className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs"
           >
             <TokenRowBody row={row} className="flex-1" />

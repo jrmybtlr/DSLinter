@@ -139,6 +139,11 @@ export function buildMergedTokenView(
   };
 }
 
+/** Stable React key — cssName alone is not unique across scope/path. */
+export function scannedTokenRowKey(row: ScannedTokenRow): string {
+  return `${row.cssName}|${row.scope}|${row.path}|${row.line}`;
+}
+
 export function filterTokenRows(
   rows: ScannedTokenRow[],
   filter: TokenUsageFilter,

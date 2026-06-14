@@ -18,6 +18,11 @@ describe("parseHashRoute", () => {
   it("parses tokens", () => {
     expect(parseHashRoute("/tokens")).toEqual({ view: "tokens" });
   });
+
+  it("parses catalog", () => {
+    expect(parseHashRoute("/catalog")).toEqual({ view: "catalog" });
+    expect(parseHashRoute("/governance/catalog")).toEqual({ view: "catalog" });
+  });
 });
 
 describe("formatHashRoute", () => {
@@ -29,5 +34,9 @@ describe("formatHashRoute", () => {
 
   it("formats governance", () => {
     expect(formatHashRoute({ view: "governance" })).toBe("/governance");
+  });
+
+  it("formats catalog", () => {
+    expect(formatHashRoute({ view: "catalog" })).toBe("/catalog");
   });
 });
