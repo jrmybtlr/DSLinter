@@ -18,6 +18,8 @@ function formatDefault(c: PlaygroundControl): string {
       return String(c.default);
     case "string":
       return c.default === "" ? "—" : JSON.stringify(c.default);
+    case "node":
+      return c.default === "" ? "—" : JSON.stringify(c.default);
     case "select":
       return c.default === "" ? "—" : c.default;
     default:
@@ -33,6 +35,8 @@ function formatType(c: PlaygroundControl): string {
       return "number";
     case "string":
       return "string";
+    case "node":
+      return "ReactNode";
     case "select":
       return "string";
     default:

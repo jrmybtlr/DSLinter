@@ -122,12 +122,22 @@ export function findComponentParamType(checker, sf, exportName) {
   return found;
 }
 
+/** @param {ts.TypeChecker} checker @param {ts.Type} type */
+function isReactNodeType(checker, type) {
+  const alias = type.aliasSymbol?.escapedName ?? type.aliasSymbol?.name;
+  if (alias === "ReactNode" || alias === "ReactElement") return true;
+  const text = checker.typeToString(type);
+  if (text === "ReactNode" || text === "ReactElement") return true;
+  return false;
+}
+
 /**
  * @param {ts.TypeChecker} checker
  * @param {ts.Type} type
  * @returns {PropKind | null}
  */
 export function classifyPropType(checker, type) {
+  if (isReactNodeType(checker, type)) return "node";
   const nn = checker.getNonNullableType(type);
   if (nn.isUnion()) {
     const parts = nn.types.map((u) =>
@@ -146,10 +156,16 @@ export function classifyPropType(checker, type) {
   return null;
 }
 
-/** @param {ts.TypeChecker} checker @param {ts.Type} type */
-function followTypeAlias(checker, type) {
+/** @param {ts.TypeChecker} checker @param {ts.Type} type @param {Set<number>} [seen] */
+function followTypeAlias(checker, type, seen = new Set()) {
   if (type.aliasSymbol) {
-    return followTypeAlias(checker, checker.getDeclaredTypeOfSymbol(type.aliasSymbol));
+    if (seen.has(type.id)) return type;
+    seen.add(type.id);
+    return followTypeAlias(
+      checker,
+      checker.getDeclaredTypeOfSymbol(type.aliasSymbol),
+      seen,
+    );
   }
   return type;
 }

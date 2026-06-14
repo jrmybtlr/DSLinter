@@ -1,5 +1,5 @@
 export type { DeclaredPropKind, PlaygroundSpec } from "../types/report";
-export type PropKind = "boolean" | "string" | "number";
+export type PropKind = "boolean" | "string" | "number" | "node";
 
 export type CheckerProgram = {
   program: import("typescript").Program;

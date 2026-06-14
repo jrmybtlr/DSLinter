@@ -29,7 +29,7 @@ function enrichOneControl(control: PlaygroundControl, slot: KitJsxSlot | undefin
   const exampleDefault = slotDefaultFromComponent(slot.component);
   const hint = `${slot.component} children`;
 
-  if (control.type === "string") {
+  if (control.type === "string" || control.type === "node") {
     const useExample =
       exampleDefault !== undefined &&
       (control.default === control.key || control.default === control.key.toLowerCase());

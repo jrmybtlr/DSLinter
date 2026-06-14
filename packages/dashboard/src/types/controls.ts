@@ -26,6 +26,16 @@ export type PlaygroundStringControl = {
   placeholder?: string;
 };
 
+export type PlaygroundNodeControl = {
+  key: string;
+  label: string;
+  type: "node";
+  default: string;
+  defaultSource?: PlaygroundDefaultSource;
+  placeholder?: string;
+  hint?: string;
+};
+
 export type PlaygroundNumberControl = {
   key: string;
   label: string;
@@ -49,6 +59,7 @@ export type PlaygroundSelectControl = {
 export type PlaygroundControl =
   | PlaygroundBooleanControl
   | PlaygroundStringControl
+  | PlaygroundNodeControl
   | PlaygroundNumberControl
   | PlaygroundSelectControl;
 
@@ -61,6 +72,7 @@ export function defaultArgsFromControls(controls: PlaygroundControl[] | undefine
         out[c.key] = c.default;
         break;
       case "string":
+      case "node":
       case "select":
         out[c.key] = c.default;
         break;

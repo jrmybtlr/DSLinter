@@ -26,4 +26,19 @@ describe("controlsToApiRows", () => {
       { prop: "variant", default: "\"default\"", defaultBadge: "\"default\"" },
     ]);
   });
+
+  it("maps node controls to ReactNode in the type column", () => {
+    const controls: PlaygroundControl[] = [
+      {
+        key: "actions",
+        label: "actions",
+        type: "node",
+        default: "actions",
+      },
+    ];
+
+    expect(controlsToApiRows(controls)).toMatchObject([
+      { prop: "actions", type: "ReactNode" },
+    ]);
+  });
 });

@@ -1,7 +1,7 @@
 import type { Program, TypeChecker, SourceFile, Type } from "typescript";
 import type { PlaygroundSpec } from "../types/report.js";
 
-export type PropKind = "boolean" | "string" | "number";
+export type PropKind = "boolean" | "string" | "number" | "node";
 
 export type CheckerProgram = {
   program: Program;

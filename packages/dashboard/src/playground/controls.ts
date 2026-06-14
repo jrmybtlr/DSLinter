@@ -19,18 +19,19 @@ export function stringDefaultForProp(key: string): string {
 }
 
 export type PlaygroundStringControl = Extract<PlaygroundControl, { type: "string" }>;
+export type PlaygroundNodeControl = Extract<PlaygroundControl, { type: "node" }>;
 
 /** Parts like BreadcrumbSeparator default to an icon when children is omitted. */
 export function usesIconChildrenFallback(exportName: string): boolean {
   return exportName.endsWith("Separator");
 }
 
-export function childrenControl(exportName?: string): PlaygroundStringControl {
+export function childrenControl(exportName?: string): PlaygroundNodeControl {
   if (exportName && usesIconChildrenFallback(exportName)) {
     return {
       key: "children",
       label: "children",
-      type: "string",
+      type: "node",
       default: "",
       placeholder: "Custom separator (chevron when empty)",
     };
@@ -38,8 +39,18 @@ export function childrenControl(exportName?: string): PlaygroundStringControl {
   return {
     key: "children",
     label: "children",
-    type: "string",
+    type: "node",
     default: CHILDREN_SLOT_DEFAULT,
+    placeholder: "Slot content",
+  };
+}
+
+export function nodeControlForProp(key: string): PlaygroundNodeControl {
+  return {
+    key,
+    label: key,
+    type: "node",
+    default: defaultStringForProp(key),
     placeholder: "Slot content",
   };
 }
@@ -133,6 +144,8 @@ export function controlsFromDeclaredProps(
       out.push({ key, label: key, type: "boolean", default: false });
     } else if (kind === "number") {
       out.push({ key, label: key, type: "number", default: 0 });
+    } else if (kind === "node") {
+      out.push(nodeControlForProp(key));
     } else if (kind === "string") {
       out.push({
         key,

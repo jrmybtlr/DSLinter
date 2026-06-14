@@ -17,6 +17,7 @@ function valueMatchesPlaygroundDefault(
       return Number.isFinite(n) && n === control.default;
     }
     case "string":
+    case "node":
     case "select":
       return String(value ?? "") === String(control.default);
     default:

@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 
-/** @typedef {"boolean" | "string" | "number"} DeclaredPropKind */
+/** @typedef {"boolean" | "string" | "number" | "node"} DeclaredPropKind */
 
 /**
  * @param {string} projectRoot
@@ -149,9 +149,22 @@ export function findComponentParamType(checker, sf, exportName) {
 /**
  * @param {import("typescript").TypeChecker} checker
  * @param {import("typescript").Type} type
+ */
+function isReactNodeType(checker, type) {
+  const alias = type.aliasSymbol?.escapedName ?? type.aliasSymbol?.name;
+  if (alias === "ReactNode" || alias === "ReactElement") return true;
+  const text = checker.typeToString(type);
+  if (text === "ReactNode" || text === "ReactElement") return true;
+  return false;
+}
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
  * @returns {DeclaredPropKind | null}
  */
 export function classifyPropType(checker, type) {
+  if (isReactNodeType(checker, type)) return "node";
   const nn = checker.getNonNullableType(type);
   if (nn.isUnion()) {
     const parts = nn.types.map((u) =>

@@ -58,6 +58,7 @@ export function PlaygroundControlField({
         );
       }
       case "string":
+      case "node":
         return (
           <div className="flex min-w-0 flex-col gap-1.5">
             <Label htmlFor={id} className={labelClass}>
@@ -153,6 +154,7 @@ export function PlaygroundControlField({
       );
     }
     case "string":
+    case "node":
       return (
         <Input
           id={id}

@@ -217,6 +217,38 @@ describe("enrichPlaygroundSpecFromTs", () => {
     expect(enriched.declared_prop_defaults?.type).toBe("text");
     expect(enriched.declared_prop_kinds?.type).toBe("string");
   });
+
+  it("classifies ReactNode props as node", () => {
+    const root = tempProject({
+      "src/section.tsx": `
+        import type { ReactNode } from "react";
+        export function Section({
+          children,
+          actions,
+        }: {
+          children: ReactNode;
+          actions?: ReactNode;
+        }) {
+          return null;
+        }
+      `,
+    });
+    const bundle = createCheckerProgram(root)!;
+    const spec: PlaygroundSpec = {
+      id: "Section",
+      export_name: "Section",
+      rel_path: "src/section.tsx",
+      declared_props: ["children", "actions"],
+    };
+    const enriched = enrichPlaygroundSpecFromTs(
+      spec,
+      bundle.checker,
+      bundle.program,
+      root,
+    );
+    expect(enriched.declared_prop_kinds?.children).toBe("node");
+    expect(enriched.declared_prop_kinds?.actions).toBe("node");
+  });
 });
 
 describe("createCheckerProgram", () => {

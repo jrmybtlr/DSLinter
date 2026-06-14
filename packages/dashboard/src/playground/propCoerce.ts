@@ -8,7 +8,7 @@ import {
 } from "./controls";
 
 export function coerceDeclaredPropKind(v: unknown): DeclaredPropKind | undefined {
-  if (v === "boolean" || v === "string" || v === "number" || v === "unknown")
+  if (v === "boolean" || v === "string" || v === "number" || v === "node" || v === "unknown")
     return v;
   return undefined;
 }
@@ -65,7 +65,7 @@ export function valuesToComponentProps(
       o[key] = Number.isFinite(n) ? n : 0;
       continue;
     }
-    if (kind === "string") {
+    if (kind === "string" || kind === "node") {
       o[key] = values[key];
       continue;
     }

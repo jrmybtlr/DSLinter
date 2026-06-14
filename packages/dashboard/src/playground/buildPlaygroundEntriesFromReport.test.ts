@@ -86,7 +86,7 @@ describe("playground preview props", () => {
   it("maps playground control values even when declared_props omits them", () => {
     const controlOverrides: Record<string, PlaygroundControl[]> = {
       Demo: [
-        { key: "children", label: "children", type: "string", default: "" },
+        { key: "children", label: "children", type: "node", default: "" },
         {
           key: "variant",
           label: "variant",
@@ -168,8 +168,8 @@ describe("playground preview props", () => {
     expect(asChild?.type).toBe("boolean");
 
     const children = entry!.controls.find((c) => c.key === "children");
-    expect(children?.type).toBe("string");
-    if (children?.type === "string") {
+    expect(children?.type).toBe("node");
+    if (children?.type === "node") {
       expect(children.default).toBe("Example");
     }
 

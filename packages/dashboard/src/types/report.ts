@@ -90,7 +90,7 @@ export interface UsageSummary {
  * Simplified prop kind from TypeScript (e.g. demo `merge-playgrounds.mjs`).
  * Dashboard falls back to name heuristics when a key is missing or kind is `unknown`.
  */
-export type DeclaredPropKind = "boolean" | "string" | "number" | "unknown";
+export type DeclaredPropKind = "boolean" | "string" | "number" | "node" | "unknown";
 
 /** Emitted by dslint for dashboard playgrounds (no per-component TS registration). */
 export interface PlaygroundSpec {

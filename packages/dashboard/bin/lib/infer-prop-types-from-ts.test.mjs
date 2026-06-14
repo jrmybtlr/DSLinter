@@ -171,4 +171,36 @@ export function Toggle({ disabled }: { disabled?: boolean }) {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("classifies ReactNode props as node", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-ts-"));
+    try {
+      writeProject(root, {
+        "Section.tsx": `
+import type { ReactNode } from "react";
+
+export function Section({
+  children,
+  actions,
+}: {
+  children: ReactNode;
+  actions?: ReactNode;
+}) {
+  return null;
+}
+`,
+      });
+      const bundle = createCheckerProgram(root);
+      const sf = bundle.program.getSourceFile(join(root, "Section.tsx"));
+      const paramType = findComponentParamType(bundle.checker, sf, "Section");
+      for (const key of ["children", "actions"]) {
+        const sym = bundle.checker.getPropertyOfType(paramType, key);
+        expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe(
+          "node",
+        );
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
