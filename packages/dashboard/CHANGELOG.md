@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.3...v0.3.0)
+
+### 🚀 Enhancements
+
+- **dashboard:** Add new components and enhance reporting features ([e65ca9b](https://github.com/jrmybtlr/DSLinter/commit/e65ca9b))
+- **dashboard:** Enhance prop type classification and add support for ReactNode ([fd3a37a](https://github.com/jrmybtlr/DSLinter/commit/fd3a37a))
+
+### 🩹 Fixes
+
+- **dashboard:** Update isDashboardPackageSrc function to accept package root ([3492f84](https://github.com/jrmybtlr/DSLinter/commit/3492f84))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.2.3
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.2...v0.2.3)
