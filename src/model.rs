@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use serde::Serialize;
 
 /// Current JSON schema version for [`WorkspaceReport`].
-pub const WORKSPACE_REPORT_SCHEMA_VERSION: u32 = 2;
+pub const WORKSPACE_REPORT_SCHEMA_VERSION: u32 = 3;
 
 /// How a UI component binding was discovered in source.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -132,10 +132,12 @@ pub struct AstExtracts {
 pub struct FileScan {
     pub path: PathBuf,
     pub definitions: Vec<ComponentDefinition>,
+    /// Per-file JSX usages; rolled up into `usage_by_component` and not emitted in JSON.
+    #[serde(skip)]
     pub usages: Vec<JsxUsage>,
     pub parse_errors: Vec<String>,
-    /// Rule violations detected in this file (e.g. accessibility).
-    #[serde(default)]
+    /// Per-file rule violations; merged into top-level `findings` and not emitted in JSON.
+    #[serde(skip)]
     pub findings: Vec<LintFinding>,
     /// Class strings and literals from Oxc (and Vue template heuristics); workspace rules only.
     #[serde(skip)]

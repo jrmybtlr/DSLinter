@@ -57,10 +57,11 @@ switch (mode) {
     await runDevMode(runParsed);
     break;
   case "report":
-    runReportMode(["--report", ...scannerArgs], {
+    await runReportMode({
       scanPath: runParsed.scanPath,
       projectRoot: runParsed.projectRoot,
       outputPath: runParsed.outputPath,
+      scannerArgs: runParsed.scannerArgs,
     });
     break;
   case "watch":

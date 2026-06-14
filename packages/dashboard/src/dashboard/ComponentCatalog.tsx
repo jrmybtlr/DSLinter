@@ -22,6 +22,7 @@ import {
   catalogAttributeProps,
   ComponentPropUsageDetail,
   buildUnusedPropSetForComponent,
+  propFrequenciesForComponent,
 } from "./ComponentPropUsageDetail";
 import { shortPath } from "./paths";
 import type { WorkspaceReport } from "../types/report";
@@ -32,11 +33,13 @@ const catalogHoverTriggerClass =
   "cursor-default text-xs underline decoration-dotted underline-offset-2 hover:text-foreground";
 
 function CatalogPropUsageHover({
+  report,
   component,
   declared,
   unusedProps,
   usedPropCount,
 }: {
+  report: WorkspaceReport;
   component: string;
   declared: string[];
   unusedProps: Set<string>;
@@ -54,11 +57,16 @@ function CatalogPropUsageHover({
           </span>
         </button>
       </HoverCardTrigger>
-      <HoverCardContent align="start" className="w-56 p-3">
+      <HoverCardContent align="start" className="w-64 p-3">
         <ComponentPropUsageDetail
           component={component}
           declared={declared}
           unusedProps={unusedProps}
+          propFrequencies={propFrequenciesForComponent(
+            report,
+            component,
+          )}
+          variant="compact"
         />
       </HoverCardContent>
     </HoverCard>
@@ -159,6 +167,7 @@ export function ComponentCatalog({
               <TableCell>
                 {attributeProps.length > 0 ? (
                   <CatalogPropUsageHover
+                    report={report}
                     component={name}
                     declared={declared}
                     unusedProps={unusedProps}

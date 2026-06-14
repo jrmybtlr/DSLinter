@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -9,7 +9,8 @@ import {
 } from "../components/ui/table";
 import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
-import { shortPath } from "./paths";
+import { openSourceFile } from "./editorLink";
+import { resolveReportAbsolutePath, shortPath } from "./paths";
 import { EmptyCard } from "../components/EmptyCard";
 import { TruncatedPath } from "../components/TruncatedPath";
 
@@ -30,6 +31,40 @@ function sortedLocations(
   const list = [...(locations ?? [])];
   list.sort((a, b) => a.path.localeCompare(b.path) || a.line - b.line);
   return list;
+}
+
+function UsageLocationLink({
+  root,
+  loc,
+}: {
+  root: string;
+  loc: UsageLocation;
+}) {
+  const fileText = shortPath(root, loc.path);
+  const locationText = `${fileText}:${loc.line}`;
+  const absolutePath = resolveReportAbsolutePath(root, loc.path);
+
+  const handleClick = useCallback(() => {
+    void openSourceFile(absolutePath, loc.line).catch((err) => {
+      const message = err instanceof Error ? err.message : String(err);
+      window.alert(`Could not open file: ${message}`);
+    });
+  }, [absolutePath, loc.line]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="block min-w-0 w-full text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+      title={locationText}
+    >
+      <TruncatedPath
+        path={`${fileText}:${loc.line}`}
+        className="text-xs"
+        title={undefined}
+      />
+    </button>
+  );
 }
 
 export function ComponentUsageDetails({
@@ -72,22 +107,17 @@ export function ComponentUsageDetails({
     <Table className="[&>table]:table-fixed [&>table]:w-full">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[40%] min-w-0">File</TableHead>
-          <TableHead className="w-14 whitespace-nowrap">Line</TableHead>
+          <TableHead className="w-[40%] min-w-0">Location</TableHead>
           <TableHead className="min-w-0">Props at this call site</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.map((loc, i) => {
-          const fileText = shortPath(report.root, loc.path);
           const propsText = formatCallSiteProps(loc);
           return (
             <TableRow key={`${loc.path}-${loc.line}-${i}`}>
               <TableCell className="min-w-0">
-                <TruncatedPath path={fileText} className="text-xs" />
-              </TableCell>
-              <TableCell className="tabular-nums text-muted-foreground">
-                {loc.line}
+                <UsageLocationLink root={report.root} loc={loc} />
               </TableCell>
               <TableCell className="min-w-0">
                 <span

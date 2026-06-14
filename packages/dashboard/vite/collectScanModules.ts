@@ -58,16 +58,25 @@ export function readIncludeDirs(projectRoot: string): string[] | null {
   return null;
 }
 
+function pathMatchesIncludePrefix(relFromProject: string, prefix: string): boolean {
+  const norm = prefix.trim().replace(/\\/g, "/").replace(/\/$/, "");
+  if (!norm) return false;
+  if (process.platform === "darwin" || process.platform === "win32") {
+    const rel = relFromProject.toLowerCase();
+    const pref = norm.toLowerCase();
+    return rel === pref || rel.startsWith(`${pref}/`);
+  }
+  return relFromProject === norm || relFromProject.startsWith(`${norm}/`);
+}
+
 function matchesIncludeDirs(
   relFromProject: string,
   includeDirs: string[] | null,
 ): boolean {
   if (!includeDirs) return true;
-  return includeDirs.some((dir) => {
-    const norm = dir.trim().replace(/\\/g, "/").replace(/\/$/, "");
-    if (!norm) return false;
-    return relFromProject === norm || relFromProject.startsWith(`${norm}/`);
-  });
+  return includeDirs.some((dir) =>
+    pathMatchesIncludePrefix(relFromProject, dir),
+  );
 }
 
 function walkDir(

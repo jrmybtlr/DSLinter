@@ -127,6 +127,12 @@ jobs:
       - name: Install mold linker (Linux)
         run: sudo apt-get update && sudo apt-get install -y mold clang
 
+      - name: Build NAPI binding
+        run: pnpm run build:napi
+
+      - name: Generate demo workspace report for tests
+        run: pnpm --filter dslinter-demo run dslinter:report
+
       - name: Run package tests before publish
         run: pnpm --filter dslinter test
 

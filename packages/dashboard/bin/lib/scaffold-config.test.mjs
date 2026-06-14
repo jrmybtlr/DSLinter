@@ -30,6 +30,18 @@ describe("ensureDslintConfig", () => {
     expect(parsed.include_dirs).toEqual(["resources/js/components"]);
   });
 
+  it("uses on-disk casing for laravel Components dir", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-scaffold-laravel-case-"));
+    mkdirSync(join(root, "resources", "js", "Components"), { recursive: true });
+
+    const result = ensureDslintConfig({ targetDir: root, layout: "laravel" });
+    const parsed = JSON.parse(readFileSync(result.path, "utf8"));
+    expect(parsed.include_dirs).toEqual(["resources/js/Components"]);
+    expect(parsed.playground_groups.components).toEqual([
+      "resources/js/Components",
+    ]);
+  });
+
   it("does not overwrite an existing config", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-scaffold-existing-"));
     const existing = join(root, ".dslinter.json");

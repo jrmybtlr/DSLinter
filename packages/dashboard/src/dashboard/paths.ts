@@ -14,6 +14,14 @@ export function shortPath(root: string, fullPath: string): string {
   return parts.slice(-3).join("/");
 }
 
+/** Resolve a report path (absolute or root-relative) to an absolute path. */
+export function resolveReportAbsolutePath(root: string, path: string): string {
+  const r = normalizePath(root);
+  const p = normalizePath(path);
+  if (p.startsWith(r + "/") || p === r) return p;
+  return `${r}/${p}`;
+}
+
 /**
  * Truncate a file path from the middle, preserving the filename and path
  * separators. Leading path segments are kept when space allows.

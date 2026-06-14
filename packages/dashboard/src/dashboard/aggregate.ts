@@ -1,4 +1,11 @@
-import type { ComponentDefinition, FileScan, UsageSummary, WorkspaceReport } from "../types/report";
+import { pillarForRule } from "../mcp/rule-catalog";
+import type {
+  ComponentDefinition,
+  FileScan,
+  LintFinding,
+  UsageSummary,
+  WorkspaceReport,
+} from "../types/report";
 import {
   definitionPathsForName,
   isCatalogComponentHidden,
@@ -40,6 +47,15 @@ function isPlayableDefinition(def: ComponentDefinition): boolean {
 function fileStem(path: string): string {
   const base = path.split("/").pop() ?? path;
   return base.replace(/\.(tsx|jsx)$/i, "");
+}
+
+/** `hover-card.tsx` → `HoverCard`, `icons.tsx` → `Icons`. */
+export function fileStemToCatalogGroupLabel(stem: string): string {
+  return stem
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join("");
 }
 
 function normalizedName(value: string): string {
@@ -135,6 +151,70 @@ export function componentCatalogNamesFromReport(
   return catalogComponentNames(aggregateDefinitions(report), usageMap(report), report);
 }
 
+export type UnusedComponent = {
+  name: string;
+  definitionPaths: string[];
+};
+
+/** Defined components with zero JSX references in the scanned workspace. */
+export function unusedComponentsFromReport(
+  report: WorkspaceReport | null | undefined,
+): UnusedComponent[] {
+  if (!report) return [];
+  const defs = aggregateDefinitions(report);
+  const usages = usageMap(report);
+  const out: UnusedComponent[] = [];
+
+  for (const [name, sites] of defs) {
+    if (!isVisibleCatalogName(report, name)) continue;
+    const usage = usages.get(name);
+    if (usage && usage.reference_count > 0) continue;
+    out.push({
+      name,
+      definitionPaths: sites.map((s) => s.path),
+    });
+  }
+
+  out.sort((a, b) => a.name.localeCompare(b.name));
+  return out;
+}
+
+export type GovernanceInventoryTab = "all" | "a11y" | "code" | "token" | "unused";
+
+export function governanceTabCounts(
+  report: WorkspaceReport | null | undefined,
+): Record<GovernanceInventoryTab, number> {
+  const counts: Record<GovernanceInventoryTab, number> = {
+    all: 0,
+    a11y: 0,
+    code: 0,
+    token: 0,
+    unused: 0,
+  };
+  if (!report) return counts;
+
+  for (const finding of report.findings ?? []) {
+    counts.all += 1;
+    const pillar = pillarForRule(finding.rule_id);
+    if (pillar === "a11y") counts.a11y += 1;
+    else if (pillar === "code") counts.code += 1;
+    else if (pillar === "token") counts.token += 1;
+  }
+
+  counts.unused = unusedComponentsFromReport(report).length;
+  return counts;
+}
+
+export function findingsForGovernanceTab(
+  report: WorkspaceReport | null | undefined,
+  tab: GovernanceInventoryTab,
+): LintFinding[] {
+  if (!report || tab === "unused") return [];
+  const findings = report.findings ?? [];
+  if (tab === "all") return findings;
+  return findings.filter((f) => pillarForRule(f.rule_id) === tab);
+}
+
 function familyFromFile(file: FileScan, report: WorkspaceReport): CatalogFamily | null {
   const defs = (file.definitions ?? []).filter((d) => {
     if (!isPlayableDefinition(d)) return false;
@@ -142,40 +222,82 @@ function familyFromFile(file: FileScan, report: WorkspaceReport): CatalogFamily 
   });
   if (defs.length < 2) return null;
 
-  const stem = normalizedName(fileStem(file.path));
-  const root = defs.find((d) => normalizedName(d.name) === stem);
-  if (!root) return null;
+  const children = defs.map((d) => d.name).sort((a, b) => a.localeCompare(b));
+  return { parent: fileStemToCatalogGroupLabel(fileStem(file.path)), children, path: file.path };
+}
 
-  const children = defs
-    .map((d) => d.name)
-    .filter((name) => name !== root.name && name.startsWith(root.name))
-    .sort((a, b) => a.localeCompare(b));
-  if (children.length === 0) return null;
+/** `Select` + `Value` yes; `Selector` no. */
+function isCompoundFamilyMember(parent: string, name: string): boolean {
+  if (name === parent) return true;
+  if (!name.startsWith(parent) || name.length <= parent.length) return false;
+  const next = name.charAt(parent.length);
+  return next === next.toUpperCase() && next !== next.toLowerCase();
+}
 
-  return { parent: root.name, children, path: file.path };
+function shouldAttachNameToFamily(
+  name: string,
+  family: CatalogFamily,
+  definitionPaths: string[],
+): boolean {
+  if (family.children.includes(name)) return false;
+  if (name === family.parent) return true;
+  if (definitionPaths.length > 0) {
+    return definitionPaths.every((p) => p === family.path);
+  }
+  return isCompoundFamilyMember(family.parent, name);
+}
+
+function enrichCatalogFamily(
+  family: CatalogFamily,
+  catalogNames: string[],
+  report: WorkspaceReport,
+): CatalogFamily {
+  const children = new Set(family.children);
+  for (const name of catalogNames) {
+    if (
+      shouldAttachNameToFamily(
+        name,
+        family,
+        definitionPathsForName(report, name),
+      )
+    ) {
+      children.add(name);
+    }
+  }
+  return {
+    ...family,
+    children: [...children].sort((a, b) => a.localeCompare(b)),
+  };
 }
 
 export function componentCatalogFamiliesFromReport(
   report: WorkspaceReport | null | undefined,
 ): CatalogFamily[] {
   if (!report) return [];
-  const byParent = new Map<string, CatalogFamily>();
+  const catalogNames = componentCatalogNamesFromReport(report);
+  const byPath = new Map<string, CatalogFamily>();
   for (const file of report.files ?? []) {
     const family = familyFromFile(file, report);
     if (!family) continue;
-    if (!isVisibleCatalogName(report, family.parent)) continue;
-    const existing = byParent.get(family.parent);
-    if (!existing) {
-      byParent.set(family.parent, family);
-      continue;
-    }
-    const children = new Set([...existing.children, ...family.children]);
-    byParent.set(family.parent, {
-      ...existing,
-      children: [...children].sort((a, b) => a.localeCompare(b)),
-    });
+    byPath.set(family.path, enrichCatalogFamily(family, catalogNames, report));
   }
-  return [...byParent.values()].sort((a, b) => a.parent.localeCompare(b.parent));
+  return [...byPath.values()].sort((a, b) => a.parent.localeCompare(b.parent));
+}
+
+/** Best component id when navigating to a file-stem group label. */
+export function resolveFamilyNavigationTarget(
+  family: CatalogFamily,
+  catalogNames: string[],
+): string {
+  if (catalogNames.includes(family.parent)) return family.parent;
+  const stem = normalizedName(fileStem(family.path));
+  const stemMatch = family.children.find((c) => normalizedName(c) === stem);
+  if (stemMatch) return stemMatch;
+  return family.children[0] ?? family.parent;
+}
+
+function catalogTreeSortKey(item: CatalogTreeItem): string {
+  return item.type === "family" ? item.parent : item.name;
 }
 
 export function componentCatalogTreeFromReport(
@@ -183,21 +305,23 @@ export function componentCatalogTreeFromReport(
 ): CatalogTreeItem[] {
   const names = componentCatalogNamesFromReport(report);
   const families = componentCatalogFamiliesFromReport(report);
-  const familyByParent = new Map(families.map((f) => [f.parent, f]));
   const childNames = new Set(families.flatMap((f) => f.children));
+  const familyParentLabels = new Set(families.map((f) => f.parent));
   const items: CatalogTreeItem[] = [];
 
+  for (const family of families) {
+    items.push({ type: "family", ...family });
+  }
+
   for (const name of names) {
-    const family = familyByParent.get(name);
-    if (family) {
-      items.push({ type: "family", ...family });
-      continue;
-    }
     if (childNames.has(name)) continue;
+    if (familyParentLabels.has(name)) continue;
     items.push({ type: "component", name });
   }
 
-  return items;
+  return items.sort((a, b) =>
+    catalogTreeSortKey(a).localeCompare(catalogTreeSortKey(b)),
+  );
 }
 
 export function componentCatalogFamilyForName(
@@ -207,4 +331,17 @@ export function componentCatalogFamilyForName(
   return componentCatalogFamiliesFromReport(report).find(
     (family) => family.parent === name || family.children.includes(name),
   );
+}
+
+/** Sibling/child exports to show for a compound component family. */
+export function catalogChildComponentsFor(
+  family: CatalogFamily | undefined,
+  componentId: string,
+): string[] {
+  if (!family) return [];
+  if (family.children.includes(componentId)) {
+    return family.children.filter((child) => child !== componentId);
+  }
+  if (family.parent === componentId) return family.children;
+  return [];
 }

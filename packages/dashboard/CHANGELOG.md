@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.2.3
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.2...v0.2.3)
+
+### 🚀 Enhancements
+
+- **report:** Upgrade schema version to 3 and refactor JSON serialization ([b53a3fb](https://github.com/jrmybtlr/DSLinter/commit/b53a3fb))
+
+### 🩹 Fixes
+
+- **requireNative:** Update expected version for native bindings to 0.2.1 ([c836736](https://github.com/jrmybtlr/DSLinter/commit/c836736))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
+## v0.2.2
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.1...v0.2.2)
+
+### ✅ Tests
+
+- **collectScanModules:** Enhance case sensitivity tests for include_dirs ([32c2065](https://github.com/jrmybtlr/DSLinter/commit/32c2065))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
+## v0.2.1
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.0...v0.2.1)
+
+### 🩹 Fixes
+
+- **ci:** Build NAPI and demo report before publish tests ([fdf497d](https://github.com/jrmybtlr/DSLinter/commit/fdf497d))
+- **report-cache:** Improve report path validation by ensuring report root matches project root ([7510dde](https://github.com/jrmybtlr/DSLinter/commit/7510dde))
+
+### 💅 Refactors
+
+- Enhance path resolution for include directories and improve case sensitivity handling ([22c96fb](https://github.com/jrmybtlr/DSLinter/commit/22c96fb))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.2.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.1.13...v0.2.0)

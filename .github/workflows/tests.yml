@@ -67,6 +67,9 @@ jobs:
       - name: Build NAPI binding (linux x64)
         run: pnpm run build:napi
 
+      - name: Generate demo workspace report for tests
+        run: pnpm --filter dslinter-demo run dslinter:report
+
       - name: Run TypeScript lint
         run: pnpm run lint
 

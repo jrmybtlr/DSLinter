@@ -137,7 +137,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
         }
     };
 
-    let json_pretty = match serde_json::to_string_pretty(&report) {
+    let json = match crate::report::report_to_json(&report) {
         Ok(s) => s,
         Err(e) => {
             eprintln!("{e:#}");
@@ -152,7 +152,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
                 return 1;
             }
         }
-        if let Err(e) = watch::write_atomic(output_path, &json_pretty) {
+        if let Err(e) = watch::write_atomic(output_path, &json) {
             eprintln!("{e:#}");
             return 1;
         }
@@ -162,7 +162,7 @@ pub fn run_cli(mut args: Vec<String>) -> i32 {
     }
 
     if cli.json {
-        println!("{json_pretty}");
+        println!("{json}");
     } else if cli.output.is_none() {
         crate::report::print_human(&report);
     }

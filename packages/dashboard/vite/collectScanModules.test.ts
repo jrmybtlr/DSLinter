@@ -25,6 +25,9 @@ describe("embedGlobKeyFromRelPath", () => {
   });
 });
 
+const caseInsensitiveFs =
+  process.platform === "darwin" || process.platform === "win32";
+
 describe("collectScanModuleRelPaths", () => {
   it("collects tsx/jsx and skips node_modules", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-scan-"));
@@ -62,6 +65,43 @@ describe("collectScanModuleRelPaths", () => {
     const paths = collectScanModuleRelPaths(root);
     expect(paths).toEqual(["resources/js/components/ui/button.tsx"]);
   });
+
+  it.skipIf(!caseInsensitiveFs)(
+    "matches include_dirs case-insensitively on case-insensitive filesystems",
+    () => {
+      const root = mkdtempSync(join(tmpdir(), "dslinter-scan-case-"));
+      mkdirSync(join(root, "resources", "js", "Components"), { recursive: true });
+      writeFileSync(
+        join(root, "resources", "js", "Components", "Button.tsx"),
+        "export function Button() { return null; }",
+      );
+      writeFileSync(
+        join(root, ".dslinter.json"),
+        JSON.stringify({ include_dirs: ["resources/js/components"] }),
+      );
+
+      const paths = collectScanModuleRelPaths(root);
+      expect(paths).toEqual(["resources/js/Components/Button.tsx"]);
+    },
+  );
+
+  it.skipIf(caseInsensitiveFs)(
+    "requires include_dirs casing to match on case-sensitive filesystems",
+    () => {
+      const root = mkdtempSync(join(tmpdir(), "dslinter-scan-case-"));
+      mkdirSync(join(root, "resources", "js", "Components"), { recursive: true });
+      writeFileSync(
+        join(root, "resources", "js", "Components", "Button.tsx"),
+        "export function Button() { return null; }",
+      );
+      writeFileSync(
+        join(root, ".dslinter.json"),
+        JSON.stringify({ include_dirs: ["resources/js/components"] }),
+      );
+
+      expect(collectScanModuleRelPaths(root)).toEqual([]);
+    },
+  );
 
   it("scopes collection to scanRoot subdirectory", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-scan-sub-"));

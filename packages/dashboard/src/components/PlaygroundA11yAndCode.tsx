@@ -230,26 +230,11 @@ type ApiProps = {
   governanceReportLoaded?: boolean;
 };
 
-function formatRepoLiteralChips(
-  byVal: Record<string, number> | undefined,
-  max = 6,
-): string {
-  if (!byVal || Object.keys(byVal).length === 0) return "—";
-  const entries = Object.entries(byVal).sort((x, y) => y[1] - x[1]);
-  const shown = entries.slice(0, max);
-  const tail = Math.max(0, entries.length - max);
-  return (
-    shown.map(([val, n]) => `${JSON.stringify(val)} ×${n}`).join(" · ") +
-    (tail > 0 ? ` · +${tail}` : "")
-  );
-}
-
 export function PlaygroundApiReference({
   controls,
   values,
   onChange,
   onReset,
-  reportUsage,
   declaredPropsFromScan: _declaredPropsFromScan = [],
   governanceReportLoaded: _governanceReportLoaded = false,
 }: ApiProps) {
@@ -263,18 +248,6 @@ export function PlaygroundApiReference({
   );
 
   const rows = controlsToApiRows(controls);
-  const showRepo = reportUsage != null;
-  const freqs = reportUsage?.prop_frequencies ?? {};
-  const valueFreqs = reportUsage?.prop_value_frequencies ?? {};
-  const controlKeys = new Set(rows.map((r) => r.prop));
-  const extraRepoProps = showRepo
-    ? Object.keys(freqs)
-        .filter((k) => !controlKeys.has(k))
-        .sort((a, b) => a.localeCompare(b))
-    : [];
-  const repoUsageProps = showRepo
-    ? [...rows.map((r) => r.prop), ...extraRepoProps]
-    : [];
   return (
     <Section
       id="api-reference"
@@ -357,31 +330,6 @@ export function PlaygroundApiReference({
           })}
         </TableBody>
       </Table>
-
-      {showRepo ? (
-        <Section id="repo-usage" title="Repo usage" className="mt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Prop</TableHead>
-                <TableHead>Count</TableHead>
-                <TableHead>Values</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {repoUsageProps.map((prop) => (
-                <TableRow key={prop}>
-                  <TableCell className="font-medium">{prop}</TableCell>
-                  <TableCell>{freqs[prop] ?? 0}</TableCell>
-                  <TableCell>
-                    {formatRepoLiteralChips(valueFreqs[prop])}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Section>
-      ) : null}
     </Section>
   );
 }

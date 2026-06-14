@@ -39,6 +39,40 @@ fn build_ignore_engine(root: &Path, config: &DslintConfig) -> anyhow::Result<Opt
     IgnoreEngine::from_patterns(&lines)
 }
 
+fn path_has_prefix(path: &Path, prefix: &Path) -> bool {
+    if path.starts_with(prefix) {
+        return true;
+    }
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    {
+        path_starts_with_ignore_case(path, prefix)
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        false
+    }
+}
+
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+fn path_starts_with_ignore_case(path: &Path, prefix: &Path) -> bool {
+    use std::path::Component;
+
+    let mut prefix_components = prefix.components();
+    let mut path_components = path.components();
+    loop {
+        match (prefix_components.next(), path_components.next()) {
+            (None, _) => return true,
+            (_, None) => return false,
+            (Some(Component::Prefix(a)), Some(Component::Prefix(b))) if a == b => {}
+            (Some(Component::RootDir), Some(Component::RootDir)) => {}
+            (Some(Component::CurDir), Some(Component::CurDir)) => {}
+            (Some(Component::ParentDir), Some(Component::ParentDir)) => {}
+            (Some(a), Some(b)) if a.as_os_str().eq_ignore_ascii_case(b.as_os_str()) => {}
+            _ => return false,
+        }
+    }
+}
+
 fn in_include_scope(root: &Path, path: &Path, config: &DslintConfig) -> bool {
     if config.include_dirs.is_empty() {
         return true;
@@ -49,7 +83,7 @@ fn in_include_scope(root: &Path, path: &Path, config: &DslintConfig) -> bool {
             return false;
         }
         let candidate = root.join(trimmed);
-        path.starts_with(&candidate)
+        path_has_prefix(path, &candidate)
     })
 }
 
@@ -248,6 +282,31 @@ mod tests {
             .map(|p| p.to_string_lossy().replace('\\', "/"))
             .collect();
         assert_eq!(rels, vec!["src/components/Button.tsx"]);
+    }
+
+    #[test]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    fn include_dirs_matches_mismatched_directory_casing() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("resources/js/Components")).unwrap();
+        std::fs::write(
+            root.join("resources/js/Components/Button.jsx"),
+            "export function Button() { return null; }",
+        )
+        .unwrap();
+
+        let config = DslintConfig {
+            include_dirs: vec!["resources/js/components".into()],
+            ..Default::default()
+        };
+        let files = collect_component_files(root, root, &config).unwrap();
+        let rels: Vec<_> = files
+            .iter()
+            .filter_map(|p| p.strip_prefix(root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(rels, vec!["resources/js/Components/Button.jsx"]);
     }
 
     #[test]

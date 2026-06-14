@@ -1,6 +1,7 @@
 export type HashRoute =
   | { view: "tokens" }
   | { view: "governance" }
+  | { view: "catalog" }
   | { view: "component"; componentId: string };
 
 function trimTrailingSlashes(path: string): string {
@@ -27,6 +28,9 @@ export function parseHashRoute(pathname: string): HashRoute {
   if (path === "/tokens") {
     return { view: "tokens" };
   }
+  if (path === "/catalog" || path === "/governance/catalog") {
+    return { view: "catalog" };
+  }
   if (path.startsWith("/component/")) {
     const componentId = decodeURIComponent(path.slice("/component/".length));
     if (componentId.length > 0) {
@@ -42,6 +46,8 @@ export function formatHashRoute(route: HashRoute): string {
       return "/tokens";
     case "governance":
       return "/governance";
+    case "catalog":
+      return "/catalog";
     case "component":
       return `/component/${encodeURIComponent(route.componentId)}`;
     default:

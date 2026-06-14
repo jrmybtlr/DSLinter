@@ -59,6 +59,15 @@ export function DashboardCommandPalette({ catalogEntries, onNavigate, open, onOp
           >
             Governance
           </CommandItem>
+          <CommandItem
+            value="catalog all components inventory"
+            onSelect={() => {
+              onNavigate({ view: "catalog" });
+              close();
+            }}
+          >
+            All components
+          </CommandItem>
         </CommandGroup>
         {catalogEntries.length > 0 ? (
           <CommandGroup heading="Components">

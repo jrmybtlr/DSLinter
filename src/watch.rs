@@ -76,7 +76,7 @@ pub fn run_watch(
         sources.clone(),
         &config,
     );
-    let json = serde_json::to_string_pretty(&report)?;
+    let json = crate::report::report_to_json(&report)?;
 
     // Ensure output directory exists.
     if let Some(parent) = output.parent() {
@@ -185,7 +185,7 @@ pub fn run_watch(
             sources.clone(),
             &config,
         );
-        let new_json = match serde_json::to_string_pretty(&new_report) {
+        let new_json = match crate::report::report_to_json(&new_report) {
             Ok(j) => j,
             Err(e) => {
                 eprintln!("dslinter: serialize error: {e}");
