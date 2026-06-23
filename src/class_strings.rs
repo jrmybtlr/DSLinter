@@ -1,14 +1,17 @@
-//! AST extraction for class strings, `cn`/`clsx` arguments, and string literals (Oxc).
+//! AST extraction for class strings, `cn`/`clsx` arguments, string literals, and style values (Oxc).
 
 use oxc_ast::ast::{
     Argument, CallExpression, Expression, JSXAttribute, JSXAttributeName, JSXAttributeValue,
-    JSXExpression, Program,
+    JSXExpression, ObjectExpression, ObjectPropertyKind, Program, PropertyKey,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
 
 use crate::lines::line_of_offset;
-use crate::model::{AstExtracts, ClassStringFragment, ClassStringKind, StringLiteralFragment};
+use crate::model::{
+    AstExtracts, ClassStringFragment, ClassStringKind, StringLiteralFragment, StyleValueFragment,
+};
+use crate::token_values::{is_style_color_property, parse_style_string};
 use crate::util::regex::class_attr_re;
 
 /// Collect class-string and literal fragments from a parsed ECMA program.
@@ -80,6 +83,48 @@ impl<'nl> ExtractVisitor<'nl> {
             .push(StringLiteralFragment { line, value });
     }
 
+    fn push_style_value(&mut self, line: u32, property: String, value: String) {
+        if value.is_empty() {
+            return;
+        }
+        self.extracts.style_values.push(StyleValueFragment {
+            line,
+            property,
+            value,
+        });
+    }
+
+    fn extract_style_jsx_expression(&mut self, line: u32, expr: &JSXExpression<'_>) {
+        match expr {
+            JSXExpression::ObjectExpression(obj) => self.extract_style_object(line, obj),
+            JSXExpression::StringLiteral(lit) => {
+                for (prop, val) in parse_style_string(lit.value.as_str()) {
+                    self.push_style_value(line, prop, val);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn extract_style_object(&mut self, line: u32, obj: &ObjectExpression<'_>) {
+        for prop in &obj.properties {
+            let ObjectPropertyKind::ObjectProperty(p) = prop else {
+                continue;
+            };
+            let key = match &p.key {
+                PropertyKey::StaticIdentifier(id) => id.name.as_str(),
+                PropertyKey::Identifier(id) => id.name.as_str(),
+                _ => continue,
+            };
+            if !is_style_color_property(key) {
+                continue;
+            }
+            if let Some(val) = expression_to_string(&p.value) {
+                self.push_style_value(line, key.to_string(), val);
+            }
+        }
+    }
+
     fn extract_class_helper_args(&mut self, line: u32, args: &[Argument<'_>]) {
         for arg in args {
             match arg {
@@ -109,6 +154,16 @@ fn is_class_helper_name(name: &str) -> bool {
     matches!(name, "cn" | "clsx" | "classnames")
 }
 
+fn expression_to_string(expr: &Expression<'_>) -> Option<String> {
+    match expr {
+        Expression::StringLiteral(lit) => Some(lit.value.to_string()),
+        Expression::TemplateLiteral(tpl) if tpl.expressions.is_empty() => {
+            tpl.quasis.first().map(|q| q.value.raw.to_string())
+        }
+        _ => None,
+    }
+}
+
 impl<'a> Visit<'a> for ExtractVisitor<'_> {
     fn visit_string_literal(&mut self, lit: &oxc_ast::ast::StringLiteral<'a>) {
         let line = self.line(lit.span.start);
@@ -132,11 +187,26 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
             return;
         };
         let name = id.name.as_str();
+        let line = self.line(attr.span.start);
+        if name == "style" {
+            match &attr.value {
+                Some(JSXAttributeValue::StringLiteral(lit)) => {
+                    for (prop, val) in parse_style_string(lit.value.as_str()) {
+                        self.push_style_value(line, prop, val);
+                    }
+                }
+                Some(JSXAttributeValue::ExpressionContainer(container)) => {
+                    self.extract_style_jsx_expression(line, &container.expression);
+                }
+                _ => {}
+            }
+            walk::walk_jsx_attribute(self, attr);
+            return;
+        }
         if name != "class" && name != "className" {
             walk::walk_jsx_attribute(self, attr);
             return;
         }
-        let line = self.line(attr.span.start);
         match &attr.value {
             Some(JSXAttributeValue::StringLiteral(lit)) => {
                 self.push_class(line, lit.value.to_string(), ClassStringKind::JsxAttr);
@@ -167,16 +237,22 @@ pub fn offset_ast_extracts(extracts: &mut AstExtracts, line_offset: u32) {
     for s in &mut extracts.string_literals {
         s.line += line_offset;
     }
+    for s in &mut extracts.style_values {
+        s.line += line_offset;
+    }
 }
 
 impl AstExtracts {
     pub fn is_empty(&self) -> bool {
-        self.class_strings.is_empty() && self.string_literals.is_empty()
+        self.class_strings.is_empty()
+            && self.string_literals.is_empty()
+            && self.style_values.is_empty()
     }
 
     pub fn merge_from(&mut self, mut other: AstExtracts) {
         self.class_strings.append(&mut other.class_strings);
         self.string_literals.append(&mut other.string_literals);
+        self.style_values.append(&mut other.style_values);
     }
 }
 
@@ -231,5 +307,44 @@ export function Cn() {
                 .any(|c| c.text.contains("dark:text-white")),
             "cn arg"
         );
+    }
+
+    #[test]
+    fn style_object_color_values_extracted() {
+        let src = r##"
+export function Box() {
+  return (
+    <div
+      style={{
+        backgroundColor: "#ff0066",
+        width: 100,
+      }}
+    />
+  );
+}
+"##;
+        let ex = parse_extract(src);
+        assert!(
+            ex.style_values
+                .iter()
+                .any(|s| s.property == "backgroundColor" && s.value == "#ff0066"),
+            "style object color: {:?}",
+            ex.style_values
+        );
+        assert!(
+            !ex.style_values.iter().any(|s| s.property == "width"),
+            "non-color style props skipped"
+        );
+    }
+
+    #[test]
+    fn style_string_attribute_extracted() {
+        let src = r##"
+export function Box() {
+  return <div style="color: #fff; background-color: #ff0066" />;
+}
+"##;
+        let ex = parse_extract(src);
+        assert_eq!(ex.style_values.len(), 2);
     }
 }

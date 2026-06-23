@@ -19,6 +19,7 @@ use crate::model::{
     utc_rfc3339_now,
 };
 use crate::playground_emit::build_playground_specs;
+use crate::token_values::{ColorAllowlist, SizeScale};
 
 use config_filter::filter_code_quality_config;
 use a11y_cva::{cva_composed_dark_mode_findings, cva_skip_fragments_for_files};
@@ -42,8 +43,24 @@ pub fn evaluate_workspace(
     for file in &files {
         findings.extend(file.findings.iter().cloned());
     }
-    findings.extend(hardcoded_hex_colors(&files, &sources));
-    findings.extend(tailwind_arbitrary_tokens(&files, &sources));
+
+    let css_tokens = analyze_css_tokens(&root, &files, &sources, config);
+    let color_allowlist = css_tokens
+        .as_ref()
+        .map(ColorAllowlist::from_css_tokens);
+    let size_scale = SizeScale::default_tailwind().extend_from_css_tokens(css_tokens.as_ref());
+
+    findings.extend(hardcoded_hex_colors(
+        &files,
+        &sources,
+        color_allowlist.as_ref(),
+    ));
+    findings.extend(tailwind_arbitrary_tokens(
+        &files,
+        &sources,
+        color_allowlist.as_ref(),
+        &size_scale,
+    ));
     let cva_skip = cva_skip_fragments_for_files(&files, &sources);
     findings.extend(cva_composed_dark_mode_findings(&files, &sources, config));
     findings.extend(dark_mode_contrast_findings(
@@ -62,7 +79,6 @@ pub fn evaluate_workspace(
 
     findings.extend(unused_props_findings(&files, &usage_by_component, config));
 
-    let css_tokens = analyze_css_tokens(&root, &files, &sources, config);
     if let Some(ref summary) = css_tokens {
         findings.extend(unused_css_var_findings(summary, config));
     }

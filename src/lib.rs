@@ -16,6 +16,7 @@ pub mod report;
 pub mod rules;
 pub mod scan;
 pub mod scan_pipeline;
+pub mod token_values;
 mod text_patterns;
 mod ts_shape_map;
 #[macro_use]

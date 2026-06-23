@@ -46,4 +46,28 @@ describe("verify-loop", () => {
     const fix = suggestFix(report, { rule_id: "token-hardcoded-color" });
     expect(fix?.fix_hint).toBeTruthy();
   });
+
+  it("matches rgb token values when suggesting hardcoded color fix", () => {
+    const report = loadDemoReport();
+    const fix = suggestFix(report, {
+      rule_id: "token-hardcoded-color",
+      message: "Hardcoded color `#dc2626` — no matching design token",
+    });
+    // Demo theme defines --color-danger as hex; rgb form should also resolve.
+    const rgbReport = {
+      ...report,
+      css_tokens: {
+        ...report.css_tokens!,
+        definitions: report.css_tokens!.definitions.map((d) =>
+          d.name === "--color-danger" ? { ...d, value: "rgb(220, 38, 38)" } : d,
+        ),
+      },
+    };
+    const rgbFix = suggestFix(rgbReport, {
+      rule_id: "token-hardcoded-color",
+      message: "Hardcoded color `#dc2626` — no matching design token",
+    });
+    expect(rgbFix?.token).toBe("--color-danger");
+    expect(fix?.fix_hint).toBeTruthy();
+  });
 });

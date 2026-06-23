@@ -26,6 +26,17 @@ pub fn for_each_ast_text(
     }
 }
 
+pub fn for_each_style_color_value(
+    files: &[FileScan],
+    mut f: impl FnMut(&Path, u32, &str),
+) {
+    for file in files {
+        for style in &file.ast_extracts.style_values {
+            f(&file.path, style.line, &style.value);
+        }
+    }
+}
+
 pub fn for_each_source_regex(
     files: &[FileScan],
     sources: &HashMap<PathBuf, String>,

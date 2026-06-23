@@ -45,15 +45,15 @@
     "rule_id": "token-hardcoded-color",
     "pillar": "token",
     "default_severity": "warning",
-    "description": "Hardcoded hex/rgb color instead of design tokens.",
+    "description": "Hardcoded hex/rgb color with no matching value in scanned CSS design tokens (className, style, or literals).",
     "fix_hint": "Replace with a CSS variable or Tailwind theme utility from css_tokens."
   },
   {
     "rule_id": "token-tailwind-arbitrary",
     "pillar": "token",
     "default_severity": "warning",
-    "description": "Tailwind arbitrary value (e.g. bg-[#fff]) bypasses the token system.",
-    "fix_hint": "Use a named theme utility or CSS custom property."
+    "description": "Tailwind arbitrary color or redundant size that duplicates the default scale or @theme spacing tokens.",
+    "fix_hint": "Use a named theme utility (e.g. w-20, p-layout-md) instead of an arbitrary bracket value."
   },
   {
     "rule_id": "token-unused-css-var",

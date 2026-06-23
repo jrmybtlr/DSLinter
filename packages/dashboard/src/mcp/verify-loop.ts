@@ -1,4 +1,5 @@
 import { catalogSummary, componentSpec, findingsForPaths } from "./agent-query";
+import { findColorTokenForHex } from "./css-color";
 import { ruleById } from "./rule-catalog";
 import type { LintFinding, WorkspaceReport } from "../types/report";
 
@@ -13,7 +14,7 @@ export type FixSuggestion = {
 
 export function suggestFix(
   report: WorkspaceReport,
-  opts: { rule_id: string; path?: string; component?: string },
+  opts: { rule_id: string; path?: string; component?: string; message?: string },
 ): FixSuggestion | null {
   const entry = ruleById(opts.rule_id);
   const fix_hint = entry?.fix_hint ?? "Review the finding and align with design system conventions.";
@@ -42,16 +43,36 @@ export function suggestFix(
   }
 
   if (opts.rule_id === "token-hardcoded-color") {
-    const colorToken = report.css_tokens?.definitions.find(
-      (d) => d.category === "color",
-    );
+    const hexMatch = opts.message?.match(/`(#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))`/);
+    const hex = hexMatch?.[1]?.toLowerCase();
+    const colorToken =
+      hex != null
+        ? findColorTokenForHex(report.css_tokens?.definitions, hex)
+        : report.css_tokens?.definitions.find((d) => d.category === "color");
     return {
       rule_id: opts.rule_id,
       fix_hint,
       suggestion: colorToken
-        ? `Use theme token \`${colorToken.name}\` or Tailwind utility bound to it instead of a hardcoded color.`
-        : "Replace hardcoded color with a CSS variable or Tailwind theme utility.",
+        ? `Use theme token \`${colorToken.name}\` or Tailwind utility bound to it instead of hardcoded \`${hex ?? "color"}\`.`
+        : "Replace hardcoded color with a CSS variable or Tailwind theme utility from css_tokens.",
       token: colorToken?.name,
+    };
+  }
+
+  if (opts.rule_id === "token-tailwind-arbitrary") {
+    const utilityMatch = opts.message?.match(/Use `([^`]+)` instead of arbitrary/);
+    if (utilityMatch?.[1]) {
+      return {
+        rule_id: opts.rule_id,
+        fix_hint,
+        suggestion: `Replace the arbitrary value with \`${utilityMatch[1]}\` from the Tailwind or @theme spacing scale.`,
+      };
+    }
+    return {
+      rule_id: opts.rule_id,
+      fix_hint,
+      suggestion:
+        "Replace the arbitrary bracket value with a named theme utility or CSS custom property.",
     };
   }
 
@@ -141,6 +162,7 @@ export function findingsWithSuggestions(
       rule_id: f.rule_id,
       path: f.path,
       component: componentMatch?.[1],
+      message: f.message,
     });
     return suggestion ? { ...f, suggestion } : f;
   });

@@ -121,11 +121,19 @@ pub struct StringLiteralFragment {
     pub value: String,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct StyleValueFragment {
+    pub line: u32,
+    pub property: String,
+    pub value: String,
+}
+
 /// AST-derived fragments for token/class rules (not emitted in JSON reports).
 #[derive(Debug, Clone, Default)]
 pub struct AstExtracts {
     pub class_strings: Vec<ClassStringFragment>,
     pub string_literals: Vec<StringLiteralFragment>,
+    pub style_values: Vec<StyleValueFragment>,
 }
 
 #[derive(Debug, Clone, Serialize)]

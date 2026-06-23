@@ -21,4 +21,24 @@ fn demo_workspace_has_inventory_and_rules() {
         report.css_tokens.is_some(),
         "demo should emit css_tokens from stylesheets"
     );
+    // Token-aware rules: theme-matching danger red should not be flagged; off-theme hex should.
+    assert!(
+        !report.findings.iter().any(|f| {
+            f.rule_id == "token-hardcoded-color" && f.message.contains("#dc2626")
+        }),
+        "PromoBanner danger color matches --color-danger and should pass"
+    );
+    assert!(
+        report.findings.iter().any(|f| {
+            f.rule_id == "token-hardcoded-color" && f.message.contains("#ff0066")
+        }),
+        "FlashBanner off-theme hex should still flag"
+    );
+    // Custom non-scale spacing should not trigger arbitrary size findings.
+    assert!(
+        !report.findings.iter().any(|f| {
+            f.rule_id == "token-tailwind-arbitrary" && f.message.contains("13px")
+        }),
+        "ChaosGrid gap-[13px] is a custom size and should pass"
+    );
 }

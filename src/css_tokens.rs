@@ -360,6 +360,13 @@ fn class_tokens_to_css_vars(class_fragment: &str, known: &HashSet<String>) -> Ve
             .or_else(|| base.strip_prefix("space-x-"))
             .or_else(|| base.strip_prefix("space-y-"))
             .or_else(|| base.strip_prefix("inset-"))
+            .or_else(|| base.strip_prefix("w-"))
+            .or_else(|| base.strip_prefix("h-"))
+            .or_else(|| base.strip_prefix("min-w-"))
+            .or_else(|| base.strip_prefix("max-w-"))
+            .or_else(|| base.strip_prefix("min-h-"))
+            .or_else(|| base.strip_prefix("max-h-"))
+            .or_else(|| base.strip_prefix("size-"))
         {
             vec![format!("--spacing-{rest}")]
         } else if let Some(rest) = base.strip_prefix("rounded-") {
