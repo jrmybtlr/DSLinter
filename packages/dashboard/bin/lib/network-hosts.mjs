@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { networkInterfaces } from "node:os";
 
 /** @returns {string[]} Non-loopback IPv4 addresses (LAN). */
@@ -27,15 +29,38 @@ export function scannerApiUrl(port) {
 }
 
 /**
+ * Status line for the MCP data source (not a shell command).
  * @param {number} port
  * @param {boolean} apiAvailable
  */
-export function formatMcpConnection(port, apiAvailable) {
-  const cmd = "npx dslinter mcp";
+export function formatMcpDataStatus(port, apiAvailable) {
   if (!apiAvailable) {
-    return `${cmd} (uses report file when scanner offline)`;
+    return "offline — agents use report file";
   }
-  return `${cmd} → http://127.0.0.1:${port}`;
+  return `live @ http://127.0.0.1:${port}`;
+}
+
+/**
+ * @param {boolean} [mcpConfigured]
+ */
+export function formatMcpAgentHint(mcpConfigured = false) {
+  if (mcpConfigured) {
+    return "AI agents: dslinter in .cursor/mcp.json (Cursor spawns MCP)";
+  }
+  return "AI agents: add dslinter to .cursor/mcp.json";
+}
+
+/**
+ * @param {string} projectRoot
+ */
+export function hasMcpConfig(projectRoot) {
+  try {
+    const raw = readFileSync(join(projectRoot, ".cursor", "mcp.json"), "utf8");
+    const parsed = JSON.parse(raw);
+    return Boolean(parsed?.mcpServers?.dslinter);
+  } catch {
+    return false;
+  }
 }
 
 /**

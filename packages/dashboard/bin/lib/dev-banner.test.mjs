@@ -22,7 +22,7 @@ describe("shortenPath", () => {
 });
 
 describe("formatDevBanner", () => {
-  it("includes logo, scan path, dashboard URL, and watch info", () => {
+  it("includes logo, scan path, dashboard URL, scanner API, and agent hint", () => {
     const text = formatDevBanner({
       scanPath: "/tmp/components",
       reportPath: "/tmp/components/public/dslinter-report.json",
@@ -30,6 +30,7 @@ describe("formatDevBanner", () => {
       apiAvailable: true,
       dashboardUrl: "http://localhost:5173/",
       pollMs: 150,
+      mcpConfigured: false,
     });
     expect(text).toContain(LOGO[0]);
     expect(text).toContain(LOGO[1]);
@@ -39,15 +40,16 @@ describe("formatDevBanner", () => {
     expect(text).toContain("http://localhost:5173/");
     expect(text).toContain("Scanner API");
     expect(text).toContain("http://127.0.0.1:7878/");
-    expect(text).toContain("MCP");
-    expect(text).toContain("npx dslinter mcp");
+    expect(text).not.toContain("MCP data");
+    expect(text).not.toContain("npx dslinter mcp");
+    expect(text).toContain("add dslinter to .cursor/mcp.json");
     expect(text).not.toContain("dslinter-report.json");
     expect(text).not.toContain("/events");
     expect(text).toContain("polling every 150 ms");
     expect(text).toContain("Open the Dashboard in your browser");
   });
 
-  it("shows bundled URL as the dashboard when no separate dev server", () => {
+  it("shows MCP data row when dashboard shares scanner port", () => {
     const text = formatDevBanner({
       scanPath: "/tmp/components",
       reportPath: "/tmp/components/public/dslinter-report.json",
@@ -55,13 +57,16 @@ describe("formatDevBanner", () => {
       apiAvailable: true,
       bundledUrl: "http://127.0.0.1:7878/",
       pollMs: 150,
+      mcpConfigured: true,
     });
     expect(text).toContain("Dashboard");
     expect(text).toContain("http://127.0.0.1:7878/");
-    expect(text).toContain("MCP");
-    expect(text).toContain("npx dslinter mcp");
+    expect(text).toContain("MCP data");
+    expect(text).toContain("live @ http://127.0.0.1:7878");
+    expect(text).toContain("Cursor spawns MCP");
     expect(text).not.toContain("Bundled UI");
     expect(text).not.toContain("Scanner API");
+    expect(text).not.toContain("npx dslinter mcp");
   });
 
   it("marks scanner unavailable when port is busy", () => {
@@ -71,11 +76,12 @@ describe("formatDevBanner", () => {
       apiPort: 7878,
       apiAvailable: false,
       dashboardUrl: "http://localhost:5174/",
+      mcpConfigured: false,
     });
     expect(text).toContain("Scanner");
     expect(text).toContain("unavailable");
-    expect(text).toContain("MCP");
     expect(text).toContain("report file");
+    expect(text).toContain("add dslinter to .cursor/mcp.json");
     expect(text).not.toContain("/events");
   });
 
@@ -88,6 +94,7 @@ describe("formatDevBanner", () => {
       dashboardUrl: "http://localhost:5175/",
       bundledUrl: "http://127.0.0.1:7878/",
       pollMs: 150,
+      mcpConfigured: false,
     });
     const rows = text.split("\n").filter((l) => l.startsWith("│"));
     const widths = rows.map((l) => visibleLength(l));

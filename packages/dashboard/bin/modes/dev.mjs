@@ -41,6 +41,7 @@ async function resolveUiPort(preferred) {
  *   apiAvailable: boolean;
  *   dashboardUrl?: string | null;
  *   bundledUrl?: string | null;
+ *   projectRoot: string;
  * }} banner
  */
 function printDevBanner(banner) {
@@ -164,6 +165,7 @@ export async function runDevMode({
     apiPort: port,
     apiAvailable,
     bundledUrl,
+    projectRoot: projectAbs,
   };
 
   const consumerViteRootForEnv = consumerViteRoot ?? findViteRoot(scanAbs);

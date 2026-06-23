@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   dashboardSharesScannerPort,
-  formatMcpConnection,
+  formatMcpAgentHint,
+  formatMcpDataStatus,
   getLanIpv4Addresses,
   httpUrl,
   scannerApiUrl,
@@ -13,15 +14,26 @@ describe("scannerApiUrl", () => {
   });
 });
 
-describe("formatMcpConnection", () => {
-  it("includes live dev URL when scanner is up", () => {
-    expect(formatMcpConnection(7878, true)).toBe(
-      "npx dslinter mcp → http://127.0.0.1:7878",
+describe("formatMcpDataStatus", () => {
+  it("shows live data URL when scanner is up", () => {
+    expect(formatMcpDataStatus(7878, true)).toBe(
+      "live @ http://127.0.0.1:7878",
     );
   });
 
   it("notes offline scanner", () => {
-    expect(formatMcpConnection(7878, false)).toContain("report file");
+    expect(formatMcpDataStatus(7878, false)).toContain("report file");
+  });
+});
+
+describe("formatMcpAgentHint", () => {
+  it("prompts setup when not configured", () => {
+    expect(formatMcpAgentHint(false)).toContain("add dslinter");
+    expect(formatMcpAgentHint(false)).toContain(".cursor/mcp.json");
+  });
+
+  it("notes Cursor spawns MCP when configured", () => {
+    expect(formatMcpAgentHint(true)).toContain("Cursor spawns MCP");
   });
 });
 

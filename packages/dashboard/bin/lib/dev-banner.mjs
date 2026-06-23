@@ -2,8 +2,10 @@ import { homedir } from "node:os";
 import { resolve } from "node:path";
 import {
   dashboardSharesScannerPort,
-  formatMcpConnection,
+  formatMcpAgentHint,
+  formatMcpDataStatus,
   getLanIpv4Addresses,
+  hasMcpConfig,
   httpUrl,
   scannerApiUrl,
 } from "./network-hosts.mjs";
@@ -170,6 +172,8 @@ function boxLines(lines, totalWidth) {
  *   dashboardUrl?: string | null;
  *   bundledUrl?: string | null;
  *   pollMs?: number;
+ *   projectRoot?: string;
+ *   mcpConfigured?: boolean;
  * }} opts
  * @returns {string}
  */
@@ -189,7 +193,12 @@ export function formatDevBanner(opts) {
     opts.apiAvailable &&
     dashboardUrl != null &&
     !dashboardSharesScannerPort(dashboardUrl, opts.apiPort);
-  const mcpPlain = formatMcpConnection(opts.apiPort, opts.apiAvailable);
+  const showMcpData = !showScannerApi;
+  const mcpDataPlain = formatMcpDataStatus(opts.apiPort, opts.apiAvailable);
+  const mcpConfigured =
+    opts.mcpConfigured ??
+    (opts.projectRoot ? hasMcpConfig(opts.projectRoot) : false);
+  const mcpHintPlain = formatMcpAgentHint(mcpConfigured);
   const lanHost = opts.apiAvailable ? getLanIpv4Addresses()[0] : undefined;
   const networkUrl = lanHost ? httpUrl(opts.apiPort, lanHost) : null;
 
@@ -201,13 +210,18 @@ export function formatDevBanner(opts) {
   if (dashboardUrl) plainWidths.push(14 + 2 + dashboardUrl.length);
   if (showScannerApi) plainWidths.push(14 + 2 + scannerUrl.length);
   if (networkUrl) plainWidths.push(14 + 2 + networkUrl.length);
-  plainWidths.push(14 + 2 + mcpPlain.length);
+  if (showMcpData) plainWidths.push(14 + 2 + mcpDataPlain.length);
   if (scannerWarnPlain) plainWidths.push(14 + 2 + scannerWarnPlain.length);
   if (opts.pollMs) plainWidths.push(14 + 2 + `polling every ${opts.pollMs} ms`.length);
-  const footerPlain = dashboardUrl
-    ? "  Open the Dashboard in your browser. Ctrl+C to stop."
-    : "  Ctrl+C to stop.";
-  plainWidths.push(visibleLength(footerPlain));
+  const footerLines = [
+    dashboardUrl
+      ? "  Open the Dashboard in your browser. Ctrl+C to stop."
+      : "  Ctrl+C to stop.",
+    `  ${mcpHintPlain}`,
+  ];
+  for (const line of footerLines) {
+    plainWidths.push(visibleLength(line));
+  }
 
   const contentWidth = Math.min(maxBox - 4, Math.max(...plainWidths, 40));
   const totalWidth = contentWidth + 4;
@@ -241,16 +255,20 @@ export function formatDevBanner(opts) {
       ...row(color.label("Network"), networkUrl, contentWidth, color.url),
     );
   }
-  styledRows.push(
-    ...row(color.label("MCP"), mcpPlain, contentWidth, color.value),
-  );
+  if (showMcpData) {
+    styledRows.push(
+      ...row(color.label("MCP data"), mcpDataPlain, contentWidth, color.value),
+    );
+  }
   if (scannerWarnPlain) {
     styledRows.push(
       ...row(color.label("Scanner"), scannerWarnPlain, contentWidth, color.err),
     );
   }
   styledRows.push("");
-  styledRows.push(color.dim(footerPlain));
+  for (const line of footerLines) {
+    styledRows.push(color.dim(line));
+  }
 
   return boxLines(styledRows, totalWidth).join("\n");
 }
