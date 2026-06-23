@@ -79,11 +79,7 @@ export function DashboardBody({
 
       <GovernanceInventoryTabs value={tab} onChange={setTab} counts={counts} />
 
-      <Section
-        id={section.id}
-        title={section.title}
-        description={section.description}
-      >
+      <Section id={section.id}>
         {tab === "unused" ? (
           <UnusedComponentsList
             components={unusedComponents}
@@ -103,8 +99,7 @@ export function DashboardBody({
             className="font-medium text-foreground underline decoration-dotted underline-offset-2 transition hover:decoration-solid"
           >
             View all components
-          </button>
-          {" "}
+          </button>{" "}
           for prop usage and app reference details.
         </p>
       ) : null}

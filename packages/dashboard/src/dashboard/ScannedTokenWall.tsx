@@ -5,6 +5,7 @@ import {
   HoverCardTrigger,
 } from "../components/ui/hover-card";
 import { cn } from "../lib/utils";
+import { EmptyCard } from "../components/EmptyCard";
 import { TruncatedPath } from "../components/TruncatedPath";
 import {
   filterTokenRows,
@@ -19,6 +20,14 @@ const filterTabs: { id: TokenUsageFilter; label: string }[] = [
   { id: "used", label: "Used" },
   { id: "unused", label: "Unused" },
 ];
+
+function emptyFilterMessage(filter: TokenUsageFilter): string {
+  if (filter === "used") return "No used theme tokens match this filter.";
+  if (filter === "unused") {
+    return "No unused theme tokens — every scanned token is referenced in the workspace.";
+  }
+  return "No theme tokens found.";
+}
 
 function TokenSection({
   title,
@@ -215,31 +224,37 @@ export function ScannedTokenWall({ view }: { view: MergedTokenView }) {
         </div>
       </div>
 
-      <ColorSection rows={filtered} />
-      <ListSection
-        title="Spacing"
-        subtitle="--spacing-* custom properties."
-        rows={filtered}
-        category="spacing"
-      />
-      <ListSection
-        title="Radius"
-        subtitle="--radius-* custom properties."
-        rows={filtered}
-        category="radius"
-      />
-      <ListSection
-        title="Typography"
-        subtitle="--font-* custom properties."
-        rows={filtered}
-        category="typography"
-      />
-      <ListSection
-        title="Other"
-        subtitle="Additional CSS variables."
-        rows={filtered}
-        category="other"
-      />
+      {filtered.length === 0 ? (
+        <EmptyCard>{emptyFilterMessage(filter)}</EmptyCard>
+      ) : (
+        <>
+          <ColorSection rows={filtered} />
+          <ListSection
+            title="Spacing"
+            subtitle="--spacing-* custom properties."
+            rows={filtered}
+            category="spacing"
+          />
+          <ListSection
+            title="Radius"
+            subtitle="--radius-* custom properties."
+            rows={filtered}
+            category="radius"
+          />
+          <ListSection
+            title="Typography"
+            subtitle="--font-* custom properties."
+            rows={filtered}
+            category="typography"
+          />
+          <ListSection
+            title="Other"
+            subtitle="Additional CSS variables."
+            rows={filtered}
+            category="other"
+          />
+        </>
+      )}
     </section>
   );
 }

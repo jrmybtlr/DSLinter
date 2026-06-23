@@ -1,11 +1,10 @@
 //! Code quality heuristics (rule ids `code-*`): patterns that add noise or risk
-//! (console/debugger, suppressions, oversized files, inline styles, empty catches, etc.).
+//! (console/debugger, suppressions, oversized files, empty catches, etc.).
 
 use std::path::{Path, PathBuf};
 
 use oxc_ast::ast::{
-    CallExpression, DebuggerStatement, Expression, JSXAttribute, JSXAttributeName,
-    JSXAttributeValue, JSXChild, JSXFragment, Program, TryStatement,
+    CallExpression, DebuggerStatement, Expression, JSXChild, JSXFragment, Program, TryStatement,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
@@ -138,27 +137,6 @@ impl<'nl, 'a> Visit<'a> for CodeQualityVisitor<'nl> {
         walk::walk_try_statement(self, stmt);
     }
 
-    fn visit_jsx_attribute(&mut self, attr: &JSXAttribute<'a>) {
-        let JSXAttributeName::Identifier(id) = &attr.name else {
-            walk::walk_jsx_attribute(self, attr);
-            return;
-        };
-        if id.name.as_str() == "style"
-            && matches!(attr.value, Some(JSXAttributeValue::ExpressionContainer(_)))
-        {
-            let line = self.line(attr.span.start);
-            push_quality_finding(
-                &mut self.findings,
-                &self.report_path,
-                Some(line),
-                Severity::Info,
-                "code-inline-style",
-                "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.",
-            );
-        }
-        walk::walk_jsx_attribute(self, attr);
-    }
-
     fn visit_jsx_fragment(&mut self, frag: &JSXFragment<'a>) {
         if frag.children.len() == 1 {
             let single = &frag.children[0];
@@ -277,5 +255,18 @@ mod tests {
         assert!(rows
             .iter()
             .any(|s| s.rule_id == "code-suppression-comment"));
+    }
+
+    #[test]
+    fn inline_style_not_reported_from_ast_code_quality() {
+        let alloc = Allocator::default();
+        let src = r##"export function X() { return <div style={{ width: 100 }} />; }"##;
+        let program = parse(&alloc, src);
+        let rows = collect_ast_code_quality(&PathBuf::from("x.tsx"), src, &program);
+        assert!(
+            !rows.iter().any(|s| s.rule_id == "code-inline-style"),
+            "code-inline-style is workspace-level only: {:?}",
+            rows
+        );
     }
 }

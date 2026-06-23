@@ -7,11 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { shortPath } from "./paths";
 import type { LintFinding, Severity } from "../types/report";
 import { Badge } from "../components/ui/badge";
+import { EmptyCard } from "../components/EmptyCard";
 import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
-import { TruncatedPath } from "../components/TruncatedPath";
+import { SourceLocationLink } from "./SourceLocationLink";
 
 type Filter = "all" | Severity;
 
@@ -22,6 +22,12 @@ function isFilter(value: string): value is Filter {
     value === "warning" ||
     value === "info"
   );
+}
+
+function emptyFilterMessage(filter: Exclude<Filter, "all">): string {
+  if (filter === "error") return "No errors in these findings.";
+  if (filter === "warning") return "No warnings in these findings.";
+  return "No info findings in these findings.";
 }
 
 export function FindingsList({
@@ -44,16 +50,15 @@ export function FindingsList({
   }, [findings]);
 
   const filtered = useMemo(
-    () => (filter === "all" ? findings : findings.filter((f) => f.severity === filter)),
+    () =>
+      filter === "all"
+        ? findings
+        : findings.filter((f) => f.severity === filter),
     [findings, filter],
   );
 
   if (findings.length === 0) {
-    return (
-      <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-        No findings
-      </p>
-    );
+    return <EmptyCard>No findings</EmptyCard>;
   }
 
   return (
@@ -107,55 +112,60 @@ export function FindingsList({
         </ToggleGroupItem>
       </ToggleGroup>
 
-      <Table className="mt-4">
-        <TableHeader>
-          <TableRow>
-            <TableHead scope="col">Severity</TableHead>
-            <TableHead scope="col">Rule</TableHead>
-            <TableHead scope="col">Message</TableHead>
-            <TableHead scope="col">File</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="align-top text-foreground">
-          {filtered.map((f, i) => (
-            <TableRow
-              key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
-              className="border-border hover:bg-transparent"
-            >
-              <TableCell className="px-3 py-2">
-                <Badge
-                  variant={
-                    f.severity === "error"
-                      ? "destructive"
-                      : f.severity === "warning"
-                        ? "secondary"
-                        : "outline"
-                  }
-                >
-                  {f.severity}
-                </Badge>
-              </TableCell>
-              <TableCell className="px-3 py-2 font-mono text-xs text-muted-foreground">
-                {f.rule_id}
-              </TableCell>
-              <TableCell className="whitespace-normal px-3 py-2 text-sm">
-                {f.message}
-              </TableCell>
-              <TableCell className="min-w-0 px-3 py-2 font-mono text-xs text-muted-foreground">
-                <div className="flex min-w-0 items-baseline">
-                  <TruncatedPath
-                    path={shortPath(root, f.path)}
-                    className="min-w-0 flex-1 text-xs"
-                  />
-                  <span className="shrink-0">
-                    :{f.line != null ? f.line : "—"}
-                  </span>
-                </div>
-              </TableCell>
+      {filtered.length === 0 ? (
+        <EmptyCard className="mt-4">
+          {filter === "all" ? "No findings" : emptyFilterMessage(filter)}
+        </EmptyCard>
+      ) : (
+        <Table className="mt-4">
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col">Severity</TableHead>
+              <TableHead scope="col">Rule</TableHead>
+              <TableHead scope="col">File</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody className="align-top text-foreground">
+            {filtered.map((f, i) => (
+              <TableRow
+                key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
+                className="border-border hover:bg-transparent"
+              >
+                <TableCell className="px-3 py-2">
+                  <Badge
+                    variant={
+                      f.severity === "error"
+                        ? "destructive"
+                        : f.severity === "warning"
+                          ? "secondary"
+                          : "outline"
+                    }
+                  >
+                    {f.severity}
+                  </Badge>
+                </TableCell>
+                <TableCell className="min-w-0 whitespace-normal px-3 py-2">
+                  <div className="font-mono text-xs text-muted-foreground">
+                    {f.rule_id}
+                  </div>
+                  <div className="mt-0.5 text-xs text-pretty text-foreground">
+                    {f.message}
+                  </div>
+                </TableCell>
+                <TableCell className="min-w-0 px-3 py-2">
+                  {f.line != null ? (
+                    <SourceLocationLink
+                      root={root}
+                      path={f.path}
+                      line={f.line}
+                    />
+                  ) : null}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

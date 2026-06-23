@@ -12,7 +12,7 @@ export function Section({
   id: string;
   className?: string;
   children: ReactNode;
-  title: string;
+  title?: string;
   description?: string;
   actions?: ReactNode;
 }) {

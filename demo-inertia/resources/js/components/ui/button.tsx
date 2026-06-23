@@ -51,6 +51,9 @@ function Button({
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
+      style={{
+        border: "1px solid #ff00ff",
+      }}
     />
   )
 }

@@ -47,9 +47,9 @@ export function SmellyInput(): JSX.Element {
             Smelly input (governance demo)
           </p>
 
-          {/* smell-inline-style */}
-          <span style={{ display: "block" }}>
-            Inline style (prefer tokens / utilities)
+          {/* smell-inline-style — off-theme inline color */}
+          <span style={{ color: "#ff00ff" }}>
+            Inline color (prefer tokens / utilities)
           </span>
 
           {/* deprecated-component */}

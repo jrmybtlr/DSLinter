@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -9,10 +9,8 @@ import {
 } from "../components/ui/table";
 import type { UsageLocation, WorkspaceReport } from "../types/report";
 import { usageMap } from "./aggregate";
-import { openSourceFile } from "./editorLink";
-import { resolveReportAbsolutePath, shortPath } from "./paths";
 import { EmptyCard } from "../components/EmptyCard";
-import { TruncatedPath } from "../components/TruncatedPath";
+import { SourceLocationLink } from "./SourceLocationLink";
 
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";
@@ -31,40 +29,6 @@ function sortedLocations(
   const list = [...(locations ?? [])];
   list.sort((a, b) => a.path.localeCompare(b.path) || a.line - b.line);
   return list;
-}
-
-function UsageLocationLink({
-  root,
-  loc,
-}: {
-  root: string;
-  loc: UsageLocation;
-}) {
-  const fileText = shortPath(root, loc.path);
-  const locationText = `${fileText}:${loc.line}`;
-  const absolutePath = resolveReportAbsolutePath(root, loc.path);
-
-  const handleClick = useCallback(() => {
-    void openSourceFile(absolutePath, loc.line).catch((err) => {
-      const message = err instanceof Error ? err.message : String(err);
-      window.alert(`Could not open file: ${message}`);
-    });
-  }, [absolutePath, loc.line]);
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className="block min-w-0 w-full text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
-      title={locationText}
-    >
-      <TruncatedPath
-        path={`${fileText}:${loc.line}`}
-        className="text-xs"
-        title={undefined}
-      />
-    </button>
-  );
 }
 
 export function ComponentUsageDetails({
@@ -117,7 +81,11 @@ export function ComponentUsageDetails({
           return (
             <TableRow key={`${loc.path}-${loc.line}-${i}`}>
               <TableCell className="min-w-0">
-                <UsageLocationLink root={report.root} loc={loc} />
+                <SourceLocationLink
+                  root={report.root}
+                  path={loc.path}
+                  line={loc.line}
+                />
               </TableCell>
               <TableCell className="min-w-0">
                 <span

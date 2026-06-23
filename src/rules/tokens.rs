@@ -162,6 +162,34 @@ fn hex_color_findings_in_text(
         .collect()
 }
 
+const INLINE_STYLE_COLOR_BYPASS_MSG: &str =
+    "Inline `style={{ }}` bypasses design tokens — prefer Tailwind/theme utilities.";
+
+/// `code-inline-style` when inline `style` color values are not in the design-token allowlist.
+pub fn inline_style_color_bypass(
+    files: &[FileScan],
+    color_allowlist: Option<&ColorAllowlist>,
+) -> Vec<LintFinding> {
+    let mut out = Vec::new();
+    let mut seen_lines: HashSet<(PathBuf, u32)> = HashSet::new();
+    for_each_style_color_value(files, |path, line, text| {
+        if find_hardcoded_colors_in_text(text, color_allowlist).is_empty() {
+            return;
+        }
+        if !seen_lines.insert((path.to_path_buf(), line)) {
+            return;
+        }
+        out.push(LintFinding::new(
+            "code-inline-style",
+            path.to_path_buf(),
+            Some(line),
+            Severity::Info,
+            INLINE_STYLE_COLOR_BYPASS_MSG,
+        ));
+    });
+    out
+}
+
 pub fn hardcoded_hex_colors(
     files: &[FileScan],
     sources: &HashMap<PathBuf, String>,
@@ -295,6 +323,118 @@ export function Flash() {
         assert!(
             findings.iter().any(|f| f.message.contains("#ff0066")),
             "off-theme hex should flag: {:?}",
+            findings
+        );
+    }
+
+    fn inline_style_findings(
+        src: &str,
+        allowlist: Option<&ColorAllowlist>,
+    ) -> Vec<LintFinding> {
+        let path = Path::new("inline_style.tsx");
+        let file = analyze_ecma_file(path, src);
+        inline_style_color_bypass(std::slice::from_ref(&file), allowlist)
+    }
+
+    #[test]
+    fn inline_style_layout_only_not_reported() {
+        let src = r##"
+export function Gauge() {
+  return <div style={{ width: 100, height: 100 }} />;
+}
+"##;
+        let findings = inline_style_findings(src, None);
+        assert!(
+            findings.is_empty(),
+            "layout-only inline style should not flag: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn inline_style_display_only_not_reported() {
+        let src = r##"
+export function Box() {
+  return <span style={{ display: "block" }}>x</span>;
+}
+"##;
+        let findings = inline_style_findings(src, None);
+        assert!(
+            findings.is_empty(),
+            "non-color inline style should not flag: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn inline_style_filter_only_not_reported() {
+        let src = r##"
+export function QrPreview({ resolvedAppearance }: { resolvedAppearance: string }) {
+  return (
+    <div
+      style={{
+        filter:
+          resolvedAppearance === 'dark'
+            ? 'invert(1) brightness(1.5)'
+            : undefined,
+      }}
+    />
+  );
+}
+"##;
+        let findings = inline_style_findings(src, None);
+        assert!(
+            findings.is_empty(),
+            "filter-only inline style should not flag: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn inline_style_off_theme_color_reported() {
+        let src = r##"
+export function Flash() {
+  return <div style={{ backgroundColor: "#ff0066" }} />;
+}
+"##;
+        let findings = inline_style_findings(src, Some(&danger_allowlist()));
+        assert!(
+            findings.iter().any(|f| f.rule_id == "code-inline-style"),
+            "off-theme inline color should flag: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn inline_style_on_theme_color_passes() {
+        let src = r##"
+export function Promo() {
+  return <div style={{ backgroundColor: "#dc2626" }} />;
+}
+"##;
+        let findings = inline_style_findings(src, Some(&danger_allowlist()));
+        assert!(
+            findings.is_empty(),
+            "theme-matching inline color should pass: {:?}",
+            findings
+        );
+    }
+
+    #[test]
+    fn inline_style_mixed_layout_and_off_theme_color_reported() {
+        let src = r##"
+export function Box() {
+  return <div style={{ width: 100, backgroundColor: "#ff0066" }} />;
+}
+"##;
+        let findings = inline_style_findings(src, Some(&danger_allowlist()));
+        assert_eq!(
+            findings
+                .iter()
+                .filter(|f| f.rule_id == "code-inline-style")
+                .count(),
+            1,
+            "one finding per line when inline color is off-theme: {:?}",
             findings
         );
     }

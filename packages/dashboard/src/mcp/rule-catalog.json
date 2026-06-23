@@ -115,8 +115,8 @@
     "rule_id": "code-inline-style",
     "pillar": "code",
     "default_severity": "warning",
-    "description": "Inline JSX style={{}} bypasses token/Tailwind conventions.",
-    "fix_hint": "Use className with theme utilities."
+    "description": "Inline JSX style uses hardcoded colors not in scanned CSS design tokens.",
+    "fix_hint": "Use className with theme utilities or CSS variables instead of inline color values."
   },
   {
     "rule_id": "code-empty-catch",

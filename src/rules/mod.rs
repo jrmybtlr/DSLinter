@@ -26,7 +26,8 @@ use a11y_cva::{cva_composed_dark_mode_findings, cva_skip_fragments_for_files};
 use dark_mode::dark_mode_contrast_findings;
 use scoring::compute_scores;
 use tokens::{
-    dedupe_token_color_overlap, deprecated_usage, hardcoded_hex_colors, tailwind_arbitrary_tokens,
+    dedupe_token_color_overlap, deprecated_usage, hardcoded_hex_colors, inline_style_color_bypass,
+    tailwind_arbitrary_tokens,
 };
 use usage::{
     duplicate_component_findings, duplicate_definitions, rollup_usage, unused_props_findings,
@@ -53,6 +54,10 @@ pub fn evaluate_workspace(
     findings.extend(hardcoded_hex_colors(
         &files,
         &sources,
+        color_allowlist.as_ref(),
+    ));
+    findings.extend(inline_style_color_bypass(
+        &files,
         color_allowlist.as_ref(),
     ));
     findings.extend(tailwind_arbitrary_tokens(
