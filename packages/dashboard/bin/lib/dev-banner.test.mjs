@@ -37,7 +37,10 @@ describe("formatDevBanner", () => {
     expect(text).not.toContain("Report file");
     expect(text).toContain("Dashboard");
     expect(text).toContain("http://localhost:5173/");
-    expect(text).not.toContain("Scanner API");
+    expect(text).toContain("Scanner API");
+    expect(text).toContain("http://127.0.0.1:7878/");
+    expect(text).toContain("MCP");
+    expect(text).toContain("npx dslinter mcp");
     expect(text).not.toContain("dslinter-report.json");
     expect(text).not.toContain("/events");
     expect(text).toContain("polling every 150 ms");
@@ -55,6 +58,8 @@ describe("formatDevBanner", () => {
     });
     expect(text).toContain("Dashboard");
     expect(text).toContain("http://127.0.0.1:7878/");
+    expect(text).toContain("MCP");
+    expect(text).toContain("npx dslinter mcp");
     expect(text).not.toContain("Bundled UI");
     expect(text).not.toContain("Scanner API");
   });
@@ -69,7 +74,8 @@ describe("formatDevBanner", () => {
     });
     expect(text).toContain("Scanner");
     expect(text).toContain("unavailable");
-    expect(text).not.toContain("7878/");
+    expect(text).toContain("MCP");
+    expect(text).toContain("report file");
     expect(text).not.toContain("/events");
   });
 

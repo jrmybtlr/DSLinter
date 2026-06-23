@@ -153,13 +153,11 @@ export function FindingsList({
                   </div>
                 </TableCell>
                 <TableCell className="min-w-0 px-3 py-2">
-                  {f.line != null ? (
-                    <SourceLocationLink
-                      root={root}
-                      path={f.path}
-                      line={f.line}
-                    />
-                  ) : null}
+                  <SourceLocationLink
+                    root={root}
+                    path={f.path}
+                    line={f.line}
+                  />
                 </TableCell>
               </TableRow>
             ))}

@@ -1,5 +1,12 @@
 import { homedir } from "node:os";
 import { resolve } from "node:path";
+import {
+  dashboardSharesScannerPort,
+  formatMcpConnection,
+  getLanIpv4Addresses,
+  httpUrl,
+  scannerApiUrl,
+} from "./network-hosts.mjs";
 
 const BOX = {
   tl: "╭",
@@ -177,6 +184,14 @@ export function formatDevBanner(opts) {
   const scannerWarnPlain = opts.apiAvailable
     ? null
     : `unavailable — port ${opts.apiPort} in use`;
+  const scannerUrl = scannerApiUrl(opts.apiPort);
+  const showScannerApi =
+    opts.apiAvailable &&
+    dashboardUrl != null &&
+    !dashboardSharesScannerPort(dashboardUrl, opts.apiPort);
+  const mcpPlain = formatMcpConnection(opts.apiPort, opts.apiAvailable);
+  const lanHost = opts.apiAvailable ? getLanIpv4Addresses()[0] : undefined;
+  const networkUrl = lanHost ? httpUrl(opts.apiPort, lanHost) : null;
 
   /** @type {number[]} */
   const plainWidths = [
@@ -184,6 +199,9 @@ export function formatDevBanner(opts) {
     14 + 2 + scanPlain.length,
   ];
   if (dashboardUrl) plainWidths.push(14 + 2 + dashboardUrl.length);
+  if (showScannerApi) plainWidths.push(14 + 2 + scannerUrl.length);
+  if (networkUrl) plainWidths.push(14 + 2 + networkUrl.length);
+  plainWidths.push(14 + 2 + mcpPlain.length);
   if (scannerWarnPlain) plainWidths.push(14 + 2 + scannerWarnPlain.length);
   if (opts.pollMs) plainWidths.push(14 + 2 + `polling every ${opts.pollMs} ms`.length);
   const footerPlain = dashboardUrl
@@ -213,6 +231,19 @@ export function formatDevBanner(opts) {
       ...row(color.label("Dashboard"), dashboardUrl, contentWidth, color.url),
     );
   }
+  if (showScannerApi) {
+    styledRows.push(
+      ...row(color.label("Scanner API"), scannerUrl, contentWidth, color.url),
+    );
+  }
+  if (networkUrl) {
+    styledRows.push(
+      ...row(color.label("Network"), networkUrl, contentWidth, color.url),
+    );
+  }
+  styledRows.push(
+    ...row(color.label("MCP"), mcpPlain, contentWidth, color.value),
+  );
   if (scannerWarnPlain) {
     styledRows.push(
       ...row(color.label("Scanner"), scannerWarnPlain, contentWidth, color.err),

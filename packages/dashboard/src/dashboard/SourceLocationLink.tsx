@@ -10,14 +10,14 @@ export function SourceLocationLink({
 }: {
   root: string;
   path: string;
-  line: number;
+  line?: number | null;
 }) {
   const fileText = shortPath(root, path);
-  const locationText = `${fileText}:${line}`;
+  const locationText = line != null ? `${fileText}:${line}` : fileText;
   const absolutePath = resolveReportAbsolutePath(root, path);
 
   const handleClick = useCallback(() => {
-    void openSourceFile(absolutePath, line).catch((err) => {
+    void openSourceFile(absolutePath, line ?? undefined).catch((err) => {
       const message = err instanceof Error ? err.message : String(err);
       window.alert(`Could not open file: ${message}`);
     });
