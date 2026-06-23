@@ -10,7 +10,53 @@ export type KitRootPropBinding = {
 };
 
 function kitSource(fn: Function): string {
-  return fn.toString();
+  const src = fn.toString();
+  const MAX_KIT_SOURCE_LEN = 64_000;
+  return src.length > MAX_KIT_SOURCE_LEN ? src.slice(0, MAX_KIT_SOURCE_LEN) : src;
+}
+
+function skipWhitespace(src: string, start: number): number {
+  let i = start;
+  while (i < src.length && /\s/.test(src[i]!)) i += 1;
+  return i;
+}
+
+function isIdentChar(ch: string, first = false): boolean {
+  if (first) return /[A-Za-z_$]/.test(ch);
+  return /[\w$]/.test(ch);
+}
+
+function readIdent(
+  src: string,
+  start: number,
+  firstUpper = false,
+): { value: string; end: number } | null {
+  if (start >= src.length) return null;
+  const ch = src[start]!;
+  if (firstUpper && !/[A-Z]/.test(ch)) return null;
+  if (!isIdentChar(ch, true)) return null;
+  let end = start + 1;
+  while (end < src.length && isIdentChar(src[end]!, false)) end += 1;
+  const value = src.slice(start, end);
+  if (firstUpper && !/^[A-Z][A-Za-z0-9]*$/.test(value)) return null;
+  return { value, end };
+}
+
+function skipUntilChar(src: string, start: number, target: string): number {
+  let quote: "'" | '"' | "`" | null = null;
+  for (let i = start; i < src.length; i += 1) {
+    const ch = src[i]!;
+    if (quote) {
+      if (ch === quote && src[i - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === "`") {
+      quote = ch;
+      continue;
+    }
+    if (ch === target) return i;
+  }
+  return -1;
 }
 
 /** Vite/esbuild wraps JSX as `(0, import.createElement)(Type, props)` (often split across lines). */
@@ -58,9 +104,45 @@ function collectJsxRuntimeSlots(src: string, out: KitJsxSlot[]): void {
 }
 
 function collectSourceJsxSlots(src: string, out: KitJsxSlot[]): void {
-  const re = /<([A-Z][A-Za-z0-9]*)(?:\s[^>]*)?>\s*\{\s*([A-Za-z_$][\w$]*)\s*\}\s*<\/\1>/g;
-  for (const match of src.matchAll(re)) {
-    out.push({ component: match[1]!, param: match[2]! });
+  let i = 0;
+  while (i < src.length) {
+    const lt = src.indexOf("<", i);
+    if (lt === -1) break;
+    if (src[lt + 1] === "/") {
+      i = lt + 1;
+      continue;
+    }
+    const ident = readIdent(src, lt + 1, true);
+    if (!ident) {
+      i = lt + 1;
+      continue;
+    }
+    const tagEnd = skipUntilChar(src, ident.end, ">");
+    if (tagEnd === -1) break;
+    let j = skipWhitespace(src, tagEnd + 1);
+    if (src[j] !== "{") {
+      i = lt + 1;
+      continue;
+    }
+    j = skipWhitespace(src, j + 1);
+    const paramIdent = readIdent(src, j);
+    if (!paramIdent) {
+      i = lt + 1;
+      continue;
+    }
+    j = skipWhitespace(src, paramIdent.end);
+    if (src[j] !== "}") {
+      i = lt + 1;
+      continue;
+    }
+    j = skipWhitespace(src, j + 1);
+    const closeTag = `</${ident.value}>`;
+    if (!src.slice(j).startsWith(closeTag)) {
+      i = lt + 1;
+      continue;
+    }
+    out.push({ component: ident.value, param: paramIdent.value });
+    i = j + closeTag.length;
   }
 }
 
@@ -118,6 +200,60 @@ function parseJsxPropsObject(raw: string | undefined): Array<{ prop: string; par
   return out;
 }
 
+function parseJsxAttrBindings(attrs: string, component: string, out: KitRootPropBinding[]): void {
+  let i = 0;
+  while (i < attrs.length) {
+    i = skipWhitespace(attrs, i);
+    if (i >= attrs.length) break;
+    const propIdent = readIdent(attrs, i);
+    if (!propIdent) {
+      i += 1;
+      continue;
+    }
+    i = skipWhitespace(attrs, propIdent.end);
+    if (attrs[i] !== "=") {
+      i = propIdent.end;
+      continue;
+    }
+    i = skipWhitespace(attrs, i + 1);
+    if (attrs[i] !== "{") {
+      i += 1;
+      continue;
+    }
+    i = skipWhitespace(attrs, i + 1);
+    const paramIdent = readIdent(attrs, i);
+    if (!paramIdent) continue;
+    const prop = propIdent.value;
+    if (prop === "className" || prop === "style" || prop === "asChild") {
+      i = paramIdent.end;
+      continue;
+    }
+    out.push({ component, prop, param: paramIdent.value });
+    i = paramIdent.end;
+  }
+}
+
+function collectSourceRootPropBindings(src: string, out: KitRootPropBinding[]): void {
+  let i = 0;
+  while (i < src.length) {
+    const lt = src.indexOf("<", i);
+    if (lt === -1) break;
+    if (src[lt + 1] === "/") {
+      i = lt + 1;
+      continue;
+    }
+    const ident = readIdent(src, lt + 1, true);
+    if (!ident) {
+      i = lt + 1;
+      continue;
+    }
+    const tagEnd = skipUntilChar(src, ident.end, ">");
+    if (tagEnd === -1) break;
+    parseJsxAttrBindings(src.slice(ident.end, tagEnd), ident.value, out);
+    i = tagEnd + 1;
+  }
+}
+
 function collectRootPropBindings(src: string, out: KitRootPropBinding[]): void {
   const normalized = normalizeKitSource(src);
   for (const match of normalized.matchAll(RUNTIME_ROOT_PROPS_RE)) {
@@ -126,16 +262,7 @@ function collectRootPropBindings(src: string, out: KitRootPropBinding[]): void {
     }
   }
 
-  const sourceRoot = /<([A-Z][A-Za-z0-9]*)([^>]*)>/g;
-  for (const match of src.matchAll(sourceRoot)) {
-    const attrs = match[2] ?? "";
-    const attrRe = /\b([A-Za-z_$][\w$]*)\s*=\s*\{\s*([A-Za-z_$][\w$]*)\s*\}/g;
-    for (const attr of attrs.matchAll(attrRe)) {
-      const prop = attr[1]!;
-      if (prop === "className" || prop === "style" || prop === "asChild") continue;
-      out.push({ component: match[1]!, prop, param: attr[2]! });
-    }
-  }
+  collectSourceRootPropBindings(src, out);
 }
 
 /** Root component prop bindings such as `<Alert variant={variant}>`. */

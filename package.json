@@ -27,13 +27,23 @@
     "typescript": "~6.0.3"
   },
   "overrides": {
-    "qs": "6.15.2"
+    "qs": "6.15.2",
+    "shell-quote": "1.8.4",
+    "hono": "4.12.25",
+    "undici": "7.28.0",
+    "ws": "8.21.0",
+    "form-data": "4.0.6"
   },
   "pnpm": {
     "overrides": {
       "react": "19.2.6",
       "react-dom": "19.2.6",
-      "qs": "6.15.2"
+      "qs": "6.15.2",
+      "shell-quote": "1.8.4",
+      "hono": "4.12.25",
+      "undici": "7.28.0",
+      "ws": "8.21.0",
+      "form-data": "4.0.6"
     },
     "publicHoistPattern": ["*react", "*react-dom"]
   }

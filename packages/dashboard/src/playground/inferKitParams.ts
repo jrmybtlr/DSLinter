@@ -91,8 +91,46 @@ function findTopLevelChar(input: string, target: string): number {
 
 function objectDestructuringSource(fn: Function): string | undefined {
   const src = fn.toString().trim();
-  const match = src.match(/^(?:async\s*)?(?:function\s*)?\(\s*\{([\s\S]*?)\}\s*(?::[^)=]*)?\)/);
-  return match?.[1];
+  const MAX_KIT_SOURCE_LEN = 64_000;
+  const bounded = src.length > MAX_KIT_SOURCE_LEN ? src.slice(0, MAX_KIT_SOURCE_LEN) : src;
+
+  let i = 0;
+  if (bounded.startsWith("async")) i = "async".length;
+  i = skipWhitespace(bounded, i);
+  if (bounded.slice(i).startsWith("function")) i += "function".length;
+  i = skipWhitespace(bounded, i);
+  if (bounded[i] !== "(") return undefined;
+  i = skipWhitespace(bounded, i + 1);
+  if (bounded[i] !== "{") return undefined;
+
+  const start = i + 1;
+  let depth = 1;
+  i += 1;
+  let quote: "'" | '"' | "`" | null = null;
+  while (i < bounded.length && depth > 0) {
+    const ch = bounded[i]!;
+    if (quote) {
+      if (ch === quote && bounded[i - 1] !== "\\") quote = null;
+      i += 1;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === "`") {
+      quote = ch;
+      i += 1;
+      continue;
+    }
+    if (ch === "{") depth += 1;
+    else if (ch === "}") depth -= 1;
+    i += 1;
+  }
+  if (depth !== 0) return undefined;
+  return bounded.slice(start, i - 1);
+}
+
+function skipWhitespace(src: string, start: number): number {
+  let i = start;
+  while (i < src.length && /\s/.test(src[i]!)) i += 1;
+  return i;
 }
 
 /** Read destructured parameter keys (and inline defaults) from a kit callback. */
