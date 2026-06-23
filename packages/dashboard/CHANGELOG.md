@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.5.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.4.0...v0.5.0)
+
+### 🚀 Enhancements
+
+- **dashboard:** Enhance dev banner with network and scanner information ([ef5f1c8](https://github.com/jrmybtlr/DSLinter/commit/ef5f1c8))
+
+### 🩹 Fixes
+
+- **dashboard:** Update inline style handling and improve linting for color values ([70a7d1d](https://github.com/jrmybtlr/DSLinter/commit/70a7d1d))
+
+### 💅 Refactors
+
+- **dashboard:** Update dev banner and button component styles ([3baa3d1](https://github.com/jrmybtlr/DSLinter/commit/3baa3d1))
+
+### 🏡 Chore
+
+- Update package-lock.json and pnpm-lock.yaml, add SECURITY.md, and enhance version checks for native bindings ([9d29b82](https://github.com/jrmybtlr/DSLinter/commit/9d29b82))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.4.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.3.0...v0.4.0)
