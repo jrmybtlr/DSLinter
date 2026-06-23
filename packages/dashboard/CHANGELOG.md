@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.3.0...v0.4.0)
+
+### 🚀 Enhancements
+
+- **dashboard:** Enhance style value extraction and token validation ([0754b61](https://github.com/jrmybtlr/DSLinter/commit/0754b61))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.3.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.2.3...v0.3.0)
