@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.1
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.5.0...v0.5.1)
+
+### 🚀 Enhancements
+
+- **dashboard:** Add embed support and improve dev server configuration ([80526e4](https://github.com/jrmybtlr/DSLinter/commit/80526e4))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.5.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.4.0...v0.5.0)
