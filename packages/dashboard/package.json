@@ -82,6 +82,8 @@
   "files": [
     "bin",
     "dashboard-dist",
+    "embed",
+    "index.html",
     "index.cjs",
     "index.d.ts",
     "src",

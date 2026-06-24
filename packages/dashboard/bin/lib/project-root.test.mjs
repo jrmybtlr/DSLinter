@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import {
   defaultReportPath,
   ensureDashboardBuilt,
+  canRunEmbedVite,
+  embedServeConfigPath,
   hasEmbedDashboard,
 } from "./project-root.mjs";
 
@@ -17,6 +19,28 @@ describe("ensureDashboardBuilt (published install layout)", () => {
     writeFileSync(join(root, "src", "index.ts"), "export {};\n");
 
     expect(hasEmbedDashboard(root)).toBe(false);
+    expect(canRunEmbedVite(root)).toBe(false);
+
+    const dist = ensureDashboardBuilt(root);
+    expect(dist).toBeTruthy();
+    expect(dist).toContain("dashboard-dist");
+  });
+
+  it("canRunEmbedVite when published embed sources exist without root vite.config.ts", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-published-embed-"));
+    mkdirSync(join(root, "dashboard-dist"), { recursive: true });
+    writeFileSync(join(root, "dashboard-dist", "index.html"), "<!doctype html>");
+    mkdirSync(join(root, "embed"), { recursive: true });
+    writeFileSync(join(root, "embed", "main.tsx"), "export {};\n");
+    mkdirSync(join(root, "vite"), { recursive: true });
+    writeFileSync(
+      join(root, "vite", "embed-serve.config.ts"),
+      "export default {};\n",
+    );
+
+    expect(hasEmbedDashboard(root)).toBe(false);
+    expect(canRunEmbedVite(root)).toBe(true);
+    expect(embedServeConfigPath(root)).toBe(join(root, "vite", "embed-serve.config.ts"));
 
     const dist = ensureDashboardBuilt(root);
     expect(dist).toBeTruthy();

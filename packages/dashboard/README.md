@@ -77,7 +77,7 @@ Previews load your components with your Vite `@/` aliases and Inertia stubs (`us
 
 The embed dev server registers Tailwind `@source` paths for your `.dslinter.json` **`include_dirs`** (for example `resources/js/components`), so component utility classes like `px-3.5` are generated in preview CSS. For 100% parity with your app's full CSS pipeline (theme entry, `@custom-variant`, etc.), use `DSLINTER_USE_CONSUMER_VITE=1` instead.
 
-The prebuilt **`dashboard-dist`** bundle shipped on npm does not run this Vite transform; use embed dev mode (monorepo / git checkout) or consumer Vite for accurate preview styling.
+`npx dslinter` on **npm installs** starts the embed dev server on port **5175** (using `vite/embed-serve.config.ts` and your project's Vite install). Open the **Dashboard** URL from the terminal banner — not the scanner-only port (`7878`). The prebuilt **`dashboard-dist`** fallback serves governance UI only; live previews need the embed dev server.
 
 For apps that already embed the dashboard (like this repo's `demo/`), dev mode uses your app's Vite server when `src/App.tsx` imports `DashboardLayout` from `dslinter`.
 
@@ -107,6 +107,14 @@ npx dslinter
 Open the **Dashboard** URL from the terminal banner (default port `5175`). The scanner writes `public/dslinter-report.json` at the project root.
 
 No Inertia route, no `buildRegistry.ts`, and no `vite.config` edits are required for dev previews.
+
+**Troubleshooting previews**
+
+- Open the **Dashboard** URL from the `npx dslinter` banner (default `http://127.0.0.1:5175/`), not the scanner API port alone.
+- Run from the **project root** (`npx dslinter .`) so `playgrounds[].rel_path` matches your repo (for example `resources/js/components/app-logo.tsx`).
+- Ensure `.dslinter.json` **`include_dirs`** includes your components folder (for example `resources/js/components`).
+- If you see `@dslinter-scan/…` or glob join errors, upgrade `dslinter` and confirm the embed dev server started (not the prebuilt `dashboard-dist` fallback).
+- Use `<DashboardLayout autoPlayground />` — not `buildRegistry.ts` — unless you run through a Vite dev server that compiles your `import.meta.glob`.
 
 **Optional — embed dashboard in your app:** set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground dslinterReport={...} />`.
 

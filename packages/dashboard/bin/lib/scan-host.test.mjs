@@ -6,6 +6,7 @@ import {
   scanProjectHostsDashboard,
   shouldUseConsumerViteDev,
 } from "./scan-host.mjs";
+import { canRunEmbedVite, embedServeConfigPath } from "./project-root.mjs";
 
 describe("scanProjectHostsDashboard", () => {
   it("detects DashboardLayout in src/App.tsx", () => {
@@ -37,5 +38,24 @@ describe("shouldUseConsumerViteDev", () => {
     delete process.env.DSLINTER_USE_CONSUMER_VITE;
     expect(shouldUseConsumerViteDev(root)).toBe(false);
     process.env.DSLINTER_USE_CONSUMER_VITE = prev;
+  });
+
+  it("uses embed vite on published npm layout when embed sources ship", () => {
+    const laravelRoot = mkdtempSync(join(tmpdir(), "dslinter-laravel-npm-"));
+    mkdirSync(join(laravelRoot, "resources", "js"), { recursive: true });
+    writeFileSync(join(laravelRoot, "vite.config.js"), "export default {};\n");
+
+    const dslinterPkg = mkdtempSync(join(tmpdir(), "dslinter-pkg-"));
+    mkdirSync(join(dslinterPkg, "embed"), { recursive: true });
+    writeFileSync(join(dslinterPkg, "embed", "main.tsx"), "export {};\n");
+    mkdirSync(join(dslinterPkg, "vite"), { recursive: true });
+    writeFileSync(
+      join(dslinterPkg, "vite", "embed-serve.config.ts"),
+      "export default {};\n",
+    );
+
+    expect(shouldUseConsumerViteDev(laravelRoot)).toBe(false);
+    expect(canRunEmbedVite(dslinterPkg)).toBe(true);
+    expect(embedServeConfigPath(dslinterPkg)).not.toBeNull();
   });
 });

@@ -32,7 +32,27 @@ function maxMtimeInDir(dir, latest = 0) {
 
 /**
  * @param {string} [root]
- * @returns {boolean} true when embed SPA sources exist (monorepo / git checkout).
+ * @returns {boolean} true when the embed SPA dev server can start (npm or monorepo).
+ */
+export function canRunEmbedVite(root = packageRoot) {
+  return (
+    existsSync(join(root, "index.html")) ||
+    existsSync(join(root, "embed", "main.tsx"))
+  );
+}
+
+/**
+ * @param {string} [root]
+ * @returns {string | null} absolute path to published embed Vite config
+ */
+export function embedServeConfigPath(root = packageRoot) {
+  const configPath = join(root, "vite", "embed-serve.config.ts");
+  return existsSync(configPath) ? configPath : null;
+}
+
+/**
+ * @param {string} [root]
+ * @returns {boolean} true when embed SPA sources exist for building dashboard-dist.
  */
 export function hasEmbedDashboard(root = packageRoot) {
   return existsSync(join(root, "index.html"));
@@ -45,7 +65,10 @@ export function hasEmbedDashboard(root = packageRoot) {
  */
 export function ensureDashboardBuilt(root = packageRoot) {
   const distDir = join(root, "dashboard-dist");
-  if (!hasEmbedDashboard(root)) {
+  const canBuildFromSource =
+    existsSync(join(root, "index.html")) &&
+    existsSync(join(root, "vite.config.ts"));
+  if (!canBuildFromSource) {
     return dashboardDirIfReady(distDir);
   }
 

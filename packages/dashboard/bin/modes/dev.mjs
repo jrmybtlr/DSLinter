@@ -5,7 +5,8 @@ import {
   defaultServePort,
   findViteRoot,
   getDashboardPackageRoot,
-  hasEmbedDashboard,
+  canRunEmbedVite,
+  embedServeConfigPath,
   resolveBundledDashboardDir,
   resolveViteBin,
 } from "../lib/project-root.mjs";
@@ -80,13 +81,18 @@ export async function runDevMode({
 
   const consumerViteRoot = findViteRoot(scanAbs);
   const embedRoot = getDashboardPackageRoot();
-  const embedViteBin = hasEmbedDashboard() ? resolveViteBin(embedRoot) : null;
+  const embedConfig = embedServeConfigPath(embedRoot);
+  const embedViteBin = canRunEmbedVite(embedRoot)
+    ? resolveViteBin(embedRoot) ??
+      (consumerViteRoot ? resolveViteBin(consumerViteRoot) : null)
+    : null;
 
   const useConsumerViteDev =
     consumerViteRoot != null && shouldUseConsumerViteDev(scanAbs);
 
   const useEmbedViteDev =
     embedViteBin != null &&
+    embedConfig != null &&
     !useConsumerViteDev &&
     process.env.DSLINTER_NO_EMBED_VITE?.trim() !== "1";
 
@@ -112,6 +118,9 @@ export async function runDevMode({
 
   if (attachBundledStatic) {
     args.push("--dashboard-static", bundledDist);
+    process.stderr.write(
+      "dslinter: warning: using prebuilt dashboard — live component previews are unavailable. Upgrade dslinter or ensure the embed dev server starts (Dashboard URL on port 5175).\n",
+    );
   }
 
   const apiAvailable = !(await warnIfPortBusy(port, { silent: true }));
@@ -181,7 +190,7 @@ export async function runDevMode({
       [
         embedViteBin,
         "--config",
-        join(embedRoot, "vite.config.ts"),
+        embedConfig,
         "--mode",
         "serve",
         "--port",

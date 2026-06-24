@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { WorkspaceReport } from "../types/report";
-import { defaultConsumerGlobKeyFromRelPath, diagnosePlaygroundJoinSkips } from "./playgroundJoin";
+import {
+  defaultConsumerGlobKeyFromRelPath,
+  diagnosePlaygroundJoinSkips,
+  isStaticBundledPreviewUnavailable,
+} from "./playgroundJoin";
 import { buildPlaygroundEntriesFromReportWithSkips } from "./buildPlaygroundEntriesFromReport";
 
 describe("defaultConsumerGlobKeyFromRelPath", () => {
@@ -138,5 +142,35 @@ describe("diagnosePlaygroundJoinSkips", () => {
     expect(skipped).toHaveLength(0);
     expect(entries).toHaveLength(1);
     expect(entries[0]?.modulePath).toBe("../Components/Button.tsx");
+  });
+});
+
+describe("isStaticBundledPreviewUnavailable", () => {
+  it("returns true in production when all skips are missing embed modules", () => {
+    const skipped = [
+      {
+        export_name: "AppLogo",
+        rel_path: "resources/js/components/app-logo.tsx",
+        globKey: "@dslinter-scan/resources/js/components/app-logo.tsx",
+        reason: "module_not_found" as const,
+      },
+    ];
+    expect(isStaticBundledPreviewUnavailable(skipped, { production: true })).toBe(
+      true,
+    );
+  });
+
+  it("returns false in dev mode", () => {
+    const skipped = [
+      {
+        export_name: "AppLogo",
+        rel_path: "resources/js/components/app-logo.tsx",
+        globKey: "@dslinter-scan/resources/js/components/app-logo.tsx",
+        reason: "module_not_found" as const,
+      },
+    ];
+    expect(isStaticBundledPreviewUnavailable(skipped, { production: false })).toBe(
+      false,
+    );
   });
 });

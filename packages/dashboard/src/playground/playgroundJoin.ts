@@ -169,6 +169,24 @@ export function findPlaygroundJoinSkip(
   return skipped?.find((s) => s.export_name === componentId);
 }
 
+/** True when the prebuilt dashboard bundle cannot load scanned components (npm static fallback). */
+export function isStaticBundledPreviewUnavailable(
+  skipped: PlaygroundJoinSkip[],
+  options?: { production?: boolean },
+): boolean {
+  if (!skipped.length) return false;
+  const isProd =
+    options?.production ??
+    (import.meta as ImportMeta & { env?: { PROD?: boolean } }).env?.PROD ===
+      true;
+  if (!isProd) return false;
+  return skipped.every(
+    (s) =>
+      s.reason === "module_not_found" &&
+      s.globKey.startsWith("@dslinter-scan/"),
+  );
+}
+
 /** User-facing hint when a playground spec cannot join to the Vite module graph. */
 export function playgroundJoinDetailMessage(
   skip: PlaygroundJoinSkip | undefined,
