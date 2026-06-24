@@ -31,7 +31,7 @@
     "dslinter": "bin/dslinter.mjs"
   },
   "scripts": {
-    "build:napi": "napi build --platform --release --cwd ../.. --output-dir packages/dashboard --package-json-path packages/dashboard/package.json --js-package-name @dslinter/binding --js index.cjs --no-default-features --features napi",
+    "build:napi": "napi build --platform --release --cwd ../.. --output-dir packages/dashboard --package-json-path packages/dashboard/package.json --js-package-name @dslinter/binding --js index.cjs --no-default-features --features napi && node ../../scripts/patch-napi-loader.mjs",
     "build:dashboard": "vite build",
     "artifacts": "napi artifacts --cwd ../.. --package-json-path packages/dashboard/package.json --js-package-name @dslinter/binding",
     "test": "vitest run",

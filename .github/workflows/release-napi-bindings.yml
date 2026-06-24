@@ -90,6 +90,7 @@ jobs:
           else
             build_one "${{ matrix.target }}" ${{ matrix.build_flags }}
           fi
+          node scripts/patch-napi-loader.mjs
 
       - uses: actions/upload-artifact@v7
         with:
