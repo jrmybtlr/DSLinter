@@ -1,26 +1,129 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: oklch(0.488 0.243 264.376);
+  --color-primary: oklch(0.65 0.18 264);
   --color-primary-foreground: oklch(0.985 0 0);
-  --color-surface: #f8fafc;
-  --color-surface-elevated: #ffffff;
-  --color-surface-border: #e2e8f0;
-  --color-muted-foreground: #64748b;
+  --color-surface: oklch(0.145 0 0);
+  --color-surface-elevated: oklch(0.205 0 0);
+  --color-surface-muted: oklch(0.185 0 0);
+  --color-surface-border: oklch(1 0 0 / 10%);
+  --color-muted-foreground: oklch(0.708 0 0);
   --font-sans:
-    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
+    "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: only dark;
   }
 
   body {
-    @apply bg-surface font-sans text-slate-900 antialiased;
+    @apply bg-surface font-sans text-zinc-100 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01", "ss03";
+  }
+}
+
+@layer utilities {
+  .hero-glow {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.65 0.18 264 / 0.22), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 0%, oklch(0.55 0.15 280 / 0.12), transparent);
+  }
+
+  .grid-fade {
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 4%) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 4%) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 70%);
+  }
+
+  .logo-spotlight {
+    --logo-spotlight-color: oklch(1 0 0);
+    --spot-x: 87px;
+    --spot-y: 81px;
+    --spot-r: 52px;
+    color: var(--logo-spotlight-color);
+    position: relative;
+    display: inline-flex;
+    width: 174px;
+    height: 162px;
+    cursor: crosshair;
+    contain: layout style;
+  }
+
+  .logo-spotlight__sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .logo-spotlight__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .logo-spotlight__base {
+    opacity: 0.14;
+  }
+
+  .logo-spotlight__reveal {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(
+      circle var(--spot-r) at var(--spot-x) var(--spot-y),
+      black 68%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      circle var(--spot-r) at var(--spot-x) var(--spot-y),
+      black 68%,
+      transparent 100%
+    );
+  }
+
+  .logo-spotlight__reveal use {
+    stroke-dasharray: 5 9;
+    stroke-linecap: round;
+    animation: logo-spotlight-dash 1.1s linear infinite;
+  }
+
+  .logo-spotlight__ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--spot-r) * 2);
+    height: calc(var(--spot-r) * 2);
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform;
+    transform: translate3d(calc(var(--spot-x) - var(--spot-r)), calc(var(--spot-y) - var(--spot-r)), 0);
+  }
+
+  .logo-spotlight.is-active .logo-spotlight__ring {
+    opacity: 0.28;
+  }
+
+  @keyframes logo-spotlight-dash {
+    to {
+      stroke-dashoffset: -14;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-spotlight__reveal use {
+      animation: none;
+      stroke-dasharray: none;
+    }
   }
 }

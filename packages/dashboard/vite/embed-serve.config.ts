@@ -14,11 +14,14 @@ const consumerViteRoot = process.env.DSLINTER_CONSUMER_VITE_ROOT?.trim()
   : undefined;
 
 /**
- * Resolve Vite and plugins from the consumer app (Laravel, etc.) when the
- * published package's devDependencies are not installed.
+ * Resolve Vite and plugins for the embed dev server.
+ *
+ * Prefer the dslinter package's own Vite (devDependencies) so the CLI binary
+ * and plugins stay on the same major version. Fall back to the consumer app
+ * when the published package has no local Vite install (npm installs).
  */
 function resolvePeer<T>(spec: string): T {
-  const candidates = [consumerViteRoot, packageRoot].filter(
+  const candidates = [packageRoot, consumerViteRoot].filter(
     (root): root is string => Boolean(root),
   );
   for (const root of candidates) {
