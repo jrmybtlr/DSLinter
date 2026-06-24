@@ -2,7 +2,6 @@ packages:
   - "demo"
   - "demo-inertia"
   - "packages/dashboard"
-  - "website"
 allowBuilds:
   esbuild: true
   msw: true
