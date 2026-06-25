@@ -4,16 +4,16 @@ This folder is a **small design-system sandbox**: ten components follow theme to
 
 Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `packages/dashboard/src`, and pulls in **`@import "dslinter/theme.css"`** (shadcn/ui tokens + DSLinter layout tokens from the package). There is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
 
-This repo uses **workspace linking** at the repo root so every dependency declared by `dslinter` is installed once and TypeScript can resolve it from `demo/`:
+This repo uses **workspace linking** at the repo root so every dependency declared by `dslinter` is installed once and TypeScript can resolve it from `demo/react/`:
 
-- **npm:** `package.json` at the repo root has `"workspaces": ["demo", "packages/dashboard"]`.
-- **pnpm:** `pnpm-workspace.yaml` lists the same packages. `demo` links the dashboard with **`"file:../packages/dashboard"`** (a bare `"*"` would hit the public npm registry and 404).
+- **npm:** `package.json` at the repo root has `"workspaces": ["demo/react", "demo/inertia", "packages/dashboard"]`.
+- **pnpm:** `pnpm-workspace.yaml` lists the same packages. `demo/react` links the dashboard with **`"dslinter": "workspace:*"`** (a bare `"*"` would hit the public npm registry and 404).
 
 ## `dslinter` package
 
-The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in [`../packages/dashboard/`](../packages/dashboard/) and is consumed like a published library:
+The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in [`../../packages/dashboard/`](../../packages/dashboard/) and is consumed like a published library:
 
-- **Local:** `demo/package.json` uses `"dslinter": "workspace:*"`. Vite aliases `dslinter` to `packages/dashboard/src` (and `optimizeDeps.exclude: ["dslinter"]`) so edits hot-reload without reinstalling when new modules are added.
+- **Local:** `demo/react/package.json` uses `"dslinter": "workspace:*"`. Vite aliases `dslinter` to `packages/dashboard/src` (and `optimizeDeps.exclude: ["dslinter"]`) so edits hot-reload without reinstalling when new modules are added.
 - **After publish:** depend on `"dslinter": "^0.0.1"` (or your registry scope) and keep the same **`@import "dslinter/theme.css"`** line after Tailwind in your app CSS.
 
 The demo app wires **data** as follows:
@@ -29,15 +29,15 @@ From the **repository root** (recommended):
 
 ```bash
 # npm
-npm install && cd demo && npm run dev
+npm install && cd demo/react && npm run dev
 
 # pnpm
-pnpm install && cd demo && pnpm dev
+pnpm install && cd demo/react && pnpm dev
 ```
 
 `npm run dev` runs **`dslinter`** ([scripts/dev.mjs](./scripts/dev.mjs)): watch + scanner HTTP on **7878** + Vite (`--mode serve`). Vite proxies `/dslinter-report.json` and `/events` (see [vite.config.ts](./vite.config.ts)) so the dashboard updates over **SSE**.
 
-Equivalent from `demo/`: `npx dslinter .`
+Equivalent from `demo/react/`: `npx dslinter .`
 
 | Script                    | When to use                                                          |
 | ------------------------- | -------------------------------------------------------------------- |
@@ -47,14 +47,14 @@ Equivalent from `demo/`: `npx dslinter .`
 | `npm run dev:vite-only`   | Vite alone; static committed report                                  |
 | `npm run dslinter:report` | One-shot report file + merge playgrounds                             |
 
-**pnpm:** Prefer **`pnpm install` from the repo root** (predictable, one lockfile). Running `pnpm install` from `demo/` still picks up the parent `pnpm-workspace.yaml` and scopes all workspace packages, but pnpm may **prompt** to wipe and reinstall `node_modules` (non-interactive shells can appear to hang — use root installs or `CI=true pnpm install` in CI).
+**pnpm:** Prefer **`pnpm install` from the repo root** (predictable, one lockfile). Running `pnpm install` from `demo/react/` still picks up the parent `pnpm-workspace.yaml` and scopes all workspace packages, but pnpm may **prompt** to wipe and reinstall `node_modules` (non-interactive shells can appear to hang — use root installs or `CI=true pnpm install` in CI).
 
-With **npm**, `cd demo && npm install` still discovers the root `package.json` workspaces.
+With **npm**, `cd demo/react && npm install` still discovers the root `package.json` workspaces.
 
 Build:
 
 ```bash
-cd demo && npm run build
+cd demo/react && npm run build
 ```
 
 ## Storybook-style playground
@@ -94,14 +94,14 @@ Then open **Governance** in the browser (or use `#!/governance`). You’ll see g
 From the repository root:
 
 ```bash
-npx dslinter demo --json > demo-report.json
+npx dslinter demo/react --json > demo-report.json
 # or parallel:
-npx dslinter -p demo
+npx dslinter -p demo/react
 ```
 
-Contributors without npm can use `cargo run --release --bin dslinter -- demo --json`.
+Contributors without npm can use `cargo run --release --bin dslinter -- demo/react --json`.
 
-Configuration for this tree lives in `demo/.dslinter.json` (deprecated component names, token substring hints for adoption scoring, **`playground_groups`** for the dashboard sidebar).
+Configuration for this tree lives in `demo/react/.dslinter.json` (deprecated component names, token substring hints for adoption scoring, **`playground_groups`** for the dashboard sidebar).
 
 ## What you should see
 

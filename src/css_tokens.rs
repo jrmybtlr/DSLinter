@@ -675,7 +675,7 @@ mod tests {
     #[test]
     fn resolves_package_import_from_demo_scan_root() {
         let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let root = manifest.join("demo");
+        let root = manifest.join("demo/react");
         let from = root.join("src/index.css");
         let resolved = resolve_css_import(&root, &from, "dslinter/theme.css");
         assert!(

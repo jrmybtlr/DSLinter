@@ -12,20 +12,20 @@ const packageRoot = resolve(
   fileURLToPath(new URL(".", import.meta.url)),
   "..",
 );
-const demoInertiaRoot = resolve(packageRoot, "../../demo-inertia");
+const demoInertiaRoot = resolve(packageRoot, "../../demo/inertia");
 const navFooter = join(
   demoInertiaRoot,
   "resources/js/components/nav-footer.tsx",
 );
 
 describe("dslinter vite plugin resolveId", () => {
-  it("has scan paths and consumer aliases for demo-inertia", () => {
+  it("has scan paths and consumer aliases for demo/inertia", () => {
     const relPaths = collectScanModuleRelPaths(demoInertiaRoot);
     expect(relPaths).toContain("resources/js/components/nav-footer.tsx");
     const aliases = loadConsumerAliases(demoInertiaRoot, undefined);
     const file = resolveExistingModule("@/components/ui/sidebar", aliases);
     expect(file?.replace(/\\/g, "/")).toContain(
-      "demo-inertia/resources/js/components/ui/sidebar.tsx",
+      "demo/inertia/resources/js/components/ui/sidebar.tsx",
     );
   });
 
@@ -40,7 +40,7 @@ describe("dslinter vite plugin resolveId", () => {
       { ssr: false },
     );
     expect(resolved?.replace(/\\/g, "/")).toContain(
-      "demo-inertia/resources/js/components/ui/sidebar.tsx",
+      "demo/inertia/resources/js/components/ui/sidebar.tsx",
     );
   });
 
@@ -62,7 +62,7 @@ describe("dslinter vite plugin resolveId", () => {
         navFooter,
       );
       expect(resolved?.id.replace(/\\/g, "/")).toContain(
-        "demo-inertia/resources/js/components/ui/sidebar",
+        "demo/inertia/resources/js/components/ui/sidebar",
       );
       expect(existsSync(resolved!.id.split("?")[0]!)).toBe(true);
     } finally {

@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 import dslinter from "./vite/plugin";
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
-const defaultScanRoot = path.resolve(packageRoot, "../../demo");
+const defaultScanRoot = path.resolve(packageRoot, "../../demo/react");
 const scanRoot = process.env.DSLINTER_SCAN_ROOT
   ? path.resolve(process.env.DSLINTER_SCAN_ROOT)
   : defaultScanRoot;

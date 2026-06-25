@@ -8,7 +8,7 @@ import { createDslinterMcpServer } from "./server";
 import { ruleCatalog } from "./rule-catalog";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const demoRoot = join(__dirname, "../../../../demo");
+const demoRoot = join(__dirname, "../../../../demo/react");
 const demoReportPath = join(demoRoot, "public/dslinter-report.json");
 
 describe("MCP server", () => {

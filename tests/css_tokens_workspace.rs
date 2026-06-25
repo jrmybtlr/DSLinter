@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 #[test]
 fn demo_workspace_discovers_css_tokens() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo/react");
     let report = dslinter::scan_workspace(&root).expect("scan demo");
     let summary = report
         .css_tokens

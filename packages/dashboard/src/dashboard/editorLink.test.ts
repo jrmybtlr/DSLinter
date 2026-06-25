@@ -8,11 +8,11 @@ describe("resolveModuleAbsolutePath", () => {
   it("resolves embed scan keys under report root", () => {
     expect(
       resolveModuleAbsolutePath(
-        "/Users/dev/demo-inertia",
+        "/Users/dev/demo/inertia",
         "@dslinter-scan/resources/js/components/app-logo-icon.tsx",
       ),
     ).toBe(
-      "/Users/dev/demo-inertia/resources/js/components/app-logo-icon.tsx",
+      "/Users/dev/demo/inertia/resources/js/components/app-logo-icon.tsx",
     );
   });
 
@@ -30,10 +30,10 @@ describe("buildEditorFileUri", () => {
   it("builds a vscode URI for unix paths", () => {
     expect(
       buildEditorFileUri(
-        "/Users/dev/demo-inertia/resources/js/components/app-logo-icon.tsx",
+        "/Users/dev/demo/inertia/resources/js/components/app-logo-icon.tsx",
       ),
     ).toBe(
-      "vscode://file/Users/dev/demo-inertia/resources/js/components/app-logo-icon.tsx",
+      "vscode://file/Users/dev/demo/inertia/resources/js/components/app-logo-icon.tsx",
     );
   });
 

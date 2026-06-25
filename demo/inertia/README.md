@@ -1,4 +1,4 @@
-# demo-inertia
+# demo/inertia
 
 Laravel 13 + Inertia 3 + React 19 + Vite 8 + Tailwind CSS 4 + shadcn/ui, with [DSLinter](https://github.com/jeremybutler/DSLint) via the **CLI and Vite plugin** (no manual dashboard wiring in this app).
 
@@ -29,7 +29,7 @@ From the **repository root** (links `dslinter` via pnpm workspace):
 pnpm install
 ```
 
-Then in `demo-inertia`:
+Then in `demo/inertia`:
 
 ```bash
 composer install
@@ -62,7 +62,7 @@ Open **http://127.0.0.1:8000/** (Laravel — not the Vite port).
 
 ## DSLint (governance + component previews)
 
-`dslinter` is linked from the monorepo (`"dslinter": "workspace:*"`), same as [`demo/`](../demo/). From `demo-inertia/`:
+`dslinter` is linked from the monorepo (`"dslinter": "workspace:*"`), same as [`demo/react/`](../react/). From `demo/inertia/`:
 
 ```bash
 npx dslinter
@@ -74,11 +74,11 @@ The CLI merges `dslinter/vite` automatically, writes `public/dslinter-report.jso
 
 Configuration: [`.dslinter.json`](./.dslinter.json) scopes scans and playground previews to `resources/js/components/`. The embed dashboard also uses those **`include_dirs`** for Tailwind `@source` scanning, so preview CSS includes utilities from your component files (for example `px-3.5` on `AppearanceToggleTab`).
 
-Optional embed in your own Inertia app: set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground />` — see [`packages/dashboard/README.md`](../packages/dashboard/README.md).
+Optional embed in your own Inertia app: set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground />` — see [`packages/dashboard/README.md`](../../packages/dashboard/README.md).
 
 ### MCP (AI agents)
 
-From `demo-inertia/` (or set `cwd` in `.cursor/mcp.json`):
+From `demo/inertia/` (or set `cwd` in `.cursor/mcp.json`):
 
 ```json
 {
@@ -86,7 +86,7 @@ From `demo-inertia/` (or set `cwd` in `.cursor/mcp.json`):
     "dslinter": {
       "command": "npx",
       "args": ["dslinter", "mcp"],
-      "cwd": "${workspaceFolder}/demo-inertia"
+      "cwd": "${workspaceFolder}/demo/inertia"
     }
   }
 }

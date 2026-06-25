@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 #[test]
 fn demo_workspace_has_inventory_and_rules() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo/react");
     let report = dslinter::scan_workspace(&root).expect("scan demo");
     assert!(
         !report.files.is_empty(),

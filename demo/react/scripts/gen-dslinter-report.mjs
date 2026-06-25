@@ -5,11 +5,11 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const demoRoot = join(__dirname, "..");
-const dslinterBin = join(demoRoot, "..", "packages", "dashboard", "bin", "dslinter.mjs");
+const dslinterBin = join(demoRoot, "..", "..", "packages", "dashboard", "bin", "dslinter.mjs");
 
 if (!existsSync(dslinterBin)) {
   process.stderr.write(
-    "dslinter:report failed — run `npm install` in demo/ (installs dslinter).\n",
+    "dslinter:report failed — run `npm install` in demo/react (installs dslinter).\n",
   );
   process.exit(1);
 }

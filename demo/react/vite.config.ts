@@ -1,13 +1,13 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
-import dslinter from "../packages/dashboard/vite/plugin";
+import dslinter from "dslinter/vite";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const DSLINTER_SERVE_PORT = 7878;
 const demoDir = path.dirname(fileURLToPath(import.meta.url));
-const dashboardPkg = path.resolve(demoDir, "../packages/dashboard");
+const dashboardPkg = path.resolve(demoDir, "../../packages/dashboard");
 const dashboardSrc = path.join(dashboardPkg, "src");
 /** One React instance for demo + linked dashboard (avoids invalid hook call). */
 const reactRoot = path.resolve(demoDir, "node_modules/react");

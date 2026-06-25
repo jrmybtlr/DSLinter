@@ -14,7 +14,7 @@ import { normalizeReportPaths } from "./normalize-paths";
 import type { WorkspaceReport } from "../types/report";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const demoReportPath = join(__dirname, "../../../../demo/public/dslinter-report.json");
+const demoReportPath = join(__dirname, "../../../../demo/react/public/dslinter-report.json");
 
 function loadDemoReport(): WorkspaceReport {
   const raw = readFileSync(demoReportPath, "utf8");

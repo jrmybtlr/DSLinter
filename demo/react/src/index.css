@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @source "./";
-@source "../../packages/dashboard/src";
+@source "../../../packages/dashboard/src";
 @import "dslinter/theme.css";
 
 :root {

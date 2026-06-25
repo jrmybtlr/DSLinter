@@ -50,11 +50,11 @@ describe("embedTailwindSources", () => {
 
   it("buildEmbedIndexCss splices consumer @source after dashboard src", () => {
     const base = `@import "tailwindcss";\n@source "../src";\n@import "../src/styles/dashboard-theme.css";\n`;
-    const out = buildEmbedIndexCss(base, ["../../../demo/src/components"]);
+    const out = buildEmbedIndexCss(base, ["../../../demo/react/src/components"]);
     expect(out).toContain('@source "../src";');
-    expect(out).toContain('@source "../../../demo/src/components";');
+    expect(out).toContain('@source "../../../demo/react/src/components";');
     expect(out.indexOf('../src";')).toBeLessThan(
-      out.indexOf("demo/src/components"),
+      out.indexOf("demo/react/src/components"),
     );
   });
 

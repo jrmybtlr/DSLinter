@@ -7,7 +7,7 @@ import {
 } from "./appPreviewTheme";
 import type { CssTokenDefinition, CssTokenSummary } from "../types/report";
 
-const root = "/Users/dev/demo-inertia";
+const root = "/Users/dev/demo/inertia";
 
 function def(
   partial: Partial<CssTokenDefinition> & Pick<CssTokenDefinition, "name" | "value" | "scope">,

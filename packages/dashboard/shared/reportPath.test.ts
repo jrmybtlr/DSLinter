@@ -4,7 +4,7 @@ import { resolveReportFilePath } from "./reportPath";
 
 describe("resolveReportFilePath", () => {
   it("defaults to public/dslinter-report.json under scan root", () => {
-    const root = "/app/demo-inertia";
+    const root = "/app/demo/inertia";
     expect(resolveReportFilePath(root, {})).toBe(
       resolve(root, "public", "dslinter-report.json"),
     );

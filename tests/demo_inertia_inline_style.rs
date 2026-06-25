@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 #[test]
 fn two_factor_modal_filter_style_not_inline_style_finding() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo-inertia");
-    let report = dslinter::scan_workspace(&root).expect("scan demo-inertia");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo/inertia");
+    let report = dslinter::scan_workspace(&root).expect("scan demo/inertia");
     let path_suffix = "two-factor-setup-modal.tsx";
     let modal_findings: Vec<_> = report
         .findings
@@ -24,8 +24,8 @@ fn two_factor_modal_filter_style_not_inline_style_finding() {
 
 #[test]
 fn demo_inertia_inline_style_only_flags_off_theme_colors() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo-inertia");
-    let report = dslinter::scan_workspace(&root).expect("scan demo-inertia");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo/inertia");
+    let report = dslinter::scan_workspace(&root).expect("scan demo/inertia");
     let inline_style: Vec<_> = report
         .findings
         .iter()
@@ -40,12 +40,12 @@ fn demo_inertia_inline_style_only_flags_off_theme_colors() {
     }
 }
 
-/// Regenerate `demo-inertia/public/dslinter-report.json` after rule changes.
+/// Regenerate `demo/inertia/public/dslinter-report.json` after rule changes.
 #[test]
 #[ignore]
 fn refresh_demo_inertia_report() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo-inertia");
-    let report = dslinter::scan_workspace(&root).expect("scan demo-inertia");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo/inertia");
+    let report = dslinter::scan_workspace(&root).expect("scan demo/inertia");
     let json = dslinter::report::report_to_json(&report).expect("json");
     let output = root.join("public/dslinter-report.json");
     std::fs::write(&output, json).expect("write report");

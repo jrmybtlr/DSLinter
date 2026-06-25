@@ -8,7 +8,7 @@ use dslinter::scan_pipeline::{scan_paths_parallel, scan_paths_sequential, PARALL
 
 #[test]
 fn demo_workspace_scan_completes_within_budget() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo/react");
     let config = dslinter::config::DslintConfig::load_from_root(&root).expect("config");
     let paths =
         dslinter::scan::collect_component_files(&root, &root, &config).expect("paths");

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Dev orchestration for demo-inertia.
+ * Dev orchestration for demo/inertia.
  *
  *   npm run dev          — Laravel + Vite + DSLinter (standalone)
  *   npm run dev:assets   — Vite + DSLinter only (use with `composer run dev`)
@@ -10,13 +10,14 @@ import { createConnection } from 'node:net';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readEnv } from '../../packages/dashboard/bin/lib/env.mjs';
-import { REPORT_FILE_NAME } from '../../packages/dashboard/bin/lib/paths.mjs';
-import { resolveServePort } from '../../packages/dashboard/bin/lib/constants.mjs';
+import { readEnv } from '../../../packages/dashboard/bin/lib/env.mjs';
+import { REPORT_FILE_NAME } from '../../../packages/dashboard/bin/lib/paths.mjs';
+import { resolveServePort } from '../../../packages/dashboard/bin/lib/constants.mjs';
 
 const demoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dslinterBin = join(
     demoRoot,
+    '..',
     '..',
     'packages',
     'dashboard',
@@ -32,7 +33,7 @@ const assetsOnly =
 
 if (!existsSync(dslinterBin)) {
     process.stderr.write(
-        'dslinter: run `npm install` in demo-inertia first (links dslinter package).\n',
+        'dslinter: run `pnpm install` from the repo root first (links dslinter package).\n',
     );
     process.exit(1);
 }
@@ -77,14 +78,14 @@ async function main() {
 
     if (assetsOnly) {
         process.stderr.write(
-            `\ndemo-inertia dev:assets (Vite + DSLinter — Laravel from \`composer run dev\`)\n` +
+            `\ndemo/inertia dev:assets (Vite + DSLinter — Laravel from \`composer run dev\`)\n` +
                 `  App (composer)  http://127.0.0.1:${LARAVEL_PORT}/\n` +
                 `  DSLinter        scanner + SSE on :${dslinterPort}\n` +
                 `  Pages           /components  /governance\n\n`,
         );
     } else {
         process.stderr.write(
-            `\ndemo-inertia dev\n` +
+            `\ndemo/inertia dev\n` +
                 `  Laravel     http://${LARAVEL_HOST}:${LARAVEL_PORT}/\n` +
                 `  Vite        (HMR — check terminal for port)\n` +
                 `  DSLinter    scanner + SSE on :${dslinterPort}\n` +

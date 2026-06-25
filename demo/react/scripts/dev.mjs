@@ -8,11 +8,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const demoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const dslinterBin = join(demoRoot, "..", "packages", "dashboard", "bin", "dslinter.mjs");
+const dslinterBin = join(demoRoot, "..", "..", "packages", "dashboard", "bin", "dslinter.mjs");
 
 if (!existsSync(dslinterBin)) {
   process.stderr.write(
-    "dslinter: run `npm install` in demo/ first (links the dslinter package).\n",
+    "dslinter: run `npm install` in demo/react first (links the dslinter package).\n",
   );
   process.exit(1);
 }

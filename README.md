@@ -67,8 +67,8 @@ Legacy `exclude_globs` remains supported for backwards compatibility.
 
 ## Demos
 
-- [`demo/`](demo/) — Vite + React + TypeScript + Tailwind sandbox with the dashboard UI. See [`demo/README.md`](demo/README.md).
-- [`demo-inertia/`](demo-inertia/) — Laravel 13 + Inertia + React + shadcn/ui. See [`demo-inertia/README.md`](demo-inertia/README.md).
+- [`demo/react`](demo/react/) — Vite + React + TypeScript + Tailwind sandbox with the dashboard UI. See [`demo/react/README.md`](demo/react/README.md).
+- [`demo/inertia`](demo/inertia/) — Laravel 13 + Inertia + React + shadcn/ui. See [`demo/inertia/README.md`](demo/inertia/README.md).
 
 ## What the CLI covers today
 
@@ -102,7 +102,7 @@ Add to `.cursor/mcp.json` in your app root:
 }
 ```
 
-For monorepos, set `cwd` to the app directory (e.g. `demo/` or `demo-inertia/`) or set `DSLINTER_SCAN_ROOT`.
+For monorepos, set `cwd` to the app directory (e.g. `demo/react/` or `demo/inertia/`) or set `DSLINTER_SCAN_ROOT`.
 
 ### Tools
 
@@ -134,7 +134,7 @@ When `npx dslinter` dev mode is running, the MCP server prefers the live report 
 ### Self-test
 
 ```bash
-cd demo && npx dslinter mcp --self-test
+cd demo/react && npx dslinter mcp --self-test
 ```
 
 See [`.cursor/skills/dslinter/SKILL.md`](.cursor/skills/dslinter/SKILL.md) for agent workflow guidance.
@@ -146,8 +146,8 @@ From the repository root:
 ```bash
 cargo build --release
 cargo test
-./target/release/dslinter demo --json
-cargo run --release --bin dslinter -- demo -p --json
+./target/release/dslinter demo/react --json
+cargo run --release --bin dslinter -- demo/react -p --json
 ```
 
 NAPI bindings for npm are built and published by [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml). Maintainers publish with `pnpm run release:patch` (see [`packages/dashboard/README.md`](packages/dashboard/README.md)).

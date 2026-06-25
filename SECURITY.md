@@ -24,7 +24,7 @@ In scope:
 
 Out of scope:
 
-- Vulnerabilities in demo applications (`demo/`, `demo-inertia/`) unless they demonstrate a flaw in the published package
+- Vulnerabilities in demo applications (`demo/react/`, `demo/inertia/`) unless they demonstrate a flaw in the published package
 - Third-party dependencies (report upstream; we track Dependabot alerts separately)
 - Issues requiring local dev servers (Vite/Vitest) to be intentionally exposed to untrusted networks
 

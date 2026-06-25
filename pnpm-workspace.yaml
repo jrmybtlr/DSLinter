@@ -1,7 +1,10 @@
 packages:
-  - "demo"
-  - "demo-inertia"
+  - "demo/inertia"
+  - "demo/react"
   - "packages/dashboard"
+
+publicHoistPattern:
+  - "@inertiajs/core"
 allowBuilds:
   esbuild: true
   msw: true

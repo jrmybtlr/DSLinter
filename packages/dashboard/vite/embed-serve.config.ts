@@ -5,7 +5,7 @@ import dslinter from "./plugin";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(configDir, "..");
-const defaultScanRoot = path.resolve(packageRoot, "../../demo");
+const defaultScanRoot = path.resolve(packageRoot, "../../demo/react");
 const scanRoot = process.env.DSLINTER_SCAN_ROOT
   ? path.resolve(process.env.DSLINTER_SCAN_ROOT)
   : defaultScanRoot;
