@@ -10,16 +10,15 @@ import { createConnection } from 'node:net';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readEnv } from '../../../packages/dashboard/bin/lib/env.mjs';
-import { REPORT_FILE_NAME } from '../../../packages/dashboard/bin/lib/paths.mjs';
-import { resolveServePort } from '../../../packages/dashboard/bin/lib/constants.mjs';
+import { readEnv } from '../../../dashboard/bin/lib/env.mjs';
+import { REPORT_FILE_NAME } from '../../../dashboard/bin/lib/paths.mjs';
+import { resolveServePort } from '../../../dashboard/bin/lib/constants.mjs';
 
 const demoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dslinterBin = join(
     demoRoot,
     '..',
     '..',
-    'packages',
     'dashboard',
     'bin',
     'dslinter.mjs',

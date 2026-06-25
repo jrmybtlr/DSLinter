@@ -2,7 +2,7 @@
   "mcpServers": {
     "dslinter": {
       "command": "node",
-      "args": ["../../packages/dashboard/bin/dslinter.mjs", "mcp"],
+      "args": ["../../dashboard/bin/dslinter.mjs", "mcp"],
       "cwd": "${workspaceFolder}"
     }
   }

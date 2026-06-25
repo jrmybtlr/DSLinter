@@ -4,15 +4,15 @@
   "workspaces": [
     "demo/inertia",
     "demo/react",
-    "packages/dashboard"
+    "dashboard"
   ],
   "scripts": {
-    "fmt": "oxfmt demo/react demo/inertia packages/dashboard",
-    "fmt:check": "oxfmt --check demo/react demo/inertia packages/dashboard",
-    "lint": "oxlint --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia packages/dashboard",
-    "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia packages/dashboard",
+    "fmt": "oxfmt demo/react demo/inertia dashboard",
+    "fmt:check": "oxfmt --check demo/react demo/inertia dashboard",
+    "lint": "oxlint --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia dashboard",
+    "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia dashboard",
     "build:napi": "pnpm --filter dslinter run build:napi",
-    "test": "cargo test && pnpm run build:napi && pnpm run lint && pnpm --filter dslinter test && node packages/dashboard/bin/dslinter.mjs --version && pnpm --filter dslinter-demo run build",
+    "test": "cargo test && pnpm run build:napi && pnpm run lint && pnpm --filter dslinter test && node dashboard/bin/dslinter.mjs --version && pnpm --filter dslinter-demo run build",
     "release:major": "node scripts/release.mjs --major",
     "release:minor": "node scripts/release.mjs --minor",
     "release:patch": "node scripts/release.mjs --patch"

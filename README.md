@@ -150,6 +150,6 @@ cargo test
 cargo run --release --bin dslinter -- demo/react -p --json
 ```
 
-NAPI bindings for npm are built and published by [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml). Maintainers publish with `pnpm run release:patch` (see [`packages/dashboard/README.md`](packages/dashboard/README.md)).
+NAPI bindings for npm are built and published by [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml). Maintainers publish with `pnpm run release:patch` (see [`dashboard/README.md`](dashboard/README.md)).
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for distribution notes and development workflow.

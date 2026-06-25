@@ -77,10 +77,10 @@ jobs:
         run: pnpm --filter dslinter test
 
       - name: MCP self-test (demo)
-        run: cd demo/react && node ../../packages/dashboard/bin/dslinter.mjs mcp --self-test
+        run: cd demo/react && node ../../dashboard/bin/dslinter.mjs mcp --self-test
 
       - name: Smoke-test dslinter CLI via NAPI
-        run: node packages/dashboard/bin/dslinter.mjs --version
+        run: node dashboard/bin/dslinter.mjs --version
 
       - name: Build demo
         run: pnpm --filter dslinter-demo run build

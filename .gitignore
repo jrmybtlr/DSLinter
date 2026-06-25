@@ -4,9 +4,9 @@ debug/
 target/
 node_modules/
 demo/node_modules/
-packages/dashboard/node_modules/
+dashboard/node_modules/
 demo/dist/
-packages/dashboard/dashboard-dist/
+dashboard/dashboard-dist/
 demo/public/dslinter-report.json
 demo-inertia/vendor/
 demo-inertia/node_modules/
@@ -15,8 +15,8 @@ demo-inertia/database/database.sqlite
 demo-inertia/public/hot
 demo-inertia/public/build/
 demo-inertia/public/dslinter-report.json
-packages/dashboard/vendor/
-packages/dashboard/*.node
+dashboard/vendor/
+dashboard/*.node
 /index.cjs
 /index.d.ts
 /index.*.node

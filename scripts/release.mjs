@@ -69,7 +69,7 @@ function waitForWorkflowRunId(branch, { attempts = 30, intervalSeconds = 2 } = {
 
 function readPackageVersion() {
   const pkg = JSON.parse(
-    readFileSync(join(root, "packages/dashboard/package.json"), "utf8"),
+    readFileSync(join(root, "dashboard/package.json"), "utf8"),
   );
   return pkg.version;
 }
@@ -94,7 +94,7 @@ run("pnpm", [
   "-r",
   nextVersion,
   "--dir",
-  "packages/dashboard",
+  "dashboard",
 ]);
 
 const version = readPackageVersion();

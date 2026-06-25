@@ -113,7 +113,7 @@ if (!resolved) {
       "          - npm install dslinter (installs platform NAPI binding)",
       "          - DSLINTER_BIN=/path/to/dslinter",
       "          - Contributors: cargo build --release --bin dslinter (repo root)",
-      "          - Contributors: pnpm run build:napi && node packages/dashboard/bin/dslinter.mjs",
+      "          - Contributors: pnpm run build:napi && node dashboard/bin/dslinter.mjs",
       "",
     ].join("\n"),
   );

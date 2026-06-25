@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { enrichWorkspaceReport } from "../../../packages/dashboard/bin/lib/enrich-playgrounds-from-ts.mjs";
+import { enrichWorkspaceReport } from "../../../dashboard/bin/lib/enrich-playgrounds-from-ts.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const demoRoot = join(__dirname, "..");

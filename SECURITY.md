@@ -18,7 +18,7 @@ You can expect an initial response within 7 days. We will work with you to under
 
 In scope:
 
-- The `dslinter` npm package and CLI (`packages/dashboard`)
+- The `dslinter` npm package and CLI (`dashboard`)
 - First-party code in this repository
 - Documented configuration and MCP integration surfaces
 

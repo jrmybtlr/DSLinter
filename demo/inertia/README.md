@@ -74,7 +74,7 @@ The CLI merges `dslinter/vite` automatically, writes `public/dslinter-report.jso
 
 Configuration: [`.dslinter.json`](./.dslinter.json) scopes scans and playground previews to `resources/js/components/`. The embed dashboard also uses those **`include_dirs`** for Tailwind `@source` scanning, so preview CSS includes utilities from your component files (for example `px-3.5` on `AppearanceToggleTab`).
 
-Optional embed in your own Inertia app: set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground />` — see [`packages/dashboard/README.md`](../../packages/dashboard/README.md).
+Optional embed in your own Inertia app: set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground />` — see [`dashboard/README.md`](../../dashboard/README.md).
 
 ### MCP (AI agents)
 

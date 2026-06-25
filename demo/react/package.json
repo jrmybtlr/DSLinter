@@ -6,14 +6,14 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:vite-only": "vite",
-    "dev:watch": "node ../../packages/dashboard/bin/dslinter.mjs --watch --output public/dslinter-report.json",
-    "dev:serve": "node ../../packages/dashboard/bin/dslinter.mjs --serve 7878 --output public/dslinter-report.json",
-    "build": "tsc && node ../../packages/dashboard/bin/dslinter.mjs --build --output public/dslinter-report.json",
+    "dev:watch": "node ../../dashboard/bin/dslinter.mjs --watch --output public/dslinter-report.json",
+    "dev:serve": "node ../../dashboard/bin/dslinter.mjs --serve 7878 --output public/dslinter-report.json",
+    "build": "tsc && node ../../dashboard/bin/dslinter.mjs --build --output public/dslinter-report.json",
     "preview": "vite preview",
     "dslinter:report": "node scripts/gen-dslinter-report.mjs",
     "dslinter:merge-playgrounds": "node scripts/merge-playgrounds.mjs",
-    "dslinter:watch": "node ../../packages/dashboard/bin/dslinter.mjs --watch --output public/dslinter-report.json",
-    "dslinter:serve": "node ../../packages/dashboard/bin/dslinter.mjs --serve 7878 --output public/dslinter-report.json"
+    "dslinter:watch": "node ../../dashboard/bin/dslinter.mjs --watch --output public/dslinter-report.json",
+    "dslinter:serve": "node ../../dashboard/bin/dslinter.mjs --serve 7878 --output public/dslinter-report.json"
   },
   "dependencies": {
     "dslinter": "workspace:*",

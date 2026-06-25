@@ -2,18 +2,18 @@
 
 This folder is a **small design-system sandbox**: ten components follow theme tokens and common UX conventions; ten illustrate drift (hardcoded colors, missing `alt`, duplicate `Card` definitions, oversized prop surfaces, deprecated names).
 
-Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `packages/dashboard/src`, and pulls in **`@import "dslinter/theme.css"`** (shadcn/ui tokens + DSLinter layout tokens from the package). There is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
+Styling uses **Tailwind CSS v4** with the **Vite plugin** (`@tailwindcss/vite`): `src/index.css` imports Tailwind, registers `@source` for `dashboard/src`, and pulls in **`@import "dslinter/theme.css"`** (shadcn/ui tokens + DSLinter layout tokens from the package). There is no `tailwind.config.js`. **`postcss.config.js` intentionally does not load the `tailwindcss` PostCSS plugin** (that is the v3 path and breaks v4’s `index.css`).
 
 This repo uses **workspace linking** at the repo root so every dependency declared by `dslinter` is installed once and TypeScript can resolve it from `demo/react/`:
 
-- **npm:** `package.json` at the repo root has `"workspaces": ["demo/react", "demo/inertia", "packages/dashboard"]`.
+- **npm:** `package.json` at the repo root has `"workspaces": ["demo/react", "demo/inertia", "dashboard"]`.
 - **pnpm:** `pnpm-workspace.yaml` lists the same packages. `demo/react` links the dashboard with **`"dslinter": "workspace:*"`** (a bare `"*"` would hit the public npm registry and 404).
 
 ## `dslinter` package
 
-The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in [`../../packages/dashboard/`](../../packages/dashboard/) and is consumed like a published library:
+The dashboard UI (sidebar, hash routing, token wall, governance panels) lives in [`../../dashboard/`](../../dashboard/) and is consumed like a published library:
 
-- **Local:** `demo/react/package.json` uses `"dslinter": "workspace:*"`. Vite aliases `dslinter` to `packages/dashboard/src` (and `optimizeDeps.exclude: ["dslinter"]`) so edits hot-reload without reinstalling when new modules are added.
+- **Local:** `demo/react/package.json` uses `"dslinter": "workspace:*"`. Vite aliases `dslinter` to `dashboard/src` (and `optimizeDeps.exclude: ["dslinter"]`) so edits hot-reload without reinstalling when new modules are added.
 - **After publish:** depend on `"dslinter": "^0.0.1"` (or your registry scope) and keep the same **`@import "dslinter/theme.css"`** line after Tailwind in your app CSS.
 
 The demo app wires **data** as follows:

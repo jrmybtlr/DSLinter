@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-06-25T22:32:24.088809Z",
+  "generated_at": "2026-06-25T22:55:46.923119Z",
   "root": "/Users/jeremy/Development/DSLint/demo/react",
   "files": [
     {
@@ -1234,16 +1234,55 @@
       "export_name": "Button",
       "rel_path": "src/components/Button.tsx",
       "declared_props": [
-        "variant",
-        "size",
-        "loading",
-        "disabled",
-        "className",
-        "onClick",
-        "children",
         "as",
-        "href"
-      ]
+        "children",
+        "className",
+        "disabled",
+        "href",
+        "loading",
+        "onClick",
+        "rest",
+        "size",
+        "variant"
+      ],
+      "declared_prop_kinds": {
+        "as": "string",
+        "children": "node",
+        "className": "string",
+        "disabled": "boolean",
+        "href": "string",
+        "loading": "boolean",
+        "size": "string",
+        "variant": "string"
+      },
+      "declared_prop_options": {
+        "as": [
+          "a",
+          "button"
+        ],
+        "size": [
+          "default",
+          "large",
+          "medium",
+          "small"
+        ],
+        "variant": [
+          "bitbucket",
+          "black",
+          "danger",
+          "danger-outline",
+          "dark",
+          "ghost",
+          "gitlab",
+          "icon",
+          "icon-outline",
+          "muted",
+          "nightwatch",
+          "outline",
+          "primary",
+          "white"
+        ]
+      }
     },
     {
       "id": "CalloutPanel",
@@ -1251,7 +1290,10 @@
       "rel_path": "src/components/CalloutPanel.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "ChaosGrid",
@@ -1259,7 +1301,10 @@
       "rel_path": "src/components/ChaosGrid.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "ContentCard",
@@ -1268,7 +1313,11 @@
       "declared_props": [
         "title",
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "title": "string",
+        "children": "node"
+      }
     },
     {
       "id": "DeprecatedChip",
@@ -1276,7 +1325,10 @@
       "rel_path": "src/components/DeprecatedChip.tsx",
       "declared_props": [
         "label"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "label": "string"
+      }
     },
     {
       "id": "FeatureGrid",
@@ -1284,7 +1336,10 @@
       "rel_path": "src/components/FeatureGrid.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "FlashBanner",
@@ -1292,7 +1347,10 @@
       "rel_path": "src/components/FlashBanner.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "FlexStack",
@@ -1300,7 +1358,10 @@
       "rel_path": "src/components/FlexStack.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "FormField",
@@ -1309,7 +1370,11 @@
       "declared_props": [
         "id",
         "label"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "id": "string",
+        "label": "string"
+      }
     },
     {
       "id": "InconsistentToggle",
@@ -1318,7 +1383,17 @@
       "declared_props": [
         "pressedTone",
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "pressedTone": "string",
+        "children": "node"
+      },
+      "declared_prop_options": {
+        "pressedTone": [
+          "off",
+          "on"
+        ]
+      }
     },
     {
       "id": "InlineAlert",
@@ -1328,7 +1403,20 @@
         "children",
         "variant",
         "title"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node",
+        "variant": "string",
+        "title": "string"
+      },
+      "declared_prop_options": {
+        "variant": [
+          "danger",
+          "info",
+          "success",
+          "warning"
+        ]
+      }
     },
     {
       "id": "InlineCode",
@@ -1336,7 +1424,10 @@
       "rel_path": "src/components/InlineCode.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "InlinePaint",
@@ -1344,7 +1435,10 @@
       "rel_path": "src/components/InlinePaint.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "KitchenSinkModal",
@@ -1367,7 +1461,25 @@
         "testId",
         "role",
         "portal"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "title": "string",
+        "subtitle": "string",
+        "icon": "string",
+        "confirmLabel": "string",
+        "cancelLabel": "string",
+        "width": "string",
+        "dismissible": "boolean",
+        "initialFocus": "string",
+        "bannerTone": "string",
+        "footerAlign": "string",
+        "scrollLock": "boolean",
+        "overlayBlur": "boolean",
+        "analyticsId": "string",
+        "testId": "string",
+        "role": "string",
+        "portal": "boolean"
+      }
     },
     {
       "id": "LoadingSkeleton",
@@ -1386,7 +1498,11 @@
       "declared_props": [
         "href",
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "href": "string",
+        "children": "node"
+      }
     },
     {
       "id": "PageHero",
@@ -1395,7 +1511,11 @@
       "declared_props": [
         "title",
         "subtitle"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "title": "string",
+        "subtitle": "string"
+      }
     },
     {
       "id": "ProgressBar",
@@ -1405,7 +1525,10 @@
         "value",
         "max",
         "isIndeterminate"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "isIndeterminate": "boolean"
+      }
     },
     {
       "id": "PromoBanner",
@@ -1413,7 +1536,10 @@
       "rel_path": "src/components/PromoBanner.tsx",
       "declared_props": [
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node"
+      }
     },
     {
       "id": "SegmentedPill",
@@ -1422,7 +1548,17 @@
       "declared_props": [
         "pressedTone",
         "children"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "pressedTone": "string",
+        "children": "node"
+      },
+      "declared_prop_options": {
+        "pressedTone": [
+          "off",
+          "on"
+        ]
+      }
     },
     {
       "id": "SelectField",
@@ -1437,7 +1573,17 @@
         "disabled",
         "required",
         "defaultValue"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "id": "string",
+        "label": "string",
+        "options": "string",
+        "helperText": "string",
+        "errorMessage": "string",
+        "disabled": "boolean",
+        "required": "boolean",
+        "defaultValue": "string"
+      }
     },
     {
       "id": "SemanticButton",
@@ -1450,7 +1596,33 @@
         "type",
         "disabled",
         "isLoading"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node",
+        "variant": "string",
+        "size": "string",
+        "type": "string",
+        "disabled": "boolean",
+        "isLoading": "boolean"
+      },
+      "declared_prop_options": {
+        "variant": [
+          "danger",
+          "ghost",
+          "primary",
+          "secondary",
+          "success",
+          "warning"
+        ],
+        "size": [
+          "md",
+          "sm"
+        ],
+        "type": [
+          "button",
+          "submit"
+        ]
+      }
     },
     {
       "id": "SettingsDialog",
@@ -1473,7 +1645,25 @@
         "testId",
         "role",
         "portal"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "title": "string",
+        "subtitle": "string",
+        "icon": "string",
+        "confirmLabel": "string",
+        "cancelLabel": "string",
+        "width": "string",
+        "dismissible": "boolean",
+        "initialFocus": "string",
+        "bannerTone": "string",
+        "footerAlign": "string",
+        "scrollLock": "boolean",
+        "overlayBlur": "boolean",
+        "analyticsId": "string",
+        "testId": "string",
+        "role": "string",
+        "portal": "boolean"
+      }
     },
     {
       "id": "SmellyInput",
@@ -1487,7 +1677,18 @@
       "declared_props": [
         "label",
         "size"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "label": "string",
+        "size": "string"
+      },
+      "declared_prop_options": {
+        "size": [
+          "lg",
+          "md",
+          "sm"
+        ]
+      }
     },
     {
       "id": "StatusBadge",
@@ -1496,7 +1697,18 @@
       "declared_props": [
         "children",
         "tone"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node",
+        "tone": "string"
+      },
+      "declared_prop_options": {
+        "tone": [
+          "danger",
+          "neutral",
+          "success"
+        ]
+      }
     },
     {
       "id": "Tag",
@@ -1506,7 +1718,20 @@
         "children",
         "tone",
         "dismissible"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node",
+        "tone": "string",
+        "dismissible": "boolean"
+      },
+      "declared_prop_options": {
+        "tone": [
+          "danger",
+          "neutral",
+          "success",
+          "warning"
+        ]
+      }
     },
     {
       "id": "LegacyButton",
@@ -1516,7 +1741,27 @@
         "children",
         "variant",
         "size"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node",
+        "variant": "string",
+        "size": "string"
+      },
+      "declared_prop_options": {
+        "variant": [
+          "danger",
+          "ghost",
+          "primary",
+          "secondary",
+          "success",
+          "warning"
+        ],
+        "size": [
+          "lg",
+          "md",
+          "sm"
+        ]
+      }
     },
     {
       "id": "TextField",
@@ -1531,7 +1776,17 @@
         "disabled",
         "required",
         "defaultValue"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "id": "string",
+        "label": "string",
+        "placeholder": "string",
+        "helperText": "string",
+        "errorMessage": "string",
+        "disabled": "boolean",
+        "required": "boolean",
+        "defaultValue": "string"
+      }
     },
     {
       "id": "TextLink",
@@ -1541,7 +1796,12 @@
         "children",
         "href",
         "external"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "children": "node",
+        "href": "string",
+        "external": "boolean"
+      }
     },
     {
       "id": "TextareaField",
@@ -1557,7 +1817,17 @@
         "required",
         "rows",
         "defaultValue"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "id": "string",
+        "label": "string",
+        "placeholder": "string",
+        "helperText": "string",
+        "errorMessage": "string",
+        "disabled": "boolean",
+        "required": "boolean",
+        "defaultValue": "string"
+      }
     },
     {
       "id": "UserAvatar",
@@ -1566,7 +1836,11 @@
       "declared_props": [
         "src",
         "name"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "src": "string",
+        "name": "string"
+      }
     },
     {
       "id": "Card",
@@ -1586,7 +1860,7 @@
         "value": "var(--background)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 16
       },
       {
@@ -1594,7 +1868,7 @@
         "value": "var(--foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 17
       },
       {
@@ -1602,7 +1876,7 @@
         "value": "var(--card)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 18
       },
       {
@@ -1610,7 +1884,7 @@
         "value": "var(--card-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 19
       },
       {
@@ -1618,7 +1892,7 @@
         "value": "var(--popover)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 20
       },
       {
@@ -1626,7 +1900,7 @@
         "value": "var(--popover-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 21
       },
       {
@@ -1634,7 +1908,7 @@
         "value": "var(--primary)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 22
       },
       {
@@ -1642,7 +1916,7 @@
         "value": "var(--primary-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 23
       },
       {
@@ -1650,7 +1924,7 @@
         "value": "var(--secondary)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 24
       },
       {
@@ -1658,7 +1932,7 @@
         "value": "var(--secondary-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 25
       },
       {
@@ -1666,7 +1940,7 @@
         "value": "var(--muted)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 26
       },
       {
@@ -1674,7 +1948,7 @@
         "value": "var(--muted-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 27
       },
       {
@@ -1682,7 +1956,7 @@
         "value": "var(--accent)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 28
       },
       {
@@ -1690,7 +1964,7 @@
         "value": "var(--accent-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 29
       },
       {
@@ -1698,7 +1972,7 @@
         "value": "var(--destructive)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 30
       },
       {
@@ -1706,7 +1980,7 @@
         "value": "var(--destructive-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 31
       },
       {
@@ -1714,7 +1988,7 @@
         "value": "var(--border)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 32
       },
       {
@@ -1722,7 +1996,7 @@
         "value": "var(--input)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 33
       },
       {
@@ -1730,7 +2004,7 @@
         "value": "var(--ring)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 34
       },
       {
@@ -1738,7 +2012,7 @@
         "value": "var(--chart-1)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 35
       },
       {
@@ -1746,7 +2020,7 @@
         "value": "var(--chart-2)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 36
       },
       {
@@ -1754,7 +2028,7 @@
         "value": "var(--chart-3)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 37
       },
       {
@@ -1762,7 +2036,7 @@
         "value": "var(--chart-4)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 38
       },
       {
@@ -1770,7 +2044,7 @@
         "value": "var(--chart-5)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 39
       },
       {
@@ -1778,7 +2052,7 @@
         "value": "calc(var(--radius) * 0.6)",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 40
       },
       {
@@ -1786,7 +2060,7 @@
         "value": "calc(var(--radius) * 0.8)",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 41
       },
       {
@@ -1794,7 +2068,7 @@
         "value": "var(--radius)",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 42
       },
       {
@@ -1802,7 +2076,7 @@
         "value": "calc(var(--radius) * 1.4)",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 43
       },
       {
@@ -1810,7 +2084,7 @@
         "value": "calc(var(--radius) * 1.8)",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 44
       },
       {
@@ -1818,7 +2092,7 @@
         "value": "calc(var(--radius) * 2.2)",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 45
       },
       {
@@ -1826,7 +2100,7 @@
         "value": "calc(var(--radius) * 2.6)",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 46
       },
       {
@@ -1834,7 +2108,7 @@
         "value": "var(--sidebar)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 47
       },
       {
@@ -1842,7 +2116,7 @@
         "value": "var(--sidebar-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 48
       },
       {
@@ -1850,7 +2124,7 @@
         "value": "var(--sidebar-primary)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 49
       },
       {
@@ -1858,7 +2132,7 @@
         "value": "var(--sidebar-primary-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 50
       },
       {
@@ -1866,7 +2140,7 @@
         "value": "var(--sidebar-accent)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 51
       },
       {
@@ -1874,7 +2148,7 @@
         "value": "var(--sidebar-accent-foreground)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 52
       },
       {
@@ -1882,7 +2156,7 @@
         "value": "var(--sidebar-border)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 53
       },
       {
@@ -1890,7 +2164,7 @@
         "value": "var(--sidebar-ring)",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 54
       },
       {
@@ -1898,7 +2172,7 @@
         "value": "#93c5fd",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 58
       },
       {
@@ -1906,7 +2180,7 @@
         "value": "#f8fafc",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 59
       },
       {
@@ -1914,7 +2188,7 @@
         "value": "#ffffff",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 60
       },
       {
@@ -1922,7 +2196,7 @@
         "value": "#e2e8f0",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 61
       },
       {
@@ -1930,7 +2204,7 @@
         "value": "#dc2626",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 62
       },
       {
@@ -1938,7 +2212,7 @@
         "value": "#fef2f2",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 63
       },
       {
@@ -1946,7 +2220,7 @@
         "value": "#15803d",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 64
       },
       {
@@ -1954,7 +2228,7 @@
         "value": "#f0fdf4",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 65
       },
       {
@@ -1962,7 +2236,7 @@
         "value": "#ca8a04",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 66
       },
       {
@@ -1970,7 +2244,7 @@
         "value": "#422006",
         "category": "color",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 67
       },
       {
@@ -1978,7 +2252,7 @@
         "value": "0.5rem",
         "category": "spacing",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 68
       },
       {
@@ -1986,7 +2260,7 @@
         "value": "1rem",
         "category": "spacing",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 69
       },
       {
@@ -1994,7 +2268,7 @@
         "value": "1.5rem",
         "category": "spacing",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 70
       },
       {
@@ -2002,7 +2276,7 @@
         "value": "2rem",
         "category": "spacing",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 71
       },
       {
@@ -2010,7 +2284,7 @@
         "value": "0.5rem",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 72
       },
       {
@@ -2018,7 +2292,7 @@
         "value": "0.75rem",
         "category": "radius",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 73
       },
       {
@@ -2026,7 +2300,7 @@
         "value": "ui-serif, Georgia, Cambria, \"Times New Roman\", Times, serif",
         "category": "typography",
         "scope": "theme",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 79
       },
       {
@@ -2034,7 +2308,7 @@
         "value": "0.625rem",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 97
       },
       {
@@ -2042,7 +2316,7 @@
         "value": "oklch(1 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 98
       },
       {
@@ -2050,7 +2324,7 @@
         "value": "oklch(0.145 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 99
       },
       {
@@ -2058,7 +2332,7 @@
         "value": "oklch(1 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 100
       },
       {
@@ -2066,7 +2340,7 @@
         "value": "oklch(0.145 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 101
       },
       {
@@ -2074,7 +2348,7 @@
         "value": "oklch(1 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 102
       },
       {
@@ -2082,7 +2356,7 @@
         "value": "oklch(0.145 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 103
       },
       {
@@ -2090,7 +2364,7 @@
         "value": "oklch(0.488 0.243 264.376)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 104
       },
       {
@@ -2098,7 +2372,7 @@
         "value": "oklch(0.985 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 105
       },
       {
@@ -2106,7 +2380,7 @@
         "value": "oklch(0.97 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 106
       },
       {
@@ -2114,7 +2388,7 @@
         "value": "oklch(0.205 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 107
       },
       {
@@ -2122,7 +2396,7 @@
         "value": "oklch(0.97 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 108
       },
       {
@@ -2130,7 +2404,7 @@
         "value": "oklch(0.556 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 109
       },
       {
@@ -2138,7 +2412,7 @@
         "value": "oklch(0.97 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 110
       },
       {
@@ -2146,7 +2420,7 @@
         "value": "oklch(0.205 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 111
       },
       {
@@ -2154,7 +2428,7 @@
         "value": "oklch(0.577 0.245 27.325)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 112
       },
       {
@@ -2162,7 +2436,7 @@
         "value": "oklch(0.985 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 113
       },
       {
@@ -2170,7 +2444,7 @@
         "value": "oklch(0.922 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 114
       },
       {
@@ -2178,7 +2452,7 @@
         "value": "oklch(0.922 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 115
       },
       {
@@ -2186,7 +2460,7 @@
         "value": "oklch(0.488 0.243 264.376)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 116
       },
       {
@@ -2194,7 +2468,7 @@
         "value": "oklch(0.646 0.222 41.116)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 117
       },
       {
@@ -2202,7 +2476,7 @@
         "value": "oklch(0.6 0.118 184.704)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 118
       },
       {
@@ -2210,7 +2484,7 @@
         "value": "oklch(0.398 0.07 227.392)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 119
       },
       {
@@ -2218,7 +2492,7 @@
         "value": "oklch(0.828 0.189 84.429)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 120
       },
       {
@@ -2226,7 +2500,7 @@
         "value": "oklch(0.769 0.188 70.08)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 121
       },
       {
@@ -2234,7 +2508,7 @@
         "value": "oklch(0.985 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 122
       },
       {
@@ -2242,7 +2516,7 @@
         "value": "oklch(0.145 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 123
       },
       {
@@ -2250,7 +2524,7 @@
         "value": "oklch(0.205 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 124
       },
       {
@@ -2258,7 +2532,7 @@
         "value": "oklch(0.985 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 125
       },
       {
@@ -2266,7 +2540,7 @@
         "value": "oklch(0.97 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 126
       },
       {
@@ -2274,7 +2548,7 @@
         "value": "oklch(0.205 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 127
       },
       {
@@ -2282,7 +2556,7 @@
         "value": "oklch(0.922 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 128
       },
       {
@@ -2290,7 +2564,7 @@
         "value": "oklch(0.708 0 0)",
         "category": "other",
         "scope": "selector",
-        "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+        "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
         "line": 129
       }
     ],
@@ -2300,11 +2574,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 28,
             "props": []
           }
@@ -2315,11 +2589,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 29,
             "props": []
           }
@@ -2330,11 +2604,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 16,
             "props": []
           }
@@ -2345,11 +2619,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 32,
             "props": []
           }
@@ -2360,11 +2634,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 18,
             "props": []
           }
@@ -2375,11 +2649,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 19,
             "props": []
           }
@@ -2390,11 +2664,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 35,
             "props": []
           }
@@ -2405,11 +2679,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 36,
             "props": []
           }
@@ -2420,11 +2694,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 37,
             "props": []
           }
@@ -2435,11 +2709,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 38,
             "props": []
           }
@@ -2450,11 +2724,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 39,
             "props": []
           }
@@ -2976,11 +3250,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 30,
             "props": []
           }
@@ -2991,11 +3265,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 31,
             "props": []
           }
@@ -3012,11 +3286,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 17,
             "props": []
           }
@@ -3027,11 +3301,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 33,
             "props": []
           }
@@ -3042,11 +3316,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 26,
             "props": []
           }
@@ -3057,11 +3331,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 27,
             "props": []
           }
@@ -3072,11 +3346,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 20,
             "props": []
           }
@@ -3087,11 +3361,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 21,
             "props": []
           }
@@ -3102,11 +3376,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 22,
             "props": []
           }
@@ -3117,11 +3391,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 23,
             "props": []
           }
@@ -3132,41 +3406,41 @@
         "reference_count": 7,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 40,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 41,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 42,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 43,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 44,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 45,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 46,
             "props": []
           }
@@ -3329,11 +3603,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 34,
             "props": []
           }
@@ -3344,11 +3618,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 24,
             "props": []
           }
@@ -3359,11 +3633,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 25,
             "props": []
           }
@@ -3374,11 +3648,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 47,
             "props": []
           }
@@ -3389,11 +3663,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 51,
             "props": []
           }
@@ -3404,11 +3678,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 52,
             "props": []
           }
@@ -3419,11 +3693,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 53,
             "props": []
           }
@@ -3434,11 +3708,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 48,
             "props": []
           }
@@ -3449,11 +3723,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 49,
             "props": []
           }
@@ -3464,11 +3738,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 50,
             "props": []
           }
@@ -3479,11 +3753,11 @@
         "reference_count": 1,
         "file_count": 1,
         "files": [
-          "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css"
+          "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css"
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/packages/dashboard/src/styles/dashboard-theme.css",
+            "path": "/Users/jeremy/Development/DSLint/demo/react/node_modules/dslinter/src/styles/dashboard-theme.css",
             "line": 54,
             "props": []
           }

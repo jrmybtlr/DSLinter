@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
  * Post-process NAPI-RS generated index.cjs so binding version checks read
- * packages/dashboard/package.json at runtime instead of a hardcoded semver.
+ * dashboard/package.json at runtime instead of a hardcoded semver.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const loaderPath = join(repoRoot, "packages/dashboard/index.cjs");
+const loaderPath = join(repoRoot, "dashboard/index.cjs");
 
 const MARKER = "__napiExpectedVersion";
 const VERSION_CONST = `const ${MARKER} = require('./package.json').version\n`;
