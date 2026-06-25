@@ -65,41 +65,10 @@ Put `.dslinter.json` at the repository root:
 `smell.disabled_rules` accepts `code-*` rule ids (and legacy `smell-*` aliases). `check_dark_mode_contrast` is **heuristic**: it inspects static `class` / `className` strings and string arguments to `cn(...)`, `clsx(...)`, and `classnames(...)` extracted from the AST where possible.
 Legacy `exclude_globs` remains supported for backwards compatibility.
 
-## Demo app
+## Demos
 
-The [`demo/`](demo/) folder is a **Vite + React + TypeScript + Tailwind** sample with a flat `src/components/` layout and [`demo/.dslinter.json`](demo/.dslinter.json).
-
-```bash
-cd demo && npm install && npm run dev
-```
-
-The UI comes from [`packages/dashboard`](packages/dashboard/) (**`dslinter`** on npm). Component previews are driven by **`playgrounds`** in `dslinter-report.json` (from the scanner plus optional `playground_groups` in config), wired with `import.meta.glob` — you do **not** need per-file `playgroundMeta` exports.
-
-`npm run dev` runs **`dslinter`** (same as `npx dslinter` in `demo/`): scanner on port **7878** plus Vite with proxy to `/dslinter-report.json` and `/events` (SSE live updates). Requires the NAPI binding from `npm install` or `DSLINTER_BIN`.
-
-| Script | Behavior |
-|--------|----------|
-| `npm run dev` | `dslinter` dev mode (watch + serve + Vite) |
-| `npm run dev:serve` | Scanner HTTP only (`--serve 7878`) |
-| `npm run dev:watch` | Watch JSON file only (no Vite) |
-| `npm run dev:vite-only` | Vite only (static committed report) |
-| `npm run dslinter:report` | One-shot report file + merge playgrounds |
-
-## Laravel + Inertia demo
-
-The [`demo-inertia/`](demo-inertia/) folder is a **Laravel 13 + Inertia + React + shadcn/ui** app scaffolded with the [official React starter kit](https://laravel.com/docs/13.x/starter-kits#react). It includes a `/components` showcase (15 shadcn `.tsx` components) and an embedded DSLinter governance page at `/governance`.
-
-```bash
-cd demo-inertia && composer install && npm install && npm run dev
-```
-
-See [`demo-inertia/README.md`](demo-inertia/README.md) for setup and scripts.
-
-For CI or a terminal-only report:
-
-```bash
-npx dslinter --report /path/to/repo --json --fail-on-warnings
-```
+- [`demo/`](demo/) — Vite + React + TypeScript + Tailwind sandbox with the dashboard UI. See [`demo/README.md`](demo/README.md).
+- [`demo-inertia/`](demo-inertia/) — Laravel 13 + Inertia + React + shadcn/ui. See [`demo-inertia/README.md`](demo-inertia/README.md).
 
 ## What the CLI covers today
 
@@ -137,28 +106,28 @@ For monorepos, set `cwd` to the app directory (e.g. `demo/` or `demo-inertia/`) 
 
 ### Tools
 
-| Tool | Purpose |
-|------|---------|
-| `dslinter_scan` | Refresh report; return scores and finding counts |
-| `dslinter_get_catalog` | Components sorted by usage |
-| `dslinter_get_component` | Props, variants, findings, example JSX |
-| `dslinter_get_findings` | Filter findings by component, rule, severity, path |
-| `dslinter_get_usage_examples` | Call sites and prop value frequencies |
-| `dslinter_get_tokens` | CSS token definitions and unused tokens |
-| `dslinter_get_agent_context` | Compact context pack for system prompts |
-| `dslinter_get_policy` | Config snapshot + rule catalog |
-| `dslinter_check_paths` | Findings for specific files after edits |
-| `dslinter_diff_since` | Drift vs saved baseline |
-| `dslinter_suggest_fix` | Heuristic fix suggestions |
+| Tool                          | Purpose                                            |
+| ----------------------------- | -------------------------------------------------- |
+| `dslinter_scan`               | Refresh report; return scores and finding counts   |
+| `dslinter_get_catalog`        | Components sorted by usage                         |
+| `dslinter_get_component`      | Props, variants, findings, example JSX             |
+| `dslinter_get_findings`       | Filter findings by component, rule, severity, path |
+| `dslinter_get_usage_examples` | Call sites and prop value frequencies              |
+| `dslinter_get_tokens`         | CSS token definitions and unused tokens            |
+| `dslinter_get_agent_context`  | Compact context pack for system prompts            |
+| `dslinter_get_policy`         | Config snapshot + rule catalog                     |
+| `dslinter_check_paths`        | Findings for specific files after edits            |
+| `dslinter_diff_since`         | Drift vs saved baseline                            |
+| `dslinter_suggest_fix`        | Heuristic fix suggestions                          |
 
 ### Environment
 
-| Variable | Purpose |
-|----------|---------|
-| `DSLINTER_SCAN_ROOT` | Scan boundary override |
-| `DSLINTER_REPORT_PATH` | Report file override |
+| Variable               | Purpose                                          |
+| ---------------------- | ------------------------------------------------ |
+| `DSLINTER_SCAN_ROOT`   | Scan boundary override                           |
+| `DSLINTER_REPORT_PATH` | Report file override                             |
 | `DSLINTER_MCP_DEV_URL` | Dev server URL (default `http://127.0.0.1:7878`) |
-| `DSLINTER_MCP_TTL_MS` | Report cache TTL (default 60000) |
+| `DSLINTER_MCP_TTL_MS`  | Report cache TTL (default 60000)                 |
 
 When `npx dslinter` dev mode is running, the MCP server prefers the live report from port 7878.
 

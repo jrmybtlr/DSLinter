@@ -39,12 +39,13 @@ pnpm install && cd demo && pnpm dev
 
 Equivalent from `demo/`: `npx dslinter .`
 
-| Script                  | When to use                                                          |
-| ----------------------- | -------------------------------------------------------------------- |
-| `npm run dev`           | Default — `dslinter` dev mode                                        |
-| `npm run dev:serve`     | Scanner only (`dslinter --serve 7878`)                               |
-| `npm run dev:watch`     | Watch JSON only (`dslinter --watch`)                                 |
-| `npm run dev:vite-only` | Vite alone; static committed report                                  |
+| Script                    | When to use                                                          |
+| ------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`             | Default — `dslinter` dev mode (watch + serve on **7878** + Vite)    |
+| `npm run dev:serve`       | Scanner only (`dslinter --serve 7878`)                               |
+| `npm run dev:watch`       | Watch JSON only (`dslinter --watch`)                                 |
+| `npm run dev:vite-only`   | Vite alone; static committed report                                  |
+| `npm run dslinter:report` | One-shot report file + merge playgrounds                             |
 
 **pnpm:** Prefer **`pnpm install` from the repo root** (predictable, one lockfile). Running `pnpm install` from `demo/` still picks up the parent `pnpm-workspace.yaml` and scopes all workspace packages, but pnpm may **prompt** to wipe and reinstall `node_modules` (non-interactive shells can appear to hang — use root installs or `CI=true pnpm install` in CI).
 
