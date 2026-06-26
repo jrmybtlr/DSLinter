@@ -5,6 +5,25 @@ function jsxTextOrStringifyExpression(text: string): string {
   return `{JSON.stringify(${JSON.stringify(text)})}`;
 }
 
+export function formatJsxPropAssignment(key: string, value: unknown): string {
+  if (value === true) {
+    return key;
+  }
+  if (typeof value === "string") {
+    if (!/["'{}<>&\n\r]/.test(value)) {
+      return `${key}="${value}"`;
+    }
+    return `${key}={${JSON.stringify(value)}}`;
+  }
+  if (typeof value === "number") {
+    return `${key}={${value}}`;
+  }
+  if (typeof value === "boolean") {
+    return `${key}={${value}}`;
+  }
+  return `${key}={${JSON.stringify(value)}}`;
+}
+
 function valueMatchesPlaygroundDefault(
   control: PlaygroundControl,
   value: string | number | boolean | undefined,
@@ -49,7 +68,7 @@ export function genericUsageSnippet(
     .filter(emitPropKey)
     .sort((a, b) => a.localeCompare(b));
   const propsStr = propKeys
-    .map((k) => `${k}={${JSON.stringify(values[k])}}`)
+    .map((k) => formatJsxPropAssignment(k, values[k]))
     .join(" ");
 
   const openWithProps =
@@ -64,7 +83,7 @@ export function genericUsageSnippet(
       .filter(emitPropKey)
       .sort((a, b) => a.localeCompare(b));
     const allProps = allKeys
-      .map((k) => `${k}={${JSON.stringify(values[k])}}`)
+      .map((k) => formatJsxPropAssignment(k, values[k]))
       .join(" ");
     return allKeys.length === 0
       ? `<${exportName} />`

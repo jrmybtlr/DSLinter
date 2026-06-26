@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-06-25T22:55:50.687703Z",
+  "generated_at": "2026-06-26T04:45:38.800737Z",
   "root": "/Users/jeremy/Development/DSLint/demo/inertia",
   "files": [
     {
@@ -7271,13 +7271,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 44,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 19,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 19,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 44,
             "props": []
           }
         ]
@@ -7292,13 +7292,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 44,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 19,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 19,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 44,
             "props": []
           }
         ]
@@ -9433,13 +9433,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 26,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 17,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 17,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 26,
             "props": []
           }
         ]
@@ -9454,34 +9454,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 26,
-            "props": []
-          },
-          {
             "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
             "line": 17,
             "props": []
-          }
-        ]
-      },
-      {
-        "name": "--popover-foreground",
-        "reference_count": 2,
-        "file_count": 2,
-        "files": [
-          "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-          "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx"
-        ],
-        "usage_locations": [
-          {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 27,
-            "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 18,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 26,
             "props": []
           }
         ]
@@ -9496,13 +9475,34 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 27,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 18,
             "props": []
           },
           {
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 27,
+            "props": []
+          }
+        ]
+      },
+      {
+        "name": "--popover-foreground",
+        "reference_count": 2,
+        "file_count": 2,
+        "files": [
+          "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+          "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx"
+        ],
+        "usage_locations": [
+          {
             "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
             "line": 18,
+            "props": []
+          },
+          {
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 27,
             "props": []
           }
         ]

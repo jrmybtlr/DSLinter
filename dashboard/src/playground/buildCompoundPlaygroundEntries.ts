@@ -19,6 +19,7 @@ import {
   SKIP_PLAYGROUND_PROPS,
   stringDefaultForProp,
 } from "./controls";
+import { formatJsxPropAssignment } from "./snippet";
 
 const PLAYABLE_KINDS = new Set<DefinitionKind>([
   "function",
@@ -428,7 +429,7 @@ function compoundUsageSnippet(
 ): string {
   const propsStr = controls
     .filter((c) => c.key !== "children")
-    .map((c) => `${c.key}={${JSON.stringify(values[c.key])}}`)
+    .map((c) => formatJsxPropAssignment(c.key, values[c.key]))
     .join(" ");
 
   const targetOpen = propsStr.length > 0 ? `<${targetName} ${propsStr}` : `<${targetName}`;

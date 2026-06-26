@@ -22,19 +22,6 @@ type Props = {
   catalogNames: string[];
 };
 
-function SearchShortcutBadge() {
-  const [label, setLabel] = useState("⌘K");
-  useEffect(() => {
-    const mac = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent);
-    setLabel(mac ? "⌘K" : "Ctrl+K");
-  }, []);
-  return (
-    <kbd className="pointer-events-none select-none rounded border border-sidebar-border bg-sidebar-accent px-1 py-px font-mono text-[10px] font-medium leading-tight text-sidebar-foreground/80 tabular-nums">
-      {label}
-    </kbd>
-  );
-}
-
 function navButtonClass(active: boolean) {
   return `w-full rounded-md truncate px-2.5 py-1.5 text-left text-sm transition ${
     active
@@ -73,8 +60,7 @@ function scrollActiveNavItemToTop(nav: HTMLElement) {
 
   const activeRect = active.getBoundingClientRect();
   const navRect = nav.getBoundingClientRect();
-  const visible =
-    activeRect.bottom > navRect.top && activeRect.top < navRect.bottom;
+  const visible = activeRect.bottom > navRect.top && activeRect.top < navRect.bottom;
   if (visible) return;
 
   const offset = activeRect.top - navRect.top;
@@ -92,14 +78,9 @@ export function Sidebar({
   onThemeChange,
   catalogNames,
 }: Props) {
-  const catalogTree = useMemo(
-    () => componentCatalogTreeFromReport(report),
-    [report],
-  );
+  const catalogTree = useMemo(() => componentCatalogTreeFromReport(report), [report]);
   const navRef = useRef<HTMLElement>(null);
-  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(() => new Set());
   const tokensActive = route.view === "tokens";
   const governanceActive = route.view === "governance";
   const catalogActive = route.view === "catalog";
@@ -109,8 +90,7 @@ export function Sidebar({
     const activeFamily = catalogTree.find(
       (item) =>
         item.type === "family" &&
-        (item.parent === route.componentId ||
-          item.children.includes(route.componentId)),
+        (item.parent === route.componentId || item.children.includes(route.componentId)),
     );
     if (!activeFamily || activeFamily.type !== "family") return;
     setExpandedFamilies((prev) => {
@@ -140,58 +120,25 @@ export function Sidebar({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center text-foreground">
             <svg
+              className="size-4 shrink-0"
+              viewBox="0 0 31 24"
+              fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
+              aria-hidden
             >
-              <g fill="currentColor">
-                <path
-                  d="m22.346,4.836l-3.182-3.182c-.779-.78-2.049-.78-2.828,0l-3.182,3.182c-.78.78-.78,2.048,0,2.828l3.182,3.182c.39.39.902.585,1.414.585s1.024-.195,1.414-.585l3.182-3.182c.78-.78.78-2.048,0-2.828Z"
-                  fill="currentColor"
-                  strokeWidth="0"
-                ></path>
-                <rect
-                  x="2"
-                  y="2"
-                  width="9"
-                  height="9"
-                  rx="2"
-                  ry="2"
-                  strokeWidth="0"
-                  fill="currentColor"
-                ></rect>
-                <rect
-                  x="13"
-                  y="13"
-                  width="9"
-                  height="9"
-                  rx="2"
-                  ry="2"
-                  strokeWidth="0"
-                  fill="currentColor"
-                ></rect>
-                <rect
-                  x="2"
-                  y="13"
-                  width="9"
-                  height="9"
-                  rx="2"
-                  ry="2"
-                  strokeWidth="0"
-                  fill="currentColor"
-                ></rect>
-              </g>
+              <path
+                d="M18.6446 -5.20202e-07C25.2173 -2.32902e-07 30.5455 5.32818 30.5455 11.9008C30.5455 18.4735 25.2173 23.8017 18.6446 23.8017L4.62965e-05 23.8016L4.73369e-05 -1.33518e-06L18.6446 -5.20202e-07Z"
+                fill="currentColor"
+              />
             </svg>
           </div>
           <button
             type="button"
             onClick={onOpenCommandPalette}
-            className="flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-foreground/70 transition hover:bg-accent hover:text-accent-foreground"
+            className="flex shrink-0 items-center gap-1.5 rounded-md pl-1.5 py-0 text-foreground/70 transition hover:bg-accent hover:text-accent-foreground"
             aria-label="Search components and views"
           >
             <IconSearch className="size-4 shrink-0" aria-hidden />
-            <SearchShortcutBadge />
           </button>
         </div>
       </div>
@@ -224,15 +171,11 @@ export function Sidebar({
         </button>
 
         {sectionLabel(
-          catalogNames.length > 0
-            ? `Components (${catalogNames.length})`
-            : "Components",
+          catalogNames.length > 0 ? `Components (${catalogNames.length})` : "Components",
         )}
         <div className="space-y-0.5">
           {reportLoading && catalogNames.length === 0 ? (
-            <p className="px-2.5 py-1.5 text-sm text-sidebar-foreground/50">
-              Loading components…
-            </p>
+            <p className="px-2.5 py-1.5 text-sm text-sidebar-foreground/50">Loading components…</p>
           ) : null}
           {reportError && catalogNames.length === 0 ? (
             <p className="px-2.5 py-1.5 text-sm text-sidebar-foreground/50">
@@ -246,15 +189,12 @@ export function Sidebar({
           ) : null}
           {catalogTree.map((item) => {
             if (item.type === "component") {
-              const active =
-                route.view === "component" && route.componentId === item.name;
+              const active = route.view === "component" && route.componentId === item.name;
               return (
                 <button
                   key={item.name}
                   type="button"
-                  onClick={() =>
-                    onNavigate({ view: "component", componentId: item.name })
-                  }
+                  onClick={() => onNavigate({ view: "component", componentId: item.name })}
                   className={navButtonClass(active)}
                   data-nav-active={active ? "true" : undefined}
                 >
@@ -263,11 +203,9 @@ export function Sidebar({
               );
             }
 
-            const parentActive =
-              route.view === "component" && route.componentId === item.parent;
+            const parentActive = route.view === "component" && route.componentId === item.parent;
             const childActive =
-              route.view === "component" &&
-              item.children.includes(route.componentId);
+              route.view === "component" && item.children.includes(route.componentId);
             const familyActive = parentActive || childActive;
             const parentNavActive = parentActive && !childActive;
             const expanded = expandedFamilies.has(item.parent);
@@ -279,10 +217,7 @@ export function Sidebar({
                     onClick={() =>
                       onNavigate({
                         view: "component",
-                        componentId: resolveFamilyNavigationTarget(
-                          item,
-                          catalogNames,
-                        ),
+                        componentId: resolveFamilyNavigationTarget(item, catalogNames),
                       })
                     }
                     className={familyParentButtonClass(familyActive)}
@@ -320,9 +255,7 @@ export function Sidebar({
                 {expanded ? (
                   <div className="mt-0.5 space-y-0.5 border-l border-sidebar-border/70 pl-3">
                     {item.children.map((child) => {
-                      const active =
-                        route.view === "component" &&
-                        route.componentId === child;
+                      const active = route.view === "component" && route.componentId === child;
                       return (
                         <button
                           key={child}
@@ -362,20 +295,10 @@ export function Sidebar({
           onValueChange={onThemeValueChange}
           aria-label="Color theme"
         >
-          <ToggleGroupItem
-            value="light"
-            className="flex-1"
-            aria-label="Light theme"
-            title="Light"
-          >
+          <ToggleGroupItem value="light" className="flex-1" aria-label="Light theme" title="Light">
             <IconSun className="size-4" aria-hidden />
           </ToggleGroupItem>
-          <ToggleGroupItem
-            value="dark"
-            className="flex-1"
-            aria-label="Dark theme"
-            title="Dark"
-          >
+          <ToggleGroupItem value="dark" className="flex-1" aria-label="Dark theme" title="Dark">
             <IconMoon className="size-4" aria-hidden />
           </ToggleGroupItem>
         </ToggleGroup>
