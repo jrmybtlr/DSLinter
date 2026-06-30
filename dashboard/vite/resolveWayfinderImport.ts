@@ -1,6 +1,6 @@
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { resolveWithConsumerAliases, type FlatAlias } from "./consumerAlias";
+import { resolveWithConsumerAliases, type FlatAlias } from "./consumerAlias.ts";
 
 const FILE_EXTENSIONS = [".tsx", ".ts", ".jsx", ".js"] as const;
 

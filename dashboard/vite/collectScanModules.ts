@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { embedGlobKeyFromRelPath } from "../src/playground/embedGlobKey";
+import { embedGlobKeyFromRelPath } from "../src/playground/embedGlobKey.ts";
 
 const CONFIG_NAMES = [".dslinter.json", "dslinter.json"];
 

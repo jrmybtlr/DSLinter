@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import dslinter from "./plugin";
+import dslinter from "./plugin.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(configDir, "..");

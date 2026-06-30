@@ -13,25 +13,25 @@ import { resolveReportFilePath } from "../shared/reportPath.ts";
 import {
   collectScanModuleRelPaths,
   embedGlobKeyFromRelPath,
-} from "./collectScanModules";
+} from "./collectScanModules.ts";
 import {
   buildEmbedIndexCss,
   embedSourcePathsRelativeToCss,
   shouldInjectEmbedConsumerSources,
-} from "./embedTailwindSources";
+} from "./embedTailwindSources.ts";
 import {
   importerUnderScanRoot,
   INERTIA_SHIM_IDS,
   ZIGGY_SHIM_ID,
   type FlatAlias,
-} from "./consumerAlias";
-import { loadConsumerAliases } from "./loadConsumerAliases";
+} from "./consumerAlias.ts";
+import { loadConsumerAliases } from "./loadConsumerAliases.ts";
 import {
   isWayfinderActionsImport,
   isWayfinderRoutesImport,
   resolveExistingModule,
   resolveWayfinderShim,
-} from "./resolveWayfinderImport";
+} from "./resolveWayfinderImport.ts";
 
 export const VIRTUAL_PLAYGROUND_MODULES_ID = "virtual:dslinter/playground-modules";
 const RESOLVED_VIRTUAL_ID = `\0${VIRTUAL_PLAYGROUND_MODULES_ID}`;

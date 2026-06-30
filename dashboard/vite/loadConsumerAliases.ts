@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { AliasOptions } from "vite";
-import { flattenViteAlias, type FlatAlias } from "./consumerAlias";
+import { flattenViteAlias, type FlatAlias } from "./consumerAlias.ts";
 
 const TSCONFIG_NAMES = ["tsconfig.json", "jsconfig.json"] as const;
 

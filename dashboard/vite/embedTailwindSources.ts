@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { projectRootForConfig, readIncludeDirs } from "./collectScanModules";
+import { projectRootForConfig, readIncludeDirs } from "./collectScanModules.ts";
 
 const FALLBACK_INCLUDE_DIRS = ["resources/js", "src", "app"];
 
