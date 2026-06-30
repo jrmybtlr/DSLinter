@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const demoRoot = join(__dirname, "..");
-const dslinterBin = join(demoRoot, "..", "..", "packages", "dashboard", "bin", "dslinter.mjs");
+const dslinterBin = join(demoRoot, "..", "..", "dashboard", "bin", "dslinter.mjs");
 
 if (!existsSync(dslinterBin)) {
   process.stderr.write(
