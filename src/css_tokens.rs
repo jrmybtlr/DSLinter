@@ -138,6 +138,25 @@ fn resolve_monorepo_dslinter_styles(anchors: &[&Path], rest: &str) -> Option<Pat
     let theme_file = dslinter_styles_filename(rest);
     for anchor in anchors {
         if let Some(path) = find_file_in_ancestors(anchor, |base| {
+            base.join("dashboard")
+                .join("src")
+                .join("styles")
+                .join(theme_file)
+        }) {
+            return Some(path);
+        }
+        if let Some(path) = find_file_in_ancestors(anchor, |base| base.join("dashboard").join(rest)) {
+            return Some(path);
+        }
+        if let Some(path) = find_file_in_ancestors(anchor, |base| {
+            base.join("dashboard")
+                .join("src")
+                .join("styles")
+                .join(rest)
+        }) {
+            return Some(path);
+        }
+        if let Some(path) = find_file_in_ancestors(anchor, |base| {
             base.join("packages")
                 .join("dashboard")
                 .join("src")
@@ -666,7 +685,7 @@ mod tests {
     #[test]
     fn resolves_package_import_from_repo_root() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let from = root.join("demo/src/index.css");
+        let from = root.join("demo/react/src/index.css");
         let resolved = resolve_css_import(&root, &from, "dslinter/theme.css");
         assert!(resolved.is_some(), "expected monorepo theme path");
         assert!(resolved.unwrap().ends_with("dashboard-theme.css"));
@@ -675,7 +694,7 @@ mod tests {
     #[test]
     fn resolves_package_import_from_demo_scan_root() {
         let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let root = manifest.join("demo");
+        let root = manifest.join("demo/react");
         let from = root.join("src/index.css");
         let resolved = resolve_css_import(&root, &from, "dslinter/theme.css");
         assert!(

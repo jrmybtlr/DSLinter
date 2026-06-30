@@ -602,7 +602,7 @@ impl ExtractVisitor<'_> {
                 {
                     self.push_a11y(
                         line,
-                        Severity::Info,
+                        Severity::Warning,
                         "a11y-input-label",
                         a11y::INPUT_LABEL,
                     );

@@ -76,8 +76,8 @@ jobs:
               --release \
               --target "$1" \
               --cwd . \
-              --output-dir packages/dashboard \
-              --package-json-path packages/dashboard/package.json \
+              --output-dir dashboard \
+              --package-json-path dashboard/package.json \
               --js-package-name @dslinter/binding \
               --js index.cjs \
               --no-default-features \
@@ -96,7 +96,7 @@ jobs:
         with:
           name: bindings-${{ matrix.target }}
           path: |
-            packages/dashboard/${{ env.APP_NAME }}.*.node
+            dashboard/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
 
   publish:
@@ -147,7 +147,7 @@ jobs:
         run: |
           pnpm exec napi create-npm-dirs \
             --cwd . \
-            --package-json-path packages/dashboard/package.json \
+            --package-json-path dashboard/package.json \
             --npm-dir npm
 
       - uses: actions/download-artifact@v7
@@ -160,22 +160,22 @@ jobs:
         run: |
           shopt -s nullglob
           for f in artifacts/${{ env.APP_NAME }}.*.node; do
-            cp "$f" packages/dashboard/
+            cp "$f" dashboard/
           done
           for f in artifacts/*/${{ env.APP_NAME }}.*.node; do
-            cp "$f" packages/dashboard/
+            cp "$f" dashboard/
           done
-          ls -la packages/dashboard/*.node
+          ls -la dashboard/*.node
           pnpm exec napi artifacts \
             --cwd . \
-            --package-json-path packages/dashboard/package.json \
+            --package-json-path dashboard/package.json \
             --npm-dir npm
 
       - name: Sync optionalDependencies for dslinter
         run: |
           pnpm exec napi prepublish \
             --cwd . \
-            --package-json-path packages/dashboard/package.json \
+            --package-json-path dashboard/package.json \
             --npm-dir npm \
             --no-gh-release \
             --skip-optional-publish
@@ -196,8 +196,8 @@ jobs:
             exit 1
           fi
           echo "npm user: ${user}"
-          pkg=$(node -p "require('./packages/dashboard/package.json').name")
-          ver=$(node -p "require('./packages/dashboard/package.json').version")
+          pkg=$(node -p "require('./dashboard/package.json').name")
+          ver=$(node -p "require('./dashboard/package.json').version")
           echo "Will publish ${pkg}@${ver} and @dslinter/binding-*@${ver}"
 
       - name: Publish platform bindings
