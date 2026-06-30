@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-06-26T04:45:38.800737Z",
+  "generated_at": "2026-06-26T05:13:25.577498Z",
   "root": "/Users/jeremy/Development/DSLint/demo/inertia",
   "files": [
     {
@@ -1708,20 +1708,6 @@
       "rule_id": "token-tailwind-arbitrary",
       "message": "Use `min-w-32` instead of arbitrary `min-w-[8rem]`",
       "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/dropdown-menu.tsx",
-      "line": 42,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-tailwind-arbitrary",
-      "message": "Use `min-w-32` instead of arbitrary `min-w-[8rem]`",
-      "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/dropdown-menu.tsx",
-      "line": 42,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-tailwind-arbitrary",
-      "message": "Use `min-w-32` instead of arbitrary `min-w-[8rem]`",
-      "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/dropdown-menu.tsx",
       "line": 230,
       "severity": "info"
     },
@@ -1744,20 +1730,6 @@
       "message": "Use `min-w-32` instead of arbitrary `min-w-[8rem]`",
       "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/select.tsx",
       "line": 64,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-tailwind-arbitrary",
-      "message": "Use `w-0.5` instead of arbitrary `w-[2px]`",
-      "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-      "line": 275,
-      "severity": "info"
-    },
-    {
-      "rule_id": "token-tailwind-arbitrary",
-      "message": "Use `w-0.5` instead of arbitrary `w-[2px]`",
-      "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-      "line": 275,
       "severity": "info"
     }
   ],
@@ -10095,13 +10067,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 58,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 58,
             "props": []
           }
         ]
@@ -10116,14 +10088,14 @@
         ],
         "usage_locations": [
           {
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
+            "props": []
+          },
+          {
             "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
             "line": 58,
             "props": []
-          },
-          {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
-            "props": []
           }
         ]
       },
@@ -10167,13 +10139,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 60,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 60,
             "props": []
           }
         ]
@@ -10188,13 +10160,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 60,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 60,
             "props": []
           }
         ]
