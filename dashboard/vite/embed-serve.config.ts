@@ -53,6 +53,7 @@ export default defineConfig(() => ({
     dslinter({ scanRoot, consumerViteRoot }),
   ],
   server: {
+    host: "127.0.0.1",
     fs: {
       allow: [packageRoot, scanRoot],
     },
