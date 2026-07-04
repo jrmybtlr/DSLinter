@@ -297,6 +297,8 @@ pub fn analyze_vue_file(path: &Path, source: &str, import_filter: &ImportFilter)
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             });
         }
     }
@@ -355,6 +357,7 @@ fn merge_template_usages(
             line,
             props: Vec::new(),
             prop_values: std::collections::BTreeMap::new(),
+            example_tree: None,
         });
     }
 
@@ -368,6 +371,7 @@ fn merge_template_usages(
             line,
             props: Vec::new(),
             prop_values: std::collections::BTreeMap::new(),
+            example_tree: None,
         });
     }
 }

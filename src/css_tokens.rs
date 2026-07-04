@@ -25,6 +25,13 @@ fn is_component_local_noise(name: &str, scope: CssTokenScope) -> bool {
     name.starts_with("--btn-") && scope == CssTokenScope::Selector
 }
 
+fn is_node_modules_path(path: &Path) -> bool {
+    path.components().any(|c| c.as_os_str() == "node_modules")
+}
+
+/// Cap per-token location lists so reports stay bounded when CSS sources are large.
+const MAX_TOKEN_USAGE_LOCATIONS: usize = 128;
+
 pub fn classify_token(name: &str) -> CssTokenCategory {
     if name.starts_with("--color-") {
         CssTokenCategory::Color
@@ -46,6 +53,9 @@ pub fn load_css_sources(root: &Path, entry_paths: &[PathBuf]) -> HashMap<PathBuf
     let mut queue: Vec<PathBuf> = entry_paths.to_vec();
 
     while let Some(path) = queue.pop() {
+        if is_node_modules_path(&path) {
+            continue;
+        }
         let canonical = path
             .canonicalize()
             .unwrap_or_else(|_| path.clone());
@@ -57,6 +67,9 @@ pub fn load_css_sources(root: &Path, entry_paths: &[PathBuf]) -> HashMap<PathBuf
         };
         for import_spec in extract_imports(&content) {
             if let Some(resolved) = resolve_css_import(root, &path, &import_spec) {
+                if is_node_modules_path(&resolved) {
+                    continue;
+                }
                 let resolved_canon = resolved
                     .canonicalize()
                     .unwrap_or_else(|_| resolved.clone());
@@ -518,8 +531,11 @@ pub fn analyze_css_tokens(
 
     let mut usage_by_token: Vec<CssTokenUsage> = Vec::new();
     for def in &definitions {
-        let locs = usage_map.get(&def.name).cloned().unwrap_or_default();
+        let mut locs = usage_map.get(&def.name).cloned().unwrap_or_default();
         let reference_count = locs.len() as u32;
+        if locs.len() > MAX_TOKEN_USAGE_LOCATIONS {
+            locs.truncate(MAX_TOKEN_USAGE_LOCATIONS);
+        }
         let mut file_set: HashSet<PathBuf> = HashSet::new();
         for loc in &locs {
             file_set.insert(loc.path.clone());
@@ -734,5 +750,27 @@ mod tests {
             .map(|p| p.to_string_lossy().replace('\\', "/"))
             .collect();
         assert_eq!(rels, vec!["styles/main.css"]);
+    }
+
+    #[test]
+    fn skips_node_modules_css_imports() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        let nm = root.join("node_modules").join("tailwindcss").join("index.css");
+        std::fs::create_dir_all(nm.parent().unwrap()).unwrap();
+        std::fs::write(&nm, ":root { --color-huge: red; color: var(--color-huge); }").unwrap();
+        std::fs::write(
+            root.join("app.css"),
+            "@import 'tailwindcss';\n:root { --color-app: blue; }",
+        )
+        .unwrap();
+
+        let loaded = load_css_sources(root, &[root.join("app.css")]);
+        assert!(
+            loaded.keys().all(|p| !is_node_modules_path(p)),
+            "node_modules CSS must not load: {:?}",
+            loaded.keys().collect::<Vec<_>>()
+        );
+        assert!(loaded.contains_key(&root.join("app.css")));
     }
 }

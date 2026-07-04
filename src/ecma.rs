@@ -226,6 +226,8 @@ fn component_definition_from_params(
         declared_prop_options,
         declared_prop_defaults,
         cva_binding_name,
+        implementation_class_frequencies: BTreeMap::new(),
+        implementation_class_locations: Vec::new(),
     }
 }
 
@@ -233,7 +235,7 @@ fn is_component_identifier(name: &str) -> bool {
     name.chars().next().is_some_and(|c| c.is_ascii_uppercase())
 }
 
-fn jsx_name(name: &JSXElementName<'_>) -> Option<String> {
+pub(crate) fn jsx_name(name: &JSXElementName<'_>) -> Option<String> {
     match name {
         JSXElementName::Identifier(id) => Some(id.name.as_str().to_string()),
         JSXElementName::IdentifierReference(id) => Some(id.name.as_str().to_string()),
@@ -683,6 +685,8 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                         declared_prop_options: BTreeMap::new(),
                         declared_prop_defaults: BTreeMap::new(),
                         cva_binding_name: None,
+                        implementation_class_frequencies: BTreeMap::new(),
+                        implementation_class_locations: Vec::new(),
                     });
                 }
             }
@@ -742,6 +746,8 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     declared_prop_options: BTreeMap::new(),
                     declared_prop_defaults: BTreeMap::new(),
                     cva_binding_name: None,
+                    implementation_class_frequencies: BTreeMap::new(),
+                    implementation_class_locations: Vec::new(),
                 });
             }
             _ => {}
@@ -769,11 +775,18 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
             {
                 let props = props_from_jsx_element(&el.opening_element.attributes, &el.children);
                 let prop_values = prop_values_from_attributes(&el.opening_element.attributes);
+                let example_tree =
+                    if crate::example_tree::element_has_composition_children(&el.children) {
+                        crate::example_tree::example_tree_from_jsx_element(el)
+                    } else {
+                        None
+                    };
                 self.usages.push(JsxUsage {
                     component,
                     line: self.line(el.opening_element.span.start),
                     props,
                     prop_values,
+                    example_tree,
                 });
             }
         }
@@ -836,6 +849,8 @@ impl ExtractVisitor<'_> {
                     declared_prop_options: BTreeMap::new(),
                     declared_prop_defaults: BTreeMap::new(),
                     cva_binding_name: None,
+                    implementation_class_frequencies: BTreeMap::new(),
+                    implementation_class_locations: Vec::new(),
                 });
             }
         }
@@ -1256,6 +1271,206 @@ export function Page() {
             .find(|u| u.component == "FlexStack")
             .expect("FlexStack usage");
         assert!(!usage.props.contains(&"children".to_string()));
+    }
+
+    #[test]
+    fn example_tree_captured_for_breadcrumb_composition() {
+        use crate::model::{ExampleNode, ExampleValue};
+
+        let src = r#"
+import { Fragment } from 'react';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+
+export function Breadcrumbs({ breadcrumbs }) {
+    return (
+        <>
+            {breadcrumbs.length > 0 && (
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        {breadcrumbs.map((item, index) => {
+                            const isLast = index === breadcrumbs.length - 1;
+                            return (
+                                <Fragment key={index}>
+                                    <BreadcrumbItem>
+                                        {isLast ? (
+                                            <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                                        ) : (
+                                            <BreadcrumbLink asChild>
+                                                <Link href={item.href}>{item.title}</Link>
+                                            </BreadcrumbLink>
+                                        )}
+                                    </BreadcrumbItem>
+                                    {!isLast && <BreadcrumbSeparator />}
+                                </Fragment>
+                            );
+                        })}
+                    </BreadcrumbList>
+                </Breadcrumb>
+            )}
+        </>
+    );
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("breadcrumbs.tsx"), src);
+        let usage = scan
+            .usages
+            .iter()
+            .find(|u| u.component == "Breadcrumb")
+            .expect("Breadcrumb usage");
+        let tree = usage.example_tree.as_ref().expect("example tree captured");
+
+        let ExampleNode::Element { name, children, .. } = tree else {
+            panic!("root should be an element");
+        };
+        assert_eq!(name, "Breadcrumb");
+
+        let ExampleNode::Element {
+            name: list_name,
+            children: list_children,
+            ..
+        } = &children[0]
+        else {
+            panic!("first child should be BreadcrumbList");
+        };
+        assert_eq!(list_name, "BreadcrumbList");
+
+        let names: Vec<&str> = list_children
+            .iter()
+            .filter_map(|n| match n {
+                ExampleNode::Element { name, .. } => Some(name.as_str()),
+                _ => None,
+            })
+            .collect();
+        // Map unrolled 3x; `!isLast && <Separator/>` dropped on the last iteration.
+        assert_eq!(
+            names,
+            vec![
+                "BreadcrumbItem",
+                "BreadcrumbSeparator",
+                "BreadcrumbItem",
+                "BreadcrumbSeparator",
+                "BreadcrumbItem",
+            ]
+        );
+
+        // Non-last iterations pick the ternary alternate (BreadcrumbLink)…
+        let ExampleNode::Element {
+            children: first_item_children,
+            ..
+        } = &list_children[0]
+        else {
+            panic!("expected element");
+        };
+        let ExampleNode::Element {
+            name: link_name,
+            props: link_props,
+            children: link_children,
+        } = &first_item_children[0]
+        else {
+            panic!("expected BreadcrumbLink element");
+        };
+        assert_eq!(link_name, "BreadcrumbLink");
+        assert_eq!(link_props.get("asChild"), Some(&ExampleValue::Bool(true)));
+        // Nested external <Link href={item.href}> is kept; dynamic href dropped.
+        let ExampleNode::Element {
+            name: anchor_name,
+            children: anchor_children,
+            ..
+        } = &link_children[0]
+        else {
+            panic!("expected nested Link element");
+        };
+        assert_eq!(anchor_name, "Link");
+        assert_eq!(
+            anchor_children[0],
+            ExampleNode::Placeholder {
+                hint: "Title".into()
+            }
+        );
+
+        // …and the last iteration picks the consequent (BreadcrumbPage).
+        let ExampleNode::Element {
+            children: last_item_children,
+            ..
+        } = &list_children[4]
+        else {
+            panic!("expected element");
+        };
+        let ExampleNode::Element {
+            name: page_name, ..
+        } = &last_item_children[0]
+        else {
+            panic!("expected BreadcrumbPage element");
+        };
+        assert_eq!(page_name, "BreadcrumbPage");
+    }
+
+    #[test]
+    fn example_tree_skipped_for_text_only_children() {
+        let src = r#"export function X() { return <Button variant="ghost">Save</Button>; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        let usage = scan
+            .usages
+            .iter()
+            .find(|u| u.component == "Button")
+            .expect("Button usage");
+        assert!(usage.example_tree.is_none());
+    }
+
+    #[test]
+    fn example_tree_keeps_literal_props_and_text() {
+        use crate::model::{ExampleNode, ExampleValue};
+
+        let src = r#"
+export function X() {
+  return (
+    <Card size="lg" rows={3} onClick={() => go()} {...rest}>
+      <CardTitle>Hello world</CardTitle>
+    </Card>
+  );
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        let usage = scan
+            .usages
+            .iter()
+            .find(|u| u.component == "Card")
+            .expect("Card usage");
+        let tree = usage.example_tree.as_ref().expect("example tree");
+        let ExampleNode::Element {
+            props, children, ..
+        } = tree
+        else {
+            panic!("expected element");
+        };
+        assert_eq!(
+            props.get("size"),
+            Some(&ExampleValue::String("lg".into()))
+        );
+        assert_eq!(props.get("rows"), Some(&ExampleValue::Number(3.0)));
+        assert!(!props.contains_key("onClick"), "function props dropped");
+        let ExampleNode::Element {
+            name,
+            children: title_children,
+            ..
+        } = &children[0]
+        else {
+            panic!("expected CardTitle");
+        };
+        assert_eq!(name, "CardTitle");
+        assert_eq!(
+            title_children[0],
+            ExampleNode::Text {
+                value: "Hello world".into()
+            }
+        );
     }
 
     #[test]

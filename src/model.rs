@@ -39,6 +39,18 @@ pub struct ComponentDefinition {
     /// Resolved `VariantProps<typeof binding>` CVA binding name, when present.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cva_binding_name: Option<String>,
+    /// Tailwind/class tokens used inside this component's JSX (`span`, `button`, …).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub implementation_class_frequencies: BTreeMap<String, u32>,
+    /// Source locations for implementation class strings (traceability).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub implementation_class_locations: Vec<ImplementationClassLocation>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ImplementationClassLocation {
+    pub line: u32,
+    pub classes: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -53,6 +65,46 @@ pub struct JsxUsage {
     /// Non-literal expressions are intentionally omitted.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub prop_values: BTreeMap<String, String>,
+    /// Sanitized JSX subtree captured at this call site (composition sites only).
+    ///
+    /// Used to pick a representative `example_tree` for playground specs; never
+    /// emitted per-usage in the JSON report.
+    #[serde(skip)]
+    pub example_tree: Option<ExampleNode>,
+}
+
+/// Statically-known literal prop value inside an [`ExampleNode`].
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(tag = "kind", content = "value", rename_all = "snake_case")]
+pub enum ExampleValue {
+    String(String),
+    Number(f64),
+    Bool(bool),
+}
+
+/// Data-only JSX subtree serialized from a real call site.
+///
+/// Dynamic expressions are sanitized at capture time (loops unrolled, ternary
+/// branches picked, non-literal expressions replaced with placeholders) so the
+/// dashboard can safely replay the tree with `createElement`.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ExampleNode {
+    Element {
+        /// JSX name as written (`Breadcrumb`, `Stack.Item`, or intrinsic `nav`).
+        name: String,
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        props: BTreeMap<String, ExampleValue>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        children: Vec<ExampleNode>,
+    },
+    Text {
+        value: String,
+    },
+    /// Dynamic `{expr}` child replaced with a readable hint (`item.title` → "Title").
+    Placeholder {
+        hint: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -294,6 +346,10 @@ pub struct PlaygroundSpec {
     pub declared_prop_defaults: BTreeMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
+    /// Representative composition captured from a real call site (compound
+    /// components); the dashboard replays it as the default preview.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub example_tree: Option<ExampleNode>,
 }
 
 /// Dashboard-relevant slice of `.dslinter.json` embedded in each report.

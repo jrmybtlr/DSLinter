@@ -112,6 +112,25 @@ export function aggregateDeclaredProps(report: WorkspaceReport): Map<string, str
   return map;
 }
 
+/** Tailwind/class tokens from component JSX implementations (includes intrinsics). */
+export function implementationClassFrequenciesForComponent(
+  report: WorkspaceReport,
+  componentName: string,
+): Record<string, number> {
+  const merged: Record<string, number> = {};
+  for (const file of report.files ?? []) {
+    for (const def of file.definitions ?? []) {
+      if (def.name !== componentName) continue;
+      for (const [token, count] of Object.entries(
+        def.implementation_class_frequencies ?? {},
+      )) {
+        merged[token] = (merged[token] ?? 0) + count;
+      }
+    }
+  }
+  return merged;
+}
+
 export function usageMap(report: WorkspaceReport): Map<string, UsageSummary> {
   const m = new Map<string, UsageSummary>();
   for (const row of report.usage_by_component ?? []) {

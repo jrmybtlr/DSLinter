@@ -22,6 +22,15 @@ export interface ComponentDefinition {
   /** Default values from CVA `defaultVariants`. */
   declared_prop_defaults?: Record<string, string>;
   cva_binding_name?: string;
+  /** Tailwind/class tokens from this component's JSX (including intrinsics). */
+  implementation_class_frequencies?: Record<string, number>;
+  /** Source lines for implementation class strings. */
+  implementation_class_locations?: ImplementationClassLocation[];
+}
+
+export interface ImplementationClassLocation {
+  line: number;
+  classes: string;
 }
 
 export interface JsxUsage {
@@ -92,6 +101,32 @@ export interface UsageSummary {
  */
 export type DeclaredPropKind = "boolean" | "string" | "number" | "node" | "unknown";
 
+/** Statically-known literal prop value inside an `ExampleNode`. */
+export type ExampleValue =
+  | { kind: "string"; value: string }
+  | { kind: "number"; value: number }
+  | { kind: "bool"; value: boolean };
+
+/**
+ * Data-only JSX subtree serialized from a real call site by the scanner.
+ * Dynamic expressions are sanitized at capture time (loops unrolled, ternary
+ * branches picked, non-literal expressions replaced with placeholders).
+ */
+export type ExampleNode =
+  | {
+      type: "element";
+      /** JSX name as written (`Breadcrumb`, `Stack.Item`, or intrinsic `nav`). */
+      name: string;
+      props?: Record<string, ExampleValue>;
+      children?: ExampleNode[];
+    }
+  | { type: "text"; value: string }
+  | {
+      /** Dynamic `{expr}` child replaced with a readable hint (`item.title` → "Title"). */
+      type: "placeholder";
+      hint: string;
+    };
+
 /** Emitted by dslint for dashboard playgrounds (no per-component TS registration). */
 export interface PlaygroundSpec {
   id: string;
@@ -108,6 +143,11 @@ export interface PlaygroundSpec {
   declared_prop_options?: Record<string, string[]>;
   /** Default values from CVA `defaultVariants`. */
   declared_prop_defaults?: Record<string, string>;
+  /**
+   * Representative composition captured from a real call site (compound
+   * components); replayed as the default preview when present.
+   */
+  example_tree?: ExampleNode;
 }
 
 export type CssTokenCategory =

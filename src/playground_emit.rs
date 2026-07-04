@@ -4,11 +4,12 @@
 //! Node CLI TypeScript checker (`enrich-playgrounds-from-ts.mjs`) when `tsconfig.json`
 //! is available. Rust still emits empty kinds and only CVA-derived options.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 
 use crate::config::DslintConfig;
-use crate::model::{ComponentDefinition, DefinitionKind, FileScan, PlaygroundSpec};
+use crate::example_tree::{descendant_component_stats, tree_node_count};
+use crate::model::{ComponentDefinition, DefinitionKind, ExampleNode, FileScan, PlaygroundSpec};
 use crate::util::kebab::kebab_to_pascal;
 use crate::util::paths::{longest_matching_group, rel_path_under_root};
 
@@ -93,6 +94,39 @@ fn is_playground_example_file(stem: &str) -> bool {
     stem.ends_with(".playground")
 }
 
+/// `(component_count, distinct_names, total_nodes)` — higher is a richer example.
+fn example_tree_score(tree: &ExampleNode) -> (usize, usize, usize) {
+    let (count, distinct) = descendant_component_stats(tree);
+    (distinct, count, tree_node_count(tree))
+}
+
+/// Best captured composition per component name, across every scanned file.
+///
+/// Only compositions count: the call site must nest at least one further
+/// design component (a `<Button>Save</Button>` usage stays on the plain
+/// auto-render path).
+fn best_example_trees(files: &[FileScan]) -> HashMap<&str, &ExampleNode> {
+    let mut best: HashMap<&str, (&ExampleNode, (usize, usize, usize))> = HashMap::new();
+    for file in files {
+        for usage in &file.usages {
+            let Some(tree) = &usage.example_tree else {
+                continue;
+            };
+            let score = example_tree_score(tree);
+            if score.1 == 0 {
+                continue; // no nested design components — not a composition
+            }
+            match best.get(usage.component.as_str()) {
+                Some((_, existing)) if *existing >= score => {}
+                _ => {
+                    best.insert(usage.component.as_str(), (tree, score));
+                }
+            }
+        }
+    }
+    best.into_iter().map(|(k, (tree, _))| (k, tree)).collect()
+}
+
 /// One playground row per eligible TSX/JSX file in the scan (whole repo when `playground_groups` is unset).
 pub fn build_playground_specs(
     root: &Path,
@@ -100,6 +134,7 @@ pub fn build_playground_specs(
     config: &DslintConfig,
 ) -> Vec<PlaygroundSpec> {
     let mut out = Vec::new();
+    let example_trees = best_example_trees(files);
     for file in files {
         let path = &file.path;
         let ext = path
@@ -126,6 +161,7 @@ pub fn build_playground_specs(
             continue;
         };
         let group = playground_spec_group(&rel, config);
+        let example_tree = example_trees.get(def.name.as_str()).map(|t| (*t).clone());
         out.push(PlaygroundSpec {
             id: def.name.clone(),
             export_name: def.name.clone(),
@@ -135,6 +171,7 @@ pub fn build_playground_specs(
             declared_prop_options: def.declared_prop_options.clone(),
             declared_prop_defaults: def.declared_prop_defaults.clone(),
             group,
+            example_tree,
         });
     }
     out.sort_by(|a, b| a.rel_path.cmp(&b.rel_path));
@@ -167,6 +204,8 @@ mod tests {
             declared_prop_options: BTreeMap::new(),
             declared_prop_defaults: BTreeMap::new(),
             cva_binding_name: None,
+            implementation_class_frequencies: BTreeMap::new(),
+            implementation_class_locations: Vec::new(),
         }];
         let picked = pick_definition(&defs, "PrimaryButton").unwrap();
         assert_eq!(picked.name, "PrimaryButton");
@@ -182,6 +221,8 @@ mod tests {
             declared_prop_options: BTreeMap::new(),
             declared_prop_defaults: BTreeMap::new(),
             cva_binding_name: None,
+            implementation_class_frequencies: BTreeMap::new(),
+            implementation_class_locations: Vec::new(),
         }];
         let picked = pick_definition(&defs, "DuplicateCardA").unwrap();
         assert_eq!(picked.name, "Card");
@@ -198,6 +239,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             },
             ComponentDefinition {
                 name: "DropdownMenuContent".into(),
@@ -207,6 +250,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             },
         ];
         let picked = pick_definition(&defs, "dropdown-menu").unwrap();
@@ -224,6 +269,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             },
             ComponentDefinition {
                 name: "InputOTPGroup".into(),
@@ -233,6 +280,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             },
         ];
         let picked = pick_definition(&defs, "input-otp").unwrap();
@@ -250,6 +299,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             },
             ComponentDefinition {
                 name: "B".into(),
@@ -259,6 +310,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             },
         ];
         assert!(pick_definition(&defs, "OtherStem").is_none());
@@ -297,6 +350,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             }],
             usages: vec![],
             parse_errors: vec![],
@@ -323,6 +378,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             }],
             usages: vec![],
             parse_errors: vec![],
@@ -331,6 +388,117 @@ mod tests {
         }];
         let specs = build_playground_specs(&root, &files, &config);
         assert!(specs.is_empty());
+    }
+
+    #[test]
+    fn build_attaches_best_example_tree_from_usage() {
+        use crate::model::JsxUsage;
+
+        fn element(name: &str, children: Vec<ExampleNode>) -> ExampleNode {
+            ExampleNode::Element {
+                name: name.into(),
+                props: BTreeMap::new(),
+                children,
+            }
+        }
+
+        let root = PathBuf::from("/repo");
+        let config = DslintConfig::default();
+
+        let breadcrumb_def = |name: &str, line: u32| ComponentDefinition {
+            name: name.into(),
+            kind: DefinitionKind::Function,
+            line,
+            declared_props: vec![],
+            declared_prop_options: BTreeMap::new(),
+            declared_prop_defaults: BTreeMap::new(),
+            cva_binding_name: None,
+            implementation_class_frequencies: BTreeMap::new(),
+            implementation_class_locations: Vec::new(),
+        };
+
+        let small_tree = element("Breadcrumb", vec![element("BreadcrumbList", vec![])]);
+        let rich_tree = element(
+            "Breadcrumb",
+            vec![element(
+                "BreadcrumbList",
+                vec![
+                    element("BreadcrumbItem", vec![]),
+                    element("BreadcrumbSeparator", vec![]),
+                ],
+            )],
+        );
+        // Composes nothing beyond intrinsics — must not qualify.
+        let intrinsic_tree = element("Chip", vec![element("span", vec![])]);
+
+        let files = vec![
+            FileScan {
+                path: PathBuf::from("/repo/src/ui/breadcrumb.tsx"),
+                definitions: vec![
+                    breadcrumb_def("Breadcrumb", 1),
+                    breadcrumb_def("BreadcrumbList", 2),
+                ],
+                usages: vec![],
+                parse_errors: vec![],
+                findings: vec![],
+                ast_extracts: Default::default(),
+            },
+            FileScan {
+                path: PathBuf::from("/repo/src/ui/chip.tsx"),
+                definitions: vec![breadcrumb_def("Chip", 1)],
+                usages: vec![],
+                parse_errors: vec![],
+                findings: vec![],
+                ast_extracts: Default::default(),
+            },
+            FileScan {
+                path: PathBuf::from("/repo/src/pages/a.tsx"),
+                definitions: vec![breadcrumb_def("PageA", 1)],
+                usages: vec![
+                    JsxUsage {
+                        component: "Breadcrumb".into(),
+                        line: 3,
+                        props: vec![],
+                        prop_values: BTreeMap::new(),
+                        example_tree: Some(small_tree),
+                    },
+                    JsxUsage {
+                        component: "Breadcrumb".into(),
+                        line: 9,
+                        props: vec![],
+                        prop_values: BTreeMap::new(),
+                        example_tree: Some(rich_tree.clone()),
+                    },
+                    JsxUsage {
+                        component: "Chip".into(),
+                        line: 20,
+                        props: vec![],
+                        prop_values: BTreeMap::new(),
+                        example_tree: Some(intrinsic_tree),
+                    },
+                ],
+                parse_errors: vec![],
+                findings: vec![],
+                ast_extracts: Default::default(),
+            },
+        ];
+
+        let specs = build_playground_specs(&root, &files, &config);
+        let breadcrumb = specs
+            .iter()
+            .find(|s| s.export_name == "Breadcrumb")
+            .expect("Breadcrumb spec");
+        assert_eq!(
+            breadcrumb.example_tree.as_ref(),
+            Some(&rich_tree),
+            "richest composition wins"
+        );
+
+        let chip = specs.iter().find(|s| s.export_name == "Chip").expect("Chip spec");
+        assert!(
+            chip.example_tree.is_none(),
+            "intrinsic-only trees are not compositions"
+        );
     }
 
     #[test]
@@ -347,6 +515,8 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
+                implementation_class_frequencies: BTreeMap::new(),
+                implementation_class_locations: Vec::new(),
             }],
             usages: vec![],
             parse_errors: vec![],
