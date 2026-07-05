@@ -71,7 +71,7 @@ export function PlaygroundControlField({
                 placeholder={c.placeholder}
                 onChange={(e) => patch(c.key, e.target.value)}
                 rows={3}
-                className="min-h-[4.5rem] w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="min-h-18 w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               />
               <p className="text-xs text-muted-foreground">{c.hint}</p>
             </div>
@@ -153,7 +153,7 @@ export function PlaygroundControlField({
     case "boolean": {
       const checked = Boolean(values[c.key]);
       return (
-        <div className="flex min-w-[8rem] flex-col gap-1">
+        <div className="flex min-w-32 flex-col gap-1">
           <div className="flex items-center gap-2">
             <Checkbox
               id={id}
@@ -180,7 +180,7 @@ export function PlaygroundControlField({
           value={String(values[c.key] ?? "")}
           placeholder={c.placeholder}
           onChange={(e) => patch(c.key, e.target.value)}
-          className="h-8 min-w-[10rem] max-w-xs text-xs"
+          className="h-8 min-w-40 max-w-xs text-xs"
           aria-label={c.label}
         />
       );
@@ -212,7 +212,7 @@ export function PlaygroundControlField({
         <Select value={v} onValueChange={(next: string) => patch(c.key, next)}>
           <SelectTrigger
             id={id}
-            className="h-8 min-w-[10rem] max-w-xs text-xs"
+            className="h-8 min-w-40 max-w-xs text-xs"
             aria-label={c.label}
           >
             <SelectValue placeholder={c.label} />
