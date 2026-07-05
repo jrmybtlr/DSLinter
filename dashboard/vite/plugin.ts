@@ -185,25 +185,29 @@ export default function dslinter(
         return null;
       }
 
-      if (INERTIA_SHIM_IDS.has(id) || id.startsWith("@inertiajs/react/")) {
-        return inertiaShimPath;
-      }
-      if (id === ZIGGY_SHIM_ID || id === "ziggy") {
-        return ziggyShimPath;
-      }
+      // Embedded consumer apps (Laravel/Inertia) run real Inertia + Ziggy; shims are
+      // only for the standalone embed dashboard where components load in isolation.
+      if (!consumerRoot) {
+        if (INERTIA_SHIM_IDS.has(id) || id.startsWith("@inertiajs/react/")) {
+          return inertiaShimPath;
+        }
+        if (id === ZIGGY_SHIM_ID || id === "ziggy") {
+          return ziggyShimPath;
+        }
 
-      if (
-        isWayfinderRoutesImport(id) ||
-        isWayfinderActionsImport(id)
-      ) {
-        const onDisk = resolveExistingModule(id, consumerAliases);
-        if (onDisk) return onDisk;
-        const shim = resolveWayfinderShim(
-          id,
-          wayfinderRoutesShimPath,
-          wayfinderActionsShimPath,
-        );
-        if (shim) return shim;
+        if (
+          isWayfinderRoutesImport(id) ||
+          isWayfinderActionsImport(id)
+        ) {
+          const onDisk = resolveExistingModule(id, consumerAliases);
+          if (onDisk) return onDisk;
+          const shim = resolveWayfinderShim(
+            id,
+            wayfinderRoutesShimPath,
+            wayfinderActionsShimPath,
+          );
+          if (shim) return shim;
+        }
       }
 
       if (consumerAliases.length > 0) {

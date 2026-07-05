@@ -249,6 +249,37 @@ describe("enrichPlaygroundSpecFromTs", () => {
     expect(enriched.declared_prop_kinds?.children).toBe("node");
     expect(enriched.declared_prop_kinds?.actions).toBe("node");
   });
+
+  it("classifies string[] props as stringArray", () => {
+    const root = tempProject({
+      "src/alert-error.tsx": `
+        export function AlertError({
+          errors,
+          title,
+        }: {
+          errors: string[];
+          title?: string;
+        }) {
+          return null;
+        }
+      `,
+    });
+    const bundle = createCheckerProgram(root)!;
+    const spec: PlaygroundSpec = {
+      id: "AlertError",
+      export_name: "AlertError",
+      rel_path: "src/alert-error.tsx",
+      declared_props: ["errors", "title"],
+    };
+    const enriched = enrichPlaygroundSpecFromTs(
+      spec,
+      bundle.checker,
+      bundle.program,
+      root,
+    );
+    expect(enriched.declared_prop_kinds?.errors).toBe("stringArray");
+    expect(enriched.declared_prop_kinds?.title).toBe("string");
+  });
 });
 
 describe("createCheckerProgram", () => {

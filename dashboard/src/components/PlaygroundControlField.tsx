@@ -59,6 +59,24 @@ export function PlaygroundControlField({
       }
       case "string":
       case "node":
+        if (c.type === "string" && c.hint) {
+          return (
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label htmlFor={id} className={labelClass}>
+                {c.label}
+              </Label>
+              <textarea
+                id={id}
+                value={String(values[c.key] ?? "")}
+                placeholder={c.placeholder}
+                onChange={(e) => patch(c.key, e.target.value)}
+                rows={3}
+                className="min-h-[4.5rem] w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              />
+              <p className="text-xs text-muted-foreground">{c.hint}</p>
+            </div>
+          );
+        }
         return (
           <div className="flex min-w-0 flex-col gap-1.5">
             <Label htmlFor={id} className={labelClass}>

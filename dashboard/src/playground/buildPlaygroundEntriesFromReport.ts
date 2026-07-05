@@ -262,7 +262,8 @@ export function buildPlaygroundEntriesFromReportWithSkips(
         });
     } else {
       renderPreview = (values) => createElement(Cmp, rootPropsFromValues(values));
-      usageSnippet = (values) => genericUsageSnippet(spec.export_name, values, controls);
+      usageSnippet = (values) =>
+        genericUsageSnippet(spec.export_name, values, controls, rootPropsFromValues(values));
     }
 
     function Preview({ values }: { values: PlaygroundArgs }) {

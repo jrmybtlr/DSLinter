@@ -99,7 +99,13 @@ export interface UsageSummary {
  * Simplified prop kind from TypeScript (e.g. demo `merge-playgrounds.mjs`).
  * Dashboard falls back to name heuristics when a key is missing or kind is `unknown`.
  */
-export type DeclaredPropKind = "boolean" | "string" | "number" | "node" | "unknown";
+export type DeclaredPropKind =
+  | "boolean"
+  | "string"
+  | "number"
+  | "node"
+  | "stringArray"
+  | "unknown";
 
 /** Statically-known literal prop value inside an `ExampleNode`. */
 export type ExampleValue =

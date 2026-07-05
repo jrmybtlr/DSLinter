@@ -21,6 +21,9 @@ export function formatJsxPropAssignment(key: string, value: unknown): string {
   if (typeof value === "boolean") {
     return `${key}={${value}}`;
   }
+  if (Array.isArray(value)) {
+    return `${key}={${JSON.stringify(value)}}`;
+  }
   return `${key}={${JSON.stringify(value)}}`;
 }
 
@@ -46,29 +49,31 @@ function valueMatchesPlaygroundDefault(
 
 export function genericUsageSnippet(
   exportName: string,
-  values: PlaygroundArgs,
+  panelValues: PlaygroundArgs,
   controls: PlaygroundControl[],
+  coercedProps?: Record<string, unknown>,
 ): string {
   const controlByKey = new Map(controls.map((c) => [c.key, c] as const));
+  const propsForSnippet = coercedProps ?? panelValues;
 
   const emitPropKey = (key: string): boolean => {
     const c = controlByKey.get(key);
     if (!c) return true;
-    return !valueMatchesPlaygroundDefault(c, values[key]);
+    return !valueMatchesPlaygroundDefault(c, panelValues[key]);
   };
 
   const hasChildrenKey = Object.prototype.hasOwnProperty.call(
-    values,
+    panelValues,
     "children",
   );
-  const childVal = hasChildrenKey ? values.children : undefined;
+  const childVal = hasChildrenKey ? panelValues.children : undefined;
 
-  const propKeys = Object.keys(values)
+  const propKeys = Object.keys(propsForSnippet)
     .filter((k) => k !== "children")
     .filter(emitPropKey)
     .sort((a, b) => a.localeCompare(b));
   const propsStr = propKeys
-    .map((k) => formatJsxPropAssignment(k, values[k]))
+    .map((k) => formatJsxPropAssignment(k, propsForSnippet[k]))
     .join(" ");
 
   const openWithProps =
@@ -79,11 +84,11 @@ export function genericUsageSnippet(
   }
 
   if (typeof childVal === "boolean") {
-    const allKeys = Object.keys(values)
+    const allKeys = Object.keys(propsForSnippet)
       .filter(emitPropKey)
       .sort((a, b) => a.localeCompare(b));
     const allProps = allKeys
-      .map((k) => formatJsxPropAssignment(k, values[k]))
+      .map((k) => formatJsxPropAssignment(k, propsForSnippet[k]))
       .join(" ");
     return allKeys.length === 0
       ? `<${exportName} />`

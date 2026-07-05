@@ -3,13 +3,23 @@ import type { DeclaredPropKind, PlaygroundSpec } from "../types/report";
 import {
   childrenPropForPreview,
   isLikelyBooleanProp,
+  isLikelyStringArrayProp,
   isPassthroughStringProp,
+  resolveEffectivePropKind,
   SKIP_PLAYGROUND_PROPS,
 } from "./controls";
 
 export function coerceDeclaredPropKind(v: unknown): DeclaredPropKind | undefined {
-  if (v === "boolean" || v === "string" || v === "number" || v === "node" || v === "unknown")
+  if (
+    v === "boolean" ||
+    v === "string" ||
+    v === "number" ||
+    v === "node" ||
+    v === "stringArray" ||
+    v === "unknown"
+  ) {
     return v;
+  }
   return undefined;
 }
 
@@ -23,6 +33,19 @@ export function normalizedPropKinds(
     if (ck && ck !== "unknown") out[k] = ck;
   }
   return Object.keys(out).length ? out : undefined;
+}
+
+export function parseStringArrayPanelValue(raw: unknown): string[] {
+  const text = String(raw ?? "").trim();
+  if (!text) return [];
+  return [
+    ...new Set(
+      text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function propKeysForPreview(
@@ -54,7 +77,7 @@ export function valuesToComponentProps(
       if (coerced !== undefined) o[key] = coerced;
       continue;
     }
-    const kind = propKinds?.[key];
+    const kind = resolveEffectivePropKind(key, propKinds);
     if (kind === "boolean") {
       o[key] = Boolean(values[key]);
       continue;
@@ -65,12 +88,20 @@ export function valuesToComponentProps(
       o[key] = Number.isFinite(n) ? n : 0;
       continue;
     }
+    if (kind === "stringArray") {
+      o[key] = parseStringArrayPanelValue(values[key]);
+      continue;
+    }
     if (kind === "string" || kind === "node") {
       o[key] = values[key];
       continue;
     }
     if (isLikelyBooleanProp(key)) {
       o[key] = Boolean(values[key]);
+      continue;
+    }
+    if (isLikelyStringArrayProp(key)) {
+      o[key] = parseStringArrayPanelValue(values[key]);
       continue;
     }
     o[key] = values[key];

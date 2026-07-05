@@ -88,13 +88,11 @@ export function GovernancePane({
           from the latest DSLinter snapshot
         </p>
       </header>
-      <div className="min-w-0 w-full px-6 py-8">
         <DashboardBody
           report={report}
           onOpenComponent={onOpenComponent}
           onOpenCatalog={onOpenCatalog}
         />
-      </div>
     </div>
   );
 }

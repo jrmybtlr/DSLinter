@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import ts from "typescript";
 
-/** @typedef {"boolean" | "string" | "number"} PropKind */
+/** @typedef {"boolean" | "string" | "number" | "node" | "stringArray"} PropKind */
 
 const MAX_UNION_OPTIONS = 32;
 
@@ -131,6 +131,17 @@ function isReactNodeType(checker, type) {
   return false;
 }
 
+/** @param {ts.TypeChecker} checker @param {ts.Type} type */
+function isStringElementArrayType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const elem = checker.getElementTypeOfArrayType(nn);
+  if (!elem) return false;
+  const elemNn = checker.getNonNullableType(elem);
+  return (
+    (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0
+  );
+}
+
 /**
  * @param {ts.TypeChecker} checker
  * @param {ts.Type} type
@@ -139,6 +150,7 @@ function isReactNodeType(checker, type) {
 export function classifyPropType(checker, type) {
   if (isReactNodeType(checker, type)) return "node";
   const nn = checker.getNonNullableType(type);
+  if (isStringElementArrayType(checker, nn)) return "stringArray";
   if (nn.isUnion()) {
     const parts = nn.types.map((u) =>
       classifyPropType(checker, checker.getNonNullableType(u)),

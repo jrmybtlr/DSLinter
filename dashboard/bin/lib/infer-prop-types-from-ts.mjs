@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 
-/** @typedef {"boolean" | "string" | "number" | "node"} DeclaredPropKind */
+/** @typedef {"boolean" | "string" | "number" | "node" | "stringArray"} DeclaredPropKind */
 
 /**
  * @param {string} projectRoot
@@ -161,11 +161,26 @@ function isReactNodeType(checker, type) {
 /**
  * @param {import("typescript").TypeChecker} checker
  * @param {import("typescript").Type} type
+ */
+function isStringElementArrayType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const elem = checker.getElementTypeOfArrayType(nn);
+  if (!elem) return false;
+  const elemNn = checker.getNonNullableType(elem);
+  return (
+    (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0
+  );
+}
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
  * @returns {DeclaredPropKind | null}
  */
 export function classifyPropType(checker, type) {
   if (isReactNodeType(checker, type)) return "node";
   const nn = checker.getNonNullableType(type);
+  if (isStringElementArrayType(checker, nn)) return "stringArray";
   if (nn.isUnion()) {
     const parts = nn.types.map((u) =>
       classifyPropType(checker, checker.getNonNullableType(u)),

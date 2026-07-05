@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-07-03T23:04:14.663106Z",
+  "generated_at": "2026-07-05T04:02:59.26924Z",
   "root": "/Users/jeremy/Development/DSLint/demo/inertia",
   "files": [
     {
@@ -9277,6 +9277,7 @@
         "title"
       ],
       "declared_prop_kinds": {
+        "errors": "stringArray",
         "title": "string"
       }
     },
@@ -9531,7 +9532,11 @@
         "recoveryCodesList",
         "fetchRecoveryCodes",
         "errors"
-      ]
+      ],
+      "declared_prop_kinds": {
+        "recoveryCodesList": "stringArray",
+        "errors": "stringArray"
+      }
     },
     {
       "id": "TwoFactorSetupModal",
@@ -9553,7 +9558,8 @@
         "requiresConfirmation": "boolean",
         "twoFactorEnabled": "boolean",
         "qrCodeSvg": "string",
-        "manualSetupKey": "string"
+        "manualSetupKey": "string",
+        "errors": "stringArray"
       }
     },
     {
@@ -12202,13 +12208,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 44,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 19,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 19,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 44,
             "props": []
           }
         ]
@@ -12223,13 +12229,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 44,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 19,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 19,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 44,
             "props": []
           }
         ]
@@ -14364,13 +14370,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 26,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 17,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 17,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 26,
             "props": []
           }
         ]
@@ -14385,34 +14391,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 26,
-            "props": []
-          },
-          {
             "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
             "line": 17,
             "props": []
-          }
-        ]
-      },
-      {
-        "name": "--popover-foreground",
-        "reference_count": 2,
-        "file_count": 2,
-        "files": [
-          "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-          "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx"
-        ],
-        "usage_locations": [
-          {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 27,
-            "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
-            "line": 18,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 26,
             "props": []
           }
         ]
@@ -14427,13 +14412,34 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 27,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
+            "line": 18,
             "props": []
           },
           {
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 27,
+            "props": []
+          }
+        ]
+      },
+      {
+        "name": "--popover-foreground",
+        "reference_count": 2,
+        "file_count": 2,
+        "files": [
+          "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+          "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx"
+        ],
+        "usage_locations": [
+          {
             "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sonner.tsx",
             "line": 18,
+            "props": []
+          },
+          {
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 27,
             "props": []
           }
         ]
@@ -15026,13 +15032,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 58,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 58,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
             "props": []
           }
         ]
@@ -15047,14 +15053,14 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
-            "props": []
-          },
-          {
             "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
             "line": 58,
             "props": []
+          },
+          {
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
+            "props": []
           }
         ]
       },
@@ -15098,13 +15104,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 60,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 60,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
             "props": []
           }
         ]
@@ -15119,13 +15125,13 @@
         ],
         "usage_locations": [
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
-            "line": 456,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
+            "line": 60,
             "props": []
           },
           {
-            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/css/app.css",
-            "line": 60,
+            "path": "/Users/jeremy/Development/DSLint/demo/inertia/resources/js/components/ui/sidebar.tsx",
+            "line": 456,
             "props": []
           }
         ]

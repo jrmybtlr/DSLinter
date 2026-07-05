@@ -9,16 +9,16 @@ export function ScoreStrip({ scores }: { scores: GovernanceScores }) {
   ];
 
   return (
-    <section className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-muted/30 p-1 md:grid-cols-4">
+    <section className="grid grid-cols-2 divide-x divide-border border-b md:grid-cols-4">
       {items.map(({ label, value }) => (
         <div
           key={label}
-          className="rounded-lg border border-border bg-card px-4 py-3 text-card-foreground shadow-xs"
+          className="px-6 py-8 text-center text-card-foreground shadow-xs"
         >
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
             {label}
           </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+          <p className="mt-1.5 text-4xl font-semibold tabular-nums text-foreground">
             {value}
           </p>
         </div>

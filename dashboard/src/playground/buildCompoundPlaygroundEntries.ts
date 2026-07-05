@@ -16,8 +16,11 @@ import { resolveModuleKeyForRelPath } from "./playgroundJoin";
 import {
   childrenControl,
   childrenPropForPreview,
+  isLikelyBooleanProp,
   isPassthroughStringProp,
+  resolveEffectivePropKind,
   SKIP_PLAYGROUND_PROPS,
+  stringArrayControlForProp,
   stringDefaultForProp,
 } from "./controls";
 import { formatJsxPropAssignment } from "./snippet";
@@ -201,14 +204,6 @@ function usageForExportName(report: WorkspaceReport, exportName: string): UsageS
   return report.usage_by_component?.find((u) => u.component === exportName);
 }
 
-function isLikelyBooleanProp(name: string): boolean {
-  const n = name.toLowerCase();
-  if (n === "disabled" || n === "loading" || n === "aschild") return true;
-  if (n.startsWith("is") || n.startsWith("has")) return true;
-  if (n.startsWith("show") || n.startsWith("hide")) return true;
-  return false;
-}
-
 function controlsFromDefinitionAndUsage(
   def: ComponentDefinition,
   usage: UsageSummary | undefined,
@@ -269,8 +264,11 @@ function controlsFromDefinitionAndUsage(
       continue;
     }
 
-    if (isLikelyBooleanProp(key)) {
+    const kind = resolveEffectivePropKind(key);
+    if (kind === "boolean" || isLikelyBooleanProp(key)) {
       out.push({ key, label: key, type: "boolean", default: false, defaultSource: "example" });
+    } else if (kind === "stringArray") {
+      out.push({ ...stringArrayControlForProp(key), defaultSource: "example" });
     } else {
       out.push({
         key,
