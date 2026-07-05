@@ -1,6 +1,76 @@
 import type { CssTokenDefinition } from "../types/report";
 
-const VAR_REF_RE = /var\(\s*(--[a-zA-Z0-9_-]+)(?:\s*,[^)]+)?\s*\)/g;
+function isWhitespace(ch: string): boolean {
+  return ch === " " || ch === "\t" || ch === "\n" || ch === "\r" || ch === "\f";
+}
+
+function isIdentChar(code: number): boolean {
+  return (
+    (code >= 48 && code <= 57) ||
+    (code >= 65 && code <= 90) ||
+    (code >= 97 && code <= 122) ||
+    code === 95 ||
+    code === 45
+  );
+}
+
+/** Parse `var(--name)` or `var(--name, fallback)` starting at `start`. */
+function parseVarFunction(
+  value: string,
+  start: number,
+): { name: string; end: number } | null {
+  if (!value.startsWith("var(", start)) return null;
+
+  let i = start + 4;
+  while (i < value.length && isWhitespace(value[i]!)) i += 1;
+
+  if (value[i] !== "-" || value[i + 1] !== "-") return null;
+
+  const nameStart = i;
+  i += 2;
+  while (i < value.length && isIdentChar(value.charCodeAt(i))) i += 1;
+
+  const name = value.slice(nameStart, i);
+  if (name.length < 3) return null;
+
+  while (i < value.length && isWhitespace(value[i]!)) i += 1;
+
+  let depth = 1;
+  if (i < value.length && value[i] === ",") {
+    i += 1;
+  }
+
+  while (i < value.length && depth > 0) {
+    const ch = value[i]!;
+    if (ch === "(") depth += 1;
+    else if (ch === ")") depth -= 1;
+    i += 1;
+  }
+
+  if (depth !== 0) return null;
+  return { name, end: i };
+}
+
+function substituteVarReferences(
+  value: string,
+  resolveRef: (name: string) => string,
+): string {
+  let out = "";
+  let i = 0;
+
+  while (i < value.length) {
+    const parsed = parseVarFunction(value, i);
+    if (parsed) {
+      out += resolveRef(parsed.name);
+      i = parsed.end;
+      continue;
+    }
+    out += value[i]!;
+    i += 1;
+  }
+
+  return out;
+}
 
 export function resolveCssVariables(
   vars: Map<string, string>,
@@ -16,7 +86,7 @@ export function resolveCssVariables(
     if (seen.has(name)) return raw;
 
     seen.add(name);
-    const next = raw.replace(VAR_REF_RE, (_match, ref: string) => {
+    const next = substituteVarReferences(raw, (ref) => {
       if (!vars.has(ref)) return `var(${ref})`;
       return resolveOne(ref, seen);
     });
