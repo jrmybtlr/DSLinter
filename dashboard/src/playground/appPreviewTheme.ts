@@ -1,3 +1,7 @@
+import {
+  resolveCssVariables,
+  variableMapForScopes,
+} from "../css/resolveCssVariables";
 import type { CssTokenDefinition, CssTokenSummary, WorkspaceReport } from "../types/report";
 
 const DASHBOARD_THEME_PATH_MARKERS = [
@@ -45,44 +49,9 @@ function definitionsForMode(
       ? new Set<CssTokenDefinition["scope"]>(["root", "theme"])
       : new Set<CssTokenDefinition["scope"]>(["selector"]);
 
-  const vars = new Map<string, string>();
-  for (const def of definitions) {
-    if (!isConsumerThemeDefinition(def, reportRoot)) continue;
-    if (!scopes.has(def.scope)) continue;
-    if (!vars.has(def.name)) {
-      vars.set(def.name, def.value);
-    }
-  }
-  return vars;
-}
-
-function resolveCssVariables(vars: Map<string, string>): Record<string, string> {
-  const resolved = new Map<string, string>();
-  const varRefRe = /var\(\s*(--[a-zA-Z0-9_-]+)(?:\s*,[^)]+)?\s*\)/g;
-
-  const resolveOne = (name: string, seen: Set<string>): string => {
-    const cached = resolved.get(name);
-    if (cached != null) return cached;
-
-    const raw = vars.get(name);
-    if (raw == null) return `var(${name})`;
-    if (seen.has(name)) return raw;
-
-    seen.add(name);
-    const next = raw.replace(varRefRe, (_match, ref: string) => {
-      if (!vars.has(ref)) return `var(${ref})`;
-      return resolveOne(ref, seen);
-    });
-    seen.delete(name);
-    resolved.set(name, next);
-    return next;
-  };
-
-  for (const name of vars.keys()) {
-    resolveOne(name, new Set());
-  }
-
-  return Object.fromEntries(resolved);
+  return variableMapForScopes(definitions, scopes, (def) =>
+    isConsumerThemeDefinition(def, reportRoot),
+  );
 }
 
 export function buildAppPreviewTheme(
