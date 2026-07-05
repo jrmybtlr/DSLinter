@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.6.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.5.1...v0.6.0)
+
+### 🚀 Enhancements
+
+- **dashboard:** Add favicon and improve sidebar component ([e4aa8c9](https://github.com/jrmybtlr/DSLinter/commit/e4aa8c9))
+
+### 🩹 Fixes
+
+- **dashboard:** Update native binding version checks and add patch script ([2f1842e](https://github.com/jrmybtlr/DSLinter/commit/2f1842e))
+
+### 💅 Refactors
+
+- **sidebar:** Update sidebar positioning logic for improved responsiveness ([e87a4df](https://github.com/jrmybtlr/DSLinter/commit/e87a4df))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.5.1
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.5.0...v0.5.1)
