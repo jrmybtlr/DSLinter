@@ -94,7 +94,7 @@ fn is_playground_example_file(stem: &str) -> bool {
     stem.ends_with(".playground")
 }
 
-/// `(component_count, distinct_names, total_nodes)` — higher is a richer example.
+/// `(distinct_names, component_count, total_nodes)` — higher is a richer example.
 fn example_tree_score(tree: &ExampleNode) -> (usize, usize, usize) {
     let (count, distinct) = descendant_component_stats(tree);
     (distinct, count, tree_node_count(tree))

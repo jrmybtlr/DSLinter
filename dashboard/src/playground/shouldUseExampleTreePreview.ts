@@ -51,7 +51,7 @@ export function shouldUseExampleTreePreview(
   report: WorkspaceReport | null | undefined,
 ): exampleTree is ExampleNode {
   if (!exampleTree) return false;
-  if (exampleTree.name !== spec.export_name) return true;
+  if (exampleTree.type === "element" && exampleTree.name !== spec.export_name) return true;
 
   const nested = nestedComponentNamesInTree(exampleTree, spec.export_name);
   if (nested.length === 0) return false;
