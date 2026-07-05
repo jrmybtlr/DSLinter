@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.6.0...v0.7.0)
+
+### 🩹 Fixes
+
+- Apply reviewer feedback - type narrowing, comment fix, and Tailwind class fix ([463dead](https://github.com/jrmybtlr/DSLinter/commit/463dead))
+
 ## v0.6.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.5.1...v0.6.0)
