@@ -3,6 +3,7 @@ import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type {
   ComponentDefinition,
   DefinitionKind,
+  ExampleNode,
   PlaygroundSpec,
   UsageSummary,
   WorkspaceReport,
@@ -15,11 +16,21 @@ import { resolveModuleKeyForRelPath } from "./playgroundJoin";
 import {
   childrenControl,
   childrenPropForPreview,
+  isLikelyBooleanProp,
   isPassthroughStringProp,
+  resolveEffectivePropKind,
   SKIP_PLAYGROUND_PROPS,
+  stringArrayControlForProp,
   stringDefaultForProp,
 } from "./controls";
 import { formatJsxPropAssignment } from "./snippet";
+import {
+  createExampleComponentResolver,
+  exampleTreeContainsElement,
+  exampleTreeSnippet,
+  renderExampleTree,
+} from "./renderExampleTree";
+import { shouldUseExampleTreePreview } from "./shouldUseExampleTreePreview";
 
 const PLAYABLE_KINDS = new Set<DefinitionKind>([
   "function",
@@ -165,6 +176,19 @@ function playgroundGroupForFile(report: WorkspaceReport, relPath: string): strin
   return spec?.group ?? undefined;
 }
 
+/** Usage-derived composition for preview when heuristic says tree beats live render. */
+export function familyExampleTree(
+  report: WorkspaceReport,
+  family: CompoundFamily,
+): ExampleNode | undefined {
+  const spec = report.playgrounds?.find(
+    (p) => p.rel_path === family.relPath && p.export_name === family.root,
+  );
+  const tree = spec?.example_tree;
+  if (!spec || !tree) return undefined;
+  return shouldUseExampleTreePreview(spec, tree, report) ? tree : undefined;
+}
+
 /** All compound families in a workspace report. */
 export function findCompoundFamilies(report: WorkspaceReport): CompoundFamily[] {
   const byFile = groupPlayableDefinitionsByFile(report);
@@ -178,14 +202,6 @@ export function findCompoundFamilies(report: WorkspaceReport): CompoundFamily[] 
 
 function usageForExportName(report: WorkspaceReport, exportName: string): UsageSummary | undefined {
   return report.usage_by_component?.find((u) => u.component === exportName);
-}
-
-function isLikelyBooleanProp(name: string): boolean {
-  const n = name.toLowerCase();
-  if (n === "disabled" || n === "loading" || n === "aschild") return true;
-  if (n.startsWith("is") || n.startsWith("has")) return true;
-  if (n.startsWith("show") || n.startsWith("hide")) return true;
-  return false;
 }
 
 function controlsFromDefinitionAndUsage(
@@ -248,8 +264,11 @@ function controlsFromDefinitionAndUsage(
       continue;
     }
 
-    if (isLikelyBooleanProp(key)) {
+    const kind = resolveEffectivePropKind(key);
+    if (kind === "boolean" || isLikelyBooleanProp(key)) {
       out.push({ key, label: key, type: "boolean", default: false, defaultSource: "example" });
+    } else if (kind === "stringArray") {
+      out.push({ ...stringArrayControlForProp(key), defaultSource: "example" });
     } else {
       out.push({
         key,
@@ -467,6 +486,7 @@ export function buildCompoundPlaygroundEntryForTarget(
   mod: Record<string, unknown>,
   modulePath: string,
   report: WorkspaceReport,
+  modules: BuildPlaygroundModules,
   options: Pick<
     BuildCompoundPlaygroundOptions,
     "controlOverrides" | "staticDefaults"
@@ -485,13 +505,35 @@ export function buildCompoundPlaygroundEntryForTarget(
   );
   const staticDefaults = options.staticDefaults?.[targetName] ?? {};
 
-  const renderPreview = (values: PlaygroundArgs) => {
-    const props = mergeStaticDefaults(
-      valuesToProps(controls, values, targetName),
-      staticDefaults,
-    );
-    return renderCompoundPreview(family, targetName, mod, props);
-  };
+  const propsFromValues = (values: PlaygroundArgs) =>
+    mergeStaticDefaults(valuesToProps(controls, values, targetName), staticDefaults);
+
+  // Prefer the usage-derived family composition: the target renders in its
+  // real context (e.g. BreadcrumbItem inside Breadcrumb → BreadcrumbList).
+  const exampleTree = familyExampleTree(report, family);
+  const exampleForTarget =
+    exampleTree && exampleTreeContainsElement(exampleTree, targetName)
+      ? exampleTree
+      : undefined;
+
+  let renderPreview: (values: PlaygroundArgs) => ReactNode;
+  let usageSnippet: (values: PlaygroundArgs) => string;
+
+  if (exampleForTarget) {
+    const resolve = createExampleComponentResolver(mod, modules);
+    renderPreview = (values) =>
+      renderExampleTree(exampleForTarget, resolve, {
+        target: { name: targetName, props: compactOverrides(propsFromValues(values)) },
+      });
+    usageSnippet = (values) =>
+      exampleTreeSnippet(exampleForTarget, {
+        target: { name: targetName, props: compactOverrides(propsFromValues(values)) },
+      });
+  } else {
+    renderPreview = (values) =>
+      renderCompoundPreview(family, targetName, mod, propsFromValues(values));
+    usageSnippet = (values) => compoundUsageSnippet(family, targetName, values, controls);
+  }
 
   function Preview({ values }: { values: PlaygroundArgs }) {
     return renderPreview(values);
@@ -508,10 +550,20 @@ export function buildCompoundPlaygroundEntryForTarget(
     meta,
     modulePath,
     controls,
-    usageSnippet: (values) => compoundUsageSnippet(family, targetName, values, controls),
+    usageSnippet,
     renderPreview,
     Preview: Preview as PlaygroundPreviewComponent,
   };
+}
+
+/** Drop empty control values so they don't clobber captured example props. */
+function compactOverrides(props: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (value === undefined || value === null || value === "") continue;
+    out[key] = value;
+  }
+  return out;
 }
 
 /**
@@ -549,6 +601,7 @@ export function buildCompoundPlaygroundEntries(
         mod,
         resolvedKey ?? globKey,
         report,
+        modules,
         options,
       );
       if (entry) out.push(entry);
@@ -575,6 +628,10 @@ export function upgradeRootEntriesWithCompoundPreview(
   const families = findCompoundFamilies(report);
 
   for (const family of families) {
+    // Usage-derived example previews (built in the spec loop) beat the
+    // Trigger/Content heuristic — leave those root entries alone.
+    if (familyExampleTree(report, family)) continue;
+
     const targetName = primaryCompoundTarget(family);
     if (!targetName || targetName === family.root) continue;
 
@@ -599,6 +656,7 @@ export function upgradeRootEntriesWithCompoundPreview(
       mod,
       modulePath,
       report,
+      modules,
       options,
     );
     if (!compoundEntry) continue;

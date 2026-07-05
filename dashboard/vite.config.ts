@@ -26,6 +26,7 @@ export default defineConfig(() => ({
     emptyOutDir: true,
   },
   server: {
+    host: "127.0.0.1",
     fs: {
       allow: [packageRoot, scanRoot],
     },

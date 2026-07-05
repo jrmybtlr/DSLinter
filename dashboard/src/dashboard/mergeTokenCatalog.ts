@@ -1,5 +1,7 @@
+import { isConsumerThemeDefinition } from "../playground/appPreviewTheme";
+import { resolveLightTokenValues } from "../css/resolveCssVariables";
 import type { TokenCatalog } from "../types/tokenCatalog";
-import type { WorkspaceReport } from "../types/report";
+import type { CssTokenDefinition, WorkspaceReport } from "../types/report";
 
 export type TokenUsageFilter = "all" | "used" | "unused";
 
@@ -76,6 +78,23 @@ function isParseableColor(value: string): boolean {
   );
 }
 
+function displayValueForDefinition(
+  def: CssTokenDefinition,
+  manualDisplay: string | undefined,
+  resolvedLight: Record<string, string>,
+): string {
+  if (manualDisplay != null) return manualDisplay;
+
+  const resolved = resolvedLight[def.name];
+  if (resolved != null && isParseableColor(resolved)) return resolved;
+
+  if (def.category === "color" && isParseableColor(def.value)) {
+    return def.value;
+  }
+
+  return def.value;
+}
+
 export function buildMergedTokenView(
   report: WorkspaceReport | null | undefined,
   catalog?: TokenCatalog,
@@ -95,18 +114,31 @@ export function buildMergedTokenView(
     ? catalogDisplayByCssName(catalog)
     : new Map<string, string>();
 
+  const consumerPredicate = report?.root
+    ? (def: CssTokenDefinition) =>
+        isConsumerThemeDefinition(def, report.root)
+    : undefined;
+  const resolvedLight = resolveLightTokenValues(
+    summary.definitions,
+    consumerPredicate,
+  );
+  const hasConsumerLight = Object.keys(resolvedLight).some(
+    (name) => !name.startsWith("--color-") && !name.startsWith("--spacing-"),
+  );
+  const resolvedLightForDisplay = hasConsumerLight
+    ? resolvedLight
+    : resolveLightTokenValues(summary.definitions);
+
   const rows: ScannedTokenRow[] = summary.definitions.map((def) => {
     const usage = usageByName.get(def.name);
     const referenceCount = usage?.reference_count ?? 0;
     const isUnused = unusedSet.has(def.name);
     const manualDisplay = displayMap.get(def.name);
-    const displayValue =
-      manualDisplay ??
-      (def.category === "color" && isParseableColor(def.value)
-        ? def.value
-        : def.value.startsWith("var(")
-          ? manualDisplay
-          : def.value);
+    const displayValue = displayValueForDefinition(
+      def,
+      manualDisplay,
+      resolvedLightForDisplay,
+    );
 
     return {
       cssName: def.name,
@@ -119,7 +151,7 @@ export function buildMergedTokenView(
       fileCount: usage?.file_count ?? 0,
       isUnused,
       tw: twMap.get(def.name),
-      displayValue: displayValue ?? def.value,
+      displayValue,
       usageFiles: usage?.files ?? [],
     };
   });

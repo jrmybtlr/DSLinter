@@ -6,6 +6,10 @@ A design-system linter that scans repos for **JSX, TSX, and Vue** components, co
 
 Prebuilt native binaries ship with the **`dslinter`** npm package — you do not need Rust or Cargo unless you are contributing to the scanner itself.
 
+## Alpha release
+
+This is an alpha release of the project. While it is functional and safe to use, it has known gaps and coverage tasks.
+
 ## Quick start
 
 ```bash

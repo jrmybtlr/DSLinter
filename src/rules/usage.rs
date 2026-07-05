@@ -265,6 +265,8 @@ mod prop_tests {
                     declared_prop_options: BTreeMap::new(),
                     declared_prop_defaults: BTreeMap::new(),
                     cva_binding_name: None,
+                    implementation_class_frequencies: BTreeMap::new(),
+                    implementation_class_locations: Vec::new(),
                 })
                 .collect(),
             usages: usages
@@ -274,6 +276,7 @@ mod prop_tests {
                     line: 5,
                     props: props.into_iter().map(|s| s.to_string()).collect(),
                     prop_values: BTreeMap::new(),
+                    example_tree: None,
                 })
                 .collect(),
             parse_errors: Vec::new(),

@@ -1,4 +1,4 @@
-import { createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type { PlaygroundSpec, UsageSummary, WorkspaceReport } from "../types/report";
 import type { PlaygroundEntry, PlaygroundMeta } from "../types/playground";
@@ -23,6 +23,7 @@ import {
 import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
 import { getModuleExport } from "./playgroundModuleExport";
 import { mergeReportControlsForKit, type PlaygroundKitHints } from "./enrichKitControls";
+import { shouldUseExampleTreePreview } from "./shouldUseExampleTreePreview";
 import {
   componentAcceptsChildren,
   controlsForSpec,
@@ -30,6 +31,11 @@ import {
 } from "./controls";
 import { genericUsageSnippet } from "./snippet";
 import { mergeStaticDefaults, normalizedPropKinds, valuesToComponentProps } from "./propCoerce";
+import {
+  createExampleComponentResolver,
+  exampleTreeSnippet,
+  renderExampleTree,
+} from "./renderExampleTree";
 
 function isDefinedPlayground(value: unknown): value is import("./definePlayground").DefinedPlayground {
   if (!value || typeof value !== "object") return false;
@@ -127,6 +133,21 @@ function usageForExportName(
   return report?.usage_by_component?.find((u) => u.component === exportName);
 }
 
+/**
+ * Drop empty control values so they don't clobber props captured in the
+ * example tree (e.g. an empty `className` control vs. the real call site's).
+ */
+function compactExampleOverrides(
+  props: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (value === undefined || value === null || value === "") continue;
+    out[key] = value;
+  }
+  return out;
+}
+
 export type { PlaygroundJoinSkip, PlaygroundJoinSkipReason } from "./playgroundJoin";
 export {
   createConsumerGlobKeyFromRelPath,
@@ -200,6 +221,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     const declared = spec.declared_props ?? [];
     const propKinds = normalizedPropKinds(spec.declared_prop_kinds);
     const repoUsage = usageForExportName(report, spec.export_name);
+    const exampleTree = spec.example_tree;
     const controls = ensureChildrenControl(
       controlsForSpec(
         catalogId,
@@ -210,22 +232,39 @@ export function buildPlaygroundEntriesFromReportWithSkips(
         controlOverrides,
         spec.export_name,
       ),
-      componentAcceptsChildren(declared, repoUsage),
+      // Example trees carry their own children — a children control would fight them.
+      !shouldUseExampleTreePreview(spec, spec.example_tree, report) &&
+        componentAcceptsChildren(declared, repoUsage),
       spec.export_name,
     );
     const staticDefaults = staticDefaultsMap[catalogId] ?? staticDefaultsMap[spec.id] ?? {};
 
-    const renderPreview = (values: PlaygroundArgs) => {
-      const fromValues = valuesToComponentProps(
-        controls,
-        declared,
-        values,
-        propKinds,
-        spec.export_name,
+    const rootPropsFromValues = (values: PlaygroundArgs) =>
+      mergeStaticDefaults(
+        valuesToComponentProps(controls, declared, values, propKinds, spec.export_name),
+        staticDefaults,
       );
-      const merged = mergeStaticDefaults(fromValues, staticDefaults);
-      return createElement(Cmp, merged);
-    };
+
+    let renderPreview: (values: PlaygroundArgs) => ReactNode;
+    let usageSnippet: (values: PlaygroundArgs) => string;
+
+    if (shouldUseExampleTreePreview(spec, exampleTree, report)) {
+      // Usage-derived preview: replay the composition captured from a real
+      // call site instead of rendering the bare (often empty) root.
+      const resolve = createExampleComponentResolver(mod, modules);
+      renderPreview = (values) =>
+        renderExampleTree(exampleTree, resolve, {
+          rootProps: compactExampleOverrides(rootPropsFromValues(values)),
+        });
+      usageSnippet = (values) =>
+        exampleTreeSnippet(exampleTree, {
+          rootProps: compactExampleOverrides(rootPropsFromValues(values)),
+        });
+    } else {
+      renderPreview = (values) => createElement(Cmp, rootPropsFromValues(values));
+      usageSnippet = (values) =>
+        genericUsageSnippet(spec.export_name, values, controls, rootPropsFromValues(values));
+    }
 
     function Preview({ values }: { values: PlaygroundArgs }) {
       return renderPreview(values);
@@ -242,7 +281,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
       meta,
       modulePath: resolvedKey ?? globKey,
       controls,
-      usageSnippet: (values) => genericUsageSnippet(spec.export_name, values, controls),
+      usageSnippet,
       renderPreview,
       Preview: Preview as PlaygroundPreviewComponent,
     });

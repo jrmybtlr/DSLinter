@@ -24,6 +24,7 @@ export type PlaygroundStringControl = {
   default: string;
   defaultSource?: PlaygroundDefaultSource;
   placeholder?: string;
+  hint?: string;
 };
 
 export type PlaygroundNodeControl = {

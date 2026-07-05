@@ -96,6 +96,41 @@ export function isLikelyBooleanProp(name: string): boolean {
   return false;
 }
 
+export function isLikelyStringArrayProp(name: string): boolean {
+  const n = name.toLowerCase();
+  if (n === "errors" || n === "messages" || n === "items" || n === "tags") {
+    return true;
+  }
+  return n.endsWith("list");
+}
+
+export function resolveEffectivePropKind(
+  key: string,
+  propKinds?: Partial<Record<string, DeclaredPropKind>>,
+): DeclaredPropKind | undefined {
+  const kind = propKinds?.[key];
+  if (kind && kind !== "unknown") return kind;
+  if (isLikelyStringArrayProp(key)) return "stringArray";
+  return kind;
+}
+
+export function stringArrayDefaultForProp(key: string): string {
+  const k = key.toLowerCase();
+  if (k === "errors" || k === "messages") return "Something went wrong.";
+  return "First item\nSecond item";
+}
+
+export function stringArrayControlForProp(key: string): PlaygroundStringControl {
+  return {
+    key,
+    label: key,
+    type: "string",
+    default: stringArrayDefaultForProp(key),
+    placeholder: "One item per line",
+    hint: "Enter multiple values on separate lines",
+  };
+}
+
 export function defaultStringForProp(key: string): string {
   if (key === "href") return "/governance";
   const k = key.toLowerCase();
@@ -139,13 +174,15 @@ export function controlsFromDeclaredProps(
       });
       continue;
     }
-    const kind = propKinds?.[key];
+    const kind = resolveEffectivePropKind(key, propKinds);
     if (kind === "boolean") {
       out.push({ key, label: key, type: "boolean", default: false });
     } else if (kind === "number") {
       out.push({ key, label: key, type: "number", default: 0 });
     } else if (kind === "node") {
       out.push(nodeControlForProp(key));
+    } else if (kind === "stringArray") {
+      out.push(stringArrayControlForProp(key));
     } else if (kind === "string") {
       out.push({
         key,

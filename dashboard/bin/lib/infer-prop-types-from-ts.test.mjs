@@ -172,6 +172,45 @@ export function Toggle({ disabled }: { disabled?: boolean }) {
     }
   });
 
+  it("classifies string[] props as stringArray", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-ts-"));
+    try {
+      writeProject(root, {
+        "AlertError.tsx": `
+export function AlertError({
+  errors,
+  title,
+}: {
+  errors: string[];
+  title?: string;
+}) {
+  return null;
+}
+`,
+      });
+      const bundle = createCheckerProgram(root);
+      const sf = bundle.program.getSourceFile(join(root, "AlertError.tsx"));
+      const paramType = findComponentParamType(bundle.checker, sf, "AlertError");
+      const errorsSym = bundle.checker.getPropertyOfType(paramType, "errors");
+      expect(
+        classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(errorsSym)),
+      ).toBe("stringArray");
+
+      const meta = inferPlaygroundPropMetadata(
+        bundle.checker,
+        bundle.program,
+        root,
+        "AlertError.tsx",
+        "AlertError",
+        ["errors", "title"],
+      );
+      expect(meta.declared_prop_kinds.errors).toBe("stringArray");
+      expect(meta.declared_prop_kinds.title).toBe("string");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("classifies ReactNode props as node", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-ts-"));
     try {

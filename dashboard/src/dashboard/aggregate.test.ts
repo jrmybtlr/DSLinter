@@ -7,6 +7,7 @@ import {
   fileStemToCatalogGroupLabel,
   findingsForGovernanceTab,
   governanceTabCounts,
+  implementationClassFrequenciesForComponent,
   resolveFamilyNavigationTarget,
   unusedComponentsFromReport,
 } from "./aggregate";
@@ -327,6 +328,30 @@ describe("unusedComponentsFromReport", () => {
     };
 
     expect(unusedComponentsFromReport(report)).toEqual([]);
+  });
+});
+
+describe("implementationClassFrequenciesForComponent", () => {
+  it("merges class tokens from component definitions including intrinsics", () => {
+    const report = reportWithDefinitions([
+      {
+        name: "AppearanceToggleTab",
+        kind: "function",
+        line: 8,
+        implementation_class_frequencies: {
+          "ml-1.5": 1,
+          "-ml-1": 1,
+          "text-sm": 1,
+        },
+      },
+    ]);
+    expect(
+      implementationClassFrequenciesForComponent(report, "AppearanceToggleTab"),
+    ).toMatchObject({
+      "ml-1.5": 1,
+      "-ml-1": 1,
+      "text-sm": 1,
+    });
   });
 });
 
