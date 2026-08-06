@@ -4,6 +4,14 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::OnceLock;
 
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{
+    Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind, PropertyKey,
+};
+use oxc_ast::visit::walk;
+use oxc_ast::Visit;
+use oxc_parser::{Parser, ParserReturn};
+use oxc_span::SourceType;
 use regex::Regex;
 
 use crate::code_quality;
@@ -11,6 +19,7 @@ use crate::ecma::analyze_ecma_for_paths;
 use crate::import_filter::ImportFilter;
 use crate::lines::{line_of_offset, newline_offsets, offset_line};
 use crate::model::{ComponentDefinition, DefinitionKind, FileScan, JsxUsage, LintFinding, Severity};
+use crate::ts_shape_map;
 use crate::util::{a11y, kebab};
 
 // ── Static regex helpers (compiled once) ────────────────────────────────────
@@ -42,6 +51,16 @@ fn input_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r#"(?si)<input\s([^>]*?)\s*/?>"#).unwrap())
 }
 
+fn select_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"(?si)<select(\s[^>]*)?>"#).unwrap())
+}
+
+fn textarea_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"(?si)<textarea(\s[^>]*)?>"#).unwrap())
+}
+
 fn template_pascal_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -54,18 +73,12 @@ fn template_kebab_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r#"<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)"#).unwrap())
 }
 
-/// `defineProps(['a', 'b'])` – array form.
+/// `defineProps(['a', 'b'])` – array form (regex fallback / Options API shared helpers).
 fn define_props_array_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(r#"defineProps\s*\(\s*\[([^\]]*)\]"#).unwrap()
     })
-}
-
-/// `defineProps({ a: ..., b: ... })` – object form (key names only).
-fn define_props_object_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"defineProps\s*\(\s*\{([^}]*)\}"#).unwrap())
 }
 
 /// Options API `props: ['a', 'b']`.
@@ -74,10 +87,16 @@ fn options_props_array_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r#"props\s*:\s*\[([^\]]*)\]"#).unwrap())
 }
 
-/// Options API `props: { a: ..., b: ... }`.
-fn options_props_object_re() -> &'static Regex {
+/// Options API `props: { … }` — opening only; body extracted with brace balancing.
+fn options_props_object_open_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"props\s*:\s*\{([^}]*)\}"#).unwrap())
+    RE.get_or_init(|| Regex::new(r#"props\s*:\s*\{"#).unwrap())
+}
+
+/// `defineProps({ … })` opening — body extracted with brace balancing (regex fallback).
+fn define_props_object_open_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"defineProps\s*\(\s*\{"#).unwrap())
 }
 
 /// Quoted string literal (single or double quotes).
@@ -101,35 +120,300 @@ fn lang_is_ts(attrs: &str) -> bool {
 
 // ── Prop extraction from Vue script source ───────────────────────────────────
 
-/// Extract prop names from a Vue `<script>` block by matching `defineProps` or
-/// the options API `props` field.  Returns an empty `Vec` when nothing is found.
-fn extract_vue_declared_props(script_src: &str) -> Vec<String> {
+#[derive(Debug, Default)]
+struct VueDeclaredProps {
+    props: Vec<String>,
+    options: BTreeMap<String, Vec<String>>,
+    defaults: BTreeMap<String, String>,
+}
+
+/// Extract prop names (and optional TS options / withDefaults defaults) from a Vue `<script>` block.
+fn extract_vue_declared_props(script_src: &str) -> VueDeclaredProps {
+    if let Some(from_ast) = extract_vue_props_via_ast(script_src) {
+        if !from_ast.props.is_empty() {
+            return from_ast;
+        }
+    }
+    extract_vue_props_via_regex(script_src)
+}
+
+fn extract_vue_props_via_ast(script_src: &str) -> Option<VueDeclaredProps> {
+    let allocator = Allocator::default();
+    let source_type = SourceType::tsx();
+    let ParserReturn {
+        program,
+        panicked,
+        ..
+    } = Parser::new(&allocator, script_src, source_type).parse();
+    if panicked {
+        return None;
+    }
+
+    let shapes = ts_shape_map::collect_ts_prop_shape_map(&program);
+    let named_options = ts_shape_map::collect_ts_prop_options_map(&program);
+    let mut visitor = DefinePropsVisitor {
+        shapes: &shapes,
+        named_options: &named_options,
+        props: Vec::new(),
+        options: BTreeMap::new(),
+        defaults: BTreeMap::new(),
+    };
+    visitor.visit_program(&program);
+
+    let mut props = visitor.props;
+    dedupe_preserve_order(&mut props);
+    Some(VueDeclaredProps {
+        props,
+        options: visitor.options,
+        defaults: visitor.defaults,
+    })
+}
+
+struct DefinePropsVisitor<'a> {
+    shapes: &'a std::collections::HashMap<String, Vec<String>>,
+    named_options: &'a std::collections::HashMap<String, BTreeMap<String, Vec<String>>>,
+    props: Vec<String>,
+    options: BTreeMap<String, Vec<String>>,
+    defaults: BTreeMap<String, String>,
+}
+
+impl<'a> Visit<'a> for DefinePropsVisitor<'_> {
+    fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
+        if let Some(name) = call_callee_name(&expr.callee) {
+            if name == "defineProps" {
+                self.ingest_define_props(expr);
+            } else if name == "withDefaults" {
+                self.ingest_with_defaults(expr);
+            }
+        }
+        walk::walk_call_expression(self, expr);
+    }
+}
+
+impl DefinePropsVisitor<'_> {
+    fn ingest_define_props(&mut self, expr: &CallExpression<'_>) {
+        if let Some(type_params) = expr.type_parameters.as_ref() {
+            if let Some(first) = type_params.params.first() {
+                let keys = ts_shape_map::props_from_type(first, self.shapes);
+                self.props.extend(keys);
+                for (k, v) in ts_shape_map::options_from_type(first, self.named_options) {
+                    self.options.entry(k).or_insert(v);
+                }
+            }
+        }
+
+        if let Some(arg) = expr.arguments.first() {
+            match arg {
+                Argument::ArrayExpression(arr) => {
+                    for el in &arr.elements {
+                        if let Some(Expression::StringLiteral(s)) = el.as_expression() {
+                            self.props.push(s.value.as_str().to_string());
+                        }
+                    }
+                }
+                Argument::ObjectExpression(obj) => {
+                    self.props.extend(object_prop_keys(obj));
+                    for (k, v) in object_string_defaults(obj) {
+                        self.defaults.entry(k).or_insert(v);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn ingest_with_defaults(&mut self, expr: &CallExpression<'_>) {
+        // First arg is typically `defineProps(...)` — handled when that call is visited.
+        if let Some(Argument::ObjectExpression(obj)) = expr.arguments.get(1) {
+            for (k, v) in object_string_defaults(obj) {
+                self.defaults.entry(k).or_insert(v);
+            }
+        }
+    }
+}
+
+fn call_callee_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+    match expr {
+        Expression::Identifier(id) => Some(id.name.as_str()),
+        _ => None,
+    }
+}
+
+fn object_prop_keys(obj: &ObjectExpression<'_>) -> Vec<String> {
+    let mut keys = Vec::new();
+    for prop in &obj.properties {
+        let ObjectPropertyKind::ObjectProperty(p) = prop else {
+            continue;
+        };
+        if p.computed {
+            continue;
+        }
+        match &p.key {
+            PropertyKey::StaticIdentifier(id) => keys.push(id.name.as_str().to_string()),
+            PropertyKey::StringLiteral(s) => keys.push(s.value.as_str().to_string()),
+            _ => {}
+        }
+    }
+    keys
+}
+
+/// From runtime validators `{ foo: { default: 'x' } }` or withDefaults `{ foo: 'x' }`.
+fn object_string_defaults(obj: &ObjectExpression<'_>) -> BTreeMap<String, String> {
+    let mut out = BTreeMap::new();
+    for prop in &obj.properties {
+        let ObjectPropertyKind::ObjectProperty(p) = prop else {
+            continue;
+        };
+        if p.computed {
+            continue;
+        }
+        let key = match &p.key {
+            PropertyKey::StaticIdentifier(id) => id.name.as_str().to_string(),
+            PropertyKey::StringLiteral(s) => s.value.as_str().to_string(),
+            _ => continue,
+        };
+        match &p.value {
+            Expression::StringLiteral(s) => {
+                out.insert(key, s.value.as_str().to_string());
+            }
+            Expression::ObjectExpression(inner) => {
+                if let Some(default_val) = nested_default_string(inner) {
+                    out.insert(key, default_val);
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
+fn nested_default_string(obj: &ObjectExpression<'_>) -> Option<String> {
+    for prop in &obj.properties {
+        let ObjectPropertyKind::ObjectProperty(p) = prop else {
+            continue;
+        };
+        if p.computed {
+            continue;
+        }
+        let is_default = match &p.key {
+            PropertyKey::StaticIdentifier(id) => id.name.as_str() == "default",
+            PropertyKey::StringLiteral(s) => s.value.as_str() == "default",
+            _ => false,
+        };
+        if is_default {
+            if let Expression::StringLiteral(s) = &p.value {
+                return Some(s.value.as_str().to_string());
+            }
+        }
+    }
+    None
+}
+
+fn dedupe_preserve_order(keys: &mut Vec<String>) {
+    let mut seen = std::collections::HashSet::new();
+    keys.retain(|k| seen.insert(k.clone()));
+}
+
+/// Brace-balanced slice starting after `{` at `open_brace` (index of `{`).
+fn balanced_object_body(src: &str, open_brace: usize) -> Option<&str> {
+    let bytes = src.as_bytes();
+    if open_brace >= bytes.len() || bytes[open_brace] != b'{' {
+        return None;
+    }
+    let mut depth = 0i32;
+    let mut i = open_brace;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(&src[open_brace + 1..i]);
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
+fn top_level_ident_keys(object_body: &str) -> Vec<String> {
+    // Only keys at brace-depth 0 so nested `type:` / `default:` are ignored.
+    let mut keys = Vec::new();
+    let mut depth = 0i32;
+    let mut line_start = 0usize;
+    let bytes = object_body.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' => depth += 1,
+            b'}' => depth -= 1,
+            b'\n' => {
+                if depth == 0 {
+                    let line = &object_body[line_start..i];
+                    if let Some(cap) = ident_key_re().captures(line) {
+                        keys.push(cap[1].to_string());
+                    }
+                }
+                line_start = i + 1;
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    if depth == 0 && line_start < object_body.len() {
+        let line = &object_body[line_start..];
+        if let Some(cap) = ident_key_re().captures(line) {
+            keys.push(cap[1].to_string());
+        }
+    }
+    dedupe_preserve_order(&mut keys);
+    keys
+}
+
+fn extract_vue_props_via_regex(script_src: &str) -> VueDeclaredProps {
     // Priority: defineProps array > defineProps object > options props array > options props object
     if let Some(cap) = define_props_array_re().captures(script_src) {
-        return quoted_string_re()
-            .captures_iter(&cap[1])
-            .map(|c| c[1].to_string())
-            .collect();
+        return VueDeclaredProps {
+            props: quoted_string_re()
+                .captures_iter(&cap[1])
+                .map(|c| c[1].to_string())
+                .collect(),
+            ..Default::default()
+        };
     }
-    if let Some(cap) = define_props_object_re().captures(script_src) {
-        return ident_key_re()
-            .captures_iter(&cap[1])
-            .map(|c| c[1].to_string())
-            .collect();
+    if let Some(m) = define_props_object_open_re().find(script_src) {
+        let open_brace = m.end() - 1;
+        if let Some(body) = balanced_object_body(script_src, open_brace) {
+            let props = top_level_ident_keys(body);
+            if !props.is_empty() {
+                return VueDeclaredProps {
+                    props,
+                    ..Default::default()
+                };
+            }
+        }
     }
     if let Some(cap) = options_props_array_re().captures(script_src) {
-        return quoted_string_re()
-            .captures_iter(&cap[1])
-            .map(|c| c[1].to_string())
-            .collect();
+        return VueDeclaredProps {
+            props: quoted_string_re()
+                .captures_iter(&cap[1])
+                .map(|c| c[1].to_string())
+                .collect(),
+            ..Default::default()
+        };
     }
-    if let Some(cap) = options_props_object_re().captures(script_src) {
-        return ident_key_re()
-            .captures_iter(&cap[1])
-            .map(|c| c[1].to_string())
-            .collect();
+    if let Some(m) = options_props_object_open_re().find(script_src) {
+        let open_brace = m.end() - 1;
+        if let Some(body) = balanced_object_body(script_src, open_brace) {
+            return VueDeclaredProps {
+                props: top_level_ident_keys(body),
+                ..Default::default()
+            };
+        }
     }
-    Vec::new()
+    VueDeclaredProps::default()
 }
 
 /// Template-only accessibility checks (HTML in `<template>`).
@@ -199,7 +483,15 @@ fn vue_template_a11y_findings(
         {
             continue;
         }
-        if lower.contains("aria-label=") || lower.contains("aria-labelledby=") {
+        // Likely paired with <label for="…"> — skip to cut template-heuristic false positives.
+        if lower.contains("id=") || lower.contains(":id=") || lower.contains("v-bind:id") {
+            continue;
+        }
+        if lower.contains("aria-label=")
+            || lower.contains("aria-labelledby=")
+            || lower.contains(":aria-label")
+            || lower.contains("v-bind:aria-label")
+        {
             continue;
         }
         let pos = template_inner_start + cap.get(0).unwrap().start();
@@ -209,6 +501,52 @@ fn vue_template_a11y_findings(
             Some(offset_line(full_source, pos)),
             Severity::Info,
             a11y::INPUT_LABEL,
+        ));
+    }
+
+    for cap in select_re().captures_iter(template) {
+        let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let lower = attrs.to_ascii_lowercase();
+        if lower.contains("id=") || lower.contains(":id=") || lower.contains("v-bind:id") {
+            continue;
+        }
+        if lower.contains("aria-label=")
+            || lower.contains("aria-labelledby=")
+            || lower.contains(":aria-label")
+            || lower.contains("v-bind:aria-label")
+        {
+            continue;
+        }
+        let pos = template_inner_start + cap.get(0).unwrap().start();
+        out.push(LintFinding::new(
+            "a11y-select-name",
+            path.to_path_buf(),
+            Some(offset_line(full_source, pos)),
+            Severity::Info,
+            a11y::SELECT_NAME,
+        ));
+    }
+
+    for cap in textarea_re().captures_iter(template) {
+        let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let lower = attrs.to_ascii_lowercase();
+        if lower.contains("id=") || lower.contains(":id=") || lower.contains("v-bind:id") {
+            continue;
+        }
+        if lower.contains("aria-label=")
+            || lower.contains("aria-labelledby=")
+            || lower.contains(":aria-label")
+            || lower.contains("v-bind:aria-label")
+        {
+            continue;
+        }
+        let pos = template_inner_start + cap.get(0).unwrap().start();
+        out.push(LintFinding::new(
+            "a11y-textarea-name",
+            path.to_path_buf(),
+            Some(offset_line(full_source, pos)),
+            Severity::Info,
+            a11y::TEXTAREA_NAME,
         ));
     }
 
@@ -280,25 +618,29 @@ pub fn analyze_vue_file(path: &Path, source: &str, import_filter: &ImportFilter)
         }
     }
 
-    let vue_declared_props = extract_vue_declared_props(&all_script);
-    if !vue_declared_props.is_empty() {
+    let vue_props = extract_vue_declared_props(&all_script);
+    if !vue_props.props.is_empty() {
         let component_name =
             kebab::component_name_from_path(path).unwrap_or_else(|| "default".into());
         if let Some(def) = scan.definitions.iter_mut().find(|d| d.name == component_name) {
             if def.declared_props.is_empty() {
-                def.declared_props = vue_declared_props;
+                def.declared_props = vue_props.props;
+            }
+            if def.declared_prop_options.is_empty() && !vue_props.options.is_empty() {
+                def.declared_prop_options = vue_props.options;
+            }
+            if def.declared_prop_defaults.is_empty() && !vue_props.defaults.is_empty() {
+                def.declared_prop_defaults = vue_props.defaults;
             }
         } else {
             scan.definitions.push(ComponentDefinition {
                 name: component_name,
                 kind: DefinitionKind::ExportDefaultAnonymous,
                 line: 1,
-                declared_props: vue_declared_props,
-                declared_prop_options: BTreeMap::new(),
-                declared_prop_defaults: BTreeMap::new(),
+                declared_props: vue_props.props,
+                declared_prop_options: vue_props.options,
+                declared_prop_defaults: vue_props.defaults,
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             });
         }
     }
@@ -491,5 +833,105 @@ defineProps({
             .expect("MyButton definition");
         assert!(def.declared_props.contains(&"label".to_string()));
         assert!(def.declared_props.contains(&"disabled".to_string()));
+    }
+
+    #[test]
+    fn vue_define_props_nested_runtime_validators() {
+        let src = r#"<template><div /></template>
+<script setup lang="ts">
+import type { PropType } from 'vue'
+const props = defineProps({
+  type: {
+    type: String as PropType<'button' | 'reset' | 'submit'>,
+    default: 'button',
+  },
+  color: {
+    type: String as PropType<'primary' | 'secondary'>,
+    default: 'primary',
+  },
+  size: {
+    type: String as PropType<'sm' | 'md' | 'lg'>,
+    default: 'md',
+  },
+})
+</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("UiButton.vue"), src, &ImportFilter::default());
+        let def = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "UiButton")
+            .expect("UiButton definition");
+        assert_eq!(
+            def.declared_props,
+            vec!["type", "color", "size"],
+            "{:?}",
+            def.declared_props
+        );
+        assert_eq!(def.declared_prop_defaults.get("type").map(String::as_str), Some("button"));
+        assert_eq!(def.declared_prop_defaults.get("color").map(String::as_str), Some("primary"));
+        assert_eq!(def.declared_prop_defaults.get("size").map(String::as_str), Some("md"));
+    }
+
+    #[test]
+    fn vue_define_props_ts_interface_with_defaults() {
+        let src = r#"<template><div /></template>
+<script setup lang="ts">
+interface Props {
+  type?: 'button' | 'reset' | 'submit'
+  color?: 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  type: 'button',
+  color: 'primary',
+  size: 'md',
+})
+</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("UiButton.vue"), src, &ImportFilter::default());
+        let def = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "UiButton")
+            .expect("UiButton definition");
+        assert_eq!(
+            def.declared_props,
+            vec!["type", "color", "size"],
+            "{:?}",
+            def.declared_props
+        );
+        assert_eq!(
+            def.declared_prop_options.get("type").map(|v| v.as_slice()),
+            Some(&["button".to_string(), "reset".to_string(), "submit".to_string()][..])
+        );
+        assert_eq!(
+            def.declared_prop_options.get("size").map(|v| v.as_slice()),
+            Some(&["sm".to_string(), "md".to_string(), "lg".to_string()][..])
+        );
+        assert_eq!(def.declared_prop_defaults.get("type").map(String::as_str), Some("button"));
+        assert_eq!(def.declared_prop_defaults.get("size").map(String::as_str), Some("md"));
+    }
+
+    #[test]
+    fn vue_define_props_inline_type_literal() {
+        let src = r#"<template><div /></template>
+<script setup lang="ts">
+defineProps<{
+  title: string
+  variant?: 'solid' | 'outline'
+}>()
+</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("Chip.vue"), src, &ImportFilter::default());
+        let def = scan
+            .definitions
+            .iter()
+            .find(|d| d.name == "Chip")
+            .expect("Chip definition");
+        assert!(def.declared_props.contains(&"title".to_string()), "{:?}", def.declared_props);
+        assert!(def.declared_props.contains(&"variant".to_string()), "{:?}", def.declared_props);
+        assert_eq!(
+            def.declared_prop_options.get("variant").map(|v| v.as_slice()),
+            Some(&["solid".to_string(), "outline".to_string()][..])
+        );
     }
 }

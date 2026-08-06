@@ -35,3 +35,4 @@ package-lock.json
 .env
 demo/react/public/dslinter-report.json
 .DS_Store
+ROADMAP.md

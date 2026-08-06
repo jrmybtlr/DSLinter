@@ -7,9 +7,17 @@ export function ScoreStrip({ scores }: { scores: GovernanceScores }) {
     { label: "Accessibility", value: scores.accessibility },
     { label: "Maintainability", value: scores.maintainability },
   ];
+  if (scores.token_adoption != null) {
+    items.push({ label: "Token adoption", value: scores.token_adoption });
+  }
+
+  const cols =
+    items.length <= 4
+      ? "grid-cols-2 md:grid-cols-4"
+      : "grid-cols-2 md:grid-cols-5";
 
   return (
-    <section className="grid grid-cols-2 divide-x divide-border border-b md:grid-cols-4">
+    <section className={`grid divide-x divide-border bg-white border-b ${cols}`}>
       {items.map(({ label, value }) => (
         <div
           key={label}

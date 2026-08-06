@@ -110,7 +110,7 @@ export function suggestFix(
 export type DriftSummary = {
   baseline: { saved_at: string; scores: WorkspaceReport["scores"]; finding_count: number } | null;
   current: { scores: WorkspaceReport["scores"]; finding_count: number };
-  score_deltas: Record<keyof WorkspaceReport["scores"], number>;
+  score_deltas: Record<string, number>;
   finding_delta: number;
 };
 
@@ -123,7 +123,7 @@ export function computeDrift(
   } | null,
 ): DriftSummary {
   const currentCount = report.findings?.length ?? 0;
-  const score_deltas = {
+  const score_deltas: Record<string, number> = {
     design_system_health:
       report.scores.design_system_health -
       (baseline?.scores.design_system_health ?? report.scores.design_system_health),
@@ -137,6 +137,14 @@ export function computeDrift(
       report.scores.maintainability -
       (baseline?.scores.maintainability ?? report.scores.maintainability),
   };
+  if (
+    report.scores.token_adoption != null ||
+    baseline?.scores.token_adoption != null
+  ) {
+    const cur = report.scores.token_adoption ?? 0;
+    const base = baseline?.scores.token_adoption ?? cur;
+    score_deltas.token_adoption = cur - base;
+  }
 
   return {
     baseline: baseline

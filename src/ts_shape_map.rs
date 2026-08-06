@@ -2,8 +2,9 @@
 //!
 //! Used to populate `declared_props` when the first parameter is not object-destructured
 //! (e.g. `function X(props: XProps)`), by resolving `type` / `interface` declarations.
+//! Also used for Vue `defineProps<T>()` / `defineProps<{…}>()` type arguments.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use oxc_ast::ast::{
     Declaration, ExportNamedDeclaration, FormalParameters, Program, PropertyKey, Statement,
@@ -54,7 +55,55 @@ pub fn props_from_first_param_type_annotation(
     let Some(note) = first.pattern.type_annotation.as_ref() else {
         return Vec::new();
     };
-    props_from_ts_type(&note.type_annotation, shapes, &mut HashSet::new())
+    props_from_type(&note.type_annotation, shapes)
+}
+
+/// Prop keys from a TypeScript type (literal, named ref, union/intersection).
+pub fn props_from_type(ty: &TSType<'_>, shapes: &HashMap<String, Vec<String>>) -> Vec<String> {
+    props_from_ts_type(ty, shapes, &mut HashSet::new())
+}
+
+/// Map type name → prop → finite string-union options (declaration order preserved per prop).
+pub fn collect_ts_prop_options_map(
+    program: &Program<'_>,
+) -> HashMap<String, BTreeMap<String, Vec<String>>> {
+    let mut alias_rhs: HashMap<String, &TSType<'_>> = HashMap::new();
+    let mut interface_options: HashMap<String, BTreeMap<String, Vec<String>>> = HashMap::new();
+
+    for stmt in &program.body {
+        ingest_options_statement(stmt, &mut alias_rhs, &mut interface_options);
+    }
+
+    let mut memo: HashMap<String, BTreeMap<String, Vec<String>>> = HashMap::new();
+    let mut stack = HashSet::new();
+
+    let mut all_syms: Vec<String> = interface_options
+        .keys()
+        .chain(alias_rhs.keys())
+        .cloned()
+        .collect();
+    all_syms.sort();
+    all_syms.dedup();
+
+    for sym in all_syms {
+        let _ = options_for_symbol(
+            &sym,
+            &alias_rhs,
+            &interface_options,
+            &mut memo,
+            &mut stack,
+        );
+    }
+
+    memo
+}
+
+/// Finite string-union options from a props type (inline literal or named ref).
+pub fn options_from_type(
+    ty: &TSType<'_>,
+    named: &HashMap<String, BTreeMap<String, Vec<String>>>,
+) -> BTreeMap<String, Vec<String>> {
+    options_from_ts_type(ty, named, &mut HashSet::new())
 }
 
 /// True when the first parameter's type includes `React.ComponentProps<"intrinsic">` (or similar)
@@ -341,5 +390,208 @@ fn props_from_ts_type(
                 .map(|t| props_from_ts_type(t, shapes, visiting)),
         ),
         _ => Vec::new(),
+    }
+}
+
+fn ingest_options_statement<'a>(
+    stmt: &'a Statement<'a>,
+    alias_rhs: &mut HashMap<String, &'a TSType<'a>>,
+    interface_options: &mut HashMap<String, BTreeMap<String, Vec<String>>>,
+) {
+    match stmt {
+        Statement::TSTypeAliasDeclaration(decl) => {
+            alias_rhs.insert(binding_name(&decl.id), &decl.type_annotation);
+        }
+        Statement::TSInterfaceDeclaration(decl) => {
+            interface_options.insert(
+                binding_name(&decl.id),
+                options_from_signatures(&decl.body.body),
+            );
+        }
+        Statement::ExportNamedDeclaration(ex) => {
+            let Some(decl) = &ex.declaration else {
+                return;
+            };
+            match decl {
+                Declaration::TSTypeAliasDeclaration(decl) => {
+                    alias_rhs.insert(binding_name(&decl.id), &decl.type_annotation);
+                }
+                Declaration::TSInterfaceDeclaration(decl) => {
+                    interface_options.insert(
+                        binding_name(&decl.id),
+                        options_from_signatures(&decl.body.body),
+                    );
+                }
+                _ => {}
+            }
+        }
+        _ => {}
+    }
+}
+
+fn options_for_symbol<'a>(
+    sym: &str,
+    alias_rhs: &HashMap<String, &'a TSType<'a>>,
+    interface_options: &HashMap<String, BTreeMap<String, Vec<String>>>,
+    memo: &mut HashMap<String, BTreeMap<String, Vec<String>>>,
+    stack: &mut HashSet<String>,
+) -> BTreeMap<String, Vec<String>> {
+    if let Some(done) = memo.get(sym) {
+        return done.clone();
+    }
+    if stack.contains(sym) {
+        return BTreeMap::new();
+    }
+    stack.insert(sym.to_string());
+
+    let options = if let Some(rhs) = alias_rhs.get(sym).copied() {
+        expand_type_to_options(rhs, alias_rhs, interface_options, memo, stack)
+    } else {
+        interface_options.get(sym).cloned().unwrap_or_default()
+    };
+
+    stack.remove(sym);
+    memo.insert(sym.to_string(), options.clone());
+    options
+}
+
+fn expand_type_to_options<'a>(
+    ty: &'a TSType<'a>,
+    alias_rhs: &HashMap<String, &'a TSType<'a>>,
+    interface_options: &HashMap<String, BTreeMap<String, Vec<String>>>,
+    memo: &mut HashMap<String, BTreeMap<String, Vec<String>>>,
+    stack: &mut HashSet<String>,
+) -> BTreeMap<String, Vec<String>> {
+    let ty = ty.without_parenthesized();
+    match ty {
+        TSType::TSTypeLiteral(lit) => options_from_signatures(&lit.members),
+        TSType::TSTypeReference(r) => {
+            let Some(sym) = type_reference_root_name(&r.type_name) else {
+                return BTreeMap::new();
+            };
+            options_for_symbol(sym, alias_rhs, interface_options, memo, stack)
+        }
+        TSType::TSIntersectionType(i) => {
+            let mut acc = BTreeMap::new();
+            for t in &i.types {
+                for (k, v) in expand_type_to_options(t, alias_rhs, interface_options, memo, stack) {
+                    acc.entry(k).or_insert(v);
+                }
+            }
+            acc
+        }
+        TSType::TSUnionType(u) => {
+            let mut acc = BTreeMap::new();
+            for t in &u.types {
+                for (k, v) in expand_type_to_options(t, alias_rhs, interface_options, memo, stack) {
+                    acc.entry(k).or_insert(v);
+                }
+            }
+            acc
+        }
+        _ => BTreeMap::new(),
+    }
+}
+
+fn options_from_ts_type(
+    ty: &TSType<'_>,
+    named: &HashMap<String, BTreeMap<String, Vec<String>>>,
+    visiting: &mut HashSet<String>,
+) -> BTreeMap<String, Vec<String>> {
+    let ty = ty.without_parenthesized();
+    match ty {
+        TSType::TSTypeLiteral(lit) => options_from_signatures(&lit.members),
+        TSType::TSTypeReference(r) => {
+            let Some(sym) = type_reference_root_name(&r.type_name) else {
+                return BTreeMap::new();
+            };
+            if visiting.contains(sym) {
+                return BTreeMap::new();
+            }
+            visiting.insert(sym.to_string());
+            let out = named.get(sym).cloned().unwrap_or_default();
+            visiting.remove(sym);
+            out
+        }
+        TSType::TSIntersectionType(i) => {
+            let mut acc = BTreeMap::new();
+            for t in &i.types {
+                for (k, v) in options_from_ts_type(t, named, visiting) {
+                    acc.entry(k).or_insert(v);
+                }
+            }
+            acc
+        }
+        TSType::TSUnionType(u) => {
+            let mut acc = BTreeMap::new();
+            for t in &u.types {
+                for (k, v) in options_from_ts_type(t, named, visiting) {
+                    acc.entry(k).or_insert(v);
+                }
+            }
+            acc
+        }
+        _ => BTreeMap::new(),
+    }
+}
+
+fn options_from_signatures(members: &[TSSignature<'_>]) -> BTreeMap<String, Vec<String>> {
+    let mut out = BTreeMap::new();
+    for m in members {
+        let TSSignature::TSPropertySignature(prop) = m else {
+            continue;
+        };
+        if prop.computed {
+            continue;
+        }
+        let PropertyKey::StaticIdentifier(id) = &prop.key else {
+            continue;
+        };
+        let Some(ann) = prop.type_annotation.as_ref() else {
+            continue;
+        };
+        let Some(lits) = finite_string_union(&ann.type_annotation) else {
+            continue;
+        };
+        if lits.len() >= 2 {
+            out.insert(id.name.as_str().to_string(), lits);
+        }
+    }
+    out
+}
+
+/// Finite string literal union, ignoring `null` / `undefined` members.
+fn finite_string_union(ty: &TSType<'_>) -> Option<Vec<String>> {
+    let ty = ty.without_parenthesized();
+    match ty {
+        TSType::TSLiteralType(lit) => match &lit.literal {
+            TSLiteral::StringLiteral(s) => Some(vec![s.value.as_str().to_string()]),
+            _ => None,
+        },
+        TSType::TSUnionType(u) => {
+            let mut acc = Vec::new();
+            let mut seen = HashSet::new();
+            for t in &u.types {
+                let t = t.without_parenthesized();
+                if matches!(
+                    t,
+                    TSType::TSUndefinedKeyword(_) | TSType::TSNullKeyword(_)
+                ) {
+                    continue;
+                }
+                let part = finite_string_union(t)?;
+                for s in part {
+                    if seen.insert(s.clone()) {
+                        acc.push(s);
+                    }
+                }
+            }
+            if acc.is_empty() {
+                None
+            } else {
+                Some(acc)
+            }
+        }
+        _ => None,
     }
 }

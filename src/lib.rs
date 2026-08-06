@@ -1,7 +1,6 @@
 //! DSLinter — design-system component inventory and governance signals (MVP).
 
 pub mod class_strings;
-pub mod class_usage;
 pub mod code_quality;
 pub mod config;
 pub mod cva_extract;

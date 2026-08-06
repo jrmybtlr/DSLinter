@@ -206,6 +206,60 @@ export function controlsFromDeclaredProps(
   return out;
 }
 
+/** Merge hardcoded control overrides with report-derived controls (report options win). */
+export function mergeControlOverrides(
+  fromReport: PlaygroundControl[],
+  override: PlaygroundControl[] | undefined,
+): PlaygroundControl[] {
+  if (!override) return fromReport;
+
+  const byKey = new Map(fromReport.map((c) => [c.key, c]));
+  const merged: PlaygroundControl[] = [];
+  const seen = new Set<string>();
+
+  for (const ctrl of override) {
+    seen.add(ctrl.key);
+    const reportCtrl = byKey.get(ctrl.key);
+    if (
+      reportCtrl &&
+      reportCtrl.type === "select" &&
+      ctrl.type === "select" &&
+      reportCtrl.options.length > 0
+    ) {
+      const optionValues = new Set(reportCtrl.options.map((o) => o.value));
+      const defaultVal =
+        typeof ctrl.default === "string" && optionValues.has(ctrl.default)
+          ? ctrl.default
+          : reportCtrl.default;
+      merged.push({ ...reportCtrl, default: defaultVal });
+      continue;
+    }
+    if (ctrl.type === "select" && ctrl.options.length === 0) {
+      if (reportCtrl) merged.push(reportCtrl);
+      continue;
+    }
+    if (reportCtrl && ctrl.type === reportCtrl.type) {
+      merged.push({
+        ...reportCtrl,
+        default: ctrl.default as never,
+        ...(ctrl.type === "string" || ctrl.type === "node"
+          ? {
+              placeholder:
+                "placeholder" in ctrl ? ctrl.placeholder : undefined,
+            }
+          : {}),
+      } as PlaygroundControl);
+      continue;
+    }
+    merged.push(ctrl);
+  }
+
+  for (const ctrl of fromReport) {
+    if (!seen.has(ctrl.key)) merged.push(ctrl);
+  }
+  return merged;
+}
+
 export function controlsForSpec(
   catalogId: string,
   declaredProps: string[],
@@ -215,13 +269,12 @@ export function controlsForSpec(
   controlOverrides: Record<string, PlaygroundControl[]>,
   exportName?: string,
 ): PlaygroundControl[] {
-  const override = controlOverrides[catalogId];
-  if (override) return override;
-  return controlsFromDeclaredProps(
+  const fromReport = controlsFromDeclaredProps(
     declaredProps,
     propKinds,
     propOptions,
     propDefaults,
     exportName,
   );
+  return mergeControlOverrides(fromReport, controlOverrides[catalogId]);
 }

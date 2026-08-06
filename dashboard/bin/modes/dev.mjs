@@ -90,11 +90,25 @@ export async function runDevMode({
   const useConsumerViteDev =
     consumerViteRoot != null && shouldUseConsumerViteDev(scanAbs);
 
+  const embedOptOut = process.env.DSLINTER_NO_EMBED_VITE?.trim() === "1";
   const useEmbedViteDev =
     embedViteBin != null &&
     embedConfig != null &&
     !useConsumerViteDev &&
-    process.env.DSLINTER_NO_EMBED_VITE?.trim() !== "1";
+    !embedOptOut;
+
+  if (!useEmbedViteDev && !useConsumerViteDev) {
+    const reasons = [];
+    if (useConsumerViteDev === false && consumerViteRoot == null) {
+      reasons.push("no Vite project detected near the scan path");
+    }
+    if (embedOptOut) reasons.push("DSLINTER_NO_EMBED_VITE=1");
+    if (!embedConfig) reasons.push("embed Vite config missing from dslinter package");
+    if (embedConfig && !embedViteBin) reasons.push("vite binary not found for embed server");
+    process.stderr.write(
+      `dslinter: live playground embed unavailable (${reasons.join("; ") || "unknown"}).\n`,
+    );
+  }
 
   const bundledDist =
     useEmbedViteDev || useConsumerViteDev
@@ -114,12 +128,14 @@ export async function runDevMode({
     (a) => a === "--dashboard-static" || a.startsWith("--dashboard-static="),
   );
   const attachBundledStatic =
-    bundledDist != null && !useEmbedViteDev && !hasDashboardStaticFlag;
+    bundledDist != null && !useEmbedViteDev && !useConsumerViteDev && !hasDashboardStaticFlag;
 
   if (attachBundledStatic) {
     args.push("--dashboard-static", bundledDist);
     process.stderr.write(
-      "dslinter: warning: using prebuilt dashboard — live component previews are unavailable. Upgrade dslinter or ensure the embed dev server starts (Dashboard URL on port 5175).\n",
+      "dslinter: GOVERNANCE ONLY — prebuilt dashboard has no live component previews.\n" +
+        "  Open the scanner URL for scores/findings only, or fix embed/Vite setup and re-run `npx dslinter`.\n" +
+        "  Look for a Dashboard URL on port 5175 when the embed server starts successfully.\n",
     );
   }
 

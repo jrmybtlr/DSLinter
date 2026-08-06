@@ -23,6 +23,9 @@ pub fn print_human(report: &WorkspaceReport) {
     println!("  ux_consistency ...... {}", report.scores.ux_consistency);
     println!("  accessibility ....... {}", report.scores.accessibility);
     println!("  maintainability ..... {}", report.scores.maintainability);
+    if let Some(t) = report.scores.token_adoption {
+        println!("  token_adoption ...... {}", t);
+    }
 
     println!("\nMost-used components (PascalCase JSX / Vue template)");
     for row in report.usage_by_component.iter().take(20) {

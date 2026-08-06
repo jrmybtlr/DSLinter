@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-07-05T04:02:59.26924Z",
+  "generated_at": "2026-08-06T07:26:10.660334Z",
   "root": "/Users/jeremy/Development/DSLint/demo/inertia",
   "files": [
     {
@@ -1849,23 +1849,23 @@
             "className"
           ],
           "implementation_class_frequencies": {
+            "break-words": 2,
             "flex": 2,
             "flex-wrap": 2,
             "gap-1.5": 2,
             "items-center": 2,
             "sm:gap-2.5": 2,
             "text-muted-foreground": 2,
-            "text-sm": 2,
-            "wrap-break-words": 2
+            "text-sm": 2
           },
           "implementation_class_locations": [
             {
               "line": 15,
-              "classes": "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm wrap-break-words sm:gap-2.5"
+              "classes": "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5"
             },
             {
               "line": 15,
-              "classes": "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm wrap-break-words sm:gap-2.5"
+              "classes": "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5"
             }
           ]
         },

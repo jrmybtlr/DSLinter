@@ -12,7 +12,6 @@ import {
   propFrequenciesForComponent,
 } from "../dashboard/ComponentPropUsageDetail";
 import { ComponentUsageDetails } from "../dashboard/ComponentUsageDetails";
-import { ComponentImplementationClasses } from "./ComponentImplementationClasses";
 import { FindingsList } from "../dashboard/FindingsList";
 import { shortPath } from "../dashboard/paths";
 import { findingsForComponent } from "../report/findingsForComponent";
@@ -228,17 +227,6 @@ export function ComponentInspectPane({
             ) : (
               reportPlaceholder("Load the DSLinter report to see prop usage.")
             )}
-          </Section>
-
-          <Section
-            id="implementation-classes"
-            title="Implementation classes"
-            description="Tailwind and class strings from this component's JSX, including intrinsics."
-          >
-            <ComponentImplementationClasses
-              report={report}
-              componentName={componentId}
-            />
           </Section>
 
           <Section

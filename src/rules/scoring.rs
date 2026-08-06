@@ -95,6 +95,7 @@ pub fn compute_scores(
         ux_consistency,
         accessibility,
         maintainability,
+        token_adoption,
     }
 }
 

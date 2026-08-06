@@ -24,7 +24,6 @@ import { defaultArgsFromControls } from "../types/controls";
 import type { PlaygroundArgs } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import { ComponentUsageDetails } from "../dashboard/ComponentUsageDetails";
-import { ComponentImplementationClasses } from "./ComponentImplementationClasses";
 import {
   PlaygroundA11ySection,
   PlaygroundApiReference,
@@ -152,9 +151,18 @@ export function ComponentPlaygroundPane({
     defaultArgsFromControls(entry.controls),
   );
 
+  const controlsSignature = entry.controls
+    .map((c) => {
+      if (c.type === "select") {
+        return `${c.key}:select:${c.default}:${c.options.map((o) => o.value).join(",")}`;
+      }
+      return `${c.key}:${c.type}:${String(c.default)}`;
+    })
+    .join("|");
+
   useEffect(() => {
     setValues(defaultArgsFromControls(entry.controls));
-  }, [entry.id]);
+  }, [entry.id, controlsSignature, entry.controls]);
 
   const a11y = useMemo(
     () =>
@@ -521,17 +529,6 @@ export function ComponentPlaygroundPane({
 
               <Section id="repo-usage" title="Repo usage" description="">
                 <ComponentUsageDetails report={report} componentId={entry.id} />
-              </Section>
-
-              <Section
-                id="implementation-classes"
-                title="Implementation classes"
-                description="Tailwind and class strings from this component's JSX, including intrinsics like span and button."
-              >
-                <ComponentImplementationClasses
-                  report={report}
-                  componentName={entry.id}
-                />
               </Section>
 
               <Section

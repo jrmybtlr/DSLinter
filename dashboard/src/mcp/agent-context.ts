@@ -107,6 +107,9 @@ export function buildAgentContext(
     `- UX consistency: ${gov.scores.ux_consistency}/100`,
     `- Accessibility: ${gov.scores.accessibility}/100`,
     `- Maintainability: ${gov.scores.maintainability}/100`,
+    ...(gov.scores.token_adoption != null
+      ? [`- Token adoption: ${gov.scores.token_adoption}/100`]
+      : []),
     "",
     "## Top components (by usage)",
   ];

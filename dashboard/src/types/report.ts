@@ -22,15 +22,6 @@ export interface ComponentDefinition {
   /** Default values from CVA `defaultVariants`. */
   declared_prop_defaults?: Record<string, string>;
   cva_binding_name?: string;
-  /** Tailwind/class tokens from this component's JSX (including intrinsics). */
-  implementation_class_frequencies?: Record<string, number>;
-  /** Source lines for implementation class strings. */
-  implementation_class_locations?: ImplementationClassLocation[];
-}
-
-export interface ImplementationClassLocation {
-  line: number;
-  classes: string;
 }
 
 export interface JsxUsage {
@@ -65,6 +56,8 @@ export interface GovernanceScores {
   ux_consistency: number;
   accessibility: number;
   maintainability: number;
+  /** CSS / known_tokens adoption 0–100 when measurable. */
+  token_adoption?: number | null;
 }
 
 export interface DuplicateComponent {

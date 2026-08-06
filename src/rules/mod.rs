@@ -21,7 +21,6 @@ use crate::model::{
 use crate::playground_emit::build_playground_specs;
 use crate::token_values::{ColorAllowlist, SizeScale};
 
-use crate::class_usage::attach_implementation_classes;
 use config_filter::filter_code_quality_config;
 use a11y_cva::{cva_composed_dark_mode_findings, cva_skip_fragments_for_files};
 use dark_mode::dark_mode_contrast_findings;
@@ -79,7 +78,6 @@ pub fn evaluate_workspace(
     findings.extend(deprecated_usage(&files, config));
 
     let duplicate_components = duplicate_definitions(&files);
-    attach_implementation_classes(&mut files);
     let usage_by_component = rollup_usage(&files);
     findings.extend(variant_explosion_findings(&usage_by_component));
     findings.extend(duplicate_component_findings(&root, &duplicate_components));

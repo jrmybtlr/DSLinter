@@ -41,6 +41,19 @@ node dashboard/bin/dslinter.mjs --version
 
 Override with a cargo-built binary: `DSLINTER_BIN=/path/to/target/release/dslinter`.
 
+## Beta checklist
+
+Before calling a release beta-ready:
+
+- [ ] `cargo test` passes
+- [ ] `pnpm --filter dslinter test` (dashboard vitest) passes
+- [ ] `demo/react` and `demo/inertia`: `npx dslinter` opens Dashboard with live previews
+- [ ] `cd demo/react && npx dslinter mcp --self-test` (and inertia equivalent) pass
+- [ ] CI recipe documented: `npx dslinter --report . --fail-on-warnings` and optional `--fail-on-drift`
+- [ ] Cargo.toml version matches npm `dslinter` version
+
+See [ROADMAP.md](ROADMAP.md) for phased product goals.
+
 ## Release workflow
 
 From repo root (maintainers). Requires `NPM_TOKEN` in GitHub Actions secrets with **publish** access to the entire **`@dslinter` scope** (every `@dslinter/binding-*` platform package plus `dslinter`). A granular token limited to `dslinter` only will fail with `404 Not Found` on binding publishes.

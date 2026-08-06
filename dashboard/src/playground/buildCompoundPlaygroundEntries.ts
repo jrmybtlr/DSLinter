@@ -18,6 +18,7 @@ import {
   childrenPropForPreview,
   isLikelyBooleanProp,
   isPassthroughStringProp,
+  mergeControlOverrides,
   resolveEffectivePropKind,
   SKIP_PLAYGROUND_PROPS,
   stringArrayControlForProp,
@@ -210,9 +211,6 @@ function controlsFromDefinitionAndUsage(
   controlOverrides: Record<string, PlaygroundControl[]>,
   catalogId: string,
 ): PlaygroundControl[] {
-  const override = controlOverrides[catalogId];
-  if (override) return override;
-
   const declared = def.declared_props ?? [];
   const skip = new Set([...SKIP_PLAYGROUND_PROPS, "as", "asChild"]);
   const propKeys = new Set<string>(declared);
@@ -288,7 +286,7 @@ function controlsFromDefinitionAndUsage(
     out.push({ ...childrenControl(catalogId), defaultSource: "example" });
   }
 
-  return out;
+  return mergeControlOverrides(out, controlOverrides[catalogId]);
 }
 
 function valuesToProps(

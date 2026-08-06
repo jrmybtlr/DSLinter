@@ -21,6 +21,20 @@
     "fix_hint": "Wrap with <Label htmlFor=...> or add aria-label."
   },
   {
+    "rule_id": "a11y-select-name",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "`<select>` should have an accessible name (aria-label or associated label).",
+    "fix_hint": "Add aria-label, aria-labelledby, or associate a <label> via id/htmlFor."
+  },
+  {
+    "rule_id": "a11y-textarea-name",
+    "pillar": "a11y",
+    "default_severity": "warning",
+    "description": "`<textarea>` should have an accessible name (aria-label or associated label).",
+    "fix_hint": "Add aria-label, aria-labelledby, or associate a <label> via id/htmlFor."
+  },
+  {
     "rule_id": "a11y-anchor-href",
     "pillar": "a11y",
     "default_severity": "warning",
