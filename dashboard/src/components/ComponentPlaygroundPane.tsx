@@ -162,7 +162,7 @@ export function ComponentPlaygroundPane({
 
   useEffect(() => {
     setValues(defaultArgsFromControls(entry.controls));
-  }, [entry.id, controlsSignature, entry.controls]);
+  }, [entry.id, controlsSignature]);
 
   const a11y = useMemo(
     () =>
