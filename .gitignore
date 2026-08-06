@@ -34,3 +34,4 @@ package-lock.json
 *.pdb
 .env
 demo/react/public/dslinter-report.json
+.DS_Store
