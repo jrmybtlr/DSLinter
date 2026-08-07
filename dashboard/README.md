@@ -32,6 +32,15 @@ The **`dslinter`** command orchestrates the Rust scanner (via **napi-rs**, same 
 
 Scanner flags: `--json`, `-p` / `--parallel`, `--fail-on-warnings`, `--max-warnings`, `--output`, `[PATH]`. Low-level: `--serve <port>` (watch + HTTP, no Vite).
 
+Baseline drift (Node CLI, same file as MCP — `.dslinter/mcp-baseline.json`):
+
+```bash
+npx dslinter --report . --update-baseline
+npx dslinter --report . --diff-baseline
+npx dslinter --report . --fail-on-drift
+npx dslinter --report . --fail-on-drift --max-finding-delta 5 --max-score-drop 2
+```
+
 ### Without installing Rust
 
 On **`npm install dslinter`**, npm installs the platform **`@dslinter/binding-*`** optional dependency (darwin/linux/windows). No postinstall download or GitHub Releases API is required.
@@ -81,15 +90,18 @@ The embed dev server registers Tailwind `@source` paths for your `.dslinter.json
 
 For apps that already embed the dashboard (like this repo's `demo/`), dev mode uses your app's Vite server when `src/App.tsx` imports `DashboardLayout` from `dslinter`.
 
-**Direct `vite --mode serve`:** add one line to `vite.config.ts`:
+**Direct `vite --mode serve`:** add the DSLinter Vite plugin. When embedding **published dashboard source** (`DashboardLayout` from `dslinter`), also enable **UseClassy** so `className:*` responsive variants compile:
 
 ```ts
 import dslinter from "dslinter/vite";
+import useClassy from "dslinter/useclassy";
 
 export default defineConfig({
-  plugins: [dslinter() /* your plugins */],
+  plugins: [useClassy(), dslinter() /* your plugins */],
 });
 ```
+
+`npx dslinter`’s embed server wires UseClassy automatically. Consumer Vite only needs `dslinter/useclassy` when you import dashboard source UI into your app.
 
 The plugin sets `DSLINTER_SCAN_ROOT` from the environment (set by `npx dslinter`) or defaults to `process.cwd()`.
 
@@ -116,17 +128,18 @@ No Inertia route, no `buildRegistry.ts`, and no `vite.config` edits are required
 - If you see `@dslinter-scan/…` or glob join errors, upgrade `dslinter` and confirm the embed dev server started (not the prebuilt `dashboard-dist` fallback).
 - Use `<DashboardLayout autoPlayground />` — not `buildRegistry.ts` — unless you run through a Vite dev server that compiles your `import.meta.glob`.
 
-**Optional — embed dashboard in your app:** set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [dslinter()]` from `dslinter/vite`, and render `<DashboardLayout autoPlayground dslinterReport={...} />`.
+**Optional — embed dashboard in your app:** set `DSLINTER_USE_CONSUMER_VITE=1`, add `plugins: [useClassy(), dslinter()]` from `dslinter/useclassy` + `dslinter/vite`, `@source` `.classy/output.classy.html` in your CSS, and render `<DashboardLayout autoPlayground dslinterReport={...} />`.
 
 **Optional — custom playground controls:** `npx dslinter init --laravel` scaffolds `resources/js/playground/buildRegistry.ts`.
 
 ## Styles (Tailwind v4)
 
-1. In your app CSS, load Tailwind, then point Tailwind at this package so utility scanning picks up dashboard classes:
+1. In your app CSS, load Tailwind, then point Tailwind at this package so utility scanning picks up dashboard classes. When using UseClassy with source embeds, also `@source` the generated classy HTML:
 
    ```css
    @import "tailwindcss";
    @source "../node_modules/dslinter/src";
+   @source "../.classy/output.classy.html";
    ```
 
 2. Import the theme (tokens + shadcn layer):

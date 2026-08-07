@@ -110,7 +110,7 @@ function BreakpointPresetSelect({
   onSelectWidth,
 }: {
   kind: "screen" | "container";
-  value: string | null;
+  value: string;
   presets: readonly { label: string; width: number }[];
   onSelectWidth: (width: number) => void;
 }) {
@@ -118,7 +118,7 @@ function BreakpointPresetSelect({
 
   return (
     <Select
-      value={value ?? undefined}
+      value={value}
       onValueChange={(next) => {
         const preset = presets.find((p) => p.label === next);
         if (preset) onSelectWidth(preset.width);
@@ -126,7 +126,7 @@ function BreakpointPresetSelect({
     >
       <SelectTrigger
         aria-label={`Select ${kind} width preset`}
-        title={`${kindLabel} — click to set a predefined width`}
+        title={`${kindLabel}: ${value} — click to set a predefined width`}
         className={cn(
           "h-auto w-auto gap-0 rounded-none border-0 bg-transparent p-2.5 shadow-none last:border-l",
           "font-mono text-xs/none text-muted-foreground tabular-nums",
@@ -135,9 +135,11 @@ function BreakpointPresetSelect({
           "[&>svg]:hidden",
         )}
       >
-        <span>{kindLabel}:&nbsp;</span>
-        {/* Value is mirrored above; keep SelectValue for Radix a11y only. */}
-        <SelectValue className="hidden" />
+        <span>
+          {kindLabel}:&nbsp;{value}
+        </span>
+        {/* Visible label above; SelectValue kept for Radix a11y. */}
+        <SelectValue className="sr-only" />
       </SelectTrigger>
       <SelectContent align="center" className="min-w-36">
         {presets.map((preset) => (
@@ -245,19 +247,19 @@ export function ComponentPlaygroundPane({
   const maxOuterRef = useRef(0);
   const [maxOuterPx, setMaxOuterPx] = useState(0);
   const [previewWidthPx, setPreviewWidthPx] = useState(DEFAULT_PREVIEW_PX);
-  const [screenBreakpoint, setScreenBreakpoint] = useState<string | null>(null);
-  const [containerBreakpoint, setContainerBreakpoint] = useState<string | null>(null);
+  const [screenBreakpoint, setScreenBreakpoint] = useState(() =>
+    screenBreakpointForWidth(DEFAULT_PREVIEW_PX),
+  );
+  const [containerBreakpoint, setContainerBreakpoint] = useState(() =>
+    containerBreakpointForWidth(DEFAULT_PREVIEW_PX),
+  );
 
   useEffect(() => {
     livePreviewWidthRef.current = previewWidthPx;
   }, [previewWidthPx]);
 
   const syncBreakpointsFromWidth = useCallback((width: number) => {
-    if (!Number.isFinite(width) || width <= 0) {
-      setScreenBreakpoint(null);
-      setContainerBreakpoint(null);
-      return;
-    }
+    if (!Number.isFinite(width) || width <= 0) return;
     setScreenBreakpoint(screenBreakpointForWidth(width));
     setContainerBreakpoint(containerBreakpointForWidth(width));
   }, []);
