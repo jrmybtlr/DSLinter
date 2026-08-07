@@ -37,7 +37,7 @@ import { join } from "node:path";
  * @typedef {{
  *   baseline: { saved_at: string; scores: GovernanceScores; finding_count: number } | null;
  *   current: { scores: GovernanceScores; finding_count: number };
- *   score_deltas: Record<string, number>;
+ *   score_deltas: Partial<Record<keyof GovernanceScores, number>>;
  *   finding_delta: number;
  * }} DriftSummary
  */
@@ -93,7 +93,7 @@ export async function saveBaseline(projectRoot, report, hash) {
  */
 export function computeDrift(report, baseline) {
   const currentCount = report.findings?.length ?? 0;
-  /** @type {Record<string, number>} */
+  /** @type {Partial<Record<keyof GovernanceScores, number>>} */
   const score_deltas = {
     design_system_health:
       report.scores.design_system_health -

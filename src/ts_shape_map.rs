@@ -560,6 +560,11 @@ fn options_from_signatures(members: &[TSSignature<'_>]) -> BTreeMap<String, Vec<
     out
 }
 
+/// Finite string-union options suitable for playground selects (≥2 literals).
+pub fn options_from_prop_type_arg(ty: &TSType<'_>) -> Option<Vec<String>> {
+    finite_string_union(ty).filter(|v| v.len() >= 2)
+}
+
 /// Finite string literal union, ignoring `null` / `undefined` members.
 fn finite_string_union(ty: &TSType<'_>) -> Option<Vec<String>> {
     let ty = ty.without_parenthesized();

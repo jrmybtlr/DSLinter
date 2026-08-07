@@ -38,7 +38,7 @@ function jsonResult(data: unknown, isError = false): CallToolResult {
 export function createDslinterMcpServer(config: McpConfig, cache: ReportCache): McpServer {
   const server = new McpServer({
     name: "dslinter",
-    version: "0.7.0",
+    version: "0.7.1",
   });
 
   server.registerTool(

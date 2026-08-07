@@ -282,7 +282,7 @@ export function controlsFromDeclaredProps(
         ...objectControlForProp(key, propTypeLabels?.[key] ?? "object"),
         optional: propOptional?.[key],
       });
-    } else if (kind === "string") {
+    } else if (kind === "string" || isPassthroughStringProp(key)) {
       out.push({
         key,
         label: key,
