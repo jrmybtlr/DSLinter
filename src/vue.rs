@@ -585,10 +585,10 @@ fn extract_vue_props_via_regex(script_src: &str) -> VueDeclaredProps {
 fn vue_attrs_have_accessible_name(lower_attrs: &str) -> bool {
     lower_attrs.contains("aria-label=")
         || lower_attrs.contains("aria-labelledby=")
-        || lower_attrs.contains(":aria-label")
-        || lower_attrs.contains("v-bind:aria-label")
-        || lower_attrs.contains(":aria-labelledby")
-        || lower_attrs.contains("v-bind:aria-labelledby")
+        || lower_attrs.contains(":aria-label=")
+        || lower_attrs.contains("v-bind:aria-label=")
+        || lower_attrs.contains(":aria-labelledby=")
+        || lower_attrs.contains("v-bind:aria-labelledby=")
 }
 
 fn vue_template_a11y_findings(
