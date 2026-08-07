@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import useClassy from "vite-plugin-useclassy";
 import dslinter from "./plugin.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
@@ -21,8 +22,8 @@ const consumerViteRoot = process.env.DSLINTER_CONSUMER_VITE_ROOT?.trim()
  * when the published package has no local Vite install (npm installs).
  */
 function resolvePeer<T>(spec: string): T {
-  const candidates = [packageRoot, consumerViteRoot].filter(
-    (root): root is string => Boolean(root),
+  const candidates = [packageRoot, consumerViteRoot].filter((root): root is string =>
+    Boolean(root),
   );
   for (const root of candidates) {
     try {
@@ -38,16 +39,14 @@ function resolvePeer<T>(spec: string): T {
 }
 
 const { defineConfig } = resolvePeer<typeof import("vite")>("vite");
-const tailwindcss =
-  resolvePeer<typeof import("@tailwindcss/vite")>("@tailwindcss/vite").default;
-const react =
-  resolvePeer<typeof import("@vitejs/plugin-react")>("@vitejs/plugin-react")
-    .default;
+const tailwindcss = resolvePeer<typeof import("@tailwindcss/vite")>("@tailwindcss/vite").default;
+const react = resolvePeer<typeof import("@vitejs/plugin-react")>("@vitejs/plugin-react").default;
 
 /** Published embed dev server config (`npx dslinter` on npm installs). */
 export default defineConfig(() => ({
   root: packageRoot,
   plugins: [
+    useClassy({ language: "react" }),
     tailwindcss(),
     react(),
     dslinter({ scanRoot, consumerViteRoot }),

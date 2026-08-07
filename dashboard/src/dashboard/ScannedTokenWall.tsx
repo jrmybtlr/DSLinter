@@ -1,9 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../components/ui/hover-card";
 import { cn } from "../lib/utils";
 import { EmptyCard } from "../components/EmptyCard";
 import { TruncatedPath } from "../components/TruncatedPath";
@@ -50,7 +46,7 @@ function TokenSection({
 function TokenUsageBadge({ row }: { row: ScannedTokenRow }) {
   if (row.isUnused) {
     return (
-      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
         unused
       </span>
     );
@@ -86,9 +82,7 @@ function TokenUsageHover({ row }: { row: ScannedTokenRow }) {
             </li>
           ))}
           {row.usageFiles.length > 12 ? (
-            <li className="text-muted-foreground/80">
-              +{row.usageFiles.length - 12} more
-            </li>
+            <li className="text-muted-foreground/80">+{row.usageFiles.length - 12} more</li>
           ) : null}
         </ul>
       </HoverCardContent>
@@ -96,23 +90,13 @@ function TokenUsageHover({ row }: { row: ScannedTokenRow }) {
   );
 }
 
-function TokenRowBody({
-  row,
-  className,
-}: {
-  row: ScannedTokenRow;
-  className?: string;
-}) {
+function TokenRowBody({ row, className }: { row: ScannedTokenRow; className?: string }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <p className="truncate font-mono text-xs text-foreground">
-        {row.cssName}
-      </p>
+      <p className="truncate font-mono text-xs text-foreground">{row.cssName}</p>
       <p className="truncate text-xs text-muted-foreground">{row.value}</p>
       {row.tw ? (
-        <p className="truncate font-mono text-xs text-muted-foreground/70">
-          {row.tw}
-        </p>
+        <p className="truncate font-mono text-xs text-muted-foreground/70">{row.tw}</p>
       ) : null}
     </div>
   );
@@ -123,19 +107,15 @@ function ColorSection({ rows }: { rows: ScannedTokenRow[] }) {
   if (colors.length === 0) return null;
 
   return (
-    <TokenSection
-      title="Colors"
-      subtitle="CSS custom properties from @theme and :root."
-    >
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+    <TokenSection title="Colors" subtitle="CSS custom properties from @theme and :root.">
+      <ul className="mt-4 grid gap-3" className:sm="grid-cols-2">
         {colors.map((row) => (
           <li
             key={scannedTokenRowKey(row)}
             className="flex items-center gap-3 rounded-lg border border-border bg-card p-2 pr-3.5"
             title={row.value}
           >
-            {row.displayValue &&
-            /^(#|rgb|oklch|hsl)/.test(row.displayValue.trim()) ? (
+            {row.displayValue && /^(#|rgb|oklch|hsl)/.test(row.displayValue.trim()) ? (
               <svg
                 className="h-9 w-9 shrink-0 overflow-hidden rounded border border-border shadow-inner"
                 viewBox="0 0 36 36"
@@ -188,10 +168,7 @@ function ListSection({
 
 export function ScannedTokenWall({ view }: { view: MergedTokenView }) {
   const [filter, setFilter] = useState<TokenUsageFilter>("all");
-  const filtered = useMemo(
-    () => filterTokenRows(view.rows, filter),
-    [view.rows, filter],
-  );
+  const filtered = useMemo(() => filterTokenRows(view.rows, filter), [view.rows, filter]);
 
   return (
     <section className="space-y-6">

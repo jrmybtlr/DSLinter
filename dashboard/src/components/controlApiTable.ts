@@ -1,4 +1,5 @@
 import type { PlaygroundControl } from "../types/controls";
+import { isNonEditableControl } from "../types/controls";
 
 export type ApiTableRow = {
   prop: string;
@@ -11,12 +12,15 @@ export type ApiTableRow = {
 };
 
 function formatDefault(c: PlaygroundControl): string {
+  if (isNonEditableControl(c)) return "—";
   switch (c.type) {
     case "boolean":
       return String(c.default);
     case "number":
       return String(c.default);
     case "string":
+    case "stringArray":
+    case "numberArray":
       return c.default === "" ? "—" : JSON.stringify(c.default);
     case "node":
       return c.default === "" ? "—" : JSON.stringify(c.default);
@@ -28,6 +32,7 @@ function formatDefault(c: PlaygroundControl): string {
 }
 
 function formatType(c: PlaygroundControl): string {
+  if (isNonEditableControl(c)) return c.typeLabel || "—";
   switch (c.type) {
     case "boolean":
       return "boolean";
@@ -35,6 +40,10 @@ function formatType(c: PlaygroundControl): string {
       return "number";
     case "string":
       return "string";
+    case "stringArray":
+      return "string[]";
+    case "numberArray":
+      return "number[]";
     case "node":
       return "ReactNode";
     case "select":
@@ -51,7 +60,7 @@ function unionLiteralsForControl(c: PlaygroundControl): string[] | null {
 
 export function controlsToApiRows(controls: PlaygroundControl[]): ApiTableRow[] {
   return controls.map((c) => ({
-    prop: c.key,
+    prop: c.optional ? `${c.key}?` : c.key,
     type: formatType(c),
     unionLiterals: unionLiteralsForControl(c),
     default: formatDefault(c),

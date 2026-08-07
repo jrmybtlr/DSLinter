@@ -8,11 +8,16 @@ export type {
   PlaygroundControl,
   PlaygroundBooleanControl,
   PlaygroundStringControl,
+  PlaygroundStringArrayControl,
+  PlaygroundNumberArrayControl,
+  PlaygroundIconControl,
+  PlaygroundObjectControl,
+  PlaygroundFunctionControl,
   PlaygroundNumberControl,
   PlaygroundSelectControl,
   PlaygroundValuesUpdater,
 } from "./types/controls";
-export { defaultArgsFromControls } from "./types/controls";
+export { defaultArgsFromControls, isNonEditableControl } from "./types/controls";
 export { definePlayground } from "./playground/definePlayground";
 export type { DefinePlaygroundKitOptions } from "./playground/definePlayground";
 /** @deprecated Use `definePlayground({ kit, controls })` instead. */

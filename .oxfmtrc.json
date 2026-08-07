@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/dashboard-dist/**",
+    "**/.classy/**",
+    "**/target/**",
+    "demo/inertia/vendor/**",
+    "demo/inertia/public/build/**"
+  ],
+  "sortTailwindcss": {
+    "stylesheet": "dashboard/embed/index.css",
+    "functions": ["clsx", "cn", "cva", "classy"]
+  }
+}

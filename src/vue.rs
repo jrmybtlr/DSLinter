@@ -323,6 +323,9 @@ fn balanced_object_body(src: &str, open_brace: usize) -> Option<&str> {
     let mut depth = 0i32;
     let mut i = open_brace;
     while i < bytes.len() {
+        if depth > 0 && skip_js_comment_or_string(bytes, &mut i) {
+            continue;
+        }
         match bytes[i] {
             b'{' => depth += 1,
             b'}' => {
@@ -338,6 +341,51 @@ fn balanced_object_body(src: &str, open_brace: usize) -> Option<&str> {
     None
 }
 
+/// Advance `i` past a JS line/block comment or quoted string starting at `bytes[i]`.
+/// Returns `true` when a comment/string was skipped (caller should `continue`).
+fn skip_js_comment_or_string(bytes: &[u8], i: &mut usize) -> bool {
+    if *i >= bytes.len() {
+        return false;
+    }
+    match bytes[*i] {
+        b'/' if *i + 1 < bytes.len() => match bytes[*i + 1] {
+            b'/' => {
+                *i += 2;
+                while *i < bytes.len() && bytes[*i] != b'\n' {
+                    *i += 1;
+                }
+                true
+            }
+            b'*' => {
+                *i += 2;
+                while *i + 1 < bytes.len() && !(bytes[*i] == b'*' && bytes[*i + 1] == b'/') {
+                    *i += 1;
+                }
+                *i = (*i + 2).min(bytes.len());
+                true
+            }
+            _ => false,
+        },
+        b'\'' | b'"' | b'`' => {
+            let quote = bytes[*i];
+            *i += 1;
+            while *i < bytes.len() {
+                if bytes[*i] == b'\\' {
+                    *i = (*i + 2).min(bytes.len());
+                    continue;
+                }
+                if bytes[*i] == quote {
+                    *i += 1;
+                    break;
+                }
+                *i += 1;
+            }
+            true
+        }
+        _ => false,
+    }
+}
+
 fn top_level_ident_keys(object_body: &str) -> Vec<String> {
     // Only keys at brace-depth 0 so nested `type:` / `default:` are ignored.
     let mut keys = Vec::new();
@@ -346,6 +394,9 @@ fn top_level_ident_keys(object_body: &str) -> Vec<String> {
     let bytes = object_body.as_bytes();
     let mut i = 0usize;
     while i < bytes.len() {
+        if skip_js_comment_or_string(bytes, &mut i) {
+            continue;
+        }
         match bytes[i] {
             b'{' => depth += 1,
             b'}' => depth -= 1,
@@ -932,6 +983,38 @@ defineProps<{
         assert_eq!(
             def.declared_prop_options.get("variant").map(|v| v.as_slice()),
             Some(&["solid".to_string(), "outline".to_string()][..])
+        );
+    }
+
+    #[test]
+    fn balanced_object_body_ignores_braces_in_strings_and_comments() {
+        let src = r#"{
+  meta: { default: '{}' }, // trailing { }
+  note: { default: "a } b" },
+  /* ignore } here */
+  label: String,
+}"#;
+        let body = balanced_object_body(src, 0).expect("balanced body");
+        let keys = top_level_ident_keys(body);
+        assert_eq!(keys, vec!["meta", "note", "label"], "{body:?} -> {keys:?}");
+    }
+
+    #[test]
+    fn extract_vue_props_via_regex_survives_braces_in_defaults() {
+        // Force regex path: invalid/unparseable enough that AST returns None isn't guaranteed,
+        // so call the regex helper directly.
+        let script = r#"
+defineProps({
+  payload: { type: String, default: '{}' },
+  title: String,
+})
+"#;
+        let extracted = extract_vue_props_via_regex(script);
+        assert_eq!(
+            extracted.props,
+            vec!["payload", "title"],
+            "{:?}",
+            extracted.props
         );
     }
 }

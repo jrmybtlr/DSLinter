@@ -1,9 +1,5 @@
 import { useMemo } from "react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../components/ui/hover-card";
 import {
   Table,
   TableBody,
@@ -52,8 +48,7 @@ function CatalogPropUsageHover({
       <HoverCardTrigger asChild>
         <button type="button" className={catalogHoverTriggerClass}>
           <span className="text-muted-foreground">
-            {usedPropCount}/{attributeProps.length}{" "}
-            {pluralize("prop", usedPropCount)} used
+            {usedPropCount}/{attributeProps.length} {pluralize("prop", usedPropCount)} used
           </span>
         </button>
       </HoverCardTrigger>
@@ -62,10 +57,7 @@ function CatalogPropUsageHover({
           component={component}
           declared={declared}
           unusedProps={unusedProps}
-          propFrequencies={propFrequenciesForComponent(
-            report,
-            component,
-          )}
+          propFrequencies={propFrequenciesForComponent(report, component)}
           variant="compact"
         />
       </HoverCardContent>
@@ -155,7 +147,8 @@ export function ComponentCatalog({
                   <button
                     type="button"
                     onClick={() => onOpenComponent(name)}
-                    className="text-left font-medium text-foreground underline decoration-transparent underline-offset-2 transition hover:decoration-current"
+                    className="text-left font-medium text-foreground underline decoration-transparent underline-offset-2 transition"
+                    className:hover="decoration-current"
                   >
                     {name}
                   </button>

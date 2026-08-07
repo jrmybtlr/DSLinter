@@ -279,6 +279,55 @@ describe("enrichPlaygroundSpecFromTs", () => {
     );
     expect(enriched.declared_prop_kinds?.errors).toBe("stringArray");
     expect(enriched.declared_prop_kinds?.title).toBe("string");
+    expect(enriched.declared_prop_optional?.title).toBe(true);
+    expect(enriched.declared_prop_optional?.errors).toBe(false);
+  });
+
+  it("classifies number[], function, LucideIcon, and object alias props", () => {
+    const root = tempProject({
+      "src/passkey-item.tsx": `
+        type LucideIcon = (props: { className?: string }) => null;
+        type Passkey = {
+          id: number;
+          name: string;
+        };
+
+        export function PasskeyItem({
+          ids,
+          onDelete,
+          iconNode,
+          passkey,
+        }: {
+          ids: number[];
+          onDelete: (id: number, onError: () => void) => void;
+          iconNode?: LucideIcon | null;
+          passkey: Passkey;
+        }) {
+          return null;
+        }
+      `,
+    });
+    const bundle = createCheckerProgram(root)!;
+    const spec: PlaygroundSpec = {
+      id: "PasskeyItem",
+      export_name: "PasskeyItem",
+      rel_path: "src/passkey-item.tsx",
+      declared_props: ["ids", "onDelete", "iconNode", "passkey"],
+    };
+    const enriched = enrichPlaygroundSpecFromTs(
+      spec,
+      bundle.checker,
+      bundle.program,
+      root,
+    );
+    expect(enriched.declared_prop_kinds?.ids).toBe("numberArray");
+    expect(enriched.declared_prop_kinds?.onDelete).toBe("function");
+    expect(enriched.declared_prop_kinds?.iconNode).toBe("icon");
+    expect(enriched.declared_prop_kinds?.passkey).toBe("object");
+    expect(enriched.declared_prop_type_labels?.iconNode).toBe("LucideIcon");
+    expect(enriched.declared_prop_type_labels?.passkey).toBe("Passkey");
+    expect(enriched.declared_prop_type_labels?.onDelete).toContain("=>");
+    expect(enriched.declared_prop_optional?.iconNode).toBe(true);
   });
 });
 

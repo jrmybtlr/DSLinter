@@ -83,8 +83,7 @@ export function PlaygroundTokenStyleSection({
         </Table>
       ) : reportReady && findings.length === 0 ? (
         <EmptyCard>
-          No hardcoded or arbitrary token color findings on this file in the
-          current report.
+          No token color findings on this file in the current report.
         </EmptyCard>
       ) : (
         <EmptyCard>
@@ -248,6 +247,7 @@ export function PlaygroundApiReference({
   );
 
   const rows = controlsToApiRows(controls);
+  const rowByKey = new Map(controls.map((c, i) => [c.key, rows[i]!]));
   return (
     <Section
       id="api-reference"
@@ -268,10 +268,10 @@ export function PlaygroundApiReference({
         </TableHeader>
         <TableBody>
           {controls.map((c) => {
-            const r = rows.find((row) => row.prop === c.key);
+            const r = rowByKey.get(c.key);
             if (!r) return null;
             return (
-              <TableRow key={r.prop}>
+              <TableRow key={c.key}>
                 <TableCell className="font-medium">{r.prop}</TableCell>
                 <TableCell>
                   {c.type === "select" ? (

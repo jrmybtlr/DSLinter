@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import useClassy from "vite-plugin-useclassy";
 import dslinter from "./vite/plugin";
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
@@ -17,6 +18,7 @@ const consumerViteRoot = process.env.DSLINTER_CONSUMER_VITE_ROOT?.trim()
 export default defineConfig(() => ({
   root: packageRoot,
   plugins: [
+    useClassy({ language: "react" }),
     tailwindcss(),
     react(),
     dslinter({ scanRoot, consumerViteRoot }),

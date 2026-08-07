@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import dslinter from "dslinter/vite";
+import useClassy from "dslinter/useclassy";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -12,13 +13,15 @@ const dashboardSrc = path.join(dashboardPkg, "src");
 /** One React instance for demo + linked dashboard (avoids invalid hook call). */
 const reactRoot = path.resolve(demoDir, "node_modules/react");
 const reactDomRoot = path.resolve(demoDir, "node_modules/react-dom");
-const useSyncExternalStoreShim = path.resolve(
-  demoDir,
-  "src/shims/use-sync-external-store-shim.ts",
-);
+const useSyncExternalStoreShim = path.resolve(demoDir, "src/shims/use-sync-external-store-shim.ts");
 
 export default defineConfig(({ mode }) => ({
-  plugins: [tailwindcss(), react(), dslinter({ scanRoot: demoDir })],
+  plugins: [
+    useClassy({ language: "react" }),
+    tailwindcss(),
+    react(),
+    dslinter({ scanRoot: demoDir }),
+  ],
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: [

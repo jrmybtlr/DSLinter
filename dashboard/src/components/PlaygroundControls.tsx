@@ -32,7 +32,7 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
           Reset defaults
         </Button>
       </div>
-      <div className=" p-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 p-3" className:sm="grid-cols-2" className:lg="grid-cols-3">
         {controls.map((c) => (
           <div key={c.key}>
             <PlaygroundControlField

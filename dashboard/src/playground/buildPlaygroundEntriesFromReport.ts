@@ -231,6 +231,8 @@ export function buildPlaygroundEntriesFromReportWithSkips(
         spec.declared_prop_defaults,
         controlOverrides,
         spec.export_name,
+        spec.declared_prop_optional,
+        spec.declared_prop_type_labels,
       ),
       // Example trees carry their own children — a children control would fight them.
       !shouldUseExampleTreePreview(spec, spec.example_tree, report) &&

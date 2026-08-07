@@ -98,6 +98,10 @@ export type DeclaredPropKind =
   | "number"
   | "node"
   | "stringArray"
+  | "numberArray"
+  | "function"
+  | "icon"
+  | "object"
   | "unknown";
 
 /** Statically-known literal prop value inside an `ExampleNode`. */
@@ -142,6 +146,10 @@ export interface PlaygroundSpec {
   declared_prop_options?: Record<string, string[]>;
   /** Default values from CVA `defaultVariants`. */
   declared_prop_defaults?: Record<string, string>;
+  /** True when the TS prop is optional (`title?`). */
+  declared_prop_optional?: Record<string, boolean>;
+  /** Display type strings for complex kinds (e.g. icon → `LucideIcon`, object → `Passkey`). */
+  declared_prop_type_labels?: Record<string, string>;
   /**
    * Representative composition captured from a real call site (compound
    * components); replayed as the default preview when present.

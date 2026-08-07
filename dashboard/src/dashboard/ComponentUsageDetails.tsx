@@ -53,7 +53,11 @@ export function ComponentUsageDetails({
   }
 
   if (!usage) {
-    return <EmptyCard>0 imports of {componentId} found in codebase</EmptyCard>;
+    return (
+      <EmptyCard>
+        No imports of {componentId} found in the current report.
+      </EmptyCard>
+    );
   }
 
   const rows = sortedLocations(usage.usage_locations);

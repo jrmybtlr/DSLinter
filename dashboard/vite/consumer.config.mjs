@@ -16,10 +16,14 @@ export default defineConfig(async ({ command, mode }) => {
   const scanRoot = process.env.DSLINTER_SCAN_ROOT?.trim() || viteRoot;
   const consumerViteRoot =
     process.env.DSLINTER_CONSUMER_VITE_ROOT?.trim() || viteRoot;
+  const { default: useClassy } = await import("vite-plugin-useclassy");
   return mergeConfig(
     userConfig,
     defineConfig({
-      plugins: [dslinter({ scanRoot, consumerViteRoot })],
+      plugins: [
+        useClassy({ language: "react" }),
+        dslinter({ scanRoot, consumerViteRoot }),
+      ],
     }),
   );
 });

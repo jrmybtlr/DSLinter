@@ -110,7 +110,7 @@ export function suggestFix(
 export type DriftSummary = {
   baseline: { saved_at: string; scores: WorkspaceReport["scores"]; finding_count: number } | null;
   current: { scores: WorkspaceReport["scores"]; finding_count: number };
-  score_deltas: Record<string, number>;
+  score_deltas: Partial<Record<keyof WorkspaceReport["scores"], number>>;
   finding_delta: number;
 };
 
@@ -123,7 +123,7 @@ export function computeDrift(
   } | null,
 ): DriftSummary {
   const currentCount = report.findings?.length ?? 0;
-  const score_deltas: Record<string, number> = {
+  const score_deltas: Partial<Record<keyof WorkspaceReport["scores"], number>> = {
     design_system_health:
       report.scores.design_system_health -
       (baseline?.scores.design_system_health ?? report.scores.design_system_health),

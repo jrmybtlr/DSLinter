@@ -39,9 +39,15 @@ function valueMatchesPlaygroundDefault(
       return Number.isFinite(n) && n === control.default;
     }
     case "string":
+    case "stringArray":
+    case "numberArray":
     case "node":
     case "select":
       return String(value ?? "") === String(control.default);
+    case "icon":
+    case "object":
+    case "function":
+      return true;
     default:
       return false;
   }

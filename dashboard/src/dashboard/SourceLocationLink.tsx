@@ -30,14 +30,11 @@ export function SourceLocationLink({
       <button
         type="button"
         onClick={handleClick}
-        className="block min-w-0 w-full text-left text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+        className="block min-w-0 w-full text-left text-xs text-muted-foreground transition-colors"
+        className:hover="text-foreground underline"
         title={locationText}
       >
-        <TruncatedPath
-          path={locationText}
-          className="text-xs"
-          title={undefined}
-        />
+        <TruncatedPath path={locationText} className="text-xs" title={undefined} />
       </button>
       {error ? (
         <p className="mt-0.5 text-xs text-destructive" role="alert">

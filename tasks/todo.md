@@ -2,28 +2,17 @@
 
 See [ROADMAP.md](../ROADMAP.md) for phased product goals.
 
-## Remove Implementation classes
+## Address Copilot review on PR #42
 
-- [x] Remove UI sections + `ComponentImplementationClasses`
-- [x] Remove dashboard types/helpers/tests
-- [x] Remove Rust model fields, `class_usage` module, attach call
-- [x] Clean struct literals + update `demo_inertia` test
-- [x] Verify cargo / dashboard tests
+- [x] Fix ComponentPlaygroundPane useEffect deps (`entry.controls` reset)
+- [x] Tighten `score_deltas` to `Partial<Record<keyof scores, number>>`
+- [x] Harden `balanced_object_body` (+ `top_level_ident_keys`) to skip strings/comments
+- [x] Relativize absolute paths in committed demo/dashboard reports
+- [x] Verify with tests
 
-## Parked — Vue defineProps AST extraction
+### Review
 
-- [ ] Replace fragile regex `defineProps({…})` matcher with Oxc AST extraction
-- [ ] Support nested runtime validators (`type`/`default`/`PropType`)
-- [ ] Support `defineProps<Props>()`, inline `defineProps<{…}>()`, and `withDefaults(defineProps<…>(), {…})`
-- [ ] Resolve `interface` / `type` Props via existing `ts_shape_map`
-- [ ] Populate `declared_prop_defaults` from `withDefaults` string literals
-- [ ] Populate `declared_prop_options` from finite string unions on TS prop types
-- [ ] Keep Options API regex as fallback when no `defineProps` found
-- [ ] Tests: nested runtime, TS generic+interface, withDefaults, inline type literal
-- [ ] `cargo test` passes
-
-## Review
-
-- Removed Implementation classes from inspect/playground panes and deleted `ComponentImplementationClasses`.
-- Dropped report fields (`implementation_class_frequencies` / `_locations`), `class_usage` rollup, and related tests.
-- `cargo test` and dashboard `aggregate.test.ts` pass.
+- Restored Copilot’s playground/`score_deltas` fixes that local WIP had undone.
+- `report_console_error` serde/`Default` mismatch was already fixed (`default_true`).
+- Vue regex fallback now skips comments/strings when brace-balancing and key-scanning; covered by unit tests.
+- Committed `dslinter-report.json` files use `root: "."` and scan-root-relative paths (incl. `../…` for out-of-root CSS), so no machine-specific `/Users/…` paths remain.

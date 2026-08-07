@@ -9,6 +9,8 @@ demo/dist/
 demo/react/dist/
 demo/react/src/**/*.js
 dashboard/dashboard-dist/
+.classy/
+**/.classy/
 demo/public/dslinter-report.json
 demo-inertia/vendor/
 demo-inertia/node_modules/

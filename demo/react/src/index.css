@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @source "./";
 @source "../../../dashboard/src";
+@source "../.classy/output.classy.html";
 @import "dslinter/theme.css";
 
 :root {

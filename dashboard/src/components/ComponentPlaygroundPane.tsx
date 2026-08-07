@@ -9,7 +9,6 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
-import { detectBreakpoint, detectContainerBreakpoint } from "usemods";
 import { a11ySummaryForModule } from "../report/a11yForModule";
 import { codeScoreSummaryForModule } from "../report/codeScoreForModule";
 import { tokenStyleFindingsForModule } from "../report/tokenStyleFindingsForModule";
@@ -36,6 +35,12 @@ import { PlaygroundPreviewErrorBoundary } from "./PlaygroundPreviewErrorBoundary
 import { PlaygroundVariantMatrix } from "./PlaygroundVariantMatrix";
 import { enumerateControlCombinations } from "../playground/enumerateControlCombinations";
 import {
+  CONTAINER_WIDTH_PRESETS,
+  SCREEN_WIDTH_PRESETS,
+  containerBreakpointForWidth,
+  screenBreakpointForWidth,
+} from "../playground/previewBreakpoints";
+import {
   mergePlaygroundA11yFindings,
   playgroundA11yScore,
   type PlaygroundA11yFinding,
@@ -45,6 +50,8 @@ import { OpenInEditorButton } from "./OpenInEditorButton";
 import { ScoreGauge } from "./ScoreGauge";
 import { Section } from "./Section";
 import { resolveModuleAbsolutePath } from "../dashboard/editorLink";
+import { cn } from "../lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 type Props = {
   entry: PlaygroundEntry;
@@ -71,8 +78,7 @@ function nextPreviewWidthForResize(
 ): number {
   if (prevOuter <= 0) return clampPreviewWidth(nextOuter, nextOuter);
   if (nextOuter < prevOuter) return clampPreviewWidth(prevPreview, nextOuter);
-  if (Math.abs(prevPreview - prevOuter) <= 2)
-    return clampPreviewWidth(nextOuter, nextOuter);
+  if (Math.abs(prevPreview - prevOuter) <= 2) return clampPreviewWidth(nextOuter, nextOuter);
   return clampPreviewWidth(prevPreview, nextOuter);
 }
 
@@ -83,8 +89,7 @@ function PreviewResizeHandle({
   side: "left" | "right";
   onPointerDown: (e: PointerEvent<HTMLButtonElement>) => void;
 }) {
-  const positionClass =
-    side === "left" ? "left-0 -translate-x-1/2" : "right-0 translate-x-1/2";
+  const positionClass = side === "left" ? "left-0 -translate-x-1/2" : "right-0 translate-x-1/2";
 
   return (
     <button
@@ -93,25 +98,68 @@ function PreviewResizeHandle({
       aria-label="Resize preview from center (drag left or right)"
       onPointerDown={onPointerDown}
     >
-      <span
-        className="h-10 w-px rounded-full bg-muted-foreground/40"
-        aria-hidden
-      />
+      <span className="h-10 w-px rounded-full bg-muted-foreground/40" aria-hidden />
     </button>
+  );
+}
+
+function BreakpointPresetSelect({
+  kind,
+  value,
+  presets,
+  onSelectWidth,
+}: {
+  kind: "screen" | "container";
+  value: string | null;
+  presets: readonly { label: string; width: number }[];
+  onSelectWidth: (width: number) => void;
+}) {
+  const kindLabel = kind === "screen" ? "Screen" : "Container";
+
+  return (
+    <Select
+      value={value ?? undefined}
+      onValueChange={(next) => {
+        const preset = presets.find((p) => p.label === next);
+        if (preset) onSelectWidth(preset.width);
+      }}
+    >
+      <SelectTrigger
+        aria-label={`Select ${kind} width preset`}
+        title={`${kindLabel} — click to set a predefined width`}
+        className={cn(
+          "h-auto w-auto gap-0 rounded-none border-0 last:border-l bg-transparent p-2.5 shadow-none",
+          "font-mono text-xs/none tabular-nums text-muted-foreground",
+          "hover:bg-accent hover:text-accent-foreground",
+          "focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
+          "[&>svg]:hidden",
+        )}
+      >
+        <span>{kindLabel}:&nbsp;</span>
+        {/* Value is mirrored above; keep SelectValue for Radix a11y only. */}
+        <SelectValue className="hidden" />
+      </SelectTrigger>
+      <SelectContent align="center" className="min-w-36">
+        {presets.map((preset) => (
+          <SelectItem
+            key={preset.label}
+            value={preset.label}
+            textValue={`${preset.label} ${preset.width}px`}
+            className="font-mono text-xs tabular-nums"
+          >
+            {preset.label}
+            <span className="ml-2 text-muted-foreground">{preset.width}px</span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
 function TocLink({ href, children }: { href: string; children: ReactNode }) {
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     // Modifier keys / non-primary clicks → fall back to default browser behaviour.
-    if (
-      e.defaultPrevented ||
-      e.button !== 0 ||
-      e.metaKey ||
-      e.ctrlKey ||
-      e.shiftKey ||
-      e.altKey
-    ) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
       return;
     }
     const id = href.startsWith("#") ? href.slice(1) : href;
@@ -128,7 +176,8 @@ function TocLink({ href, children }: { href: string; children: ReactNode }) {
     <a
       href={href}
       onClick={handleClick}
-      className="block rounded-md py-1 text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+      className="block rounded-md py-1 text-muted-foreground transition"
+      className:hover="bg-accent text-accent-foreground"
     >
       {children}
     </a>
@@ -162,32 +211,20 @@ export function ComponentPlaygroundPane({
 
   useEffect(() => {
     setValues(defaultArgsFromControls(entry.controls));
-  }, [entry.id, controlsSignature, entry.controls]);
+  }, [entry.id, controlsSignature]);
 
   const a11y = useMemo(
-    () =>
-      a11ySummaryForModule(
-        reportReady ? workspaceReport : null,
-        entry.modulePath,
-      ),
+    () => a11ySummaryForModule(reportReady ? workspaceReport : null, entry.modulePath),
     [workspaceReport, entry.modulePath, reportReady],
   );
 
   const tokenStyleFindings = useMemo(
-    () =>
-      tokenStyleFindingsForModule(
-        reportReady ? workspaceReport : null,
-        entry.modulePath,
-      ),
+    () => tokenStyleFindingsForModule(reportReady ? workspaceReport : null, entry.modulePath),
     [workspaceReport, entry.modulePath, reportReady],
   );
 
   const codeScore = useMemo(
-    () =>
-      codeScoreSummaryForModule(
-        reportReady ? workspaceReport : null,
-        entry.modulePath,
-      ),
+    () => codeScoreSummaryForModule(reportReady ? workspaceReport : null, entry.modulePath),
     [workspaceReport, entry.modulePath, reportReady],
   );
 
@@ -208,37 +245,55 @@ export function ComponentPlaygroundPane({
   const maxOuterRef = useRef(0);
   const [maxOuterPx, setMaxOuterPx] = useState(0);
   const [previewWidthPx, setPreviewWidthPx] = useState(DEFAULT_PREVIEW_PX);
-  const [windowBreakpoint, setWindowBreakpoint] = useState<string | null>(null);
-  const [containerBreakpoint, setContainerBreakpoint] = useState<string | null>(
-    null,
-  );
+  const [screenBreakpoint, setScreenBreakpoint] = useState<string | null>(null);
+  const [containerBreakpoint, setContainerBreakpoint] = useState<string | null>(null);
 
   useEffect(() => {
     livePreviewWidthRef.current = previewWidthPx;
   }, [previewWidthPx]);
 
-  const applyLivePreviewWidth = useCallback((w: number) => {
-    const clamped = clampPreviewWidth(w, maxOuterRef.current);
-    livePreviewWidthRef.current = clamped;
-    const frame = previewFrameRef.current;
-    if (frame) {
-      frame.style.width = `${clamped}px`;
+  const syncBreakpointsFromWidth = useCallback((width: number) => {
+    if (!Number.isFinite(width) || width <= 0) {
+      setScreenBreakpoint(null);
+      setContainerBreakpoint(null);
+      return;
     }
-    const label = previewWidthLabelRef.current;
-    if (label) {
-      label.textContent = `${Math.round(clamped)}px`;
-    }
-    return clamped;
+    setScreenBreakpoint(screenBreakpointForWidth(width));
+    setContainerBreakpoint(containerBreakpointForWidth(width));
   }, []);
+
+  const applyLivePreviewWidth = useCallback(
+    (w: number) => {
+      const clamped = clampPreviewWidth(w, maxOuterRef.current);
+      livePreviewWidthRef.current = clamped;
+      const frame = previewFrameRef.current;
+      if (frame) {
+        frame.style.width = `${clamped}px`;
+      }
+      const label = previewWidthLabelRef.current;
+      if (label) {
+        label.textContent = `${Math.round(clamped)}px`;
+      }
+      syncBreakpointsFromWidth(clamped);
+      return clamped;
+    },
+    [syncBreakpointsFromWidth],
+  );
+
+  const setPreviewWidthFromPreset = useCallback(
+    (width: number) => {
+      const clamped = applyLivePreviewWidth(width);
+      setPreviewWidthPx(clamped);
+    },
+    [applyLivePreviewWidth],
+  );
 
   const syncPreviewToOuterWidth = useCallback((nextOuter: number) => {
     if (!Number.isFinite(nextOuter) || nextOuter <= 0) return;
     const prevOuter = maxOuterRef.current;
     maxOuterRef.current = nextOuter;
     setMaxOuterPx(nextOuter);
-    setPreviewWidthPx((pw) =>
-      nextPreviewWidthForResize(pw, prevOuter, nextOuter),
-    );
+    setPreviewWidthPx((pw) => nextPreviewWidthForResize(pw, prevOuter, nextOuter));
   }, []);
 
   useLayoutEffect(() => {
@@ -252,28 +307,9 @@ export function ComponentPlaygroundPane({
     return () => ro.disconnect();
   }, [syncPreviewToOuterWidth]);
 
-  const syncUsemodsBreakpoints = useCallback(() => {
-    setWindowBreakpoint(detectBreakpoint());
-    const frame = previewFrameRef.current;
-    setContainerBreakpoint(frame ? detectContainerBreakpoint(frame) : null);
-  }, []);
-
   useLayoutEffect(() => {
-    const frame = previewFrameRef.current;
-    if (!frame) return;
-    const ro = new ResizeObserver(() => {
-      syncUsemodsBreakpoints();
-    });
-    ro.observe(frame);
-    syncUsemodsBreakpoints();
-    return () => ro.disconnect();
-  }, [syncUsemodsBreakpoints]);
-
-  useEffect(() => {
-    syncUsemodsBreakpoints();
-    window.addEventListener("resize", syncUsemodsBreakpoints);
-    return () => window.removeEventListener("resize", syncUsemodsBreakpoints);
-  }, [syncUsemodsBreakpoints]);
+    syncBreakpointsFromWidth(previewWidthPx);
+  }, [previewWidthPx, syncBreakpointsFromWidth]);
 
   const attachSymmetricWidthDrag = useCallback(
     (side: "left" | "right") => {
@@ -300,10 +336,7 @@ export function ComponentPlaygroundPane({
         const onMove = (ev: globalThis.PointerEvent) => {
           const dx = ev.clientX - lastX;
           lastX = ev.clientX;
-          currentWidth = clampPreviewWidth(
-            currentWidth + sign * 2 * dx,
-            maxOuterRef.current,
-          );
+          currentWidth = clampPreviewWidth(currentWidth + sign * 2 * dx, maxOuterRef.current);
           if (!rafId) {
             rafId = requestAnimationFrame(flushWidth);
           }
@@ -340,12 +373,9 @@ export function ComponentPlaygroundPane({
 
   const showVariantsSection =
     hasControls &&
-    (variantEnumeration.combinations.length > 0 ||
-      variantEnumeration.totalCount === 0);
+    (variantEnumeration.combinations.length > 0 || variantEnumeration.totalCount === 0);
 
-  const [variantA11yFindings, setVariantA11yFindings] = useState<
-    PlaygroundA11yFinding[]
-  >([]);
+  const [variantA11yFindings, setVariantA11yFindings] = useState<PlaygroundA11yFinding[]>([]);
   const [variantScanComplete, setVariantScanComplete] = useState(false);
 
   useEffect(() => {
@@ -353,19 +383,13 @@ export function ComponentPlaygroundPane({
     setVariantScanComplete(false);
   }, [entry.id, variantEnumeration.combinations]);
 
-  const handleVariantA11yScan = useCallback(
-    (findings: PlaygroundA11yFinding[]) => {
-      setVariantA11yFindings(findings);
-      setVariantScanComplete(true);
-    },
-    [],
-  );
+  const handleVariantA11yScan = useCallback((findings: PlaygroundA11yFinding[]) => {
+    setVariantA11yFindings(findings);
+    setVariantScanComplete(true);
+  }, []);
 
   const combinedA11y = useMemo(() => {
-    const findings = mergePlaygroundA11yFindings(
-      a11y.findings,
-      variantA11yFindings,
-    );
+    const findings = mergePlaygroundA11yFindings(a11y.findings, variantA11yFindings);
     return {
       ...a11y,
       findings,
@@ -382,13 +406,9 @@ export function ComponentPlaygroundPane({
       : "—";
 
   const report = reportReady ? workspaceReport : null;
-  const family = useMemo(
-    () => componentCatalogFamilyForName(report, entry.id),
-    [report, entry.id],
-  );
+  const family = useMemo(() => componentCatalogFamilyForName(report, entry.id), [report, entry.id]);
   const childComponents = catalogChildComponentsFor(family, entry.id);
-  const resetControls = () =>
-    setValues(defaultArgsFromControls(entry.controls));
+  const resetControls = () => setValues(defaultArgsFromControls(entry.controls));
 
   const tocItems: { href: string; label: string; show?: boolean }[] = [
     { href: "#api-reference", label: "API reference", show: hasControls },
@@ -419,9 +439,7 @@ export function ComponentPlaygroundPane({
                 <>
                   {" "}
                   <span className="text-muted-foreground/40">/</span>{" "}
-                  <span className="capitalize text-foreground/80">
-                    {entry.meta.group}
-                  </span>
+                  <span className="capitalize text-foreground/80">{entry.meta.group}</span>
                 </>
               ) : null}
             </p>
@@ -431,14 +449,9 @@ export function ComponentPlaygroundPane({
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              {sourceAbsolutePath ? (
-                <OpenInEditorButton filePath={sourceAbsolutePath} />
-              ) : null}
+              {sourceAbsolutePath ? <OpenInEditorButton filePath={sourceAbsolutePath} /> : null}
               {onHideFromCatalog ? (
-                <HideFromCatalogButton
-                  componentName={entry.meta.id}
-                  onHidden={onHideFromCatalog}
-                />
+                <HideFromCatalogButton componentName={entry.meta.id} onHidden={onHideFromCatalog} />
               ) : null}
             </div>
             <div className="flex items-start gap-5">
@@ -449,9 +462,7 @@ export function ComponentPlaygroundPane({
               />
               <ScoreGauge
                 label="Accessibility"
-                value={
-                  reportReady || variantScanComplete ? combinedA11y.score : null
-                }
+                value={reportReady || variantScanComplete ? combinedA11y.score : null}
                 href="#accessibility"
                 pending={variantScanPending}
               />
@@ -459,10 +470,7 @@ export function ComponentPlaygroundPane({
           </div>
         </header>
 
-        <section
-          id="examples"
-          className="ds-playground-dot-surface border-b px-16 py-10"
-        >
+        <section id="examples" className="ds-playground-dot-surface border-b px-16 py-10">
           <div ref={previewMeasureRef}>
             <div className="flex justify-center">
               <div
@@ -470,21 +478,13 @@ export function ComponentPlaygroundPane({
                 className="relative min-w-0 shrink-0 select-none rounded-lg border border-border bg-background shadow-xs will-change-[width]"
                 style={{ width: previewWidthPx }}
               >
-                <PreviewResizeHandle
-                  side="left"
-                  onPointerDown={attachSymmetricWidthDrag("left")}
-                />
+                <PreviewResizeHandle side="left" onPointerDown={attachSymmetricWidthDrag("left")} />
                 <PreviewResizeHandle
                   side="right"
                   onPointerDown={attachSymmetricWidthDrag("right")}
                 />
-                <PlaygroundAppThemeWrapper
-                  workspaceReport={report}
-                  className="min-w-0 p-8"
-                >
-                  <PlaygroundPreviewErrorBoundary
-                    componentName={entry.meta.title}
-                  >
+                <PlaygroundAppThemeWrapper workspaceReport={report} className="min-w-0 p-8">
+                  <PlaygroundPreviewErrorBoundary componentName={entry.meta.title}>
                     {renderPreview(values)}
                   </PlaygroundPreviewErrorBoundary>
                 </PlaygroundAppThemeWrapper>
@@ -495,22 +495,25 @@ export function ComponentPlaygroundPane({
                 <span ref={previewWidthLabelRef} className="p-2.5">
                   {Math.round(previewWidthPx)}px
                 </span>
-                <span className="p-2.5" title="usemods detectBreakpoint">
-                  Screen: {windowBreakpoint ?? "—"}
-                </span>
-                <span
-                  className="p-2.5"
-                  title="usemods detectContainerBreakpoint"
-                >
-                  Container: {containerBreakpoint ?? "—"}
-                </span>
+                <BreakpointPresetSelect
+                  kind="screen"
+                  value={screenBreakpoint}
+                  presets={SCREEN_WIDTH_PRESETS}
+                  onSelectWidth={setPreviewWidthFromPreset}
+                />
+                <BreakpointPresetSelect
+                  kind="container"
+                  value={containerBreakpoint}
+                  presets={CONTAINER_WIDTH_PRESETS}
+                  onSelectWidth={setPreviewWidthFromPreset}
+                />
               </div>
             ) : null}
           </div>
         </section>
 
-        <div className="min-w-0 w-full px-6 py-10 lg:px-12">
-          <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_12rem] xl:gap-14">
+        <div className="min-w-0 w-full px-6 py-10" className:lg="px-12">
+          <div className:xl="grid grid-cols-[minmax(0,1fr)_12rem] gap-14">
             <div className="min-w-0 space-y-14">
               {hasControls ? (
                 <PlaygroundApiReference
@@ -547,10 +550,7 @@ export function ComponentPlaygroundPane({
                 title={`Code score: ${reportReady ? codeScore.score : "—"}/100`}
                 description="Static quality rules and findings from the workspace DSLinter report scoped to this file."
               >
-                <PlaygroundCodeScoreSection
-                  codeScore={codeScore}
-                  reportReady={reportReady}
-                />
+                <PlaygroundCodeScoreSection codeScore={codeScore} reportReady={reportReady} />
               </Section>
 
               <Section
@@ -566,7 +566,7 @@ export function ComponentPlaygroundPane({
               </Section>
             </div>
 
-            <aside className="mt-12 hidden self-start sticky top-8 xl:mt-0 xl:block">
+            <aside className="mt-12 hidden self-start sticky top-8" className:xl="mt-0 block">
               <nav
                 aria-label="On this page"
                 className="space-y-0.5 border-l border-border pl-4 text-sm"
@@ -591,7 +591,7 @@ export function ComponentPlaygroundPane({
             id="variants"
             className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t pt-10 pb-12"
           >
-            <div className="min-w-0 w-full px-6 lg:px-12">
+            <div className="min-w-0 w-full px-6" className:lg="px-12">
               <h2 className="w-fit bg-card text-xl font-semibold tracking-tight text-foreground">
                 All variants
               </h2>

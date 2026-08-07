@@ -22,6 +22,9 @@ import {
   resolveEffectivePropKind,
   SKIP_PLAYGROUND_PROPS,
   stringArrayControlForProp,
+  numberArrayControlForProp,
+  iconControlForProp,
+  isLikelyFunctionProp,
   stringDefaultForProp,
 } from "./controls";
 import { formatJsxPropAssignment } from "./snippet";
@@ -263,10 +266,17 @@ function controlsFromDefinitionAndUsage(
     }
 
     const kind = resolveEffectivePropKind(key);
+    if (kind === "function" || isLikelyFunctionProp(key)) {
+      continue;
+    }
     if (kind === "boolean" || isLikelyBooleanProp(key)) {
       out.push({ key, label: key, type: "boolean", default: false, defaultSource: "example" });
     } else if (kind === "stringArray") {
       out.push({ ...stringArrayControlForProp(key), defaultSource: "example" });
+    } else if (kind === "numberArray") {
+      out.push({ ...numberArrayControlForProp(key), defaultSource: "example" });
+    } else if (kind === "icon") {
+      out.push({ ...iconControlForProp(key), defaultSource: "example" });
     } else {
       out.push({
         key,
@@ -298,6 +308,9 @@ function valuesToProps(
   for (const control of controls) {
     const key = control.key;
     if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
+    if (control.type === "icon" || control.type === "object" || control.type === "function") {
+      continue;
+    }
     if (key === "children") {
       const coerced = childrenPropForPreview(exportName, values.children);
       if (coerced !== undefined) o[key] = coerced;
@@ -315,6 +328,21 @@ function valuesToProps(
       const raw = values[key];
       const n = typeof raw === "number" ? raw : Number(raw);
       o[key] = Number.isFinite(n) ? n : 0;
+    } else if (control.type === "numberArray") {
+      const text = String(values[key] ?? "").trim();
+      if (!text) {
+        o[key] = [];
+      } else {
+        const nums: number[] = [];
+        const seen = new Set<number>();
+        for (const line of text.split(/\r?\n/)) {
+          const n = Number(line.trim());
+          if (!Number.isFinite(n) || seen.has(n)) continue;
+          seen.add(n);
+          nums.push(n);
+        }
+        o[key] = nums;
+      }
     } else {
       o[key] = values[key];
     }

@@ -29,7 +29,12 @@ function enrichOneControl(control: PlaygroundControl, slot: KitJsxSlot | undefin
   const exampleDefault = slotDefaultFromComponent(slot.component);
   const hint = `${slot.component} children`;
 
-  if (control.type === "string" || control.type === "node") {
+  if (
+    control.type === "string" ||
+    control.type === "stringArray" ||
+    control.type === "numberArray" ||
+    control.type === "node"
+  ) {
     const useExample =
       exampleDefault !== undefined &&
       (control.default === control.key || control.default === control.key.toLowerCase());
@@ -96,6 +101,8 @@ function propMetadataForCatalog(
   propOptions: Record<string, string[]>;
   propDefaults: Record<string, string>;
   propKinds: PlaygroundSpec["declared_prop_kinds"];
+  propOptional: Record<string, boolean>;
+  propTypeLabels: Record<string, string>;
 } | undefined {
   const spec = specForCatalog(report, catalogId);
   if (!spec || !report) return undefined;
@@ -110,8 +117,10 @@ function propMetadataForCatalog(
     ...spec.declared_prop_defaults,
   };
   const propKinds = { ...spec.declared_prop_kinds };
+  const propOptional = { ...spec.declared_prop_optional };
+  const propTypeLabels = { ...spec.declared_prop_type_labels };
 
-  return { spec, propOptions, propDefaults, propKinds };
+  return { spec, propOptions, propDefaults, propKinds, propOptional, propTypeLabels };
 }
 
 /** Merge typed root props (e.g. CVA `variant`) from the report when the kit binds them. */
@@ -124,7 +133,8 @@ export function mergeReportControlsForKit(
   const metadata = propMetadataForCatalog(report, catalogId);
   if (!metadata) return controls;
 
-  const { spec, propOptions, propDefaults, propKinds } = metadata;
+  const { spec, propOptions, propDefaults, propKinds, propOptional, propTypeLabels } =
+    metadata;
   const rootBindings = rootPropBindings.filter(
     (binding) => binding.component === spec.export_name || binding.component === catalogId,
   );
@@ -139,6 +149,8 @@ export function mergeReportControlsForKit(
     Object.keys(propDefaults).length ? propDefaults : undefined,
     {},
     spec.export_name,
+    Object.keys(propOptional).length ? propOptional : undefined,
+    Object.keys(propTypeLabels).length ? propTypeLabels : undefined,
   );
 
   const byKey = new Map(controls.map((control) => [control.key, control]));

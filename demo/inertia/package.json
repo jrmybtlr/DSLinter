@@ -12,8 +12,8 @@
         "dslinter:report": "dslinter . --report --output public/dslinter-report.json",
         "dslinter:watch": "dslinter . --watch --output public/dslinter-report.json",
         "dslinter:serve": "dslinter . --serve 7878 --output public/dslinter-report.json",
-        "format": "prettier --write resources/",
-        "format:check": "prettier --check resources/",
+        "format": "../../node_modules/.bin/oxfmt resources/",
+        "format:check": "../../node_modules/.bin/oxfmt --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
         "types:check": "tsc --noEmit"
