@@ -2,20 +2,13 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import {
-  collectScanModuleRelPaths,
-  embedGlobKeyFromRelPath,
-} from "./collectScanModules";
+import { collectScanModuleRelPaths, embedGlobKeyFromRelPath } from "./collectScanModules";
 
 describe("embedGlobKeyFromRelPath", () => {
   it("maps Laravel rel_path to @dslinter-scan key", () => {
     expect(
-      embedGlobKeyFromRelPath(
-        "resources/js/Components/Billing/AdditionalEventLimitModal.tsx",
-      ),
-    ).toBe(
-      "@dslinter-scan/resources/js/Components/Billing/AdditionalEventLimitModal.tsx",
-    );
+      embedGlobKeyFromRelPath("resources/js/Components/Billing/AdditionalEventLimitModal.tsx"),
+    ).toBe("@dslinter-scan/resources/js/Components/Billing/AdditionalEventLimitModal.tsx");
   });
 
   it("strips leading slashes", () => {
@@ -25,8 +18,7 @@ describe("embedGlobKeyFromRelPath", () => {
   });
 });
 
-const caseInsensitiveFs =
-  process.platform === "darwin" || process.platform === "win32";
+const caseInsensitiveFs = process.platform === "darwin" || process.platform === "win32";
 
 describe("collectScanModuleRelPaths", () => {
   it("collects tsx/jsx and skips node_modules", () => {
@@ -117,14 +109,9 @@ describe("collectScanModuleRelPaths", () => {
       join(root, "resources", "js", "layouts", "auth", "Split.tsx"),
       "export function Split() { return null; }",
     );
-    writeFileSync(
-      join(root, ".dslinter.json"),
-      JSON.stringify({ include_dirs: ["resources/js"] }),
-    );
+    writeFileSync(join(root, ".dslinter.json"), JSON.stringify({ include_dirs: ["resources/js"] }));
 
-    const paths = collectScanModuleRelPaths(
-      join(root, "resources", "js", "components"),
-    );
+    const paths = collectScanModuleRelPaths(join(root, "resources", "js", "components"));
     expect(paths).toEqual(["resources/js/components/Button.tsx"]);
   });
 });

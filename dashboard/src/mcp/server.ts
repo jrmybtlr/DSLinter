@@ -26,11 +26,7 @@ import {
   tokensInput,
   usageExamplesInput,
 } from "./schemas";
-import {
-  computeDrift,
-  findingsForPaths,
-  suggestFix,
-} from "./verify-loop";
+import { computeDrift, findingsForPaths, suggestFix } from "./verify-loop";
 
 function jsonResult(data: unknown, isError = false): CallToolResult {
   return {
@@ -39,10 +35,7 @@ function jsonResult(data: unknown, isError = false): CallToolResult {
   };
 }
 
-export function createDslinterMcpServer(
-  config: McpConfig,
-  cache: ReportCache,
-): McpServer {
+export function createDslinterMcpServer(config: McpConfig, cache: ReportCache): McpServer {
   const server = new McpServer({
     name: "dslinter",
     version: "0.7.0",
@@ -123,10 +116,7 @@ export function createDslinterMcpServer(
       const report = await cache.getReport();
       const examples = usageExamples(report, args.component, args.limit);
       if (!examples) {
-        return jsonResult(
-          { error: `No usage data for component: ${args.component}` },
-          true,
-        );
+        return jsonResult({ error: `No usage data for component: ${args.component}` }, true);
       }
       return jsonResult(examples);
     },
@@ -166,8 +156,7 @@ export function createDslinterMcpServer(
   server.registerTool(
     "dslinter_get_policy",
     {
-      description:
-        "Effective governance policy from .dslinter.json snapshot and rule catalog.",
+      description: "Effective governance policy from .dslinter.json snapshot and rule catalog.",
     },
     async () => {
       const report = await cache.getReport();
@@ -178,8 +167,7 @@ export function createDslinterMcpServer(
   server.registerTool(
     "dslinter_check_paths",
     {
-      description:
-        "Findings for specific file paths after agent edits (post-write verification).",
+      description: "Findings for specific file paths after agent edits (post-write verification).",
       inputSchema: checkPathsInput,
     },
     async (args) => {
@@ -210,8 +198,7 @@ export function createDslinterMcpServer(
   server.registerTool(
     "dslinter_suggest_fix",
     {
-      description:
-        "Heuristic fix suggestion for a rule id (deprecated components, tokens, a11y).",
+      description: "Heuristic fix suggestion for a rule id (deprecated components, tokens, a11y).",
       inputSchema: suggestFixInput,
     },
     async (args) => {
@@ -236,9 +223,7 @@ export function createDslinterMcpServer(
         {
           uri: "dslinter://context",
           mimeType: "text/markdown",
-          text: String(
-            buildAgentContext(await cache.getReport(), { format: "markdown" }),
-          ),
+          text: String(buildAgentContext(await cache.getReport(), { format: "markdown" })),
         },
       ],
     }),
@@ -256,11 +241,7 @@ export function createDslinterMcpServer(
         {
           uri: "dslinter://catalog",
           mimeType: "application/json",
-          text: JSON.stringify(
-            catalogSummary(await cache.getReport(), { limit: 200 }),
-            null,
-            2,
-          ),
+          text: JSON.stringify(catalogSummary(await cache.getReport(), { limit: 200 }), null, 2),
         },
       ],
     }),
@@ -282,11 +263,7 @@ export function createDslinterMcpServer(
           {
             uri: uri.href,
             mimeType: "application/json",
-            text: JSON.stringify(
-              spec ?? { error: `Component not found: ${name}` },
-              null,
-              2,
-            ),
+            text: JSON.stringify(spec ?? { error: `Component not found: ${name}` }, null, 2),
           },
         ],
       };
@@ -296,8 +273,7 @@ export function createDslinterMcpServer(
   server.registerPrompt(
     "design-system-ui-task",
     {
-      description:
-        "System prompt template for building UI with the repo design system.",
+      description: "System prompt template for building UI with the repo design system.",
       argsSchema: {
         task: z.string().describe("What UI to build"),
       },

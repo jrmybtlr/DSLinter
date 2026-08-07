@@ -25,9 +25,7 @@ const POLL_MS = 150;
  */
 async function resolveUiPort(preferred) {
   const fromEnv = process.env.DSLINTER_DEV_UI_PORT?.trim();
-  const start = fromEnv
-    ? Number.parseInt(fromEnv, 10)
-    : preferred;
+  const start = fromEnv ? Number.parseInt(fromEnv, 10) : preferred;
   if (!Number.isFinite(start) || start < 1 || start > 65535) {
     return findAvailablePort(preferred);
   }
@@ -83,19 +81,14 @@ export async function runDevMode({
   const embedRoot = getDashboardPackageRoot();
   const embedConfig = embedServeConfigPath(embedRoot);
   const embedViteBin = canRunEmbedVite(embedRoot)
-    ? resolveViteBin(embedRoot) ??
-      (consumerViteRoot ? resolveViteBin(consumerViteRoot) : null)
+    ? (resolveViteBin(embedRoot) ?? (consumerViteRoot ? resolveViteBin(consumerViteRoot) : null))
     : null;
 
-  const useConsumerViteDev =
-    consumerViteRoot != null && shouldUseConsumerViteDev(scanAbs);
+  const useConsumerViteDev = consumerViteRoot != null && shouldUseConsumerViteDev(scanAbs);
 
   const embedOptOut = process.env.DSLINTER_NO_EMBED_VITE?.trim() === "1";
   const useEmbedViteDev =
-    embedViteBin != null &&
-    embedConfig != null &&
-    !useConsumerViteDev &&
-    !embedOptOut;
+    embedViteBin != null && embedConfig != null && !useConsumerViteDev && !embedOptOut;
 
   if (!useEmbedViteDev && !useConsumerViteDev) {
     const reasons = [];
@@ -110,10 +103,7 @@ export async function runDevMode({
     );
   }
 
-  const bundledDist =
-    useEmbedViteDev || useConsumerViteDev
-      ? null
-      : resolveBundledDashboardDir();
+  const bundledDist = useEmbedViteDev || useConsumerViteDev ? null : resolveBundledDashboardDir();
 
   const args = [...scannerArgs];
   const hasServe = args.some((a) => a === "--serve" || a.startsWith("--serve="));
@@ -228,9 +218,7 @@ export async function runDevMode({
       },
     );
     children.push(vite);
-    printDevBanner(
-      attachBundledStatic ? bannerBase : { ...bannerBase, dashboardUrl },
-    );
+    printDevBanner(attachBundledStatic ? bannerBase : { ...bannerBase, dashboardUrl });
 
     vite.on("exit", (code, signal) => {
       cleanup("SIGTERM");
@@ -243,7 +231,9 @@ export async function runDevMode({
   if (useConsumerViteDev) {
     const viteBin = resolveViteBin(consumerViteRoot);
     if (!viteBin) {
-      process.stderr.write(`dslinter: vite not installed in ${consumerViteRoot}. Run npm install.\n`);
+      process.stderr.write(
+        `dslinter: vite not installed in ${consumerViteRoot}. Run npm install.\n`,
+      );
       cleanup("SIGTERM");
       process.exit(1);
     }
@@ -251,11 +241,7 @@ export async function runDevMode({
     const uiPort = await resolveUiPort(5173);
     const dashboardUrl = `http://localhost:${uiPort}/`;
 
-    const consumerConfig = join(
-      getDashboardPackageRoot(),
-      "vite",
-      "consumer.config.mjs",
-    );
+    const consumerConfig = join(getDashboardPackageRoot(), "vite", "consumer.config.mjs");
     const vite = spawn(
       process.execPath,
       [
@@ -282,9 +268,7 @@ export async function runDevMode({
       },
     );
     children.push(vite);
-    printDevBanner(
-      attachBundledStatic ? bannerBase : { ...bannerBase, dashboardUrl },
-    );
+    printDevBanner(attachBundledStatic ? bannerBase : { ...bannerBase, dashboardUrl });
 
     vite.on("exit", (code, signal) => {
       cleanup("SIGTERM");

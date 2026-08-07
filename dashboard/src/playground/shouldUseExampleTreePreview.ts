@@ -11,10 +11,7 @@ function isPascalComponentName(name: string): boolean {
 }
 
 /** PascalCase element names nested under `rootName` (root excluded). */
-export function nestedComponentNamesInTree(
-  tree: ExampleNode,
-  rootName: string,
-): string[] {
+export function nestedComponentNamesInTree(tree: ExampleNode, rootName: string): string[] {
   const out: string[] = [];
   const walk = (node: ExampleNode, underRoot: boolean) => {
     if (node.type !== "element") return;
@@ -64,7 +61,5 @@ export function shouldUseExampleTreePreview(
   if (sameModuleNested.length === 0) return false;
 
   // Same-file kit (Alert + AlertTitle) — tree even with CVA on root.
-  return sameModuleNested.some((name) =>
-    exampleTreeContainsElement(exampleTree, name),
-  );
+  return sameModuleNested.some((name) => exampleTreeContainsElement(exampleTree, name));
 }

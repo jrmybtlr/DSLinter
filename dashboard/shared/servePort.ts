@@ -4,9 +4,7 @@ import { readEnv } from "./env.ts";
 export const DEFAULT_SERVE_PORT = 7878;
 
 /** Resolve scanner HTTP port from `DSLINTER_SERVE_PORT` or {@link DEFAULT_SERVE_PORT}. */
-export function resolveServePort(
-  env: NodeJS.ProcessEnv = process.env,
-): number {
+export function resolveServePort(env: NodeJS.ProcessEnv = process.env): number {
   const fromEnv = readEnv("SERVE_PORT", env);
   if (fromEnv) {
     const n = Number.parseInt(fromEnv, 10);

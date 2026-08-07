@@ -59,9 +59,8 @@ export function HideFromCatalogButton({ componentName, onHidden }: Props) {
           <DialogHeader>
             <DialogTitle>Hide from catalog?</DialogTitle>
             <DialogDescription>
-              Hide <span className="font-medium text-foreground">{componentName}</span>{" "}
-              from the component catalog. This updates{" "}
-              <code className="text-xs">hidden_components</code> in{" "}
+              Hide <span className="font-medium text-foreground">{componentName}</span> from the
+              component catalog. This updates <code className="text-xs">hidden_components</code> in{" "}
               <code className="text-xs">.dslinter.json</code>.
             </DialogDescription>
           </DialogHeader>
@@ -79,11 +78,7 @@ export function HideFromCatalogButton({ componentName, onHidden }: Props) {
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              disabled={pending}
-              onClick={() => void handleConfirm()}
-            >
+            <Button type="button" disabled={pending} onClick={() => void handleConfirm()}>
               {pending ? "Hiding…" : "Hide component"}
             </Button>
           </DialogFooter>

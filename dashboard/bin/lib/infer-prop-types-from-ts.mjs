@@ -167,9 +167,7 @@ function isStringElementArrayType(checker, type) {
   const elem = checker.getElementTypeOfArrayType(nn);
   if (!elem) return false;
   const elemNn = checker.getNonNullableType(elem);
-  return (
-    (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0
-  );
+  return (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0;
 }
 
 /**
@@ -181,9 +179,7 @@ function isNumberElementArrayType(checker, type) {
   const elem = checker.getElementTypeOfArrayType(nn);
   if (!elem) return false;
   const elemNn = checker.getNonNullableType(elem);
-  return (
-    (elemNn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) !== 0
-  );
+  return (elemNn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) !== 0;
 }
 
 /**
@@ -219,10 +215,8 @@ function isIconPropType(checker, type) {
   const symName = String(nn.getSymbol()?.escapedName ?? nn.getSymbol()?.name ?? "");
   if (ICON_TYPE_NAMES.has(symName)) return true;
   const text = checker.typeToString(nn);
-  return (
-    /LucideIcon|ElementType|ComponentType|ForwardRefExoticComponent|FunctionComponent|\bFC</.test(
-      text,
-    )
+  return /LucideIcon|ElementType|ComponentType|ForwardRefExoticComponent|FunctionComponent|\bFC</.test(
+    text,
   );
 }
 
@@ -310,9 +304,7 @@ export function classifyPropType(checker, type) {
   if (isStringElementArrayType(checker, nn)) return "stringArray";
   if (isNumberElementArrayType(checker, nn)) return "numberArray";
   if (nn.isUnion()) {
-    const parts = nn.types.map((u) =>
-      classifyPropType(checker, checker.getNonNullableType(u)),
-    );
+    const parts = nn.types.map((u) => classifyPropType(checker, checker.getNonNullableType(u)));
     const ok = parts.filter((p) => p !== null);
     if (!ok.length) return null;
     const set = new Set(ok);
@@ -335,10 +327,7 @@ export function classifyPropType(checker, type) {
  */
 function isPlainStringType(checker, type) {
   const nn = checker.getNonNullableType(type);
-  return (
-    (nn.flags & ts.TypeFlags.String) !== 0 &&
-    (nn.flags & ts.TypeFlags.StringLiteral) === 0
-  );
+  return (nn.flags & ts.TypeFlags.String) !== 0 && (nn.flags & ts.TypeFlags.StringLiteral) === 0;
 }
 
 /**
@@ -494,10 +483,7 @@ export function inferPlaygroundPropMetadata(
     }
 
     const kind = kinds[key];
-    if (
-      (kind === "icon" || kind === "function" || kind === "object") &&
-      !typeLabels[key]
-    ) {
+    if ((kind === "icon" || kind === "function" || kind === "object") && !typeLabels[key]) {
       const label = typeLabelForKind(checker, propType, kind);
       if (label) typeLabels[key] = label;
     }

@@ -36,14 +36,8 @@ describe("stripJsonComments", () => {
 describe("flattenTsconfigPaths", () => {
   it("maps @/* to resources/js", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-tsconfig-"));
-    const aliases = flattenTsconfigPaths(
-      { "@/*": ["./resources/js/*"] },
-      root,
-    );
-    const resolved = resolveWithConsumerAliases(
-      "@/components/ui/sidebar",
-      aliases,
-    );
+    const aliases = flattenTsconfigPaths({ "@/*": ["./resources/js/*"] }, root);
+    const resolved = resolveWithConsumerAliases("@/components/ui/sidebar", aliases);
     expect(resolved?.replace(/\\/g, "/")).toContain("resources/js/components/ui/sidebar");
   });
 });
@@ -54,10 +48,7 @@ describe("loadConsumerAliases", () => {
     mkdirSync(join(root, "resources", "js", "components", "ui"), {
       recursive: true,
     });
-    writeFileSync(
-      join(root, "resources", "js", "components", "ui", "sidebar.tsx"),
-      "export {}",
-    );
+    writeFileSync(join(root, "resources", "js", "components", "ui", "sidebar.tsx"), "export {}");
     writeFileSync(
       join(root, "tsconfig.json"),
       JSON.stringify({
@@ -69,13 +60,8 @@ describe("loadConsumerAliases", () => {
     );
 
     const aliases = loadConsumerAliases(root, undefined);
-    const resolved = resolveExistingModule(
-      "@/components/ui/sidebar",
-      aliases,
-    );
-    expect(resolved?.replace(/\\/g, "/")).toContain(
-      "resources/js/components/ui/sidebar.tsx",
-    );
+    const resolved = resolveExistingModule("@/components/ui/sidebar", aliases);
+    expect(resolved?.replace(/\\/g, "/")).toContain("resources/js/components/ui/sidebar.tsx");
   });
 
   it("falls back to resources/js when no tsconfig", () => {
@@ -93,9 +79,7 @@ describe("resolveWayfinderImport", () => {
   it("detects routes and actions prefixes", () => {
     expect(isWayfinderRoutesImport("@/routes")).toBe(true);
     expect(isWayfinderRoutesImport("@/routes/two-factor")).toBe(true);
-    expect(isWayfinderActionsImport("@/actions/App/Http/Controllers/Foo")).toBe(
-      true,
-    );
+    expect(isWayfinderActionsImport("@/actions/App/Http/Controllers/Foo")).toBe(true);
     expect(isWayfinderRoutesImport("@/components/foo")).toBe(false);
   });
 
@@ -124,8 +108,6 @@ describe("resolveWayfinderImport", () => {
     );
     const aliases = loadConsumerAliases(root, undefined);
     const resolved = resolveExistingModule("@/routes", aliases);
-    expect(resolved?.replace(/\\/g, "/")).toContain(
-      "resources/js/routes/index.ts",
-    );
+    expect(resolved?.replace(/\\/g, "/")).toContain("resources/js/routes/index.ts");
   });
 });

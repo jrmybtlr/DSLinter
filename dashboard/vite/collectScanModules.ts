@@ -69,14 +69,9 @@ function pathMatchesIncludePrefix(relFromProject: string, prefix: string): boole
   return relFromProject === norm || relFromProject.startsWith(`${norm}/`);
 }
 
-function matchesIncludeDirs(
-  relFromProject: string,
-  includeDirs: string[] | null,
-): boolean {
+function matchesIncludeDirs(relFromProject: string, includeDirs: string[] | null): boolean {
   if (!includeDirs) return true;
-  return includeDirs.some((dir) =>
-    pathMatchesIncludePrefix(relFromProject, dir),
-  );
+  return includeDirs.some((dir) => pathMatchesIncludePrefix(relFromProject, dir));
 }
 
 function walkDir(

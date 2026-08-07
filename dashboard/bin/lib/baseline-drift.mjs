@@ -102,16 +102,12 @@ export function computeDrift(report, baseline) {
       report.scores.ux_consistency -
       (baseline?.scores.ux_consistency ?? report.scores.ux_consistency),
     accessibility:
-      report.scores.accessibility -
-      (baseline?.scores.accessibility ?? report.scores.accessibility),
+      report.scores.accessibility - (baseline?.scores.accessibility ?? report.scores.accessibility),
     maintainability:
       report.scores.maintainability -
       (baseline?.scores.maintainability ?? report.scores.maintainability),
   };
-  if (
-    report.scores.token_adoption != null ||
-    baseline?.scores.token_adoption != null
-  ) {
+  if (report.scores.token_adoption != null || baseline?.scores.token_adoption != null) {
     const cur = report.scores.token_adoption ?? 0;
     const base = baseline?.scores.token_adoption ?? cur;
     score_deltas.token_adoption = cur - base;
@@ -151,16 +147,12 @@ export function evaluateDriftFailure(drift, opts = {}) {
   }
 
   if (drift.finding_delta > maxFindingDelta) {
-    reasons.push(
-      `finding_delta ${drift.finding_delta} exceeds max ${maxFindingDelta}`,
-    );
+    reasons.push(`finding_delta ${drift.finding_delta} exceeds max ${maxFindingDelta}`);
   }
 
   for (const [pillar, delta] of Object.entries(drift.score_deltas)) {
     if (typeof delta === "number" && delta < -maxScoreDrop) {
-      reasons.push(
-        `${pillar} dropped by ${-delta} (max allowed drop ${maxScoreDrop})`,
-      );
+      reasons.push(`${pillar} dropped by ${-delta} (max allowed drop ${maxScoreDrop})`);
     }
   }
 

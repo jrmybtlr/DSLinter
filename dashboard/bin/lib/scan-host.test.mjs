@@ -2,10 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  scanProjectHostsDashboard,
-  shouldUseConsumerViteDev,
-} from "./scan-host.mjs";
+import { scanProjectHostsDashboard, shouldUseConsumerViteDev } from "./scan-host.mjs";
 import { canRunEmbedVite, embedServeConfigPath } from "./project-root.mjs";
 
 describe("scanProjectHostsDashboard", () => {
@@ -49,10 +46,7 @@ describe("shouldUseConsumerViteDev", () => {
     mkdirSync(join(dslinterPkg, "embed"), { recursive: true });
     writeFileSync(join(dslinterPkg, "embed", "main.tsx"), "export {};\n");
     mkdirSync(join(dslinterPkg, "vite"), { recursive: true });
-    writeFileSync(
-      join(dslinterPkg, "vite", "embed-serve.config.ts"),
-      "export default {};\n",
-    );
+    writeFileSync(join(dslinterPkg, "vite", "embed-serve.config.ts"), "export default {};\n");
 
     expect(shouldUseConsumerViteDev(laravelRoot)).toBe(false);
     expect(canRunEmbedVite(dslinterPkg)).toBe(true);

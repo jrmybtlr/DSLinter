@@ -20,12 +20,7 @@ import {
  *   scannerArgs: string[];
  * }} opts
  */
-export async function runReportMode({
-  scanPath,
-  projectRoot,
-  outputPath,
-  scannerArgs,
-}) {
+export async function runReportMode({ scanPath, projectRoot, outputPath, scannerArgs }) {
   const driftOpts = extractDriftFlags(scannerArgs);
   const reportPath = defaultReportPath(scanPath, outputPath);
   const args = ["--report", ...driftOpts.scannerArgs];
@@ -42,10 +37,7 @@ export async function runReportMode({
     reportPath,
   });
 
-  const needsDrift =
-    driftOpts.diffBaseline ||
-    driftOpts.updateBaseline ||
-    driftOpts.failOnDrift;
+  const needsDrift = driftOpts.diffBaseline || driftOpts.updateBaseline || driftOpts.failOnDrift;
 
   if (!needsDrift) {
     process.exit(0);
@@ -56,9 +48,7 @@ export async function runReportMode({
 
   if (driftOpts.updateBaseline) {
     await saveBaseline(projectAbs, report);
-    process.stderr.write(
-      `dslinter: wrote baseline ${baselinePath(projectAbs)}\n`,
-    );
+    process.stderr.write(`dslinter: wrote baseline ${baselinePath(projectAbs)}\n`);
   }
 
   let baseline = null;

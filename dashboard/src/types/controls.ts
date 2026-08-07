@@ -95,11 +95,7 @@ export type PlaygroundControl =
   | PlaygroundNumberControl
   | PlaygroundSelectControl;
 
-const NON_EDITABLE_CONTROL_TYPES = new Set([
-  "icon",
-  "object",
-  "function",
-]);
+const NON_EDITABLE_CONTROL_TYPES = new Set(["icon", "object", "function"]);
 
 export function isNonEditableControl(
   c: PlaygroundControl,

@@ -3,12 +3,7 @@ import { join, resolve } from "node:path";
 import { detectInitLayout } from "./scaffold-config.mjs";
 import { envIs } from "./env.mjs";
 
-const HOST_APP_CANDIDATES = [
-  "src/App.tsx",
-  "src/App.jsx",
-  "src/app.tsx",
-  "resources/js/app.tsx",
-];
+const HOST_APP_CANDIDATES = ["src/App.tsx", "src/App.jsx", "src/app.tsx", "resources/js/app.tsx"];
 
 /**
  * True when the scan root already embeds DashboardLayout (e.g. demo app).

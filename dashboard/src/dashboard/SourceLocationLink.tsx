@@ -26,11 +26,11 @@ export function SourceLocationLink({
   }, [absolutePath, line]);
 
   return (
-    <div className="min-w-0 w-full">
+    <div className="w-full min-w-0">
       <button
         type="button"
         onClick={handleClick}
-        className="block min-w-0 w-full text-left text-xs text-muted-foreground transition-colors"
+        className="block w-full min-w-0 text-left text-xs text-muted-foreground transition-colors"
         className:hover="text-foreground underline"
         title={locationText}
       >

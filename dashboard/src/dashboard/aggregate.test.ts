@@ -94,9 +94,7 @@ describe("componentCatalogFamiliesFromReport", () => {
     );
 
     expect(componentCatalogFamiliesFromReport(report)).toEqual([]);
-    expect(componentCatalogTreeFromReport(report)).toEqual([
-      { type: "component", name: "Button" },
-    ]);
+    expect(componentCatalogTreeFromReport(report)).toEqual([{ type: "component", name: "Button" }]);
   });
 
   it("folds usage-only root exports into the file group instead of duplicating the label", () => {
@@ -144,13 +142,7 @@ describe("componentCatalogFamiliesFromReport", () => {
     expect(componentCatalogFamiliesFromReport(report)).toEqual([
       {
         parent: "Select",
-        children: [
-          "Select",
-          "SelectContent",
-          "SelectItem",
-          "SelectTrigger",
-          "SelectValue",
-        ],
+        children: ["Select", "SelectContent", "SelectItem", "SelectTrigger", "SelectValue"],
         path: selectPath,
       },
     ]);
@@ -158,13 +150,7 @@ describe("componentCatalogFamiliesFromReport", () => {
       {
         type: "family",
         parent: "Select",
-        children: [
-          "Select",
-          "SelectContent",
-          "SelectItem",
-          "SelectTrigger",
-          "SelectValue",
-        ],
+        children: ["Select", "SelectContent", "SelectItem", "SelectTrigger", "SelectValue"],
         path: selectPath,
       },
     ]);
@@ -224,12 +210,7 @@ describe("resolveFamilyNavigationTarget", () => {
   it("prefers a child export whose normalized name matches the file stem", () => {
     const family = {
       parent: "DropdownMenu",
-      children: [
-        "DropdownMenu",
-        "DropdownMenuContent",
-        "DropdownMenuItem",
-        "DropdownMenuTrigger",
-      ],
+      children: ["DropdownMenu", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuTrigger"],
       path: "/repo/src/components/ui/dropdown-menu.tsx",
     };
     const names = componentCatalogNamesFromReport(reportWithDefinitions([]));
@@ -252,9 +233,7 @@ describe("resolveFamilyNavigationTarget", () => {
       path: "/repo/src/components/icons.tsx",
     };
 
-    expect(resolveFamilyNavigationTarget(family, ["IconCheck", "IconSearch"])).toBe(
-      "IconCheck",
-    );
+    expect(resolveFamilyNavigationTarget(family, ["IconCheck", "IconSearch"])).toBe("IconCheck");
   });
 });
 

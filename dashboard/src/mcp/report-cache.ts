@@ -136,12 +136,7 @@ export class ReportCache {
   }
 
   private async runScan(): Promise<WorkspaceReport> {
-    const args = [
-      this.config.scanPath,
-      "--output",
-      this.config.reportPath,
-      "--json",
-    ];
+    const args = [this.config.scanPath, "--output", this.config.reportPath, "--json"];
 
     let json = "";
     try {

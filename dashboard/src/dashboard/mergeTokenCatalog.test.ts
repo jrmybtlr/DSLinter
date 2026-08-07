@@ -5,8 +5,7 @@ import type { CssTokenDefinition, WorkspaceReport } from "../types/report";
 const root = "/Users/dev/demo/inertia";
 
 function def(
-  partial: Partial<CssTokenDefinition> &
-    Pick<CssTokenDefinition, "name" | "value" | "scope">,
+  partial: Partial<CssTokenDefinition> & Pick<CssTokenDefinition, "name" | "value" | "scope">,
 ): CssTokenDefinition {
   return {
     category: "other",

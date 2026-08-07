@@ -142,7 +142,9 @@ export function inferKitParams(fn: Function): InferredKitParam[] {
     .filter((param): param is InferredKitParam => param !== null);
 }
 
-export function controlsFromKitParams(params: InferredKitParam[]): Record<string, CompactPlaygroundControl> {
+export function controlsFromKitParams(
+  params: InferredKitParam[],
+): Record<string, CompactPlaygroundControl> {
   const out: Record<string, CompactPlaygroundControl> = {};
   for (const param of params) {
     out[param.key] = param.defaultValue ?? param.key;

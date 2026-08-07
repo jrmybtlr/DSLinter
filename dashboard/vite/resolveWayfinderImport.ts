@@ -16,10 +16,7 @@ export function isWayfinderActionsImport(id: string): boolean {
 }
 
 /** Resolve import to an existing file on disk, trying common extensions. */
-export function resolveExistingModule(
-  id: string,
-  aliases: FlatAlias[],
-): string | null {
+export function resolveExistingModule(id: string, aliases: FlatAlias[]): string | null {
   const base = resolveWithConsumerAliases(id, aliases);
   if (!base) return null;
 

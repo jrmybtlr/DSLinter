@@ -23,28 +23,25 @@ export function TokensPane({
   return (
     <div className="min-h-0 flex-1 overflow-auto bg-muted/40">
       <header className="border-b border-border bg-card px-8 py-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           System
         </p>
-        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-          Design tokens
-        </h1>
+        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Design tokens</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {hasScanned
             ? "CSS variables discovered from your stylesheets, with used vs unused usage across the repo."
             : "Supply a catalog object (same shape as your Tailwind theme docs) — keep it aligned with your design tokens."}
         </p>
       </header>
-      <div className="min-w-0 w-full px-8 py-8">
+      <div className="w-full min-w-0 px-8 py-8">
         {hasScanned && merged ? (
           <ScannedTokenWall view={merged} />
         ) : hasManual ? (
           <TokenWall catalog={tokenCatalog} />
         ) : (
           <p className="text-sm text-muted-foreground">
-            Run <span className="font-mono">dslinter --json</span> on a project
-            with CSS token sources, or pass a{" "}
-            <span className="font-mono">tokenCatalog</span> prop.
+            Run <span className="font-mono">dslinter --json</span> on a project with CSS token
+            sources, or pass a <span className="font-mono">tokenCatalog</span> prop.
           </p>
         )}
       </div>

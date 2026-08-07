@@ -18,11 +18,7 @@ export class PlaygroundPreviewErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "[dslinter] preview render failed",
-        error,
-        info.componentStack,
-      );
+      console.warn("[dslinter] preview render failed", error, info.componentStack);
     }
   }
 
@@ -37,13 +33,10 @@ export class PlaygroundPreviewErrorBoundary extends Component<Props, State> {
       const name = this.props.componentName ?? "Component";
       return (
         <div className="rounded-md border border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">
-            Preview could not render {name}
-          </p>
+          <p className="font-medium text-foreground">Preview could not render {name}</p>
           <p className="mt-2">
-            This component may need Inertia page props, a provider, or other app
-            context. The scanner snapshot and governance panels still reflect
-            static analysis.
+            This component may need Inertia page props, a provider, or other app context. The
+            scanner snapshot and governance panels still reflect static analysis.
           </p>
           <p className="mt-2 font-mono text-xs">{this.state.error.message}</p>
         </div>

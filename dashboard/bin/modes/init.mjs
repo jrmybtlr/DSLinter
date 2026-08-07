@@ -14,22 +14,15 @@ export function runInitMode(opts = {}) {
   const targetDir = resolve(
     opts.targetDir ?? argv.find((a) => !a.startsWith("-")) ?? process.cwd(),
   );
-  const layout =
-    opts.layout ?? (forceLaravel ? "laravel" : detectInitLayout(targetDir));
+  const layout = opts.layout ?? (forceLaravel ? "laravel" : detectInitLayout(targetDir));
 
   const registryDir =
     layout === "laravel"
       ? join(targetDir, "resources", "js", "playground")
       : join(targetDir, "src", "playground");
   const registryPath = join(registryDir, "buildRegistry.ts");
-  const templateName =
-    layout === "laravel" ? "buildRegistry.laravel.ts" : "buildRegistry.ts";
-  const templatePath = join(
-    packageRoot,
-    "templates",
-    "playground",
-    templateName,
-  );
+  const templateName = layout === "laravel" ? "buildRegistry.laravel.ts" : "buildRegistry.ts";
+  const templatePath = join(packageRoot, "templates", "playground", templateName);
 
   const configResult = ensureDslintConfig({ targetDir, layout });
   const wroteRegistry = !existsSync(registryPath);

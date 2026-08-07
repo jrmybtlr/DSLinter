@@ -8,10 +8,7 @@ import {
 
 describe("parseStringArrayPanelValue", () => {
   it("splits multiline panel text into trimmed unique items", () => {
-    expect(parseStringArrayPanelValue("First\nSecond\nFirst")).toEqual([
-      "First",
-      "Second",
-    ]);
+    expect(parseStringArrayPanelValue("First\nSecond\nFirst")).toEqual(["First", "Second"]);
   });
 
   it("returns empty array for blank input", () => {

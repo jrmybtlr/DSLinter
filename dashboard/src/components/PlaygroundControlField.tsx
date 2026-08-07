@@ -176,7 +176,7 @@ export function PlaygroundControlField({
           value={String(values[c.key] ?? "")}
           placeholder={c.placeholder}
           onChange={(e) => patch(c.key, e.target.value)}
-          className="h-8 min-w-40 max-w-xs text-xs"
+          className="h-8 max-w-xs min-w-40 text-xs"
           aria-label={c.label}
         />
       );
@@ -213,7 +213,7 @@ export function PlaygroundControlField({
       const v = String(values[c.key] ?? c.default ?? "");
       return (
         <Select value={v} onValueChange={(next: string) => patch(c.key, next)}>
-          <SelectTrigger id={id} className="h-8 min-w-40 max-w-xs text-xs" aria-label={c.label}>
+          <SelectTrigger id={id} className="h-8 max-w-xs min-w-40 text-xs" aria-label={c.label}>
             <SelectValue placeholder={c.label} />
           </SelectTrigger>
           <SelectContent>

@@ -27,9 +27,9 @@ describe("parseHashRoute", () => {
 
 describe("formatHashRoute", () => {
   it("formats component route", () => {
-    expect(
-      formatHashRoute({ view: "component", componentId: "ActionItem" }),
-    ).toBe("/component/ActionItem");
+    expect(formatHashRoute({ view: "component", componentId: "ActionItem" })).toBe(
+      "/component/ActionItem",
+    );
   });
 
   it("formats governance", () => {

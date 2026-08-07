@@ -108,9 +108,7 @@ function renderNode(
     props = { ...props, ...state.target.props };
   }
 
-  const children = (node.children ?? []).map((child, i) =>
-    renderNode(child, state, `${key}.${i}`),
-  );
+  const children = (node.children ?? []).map((child, i) => renderNode(child, state, `${key}.${i}`));
   const hasChildren = children.length > 0;
 
   let type = state.resolve(node.name);
@@ -129,10 +127,7 @@ function renderNode(
 
 const DOM_SAFE_PROPS = new Set(["className", "style", "id", "title", "role"]);
 
-function pickDomSafeProps(
-  props: Record<string, unknown>,
-  tag: string,
-): Record<string, unknown> {
+function pickDomSafeProps(props: Record<string, unknown>, tag: string): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(props)) {
     if (DOM_SAFE_PROPS.has(key) || key.startsWith("aria-") || key.startsWith("data-")) {

@@ -22,8 +22,8 @@ describe("controlsToApiRows", () => {
     ];
 
     expect(controlsToApiRows(controls)).toMatchObject([
-      { prop: "children", default: "\"Example\"", defaultBadge: null },
-      { prop: "variant", default: "\"default\"", defaultBadge: "\"default\"" },
+      { prop: "children", default: '"Example"', defaultBadge: null },
+      { prop: "variant", default: '"default"', defaultBadge: '"default"' },
     ]);
   });
 
@@ -37,9 +37,7 @@ describe("controlsToApiRows", () => {
       },
     ];
 
-    expect(controlsToApiRows(controls)).toMatchObject([
-      { prop: "actions", type: "ReactNode" },
-    ]);
+    expect(controlsToApiRows(controls)).toMatchObject([{ prop: "actions", type: "ReactNode" }]);
   });
 
   it("maps stringArray controls to string[] in the type column", () => {

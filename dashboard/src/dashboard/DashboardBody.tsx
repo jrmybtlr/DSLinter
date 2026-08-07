@@ -65,7 +65,7 @@ export function DashboardBody({
         <ScoreStrip scores={report.scores} />
       </div>
 
-      <div className="min-w-0 w-full px-6 py-8">
+      <div className="w-full min-w-0 px-6 py-8">
         {report.duplicate_components.length > 0 ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
             <span className="font-semibold">Duplicate component names: </span>

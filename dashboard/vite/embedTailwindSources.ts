@@ -11,23 +11,16 @@ function normalizePosixPath(path: string): string {
 function isDashboardPackageSrc(absPath: string, packageRoot: string): boolean {
   const dashboardSrc = normalizePosixPath(join(resolve(packageRoot), "src"));
   const normalized = normalizePosixPath(absPath);
-  return (
-    normalized === dashboardSrc || normalized.startsWith(`${dashboardSrc}/`)
-  );
+  return normalized === dashboardSrc || normalized.startsWith(`${dashboardSrc}/`);
 }
 
-function resolveConsumerSourceAbsDirs(
-  scanRoot: string,
-  packageRoot: string,
-): string[] {
+function resolveConsumerSourceAbsDirs(scanRoot: string, packageRoot: string): string[] {
   const scanAbs = resolve(scanRoot);
   const projectRoot = projectRootForConfig(scanAbs);
   let dirs = readIncludeDirs(projectRoot);
 
   if (!dirs?.length) {
-    dirs = FALLBACK_INCLUDE_DIRS.filter((dir) =>
-      existsSync(join(projectRoot, dir)),
-    );
+    dirs = FALLBACK_INCLUDE_DIRS.filter((dir) => existsSync(join(projectRoot, dir)));
   }
 
   const unique = new Set<string>();
@@ -53,10 +46,7 @@ function resolveConsumerSourceAbsDirs(
 }
 
 /** Absolute consumer include dirs to register with Tailwind `@source`. */
-export function resolveEmbedConsumerSourceDirs(
-  scanRoot: string,
-  packageRoot: string,
-): string[] {
+export function resolveEmbedConsumerSourceDirs(scanRoot: string, packageRoot: string): string[] {
   return resolveConsumerSourceAbsDirs(scanRoot, packageRoot);
 }
 
@@ -74,22 +64,13 @@ export function embedSourcePathsRelativeToCss(
   });
 }
 
-export function buildEmbedIndexCss(
-  base: string,
-  consumerSources: string[],
-): string {
+export function buildEmbedIndexCss(base: string, consumerSources: string[]): string {
   if (consumerSources.length === 0) return base;
   const injected = consumerSources.map((p) => `@source "${p}";`).join("\n");
-  return base.replace(
-    '@source "../src";',
-    `@source "../src";\n${injected}`,
-  );
+  return base.replace('@source "../src";', `@source "../src";\n${injected}`);
 }
 
-export function shouldInjectEmbedConsumerSources(
-  scanRoot: string,
-  packageRoot: string,
-): boolean {
+export function shouldInjectEmbedConsumerSources(scanRoot: string, packageRoot: string): boolean {
   const scanAbs = resolve(scanRoot);
   const pkgAbs = resolve(packageRoot);
   if (normalizePosixPath(scanAbs) !== normalizePosixPath(pkgAbs)) {

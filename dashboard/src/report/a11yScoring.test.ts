@@ -8,11 +8,7 @@ describe("a11yScoreFromFindings", () => {
 
   it("applies severity penalties", () => {
     expect(
-      a11yScoreFromFindings([
-        { severity: "error" },
-        { severity: "warning" },
-        { severity: "info" },
-      ]),
+      a11yScoreFromFindings([{ severity: "error" }, { severity: "warning" }, { severity: "info" }]),
     ).toBe(62);
   });
 

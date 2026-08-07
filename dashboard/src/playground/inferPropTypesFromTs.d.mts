@@ -18,10 +18,7 @@ export declare function findComponentParamType(
 
 export declare function classifyPropType(checker: TypeChecker, type: Type): PropKind | null;
 
-export declare function extractFiniteStringUnion(
-  checker: TypeChecker,
-  type: Type,
-): string[] | null;
+export declare function extractFiniteStringUnion(checker: TypeChecker, type: Type): string[] | null;
 
 export declare function inferDeclaredPropKindsFromTs(
   checker: TypeChecker,

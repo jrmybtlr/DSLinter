@@ -4,10 +4,7 @@ import { normalizePath } from "./paths";
 const EMBED_PREFIX = "@dslinter-scan/";
 
 /** Resolve a playground `modulePath` to an absolute file path under `reportRoot`. */
-export function resolveModuleAbsolutePath(
-  reportRoot: string,
-  modulePath: string,
-): string {
+export function resolveModuleAbsolutePath(reportRoot: string, modulePath: string): string {
   const normalized = normalizePath(modulePath);
   if (normalized.startsWith(EMBED_PREFIX)) {
     const root = normalizePath(reportRoot);
@@ -37,9 +34,7 @@ export async function openSourceFile(
     // Static build or server unavailable — fall back to protocol links below.
   }
 
-  window.location.assign(
-    buildEditorFileUri(absolutePath, line, column, "cursor"),
-  );
+  window.location.assign(buildEditorFileUri(absolutePath, line, column, "cursor"));
 }
 
 /** Open a local file in VS Code / Cursor via the editor URI handler. */
@@ -54,12 +49,7 @@ export function buildEditorFileUri(
 
   if (/^[a-zA-Z]:/.test(path)) {
     const drive = path.slice(0, 2).toLowerCase();
-    const rest = path
-      .slice(2)
-      .replace(/^\//, "")
-      .split("/")
-      .map(encodeURIComponent)
-      .join("/");
+    const rest = path.slice(2).replace(/^\//, "").split("/").map(encodeURIComponent).join("/");
     return `${scheme}://file/${drive}/${rest}${suffix}`;
   }
 

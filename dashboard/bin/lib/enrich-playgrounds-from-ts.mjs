@@ -140,16 +140,10 @@ export function enrichReportFileBestEffort(reportPath, projectRoot) {
  * @param {EnrichOptions} opts
  * @returns {Promise<boolean>} true when enrichment ran and wrote the report
  */
-export async function enrichPlaygroundsFromTs({
-  projectRoot,
-  reportPath,
-  logPrefix = "dslinter",
-}) {
+export async function enrichPlaygroundsFromTs({ projectRoot, reportPath, logPrefix = "dslinter" }) {
   if (!createCheckerProgram(projectRoot)) {
     if (process.env.DSLINTER_DEBUG?.trim() === "1") {
-      process.stderr.write(
-        `${logPrefix}: skip playground TS enrichment (no tsconfig.json)\n`,
-      );
+      process.stderr.write(`${logPrefix}: skip playground TS enrichment (no tsconfig.json)\n`);
     }
     return false;
   }

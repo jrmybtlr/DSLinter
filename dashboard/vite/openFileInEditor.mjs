@@ -61,9 +61,7 @@ export function isPathUnderRoot(absPath, root) {
   const normalized = resolve(absPath);
   const normalizedRoot = resolve(root);
   if (normalized === normalizedRoot) return true;
-  const prefix = normalizedRoot.endsWith("/")
-    ? normalizedRoot
-    : `${normalizedRoot}/`;
+  const prefix = normalizedRoot.endsWith("/") ? normalizedRoot : `${normalizedRoot}/`;
   return normalized.startsWith(prefix);
 }
 
@@ -121,10 +119,8 @@ function splitShellArgs(input) {
  * @returns {boolean}
  */
 function commandExists(command) {
-  const probe =
-    process.platform === "win32" ? "where" : "command";
-  const args =
-    process.platform === "win32" ? [command] : ["-v", command];
+  const probe = process.platform === "win32" ? "where" : "command";
+  const args = process.platform === "win32" ? [command] : ["-v", command];
   const result = spawnSync(probe, args, { stdio: "ignore" });
   return result.status === 0;
 }

@@ -15,11 +15,7 @@ export function usePlaygroundFromReport(
 ): BuildPlaygroundResult {
   const specsKey = playgroundSpecsKey(report);
   return useMemo(
-    () =>
-      buildPlaygroundEntriesFromReportWithSkips(
-        report,
-        scanPlaygroundModules,
-      ),
+    () => buildPlaygroundEntriesFromReportWithSkips(report, scanPlaygroundModules),
     [specsKey],
   );
 }

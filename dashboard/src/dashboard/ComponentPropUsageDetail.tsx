@@ -22,9 +22,7 @@ export function propFrequenciesForComponent(
   report: WorkspaceReport,
   componentName: string,
 ): Record<string, number> {
-  const usageRow = (report.usage_by_component ?? []).find(
-    (u) => u.component === componentName,
-  );
+  const usageRow = (report.usage_by_component ?? []).find((u) => u.component === componentName);
   return usageRow?.prop_frequencies ?? {};
 }
 
@@ -45,9 +43,7 @@ export function buildUnusedPropSetForComponent(
 }
 
 function sortedAttributeProps(declared: string[]): string[] {
-  return [...catalogAttributeProps(declared)].sort((a, b) =>
-    a.localeCompare(b),
-  );
+  return [...catalogAttributeProps(declared)].sort((a, b) => a.localeCompare(b));
 }
 
 function PropUsageSummary({
@@ -59,8 +55,8 @@ function PropUsageSummary({
 }) {
   return (
     <p className="text-sm text-muted-foreground">
-      {usedPropCount}/{totalPropCount} {pluralize("prop", usedPropCount)} used
-      in the workspace snapshot.
+      {usedPropCount}/{totalPropCount} {pluralize("prop", usedPropCount)} used in the workspace
+      snapshot.
     </p>
   );
 }
@@ -85,10 +81,7 @@ function PropUsageTable({
           const count = propFrequencies[prop] ?? 0;
           const isUnused = count === 0;
           return (
-            <TableRow
-              key={prop}
-              className={isUnused ? "text-muted-foreground" : undefined}
-            >
+            <TableRow key={prop} className={isUnused ? "text-muted-foreground" : undefined}>
               <TableCell className="font-mono text-xs">{prop}</TableCell>
               <TableCell className="text-right tabular-nums">{count}</TableCell>
             </TableRow>
@@ -155,20 +148,11 @@ export function ComponentPropUsageDetail({
 
   return (
     <div className={variant === "compact" ? "space-y-2" : "space-y-4"}>
-      <PropUsageSummary
-        usedPropCount={usedPropCount}
-        totalPropCount={attributeProps.length}
-      />
+      <PropUsageSummary usedPropCount={usedPropCount} totalPropCount={attributeProps.length} />
       {variant === "compact" ? (
-        <PropUsageBadges
-          props={attributeProps}
-          propFrequencies={propFrequencies}
-        />
+        <PropUsageBadges props={attributeProps} propFrequencies={propFrequencies} />
       ) : (
-        <PropUsageTable
-          props={attributeProps}
-          propFrequencies={propFrequencies}
-        />
+        <PropUsageTable props={attributeProps} propFrequencies={propFrequencies} />
       )}
     </div>
   );

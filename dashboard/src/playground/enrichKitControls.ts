@@ -23,7 +23,10 @@ function slotForParam(slots: KitJsxSlot[], key: string): KitJsxSlot | undefined 
   return slots.find((slot) => slot.param === key);
 }
 
-function enrichOneControl(control: PlaygroundControl, slot: KitJsxSlot | undefined): PlaygroundControl {
+function enrichOneControl(
+  control: PlaygroundControl,
+  slot: KitJsxSlot | undefined,
+): PlaygroundControl {
   if (!slot) return control;
   const label = slotLabelFromComponent(slot.component);
   const exampleDefault = slotDefaultFromComponent(slot.component);
@@ -43,7 +46,11 @@ function enrichOneControl(control: PlaygroundControl, slot: KitJsxSlot | undefin
       label,
       hint,
       ...(useExample
-        ? { default: exampleDefault, defaultSource: "example" as const, placeholder: exampleDefault }
+        ? {
+            default: exampleDefault,
+            defaultSource: "example" as const,
+            placeholder: exampleDefault,
+          }
         : {}),
     };
   }
@@ -96,14 +103,16 @@ function definitionForExport(
 function propMetadataForCatalog(
   report: WorkspaceReport | null | undefined,
   catalogId: string,
-): {
-  spec: PlaygroundSpec;
-  propOptions: Record<string, string[]>;
-  propDefaults: Record<string, string>;
-  propKinds: PlaygroundSpec["declared_prop_kinds"];
-  propOptional: Record<string, boolean>;
-  propTypeLabels: Record<string, string>;
-} | undefined {
+):
+  | {
+      spec: PlaygroundSpec;
+      propOptions: Record<string, string[]>;
+      propDefaults: Record<string, string>;
+      propKinds: PlaygroundSpec["declared_prop_kinds"];
+      propOptional: Record<string, boolean>;
+      propTypeLabels: Record<string, string>;
+    }
+  | undefined {
   const spec = specForCatalog(report, catalogId);
   if (!spec || !report) return undefined;
 
@@ -133,8 +142,7 @@ export function mergeReportControlsForKit(
   const metadata = propMetadataForCatalog(report, catalogId);
   if (!metadata) return controls;
 
-  const { spec, propOptions, propDefaults, propKinds, propOptional, propTypeLabels } =
-    metadata;
+  const { spec, propOptions, propDefaults, propKinds, propOptional, propTypeLabels } = metadata;
   const rootBindings = rootPropBindings.filter(
     (binding) => binding.component === spec.export_name || binding.component === catalogId,
   );

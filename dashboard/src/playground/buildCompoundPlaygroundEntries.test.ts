@@ -321,13 +321,8 @@ describe("buildCompoundPlaygroundEntries", () => {
           createElement("div", { "data-root": "dropdown-menu" }, children),
         DropdownMenuTrigger: ({ children }: { children?: ReactNode }) =>
           createElement("button", { type: "button" }, children),
-        DropdownMenuContent: ({
-          children,
-          align,
-        }: {
-          children?: ReactNode;
-          align?: string;
-        }) => createElement("div", { "data-content": true, "data-align": align }, children),
+        DropdownMenuContent: ({ children, align }: { children?: ReactNode; align?: string }) =>
+          createElement("div", { "data-content": true, "data-align": align }, children),
         DropdownMenuItem: ({ children }: { children?: ReactNode }) =>
           createElement("div", { "data-item": true }, children),
       },

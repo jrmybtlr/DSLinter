@@ -6,10 +6,7 @@ import type {
   UsageSummary,
   WorkspaceReport,
 } from "../types/report";
-import {
-  definitionPathsForName,
-  isCatalogComponentHidden,
-} from "./catalogVisibility";
+import { definitionPathsForName, isCatalogComponentHidden } from "./catalogVisibility";
 
 export interface DefinitionSite {
   kind: ComponentDefinition["kind"];
@@ -121,11 +118,7 @@ export function usageMap(report: WorkspaceReport): Map<string, UsageSummary> {
 }
 
 function isVisibleCatalogName(report: WorkspaceReport, name: string): boolean {
-  return !isCatalogComponentHidden(
-    name,
-    report,
-    definitionPathsForName(report, name),
-  );
+  return !isCatalogComponentHidden(name, report, definitionPathsForName(report, name));
 }
 
 export function catalogComponentNames(
@@ -254,13 +247,7 @@ function enrichCatalogFamily(
 ): CatalogFamily {
   const children = new Set(family.children);
   for (const name of catalogNames) {
-    if (
-      shouldAttachNameToFamily(
-        name,
-        family,
-        definitionPathsForName(report, name),
-      )
-    ) {
+    if (shouldAttachNameToFamily(name, family, definitionPathsForName(report, name))) {
       children.add(name);
     }
   }
@@ -319,9 +306,7 @@ export function componentCatalogTreeFromReport(
     items.push({ type: "component", name });
   }
 
-  return items.sort((a, b) =>
-    catalogTreeSortKey(a).localeCompare(catalogTreeSortKey(b)),
-  );
+  return items.sort((a, b) => catalogTreeSortKey(a).localeCompare(catalogTreeSortKey(b)));
 }
 
 export function componentCatalogFamilyForName(

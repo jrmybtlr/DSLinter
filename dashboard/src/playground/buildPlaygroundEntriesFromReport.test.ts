@@ -233,7 +233,11 @@ describe("playground preview props", () => {
 
   it("manual kit playground merges CVA variant select from report", () => {
     function Alert(props: { variant?: string; children?: ReactNode }) {
-      return createElement("div", { "data-slot": "alert", "data-variant": props.variant }, props.children);
+      return createElement(
+        "div",
+        { "data-slot": "alert", "data-variant": props.variant },
+        props.children,
+      );
     }
     function AlertTitle(props: { children?: ReactNode }) {
       return createElement("div", { "data-slot": "alert-title" }, props.children);
@@ -242,7 +246,15 @@ describe("playground preview props", () => {
       return createElement("div", { "data-slot": "alert-description" }, props.children);
     }
 
-    const kit = ({ title, description, variant }: { title: string; description: string; variant: string }) =>
+    const kit = ({
+      title,
+      description,
+      variant,
+    }: {
+      title: string;
+      description: string;
+      variant: string;
+    }) =>
       createElement(
         Alert,
         { variant },
@@ -331,7 +343,9 @@ describe("playground preview props", () => {
     expect(entries[0]?.id).toBe("Alert");
     expect(
       renderToStaticMarkup(
-        createElement(entries[0]!.Preview, { values: defaultArgsFromControls(entries[0]!.controls) }),
+        createElement(entries[0]!.Preview, {
+          values: defaultArgsFromControls(entries[0]!.controls),
+        }),
       ),
     ).toBe('<div data-slot="alert">Heads up</div>');
   });
@@ -394,13 +408,8 @@ describe("playground preview props", () => {
           createElement("div", { "data-root": "dropdown-menu" }, children),
         DropdownMenuTrigger: ({ children }: { children?: ReactNode }) =>
           createElement("button", { type: "button" }, children),
-        DropdownMenuContent: ({
-          children,
-          align,
-        }: {
-          children?: ReactNode;
-          align?: string;
-        }) => createElement("div", { "data-content": true, "data-align": align }, children),
+        DropdownMenuContent: ({ children, align }: { children?: ReactNode; align?: string }) =>
+          createElement("div", { "data-content": true, "data-align": align }, children),
         DropdownMenuItem: ({ children }: { children?: ReactNode }) =>
           createElement("div", { "data-item": true }, children),
       },
@@ -439,10 +448,10 @@ describe("playground preview props", () => {
         },
       ],
     };
-    const defined = definePlayground(
-      () => createElement("nav", null, "manual menu"),
-      { id: "DropdownMenu", group: "ui" },
-    );
+    const defined = definePlayground(() => createElement("nav", null, "manual menu"), {
+      id: "DropdownMenu",
+      group: "ui",
+    });
     const modules = {
       "../components/ui/dropdown-menu.tsx": {
         DropdownMenu: () => createElement("div", null, "auto menu"),

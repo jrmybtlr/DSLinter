@@ -36,8 +36,7 @@ function normalizePath(p) {
 function hasExportModifier(node) {
   return (
     ts.canHaveModifiers(node) &&
-    (ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ??
-      false)
+    (ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false)
   );
 }
 
@@ -137,9 +136,7 @@ function isStringElementArrayType(checker, type) {
   const elem = checker.getElementTypeOfArrayType(nn);
   if (!elem) return false;
   const elemNn = checker.getNonNullableType(elem);
-  return (
-    (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0
-  );
+  return (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0;
 }
 
 /** @param {ts.TypeChecker} checker @param {ts.Type} type */
@@ -148,9 +145,7 @@ function isNumberElementArrayType(checker, type) {
   const elem = checker.getElementTypeOfArrayType(nn);
   if (!elem) return false;
   const elemNn = checker.getNonNullableType(elem);
-  return (
-    (elemNn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) !== 0
-  );
+  return (elemNn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) !== 0;
 }
 
 /** @param {ts.TypeChecker} checker @param {ts.Type} type */
@@ -180,10 +175,8 @@ function isIconPropType(checker, type) {
   const symName = String(nn.getSymbol()?.escapedName ?? nn.getSymbol()?.name ?? "");
   if (ICON_TYPE_NAMES.has(symName)) return true;
   const text = checker.typeToString(nn);
-  return (
-    /LucideIcon|ElementType|ComponentType|ForwardRefExoticComponent|FunctionComponent|\bFC</.test(
-      text,
-    )
+  return /LucideIcon|ElementType|ComponentType|ForwardRefExoticComponent|FunctionComponent|\bFC</.test(
+    text,
   );
 }
 
@@ -261,9 +254,7 @@ export function classifyPropType(checker, type) {
   if (isStringElementArrayType(checker, nn)) return "stringArray";
   if (isNumberElementArrayType(checker, nn)) return "numberArray";
   if (nn.isUnion()) {
-    const parts = nn.types.map((u) =>
-      classifyPropType(checker, checker.getNonNullableType(u)),
-    );
+    const parts = nn.types.map((u) => classifyPropType(checker, checker.getNonNullableType(u)));
     const ok = parts.filter((p) => p !== null);
     if (!ok.length) return null;
     const set = new Set(ok);
@@ -283,11 +274,7 @@ function followTypeAlias(checker, type, seen = new Set()) {
   if (type.aliasSymbol) {
     if (seen.has(type.id)) return type;
     seen.add(type.id);
-    return followTypeAlias(
-      checker,
-      checker.getDeclaredTypeOfSymbol(type.aliasSymbol),
-      seen,
-    );
+    return followTypeAlias(checker, checker.getDeclaredTypeOfSymbol(type.aliasSymbol), seen);
   }
   return type;
 }

@@ -164,9 +164,7 @@ export function Toggle({ disabled }: { disabled?: boolean }) {
       const sf = bundle.program.getSourceFile(join(root, "Toggle.tsx"));
       const paramType = findComponentParamType(bundle.checker, sf, "Toggle");
       const sym = bundle.checker.getPropertyOfType(paramType, "disabled");
-      expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe(
-        "boolean",
-      );
+      expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe("boolean");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -192,9 +190,9 @@ export function AlertError({
       const sf = bundle.program.getSourceFile(join(root, "AlertError.tsx"));
       const paramType = findComponentParamType(bundle.checker, sf, "AlertError");
       const errorsSym = bundle.checker.getPropertyOfType(paramType, "errors");
-      expect(
-        classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(errorsSym)),
-      ).toBe("stringArray");
+      expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(errorsSym))).toBe(
+        "stringArray",
+      );
 
       const meta = inferPlaygroundPropMetadata(
         bundle.checker,
@@ -284,9 +282,7 @@ export function Section({
       const paramType = findComponentParamType(bundle.checker, sf, "Section");
       for (const key of ["children", "actions"]) {
         const sym = bundle.checker.getPropertyOfType(paramType, key);
-        expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe(
-          "node",
-        );
+        expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe("node");
       }
     } finally {
       rmSync(root, { recursive: true, force: true });

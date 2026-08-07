@@ -52,7 +52,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
 
           {typo.families.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Font families
               </h3>
               <ul className="mt-3 grid gap-3" className:sm="grid-cols-2">
@@ -66,7 +66,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
                       The quick brown fox jumps over the lazy dog.
                     </p>
                     <p className="mt-2 truncate font-mono text-xs text-foreground">{f.tw}</p>
-                    <p className="mt-1 break-all text-xs leading-snug text-muted-foreground">
+                    <p className="mt-1 text-xs leading-snug break-all text-muted-foreground">
                       {f.value}
                     </p>
                   </li>
@@ -78,7 +78,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
           {typo.families.length > 0 && typo.sizes.length > 0 ? (
             typo.families.map((family) => (
               <div key={family.key}>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   Type scale · {family.tw}
                 </h3>
                 <ul className="mt-3 divide-y divide-border overflow-x-auto rounded-lg border border-border bg-card">
@@ -107,7 +107,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
             ))
           ) : typo.sizes.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Type scale · font-sans
               </h3>
               <ul className="mt-3 divide-y divide-border overflow-x-auto rounded-lg border border-border bg-card">
@@ -136,7 +136,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
           {typo.families.length > 0 && weights.length > 0 ? (
             typo.families.map((family) => (
               <div key={`w-${family.key}`}>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   Font weights · {family.tw}
                 </h3>
                 <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
@@ -146,7 +146,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
                       className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-3 py-2 text-xs"
                     >
                       <span className="w-28 shrink-0 font-mono text-foreground/90">{w.tw}</span>
-                      <span className="w-10 shrink-0 tabular-nums text-muted-foreground">
+                      <span className="w-10 shrink-0 text-muted-foreground tabular-nums">
                         {w.value ?? "—"}
                       </span>
                       <span
@@ -161,7 +161,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
             ))
           ) : weights.length > 0 ? (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Font weights · font-sans
               </h3>
               <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
@@ -171,7 +171,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
                     className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-3 py-2 text-xs"
                   >
                     <span className="w-28 shrink-0 font-mono text-foreground/90">{w.tw}</span>
-                    <span className="w-10 shrink-0 tabular-nums text-muted-foreground">
+                    <span className="w-10 shrink-0 text-muted-foreground tabular-nums">
                       {w.value ?? "—"}
                     </span>
                     <span className={`min-w-0 flex-1 font-sans ${w.tw} text-base text-foreground`}>

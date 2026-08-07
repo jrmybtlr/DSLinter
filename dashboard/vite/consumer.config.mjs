@@ -6,24 +6,16 @@ import { defineConfig, loadConfigFromFile, mergeConfig } from "vite";
  */
 export default defineConfig(async ({ command, mode }) => {
   const viteRoot = process.env.DSLINTER_VITE_ROOT?.trim() || process.cwd();
-  const loaded = await loadConfigFromFile(
-    { command, mode },
-    undefined,
-    viteRoot,
-  );
+  const loaded = await loadConfigFromFile({ command, mode }, undefined, viteRoot);
   const userConfig = loaded?.config ?? {};
   const { default: dslinter } = await import("./plugin.ts");
   const scanRoot = process.env.DSLINTER_SCAN_ROOT?.trim() || viteRoot;
-  const consumerViteRoot =
-    process.env.DSLINTER_CONSUMER_VITE_ROOT?.trim() || viteRoot;
+  const consumerViteRoot = process.env.DSLINTER_CONSUMER_VITE_ROOT?.trim() || viteRoot;
   const { default: useClassy } = await import("vite-plugin-useclassy");
   return mergeConfig(
     userConfig,
     defineConfig({
-      plugins: [
-        useClassy({ language: "react" }),
-        dslinter({ scanRoot, consumerViteRoot }),
-      ],
+      plugins: [useClassy({ language: "react" }), dslinter({ scanRoot, consumerViteRoot })],
     }),
   );
 });

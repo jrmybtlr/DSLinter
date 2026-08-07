@@ -177,13 +177,10 @@ export function isStaticBundledPreviewUnavailable(
   if (!skipped.length) return false;
   const isProd =
     options?.production ??
-    (import.meta as ImportMeta & { env?: { PROD?: boolean } }).env?.PROD ===
-      true;
+    (import.meta as ImportMeta & { env?: { PROD?: boolean } }).env?.PROD === true;
   if (!isProd) return false;
   return skipped.every(
-    (s) =>
-      s.reason === "module_not_found" &&
-      s.globKey.startsWith("@dslinter-scan/"),
+    (s) => s.reason === "module_not_found" && s.globKey.startsWith("@dslinter-scan/"),
   );
 }
 

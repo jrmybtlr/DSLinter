@@ -176,12 +176,7 @@ describe("enrichPlaygroundSpecFromTs", () => {
         variant: ["default", "destructive"],
       },
     };
-    const enriched = enrichPlaygroundSpecFromTs(
-      spec,
-      bundle.checker,
-      bundle.program,
-      root,
-    );
+    const enriched = enrichPlaygroundSpecFromTs(spec, bundle.checker, bundle.program, root);
     expect(enriched.declared_prop_options?.variant).toEqual(["default", "destructive"]);
   });
 
@@ -202,12 +197,7 @@ describe("enrichPlaygroundSpecFromTs", () => {
       rel_path: "src/input.tsx",
       declared_props: ["className", "type", "placeholder"],
     };
-    const enriched = enrichPlaygroundSpecFromTs(
-      spec,
-      bundle.checker,
-      bundle.program,
-      root,
-    );
+    const enriched = enrichPlaygroundSpecFromTs(spec, bundle.checker, bundle.program, root);
     const typeOptions = enriched.declared_prop_options?.type;
     expect(typeOptions).toBeDefined();
     expect(typeOptions!.length).toBeGreaterThanOrEqual(2);
@@ -240,12 +230,7 @@ describe("enrichPlaygroundSpecFromTs", () => {
       rel_path: "src/section.tsx",
       declared_props: ["children", "actions"],
     };
-    const enriched = enrichPlaygroundSpecFromTs(
-      spec,
-      bundle.checker,
-      bundle.program,
-      root,
-    );
+    const enriched = enrichPlaygroundSpecFromTs(spec, bundle.checker, bundle.program, root);
     expect(enriched.declared_prop_kinds?.children).toBe("node");
     expect(enriched.declared_prop_kinds?.actions).toBe("node");
   });
@@ -271,12 +256,7 @@ describe("enrichPlaygroundSpecFromTs", () => {
       rel_path: "src/alert-error.tsx",
       declared_props: ["errors", "title"],
     };
-    const enriched = enrichPlaygroundSpecFromTs(
-      spec,
-      bundle.checker,
-      bundle.program,
-      root,
-    );
+    const enriched = enrichPlaygroundSpecFromTs(spec, bundle.checker, bundle.program, root);
     expect(enriched.declared_prop_kinds?.errors).toBe("stringArray");
     expect(enriched.declared_prop_kinds?.title).toBe("string");
     expect(enriched.declared_prop_optional?.title).toBe(true);
@@ -314,12 +294,7 @@ describe("enrichPlaygroundSpecFromTs", () => {
       rel_path: "src/passkey-item.tsx",
       declared_props: ["ids", "onDelete", "iconNode", "passkey"],
     };
-    const enriched = enrichPlaygroundSpecFromTs(
-      spec,
-      bundle.checker,
-      bundle.program,
-      root,
-    );
+    const enriched = enrichPlaygroundSpecFromTs(spec, bundle.checker, bundle.program, root);
     expect(enriched.declared_prop_kinds?.ids).toBe("numberArray");
     expect(enriched.declared_prop_kinds?.onDelete).toBe("function");
     expect(enriched.declared_prop_kinds?.iconNode).toBe("icon");

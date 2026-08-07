@@ -157,12 +157,7 @@ export interface PlaygroundSpec {
   example_tree?: ExampleNode;
 }
 
-export type CssTokenCategory =
-  | "color"
-  | "spacing"
-  | "radius"
-  | "typography"
-  | "other";
+export type CssTokenCategory = "color" | "spacing" | "radius" | "typography" | "other";
 
 export type CssTokenScope = "theme" | "root" | "selector";
 

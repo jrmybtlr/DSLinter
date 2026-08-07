@@ -22,24 +22,15 @@ function def(
 
 describe("isDashboardThemePath", () => {
   it("flags dslinter dashboard theme files", () => {
-    expect(
-      isDashboardThemePath(
-        "/repo/dashboard/src/styles/dashboard-theme.css",
-      ),
-    ).toBe(true);
-    expect(isDashboardThemePath("/repo/node_modules/dslinter/theme.css")).toBe(
-      true,
-    );
+    expect(isDashboardThemePath("/repo/dashboard/src/styles/dashboard-theme.css")).toBe(true);
+    expect(isDashboardThemePath("/repo/node_modules/dslinter/theme.css")).toBe(true);
   });
 });
 
 describe("isConsumerThemeDefinition", () => {
   it("accepts app css under report root", () => {
     expect(
-      isConsumerThemeDefinition(
-        def({ name: "--primary", value: "black", scope: "root" }),
-        root,
-      ),
+      isConsumerThemeDefinition(def({ name: "--primary", value: "black", scope: "root" }), root),
     ).toBe(true);
   });
 

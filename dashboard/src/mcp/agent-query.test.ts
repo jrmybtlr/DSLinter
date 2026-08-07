@@ -36,9 +36,7 @@ describe("agent-query", () => {
     const catalog = catalogSummary(report, { limit: 10 });
     expect(catalog.length).toBeGreaterThan(0);
     for (let i = 1; i < catalog.length; i++) {
-      expect(catalog[i - 1]!.reference_count).toBeGreaterThanOrEqual(
-        catalog[i]!.reference_count,
-      );
+      expect(catalog[i - 1]!.reference_count).toBeGreaterThanOrEqual(catalog[i]!.reference_count);
     }
   });
 
@@ -79,10 +77,7 @@ describe("agent-context", () => {
 
   it("builds json context", () => {
     const report = loadDemoReport();
-    const json = buildAgentContext(report, { format: "json" }) as Record<
-      string,
-      unknown
-    >;
+    const json = buildAgentContext(report, { format: "json" }) as Record<string, unknown>;
     expect(json.scores).toBeDefined();
     expect(Array.isArray(json.top_components)).toBe(true);
   });

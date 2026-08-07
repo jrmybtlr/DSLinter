@@ -12,9 +12,7 @@ export function findingsForComponent(
   const sites = defs.get(componentName) ?? [];
   if (sites.length === 0) return [];
 
-  const rows = report.findings.filter((f) =>
-    sites.some((site) => pathsMatch(f.path, site.path)),
-  );
+  const rows = report.findings.filter((f) => sites.some((site) => pathsMatch(f.path, site.path)));
   return [...rows].sort(
     (a, b) =>
       a.path.localeCompare(b.path) ||

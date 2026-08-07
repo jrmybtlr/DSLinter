@@ -6,8 +6,7 @@ const shellClass =
   "playground-usage-shiki mt-4 overflow-x-auto rounded-lg border border-border p-4 text-sm leading-relaxed text-foreground " +
   "[&_.shiki]:!bg-transparent [&_pre.shiki]:!m-0 [&_pre.shiki]:!bg-transparent [&_pre.shiki]:!p-0";
 
-const plainPreClass =
-  "m-0 whitespace-pre font-mono text-sm leading-relaxed text-foreground";
+const plainPreClass = "m-0 whitespace-pre font-mono text-sm leading-relaxed text-foreground";
 
 type Props = {
   source: string;
@@ -39,9 +38,7 @@ export function PlaygroundUsageCode({ source }: Props) {
   }, [source, theme]);
 
   if (html) {
-    return (
-      <div className={shellClass} dangerouslySetInnerHTML={{ __html: html }} />
-    );
+    return <div className={shellClass} dangerouslySetInnerHTML={{ __html: html }} />;
   }
 
   return (

@@ -8,15 +8,9 @@ import { collectScanModuleRelPaths } from "./collectScanModules";
 import { resolveExistingModule } from "./resolveWayfinderImport";
 import dslinter from "./plugin";
 
-const packageRoot = resolve(
-  fileURLToPath(new URL(".", import.meta.url)),
-  "..",
-);
+const packageRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const demoInertiaRoot = resolve(packageRoot, "../demo/inertia");
-const navFooter = join(
-  demoInertiaRoot,
-  "resources/js/components/nav-footer.tsx",
-);
+const navFooter = join(demoInertiaRoot, "resources/js/components/nav-footer.tsx");
 
 describe("dslinter vite plugin resolveId", () => {
   it("has scan paths and consumer aliases for demo/inertia", () => {
@@ -34,11 +28,7 @@ describe("dslinter vite plugin resolveId", () => {
       scanRoot: demoInertiaRoot,
       consumerViteRoot: demoInertiaRoot,
     });
-    const resolved = await plugin.resolveId?.(
-      "@/components/ui/sidebar",
-      navFooter,
-      { ssr: false },
-    );
+    const resolved = await plugin.resolveId?.("@/components/ui/sidebar", navFooter, { ssr: false });
     expect(resolved?.replace(/\\/g, "/")).toContain(
       "demo/inertia/resources/js/components/ui/sidebar.tsx",
     );
@@ -57,10 +47,7 @@ describe("dslinter vite plugin resolveId", () => {
     });
 
     try {
-      const resolved = await server.pluginContainer.resolveId(
-        "@/components/ui/sidebar",
-        navFooter,
-      );
+      const resolved = await server.pluginContainer.resolveId("@/components/ui/sidebar", navFooter);
       expect(resolved?.id.replace(/\\/g, "/")).toContain(
         "demo/inertia/resources/js/components/ui/sidebar",
       );

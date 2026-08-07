@@ -34,9 +34,7 @@ export function hideComponentInDslintConfig(projectRoot, componentName) {
       throw new Error(`Invalid JSON in ${configPath}: ${e.message}`);
     }
   }
-  const hidden = Array.isArray(config.hidden_components)
-    ? [...config.hidden_components]
-    : [];
+  const hidden = Array.isArray(config.hidden_components) ? [...config.hidden_components] : [];
   if (!hidden.includes(name)) hidden.push(name);
   config.hidden_components = hidden;
   writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);

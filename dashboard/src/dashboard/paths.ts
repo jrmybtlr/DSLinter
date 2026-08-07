@@ -37,8 +37,7 @@ export function truncatePathMiddle(path: string, maxLength: number): string {
 
   for (let keep = segments.length; keep >= 0; keep--) {
     const prefix = segments.slice(0, keep).join("/");
-    const result =
-      keep === 0 ? `.../${filename}` : `${prefix}${ELLIPSIS}${filename}`;
+    const result = keep === 0 ? `.../${filename}` : `${prefix}${ELLIPSIS}${filename}`;
     if (result.length <= maxLength) return result;
   }
 

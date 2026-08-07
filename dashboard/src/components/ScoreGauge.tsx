@@ -10,10 +10,7 @@ export function scoreGaugeBand(score: number): ScoreGaugeBand {
   return "poor";
 }
 
-const BAND_STYLES: Record<
-  ScoreGaugeBand,
-  { stroke: string; track: string; text: string }
-> = {
+const BAND_STYLES: Record<ScoreGaugeBand, { stroke: string; track: string; text: string }> = {
   good: {
     stroke: "stroke-success",
     track: "stroke-success/15",
@@ -51,14 +48,7 @@ const GAUGE_SIZE = 56;
 const STROKE_WIDTH = 4;
 
 function scrollToHash(href: string, e: MouseEvent<HTMLAnchorElement>) {
-  if (
-    e.defaultPrevented ||
-    e.button !== 0 ||
-    e.metaKey ||
-    e.ctrlKey ||
-    e.shiftKey ||
-    e.altKey
-  ) {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
     return;
   }
   const id = href.startsWith("#") ? href.slice(1) : href;
@@ -71,23 +61,13 @@ function scrollToHash(href: string, e: MouseEvent<HTMLAnchorElement>) {
   }
 }
 
-export function ScoreGauge({
-  label,
-  value,
-  href,
-  pending = false,
-  className,
-}: ScoreGaugeProps) {
+export function ScoreGauge({ label, value, href, pending = false, className }: ScoreGaugeProps) {
   const radius = (GAUGE_SIZE - STROKE_WIDTH) / 2;
   const circumference = 2 * Math.PI * radius;
-  const clamped =
-    value == null ? 0 : Math.max(0, Math.min(100, Math.round(value)));
-  const styles =
-    value == null ? PENDING_STYLES : BAND_STYLES[scoreGaugeBand(clamped)];
+  const clamped = value == null ? 0 : Math.max(0, Math.min(100, Math.round(value)));
+  const styles = value == null ? PENDING_STYLES : BAND_STYLES[scoreGaugeBand(clamped)];
   const dashOffset =
-    value == null
-      ? circumference
-      : circumference - (clamped / 100) * circumference;
+    value == null ? circumference : circumference - (clamped / 100) * circumference;
 
   const content = (
     <>
@@ -142,7 +122,7 @@ export function ScoreGauge({
   const rootClass = cn(
     "flex flex-col items-center gap-0",
     href &&
-      "rounded-lg transition hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      "rounded-lg transition hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
     className,
   );
 

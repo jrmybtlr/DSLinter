@@ -19,8 +19,6 @@ export function buildPlaygroundEntries(
 }
 
 /** Skipped joins (module glob / export mismatch) — useful for debugging previews. */
-export function getPlaygroundJoinSkips(
-  report: WorkspaceReport | null | undefined,
-) {
+export function getPlaygroundJoinSkips(report: WorkspaceReport | null | undefined) {
   return buildWithSkips(report).skipped;
 }

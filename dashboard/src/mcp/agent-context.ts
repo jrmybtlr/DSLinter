@@ -8,9 +8,7 @@ export type AgentContextOptions = {
   format?: "markdown" | "json";
 };
 
-function topUsageHint(
-  propValueFreqs: Record<string, Record<string, number>> | undefined,
-): string {
+function topUsageHint(propValueFreqs: Record<string, Record<string, number>> | undefined): string {
   if (!propValueFreqs) return "";
   const parts: string[] = [];
   for (const [prop, values] of Object.entries(propValueFreqs)) {
@@ -61,8 +59,7 @@ export function buildAgentContext(
       references: c.reference_count,
       import_path: c.import_path,
       usage_hint: topUsageHint(
-        report.usage_by_component.find((u) => u.component === c.name)
-          ?.prop_value_frequencies,
+        report.usage_by_component.find((u) => u.component === c.name)?.prop_value_frequencies,
       ),
     })),
     deprecated_components: deprecated,
@@ -82,9 +79,7 @@ export function buildAgentContext(
       "Use theme tokens and Tailwind utilities from known_tokens / css_tokens.",
     ],
     donts: [
-      ...(deprecated.length
-        ? [`Do not use deprecated components: ${deprecated.join(", ")}.`]
-        : []),
+      ...(deprecated.length ? [`Do not use deprecated components: ${deprecated.join(", ")}.`] : []),
       "Do not hardcode hex colors or Tailwind arbitrary values.",
       "Do not duplicate existing component names.",
       ...(snap.include_dirs?.length

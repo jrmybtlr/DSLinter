@@ -35,10 +35,7 @@ function maxMtimeInDir(dir, latest = 0) {
  * @returns {boolean} true when the embed SPA dev server can start (npm or monorepo).
  */
 export function canRunEmbedVite(root = packageRoot) {
-  return (
-    existsSync(join(root, "index.html")) ||
-    existsSync(join(root, "embed", "main.tsx"))
-  );
+  return existsSync(join(root, "index.html")) || existsSync(join(root, "embed", "main.tsx"));
 }
 
 /**
@@ -66,8 +63,7 @@ export function hasEmbedDashboard(root = packageRoot) {
 export function ensureDashboardBuilt(root = packageRoot) {
   const distDir = join(root, "dashboard-dist");
   const canBuildFromSource =
-    existsSync(join(root, "index.html")) &&
-    existsSync(join(root, "vite.config.ts"));
+    existsSync(join(root, "index.html")) && existsSync(join(root, "vite.config.ts"));
   if (!canBuildFromSource) {
     return dashboardDirIfReady(distDir);
   }
@@ -104,7 +100,12 @@ export function ensureDashboardBuilt(root = packageRoot) {
   return dashboardDirIfReady(distDir);
 }
 
-const VITE_CONFIG_NAMES = ["vite.config.ts", "vite.config.js", "vite.config.mjs", "vite.config.cjs"];
+const VITE_CONFIG_NAMES = [
+  "vite.config.ts",
+  "vite.config.js",
+  "vite.config.mjs",
+  "vite.config.cjs",
+];
 
 /**
  * @param {string} startDir
@@ -163,13 +164,10 @@ export function logScanScopeHint(info) {
   if (scanAbs === projectAbs) return;
 
   const implicit =
-    info.explicitScanPath == null ||
-    info.explicitScanPath === "" ||
-    info.explicitScanPath === ".";
+    info.explicitScanPath == null || info.explicitScanPath === "" || info.explicitScanPath === ".";
   if (!implicit) return;
 
-  const rel =
-    relative(projectAbs, scanAbs).replace(/\\/g, "/") || scanAbs;
+  const rel = relative(projectAbs, scanAbs).replace(/\\/g, "/") || scanAbs;
   process.stderr.write(
     `dslinter: scanning ${rel} (project root: ${projectAbs}). Run from repo root for a full-repo scan.\n`,
   );

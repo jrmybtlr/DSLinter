@@ -11,10 +11,7 @@ import {
   defaultConsumerGlobKeyFromRelPath,
 } from "./playgroundJoin";
 
-export type CreatePlaygroundRegistryOptions = Omit<
-  BuildPlaygroundOptions,
-  "globKeyFromRelPath"
-> & {
+export type CreatePlaygroundRegistryOptions = Omit<BuildPlaygroundOptions, "globKeyFromRelPath"> & {
   /**
    * Defaults to {@link defaultConsumerGlobKeyFromRelPath}
    * (strips `src/` or `resources/js/` then prefixes `../`).

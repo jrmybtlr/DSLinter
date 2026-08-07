@@ -19,20 +19,11 @@ export function stringDefaultForProp(key: string): string {
 }
 
 export type PlaygroundStringControl = Extract<PlaygroundControl, { type: "string" }>;
-export type PlaygroundStringArrayControl = Extract<
-  PlaygroundControl,
-  { type: "stringArray" }
->;
-export type PlaygroundNumberArrayControl = Extract<
-  PlaygroundControl,
-  { type: "numberArray" }
->;
+export type PlaygroundStringArrayControl = Extract<PlaygroundControl, { type: "stringArray" }>;
+export type PlaygroundNumberArrayControl = Extract<PlaygroundControl, { type: "numberArray" }>;
 export type PlaygroundIconControl = Extract<PlaygroundControl, { type: "icon" }>;
 export type PlaygroundObjectControl = Extract<PlaygroundControl, { type: "object" }>;
-export type PlaygroundFunctionControl = Extract<
-  PlaygroundControl,
-  { type: "function" }
->;
+export type PlaygroundFunctionControl = Extract<PlaygroundControl, { type: "function" }>;
 export type PlaygroundNodeControl = Extract<PlaygroundControl, { type: "node" }>;
 
 /** Parts like BreadcrumbSeparator default to an icon when children is omitted. */
@@ -81,10 +72,7 @@ export function childrenPropForPreview(
   return String(raw);
 }
 
-export function componentAcceptsChildren(
-  declaredProps: string[],
-  usage?: UsageSummary,
-): boolean {
+export function componentAcceptsChildren(declaredProps: string[], usage?: UsageSummary): boolean {
   if (declaredProps.includes("children")) return true;
   if (declaredProps.includes("asChild")) return true;
   if ((usage?.prop_frequencies?.children ?? 0) > 0) return true;
@@ -175,10 +163,7 @@ export function iconControlForProp(
   };
 }
 
-export function objectControlForProp(
-  key: string,
-  typeLabel = "object",
-): PlaygroundObjectControl {
+export function objectControlForProp(key: string, typeLabel = "object"): PlaygroundObjectControl {
   return {
     key,
     label: key,
@@ -202,23 +187,14 @@ export function functionControlForProp(
 }
 
 /** Display-only control when we cannot honestly edit the prop. */
-export function unknownControlForProp(
-  key: string,
-  typeLabel = "unknown",
-): PlaygroundObjectControl {
+export function unknownControlForProp(key: string, typeLabel = "unknown"): PlaygroundObjectControl {
   return objectControlForProp(key, typeLabel);
 }
 
 export function defaultStringForProp(key: string): string {
   if (key === "href") return "/governance";
   const k = key.toLowerCase();
-  if (
-    k === "title" ||
-    k === "label" ||
-    k === "text" ||
-    k === "name" ||
-    k === "heading"
-  ) {
+  if (k === "title" || k === "label" || k === "text" || k === "name" || k === "heading") {
     return "Label";
   }
   return key;
@@ -246,10 +222,7 @@ export function controlsFromDeclaredProps(
     const kind = resolveEffectivePropKind(key, propKinds);
     if (kind === "function" || (!kind && isLikelyFunctionProp(key))) {
       out.push({
-        ...functionControlForProp(
-          key,
-          propTypeLabels?.[key] ?? "function",
-        ),
+        ...functionControlForProp(key, propTypeLabels?.[key] ?? "function"),
         optional: propOptional?.[key],
       });
       continue;
@@ -257,8 +230,7 @@ export function controlsFromDeclaredProps(
     const options = propOptions?.[key];
     if (options && options.length >= 2) {
       const defaultVal =
-        propDefaults?.[key] ??
-        (options.includes("default") ? "default" : options[0]!);
+        propDefaults?.[key] ?? (options.includes("default") ? "default" : options[0]!);
       out.push({
         key,
         label: key,
@@ -382,11 +354,8 @@ export function mergeControlOverrides(
         ctrl.type === "object" ||
         ctrl.type === "function"
           ? {
-              placeholder:
-                "placeholder" in ctrl ? ctrl.placeholder : undefined,
-              ...("typeLabel" in ctrl
-                ? { typeLabel: ctrl.typeLabel }
-                : {}),
+              placeholder: "placeholder" in ctrl ? ctrl.placeholder : undefined,
+              ...("typeLabel" in ctrl ? { typeLabel: ctrl.typeLabel } : {}),
             }
           : {}),
       } as PlaygroundControl);

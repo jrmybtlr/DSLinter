@@ -32,7 +32,6 @@ describe("parseDslinterArgs", () => {
     expect(p.yes).toBe(true);
   });
 
-
   it("uses scanner mode for --serve only", () => {
     expect(parseDslinterArgs([".", "--serve", "7878"]).mode).toBe("scanner");
   });

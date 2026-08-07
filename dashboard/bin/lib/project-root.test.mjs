@@ -33,10 +33,7 @@ describe("ensureDashboardBuilt (published install layout)", () => {
     mkdirSync(join(root, "embed"), { recursive: true });
     writeFileSync(join(root, "embed", "main.tsx"), "export {};\n");
     mkdirSync(join(root, "vite"), { recursive: true });
-    writeFileSync(
-      join(root, "vite", "embed-serve.config.ts"),
-      "export default {};\n",
-    );
+    writeFileSync(join(root, "vite", "embed-serve.config.ts"), "export default {};\n");
 
     expect(hasEmbedDashboard(root)).toBe(false);
     expect(canRunEmbedVite(root)).toBe(true);

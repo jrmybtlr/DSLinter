@@ -17,19 +17,21 @@ export function suggestFix(
   opts: { rule_id: string; path?: string; component?: string; message?: string },
 ): FixSuggestion | null {
   const entry = ruleById(opts.rule_id);
-  const fix_hint = entry?.fix_hint ?? "Review the finding and align with design system conventions.";
+  const fix_hint =
+    entry?.fix_hint ?? "Review the finding and align with design system conventions.";
 
   if (opts.rule_id === "deprecated-component" && opts.component) {
     const snap = report.config_snapshot?.deprecated_components ?? [];
     const catalog = catalogSummary(report, { limit: 20 });
-    const replacement = catalog.find(
-      (c) =>
-        !c.deprecated &&
-        !snap.includes(c.name) &&
-        c.name.toLowerCase().includes(
-          opts.component!.replace(/^Legacy|Deprecated/i, "").toLowerCase(),
-        ),
-    ) ?? catalog.find((c) => !c.deprecated && c.reference_count > 0);
+    const replacement =
+      catalog.find(
+        (c) =>
+          !c.deprecated &&
+          !snap.includes(c.name) &&
+          c.name
+            .toLowerCase()
+            .includes(opts.component!.replace(/^Legacy|Deprecated/i, "").toLowerCase()),
+      ) ?? catalog.find((c) => !c.deprecated && c.reference_count > 0);
 
     return {
       rule_id: opts.rule_id,
@@ -131,16 +133,12 @@ export function computeDrift(
       report.scores.ux_consistency -
       (baseline?.scores.ux_consistency ?? report.scores.ux_consistency),
     accessibility:
-      report.scores.accessibility -
-      (baseline?.scores.accessibility ?? report.scores.accessibility),
+      report.scores.accessibility - (baseline?.scores.accessibility ?? report.scores.accessibility),
     maintainability:
       report.scores.maintainability -
       (baseline?.scores.maintainability ?? report.scores.maintainability),
   };
-  if (
-    report.scores.token_adoption != null ||
-    baseline?.scores.token_adoption != null
-  ) {
+  if (report.scores.token_adoption != null || baseline?.scores.token_adoption != null) {
     const cur = report.scores.token_adoption ?? 0;
     const base = baseline?.scores.token_adoption ?? cur;
     score_deltas.token_adoption = cur - base;

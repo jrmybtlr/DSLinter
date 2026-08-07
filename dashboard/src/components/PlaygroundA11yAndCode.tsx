@@ -1,9 +1,5 @@
 import { useCallback } from "react";
-import type {
-  PlaygroundArgs,
-  PlaygroundControl,
-  PlaygroundValuesUpdater,
-} from "../types/controls";
+import type { PlaygroundArgs, PlaygroundControl, PlaygroundValuesUpdater } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import type { A11yModuleSummary } from "../report/a11yForModule";
 import type { PlaygroundA11yFinding } from "../playground/scanVariantA11y";
@@ -11,14 +7,7 @@ import type { CodeScoreModuleSummary } from "../report/codeScoreForModule";
 import type { LintFinding, UsageSummary } from "../types/report";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { controlsToApiRows } from "./controlApiTable";
 import { PlaygroundControlField } from "./PlaygroundControlField";
 import { PlaygroundUsageCode } from "./PlaygroundUsageCode";
@@ -46,10 +35,7 @@ type TokenStyleProps = {
   reportReady: boolean;
 };
 
-export function PlaygroundTokenStyleSection({
-  findings,
-  reportReady,
-}: TokenStyleProps) {
+export function PlaygroundTokenStyleSection({ findings, reportReady }: TokenStyleProps) {
   return (
     <>
       {reportReady && findings.length > 0 ? (
@@ -82,14 +68,11 @@ export function PlaygroundTokenStyleSection({
           </TableBody>
         </Table>
       ) : reportReady && findings.length === 0 ? (
-        <EmptyCard>
-          No token color findings on this file in the current report.
-        </EmptyCard>
+        <EmptyCard>No token color findings on this file in the current report.</EmptyCard>
       ) : (
         <EmptyCard>
-          Token findings update when{" "}
-          <span className="font-mono">dslinter-report.json</span> is available
-          (same fetch as Governance).
+          Token findings update when <span className="font-mono">dslinter-report.json</span> is
+          available (same fetch as Governance).
         </EmptyCard>
       )}
     </>
@@ -101,10 +84,7 @@ type CodeScoreProps = {
   reportReady: boolean;
 };
 
-export function PlaygroundCodeScoreSection({
-  codeScore,
-  reportReady,
-}: CodeScoreProps) {
+export function PlaygroundCodeScoreSection({ codeScore, reportReady }: CodeScoreProps) {
   const { findings } = codeScore;
 
   const hasFindingRows = reportReady && findings.length > 0;
@@ -135,14 +115,11 @@ export function PlaygroundCodeScoreSection({
           </Table>
         </>
       ) : reportReady && findings.length === 0 ? (
-        <EmptyCard>
-          No quality findings on this file in the current report.
-        </EmptyCard>
+        <EmptyCard>No quality findings on this file in the current report.</EmptyCard>
       ) : (
         <EmptyCard>
-          Code score updates when{" "}
-          <span className="font-mono">dslinter-report.json</span> is available
-          (same fetch as Governance).
+          Code score updates when <span className="font-mono">dslinter-report.json</span> is
+          available (same fetch as Governance).
         </EmptyCard>
       )}
     </>
@@ -182,9 +159,7 @@ export function PlaygroundA11ySection({
           </TableHeader>
           <TableBody>
             {a11y.findings.map((f, i) => (
-              <TableRow
-                key={`${f.rule_id}-${f.line ?? "x"}-${f.variant_label ?? ""}-${i}`}
-              >
+              <TableRow key={`${f.rule_id}-${f.line ?? "x"}-${f.variant_label ?? ""}-${i}`}>
                 {showVariantColumn ? (
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {f.variant_label ?? "—"}
@@ -206,9 +181,8 @@ export function PlaygroundA11ySection({
         </EmptyCard>
       ) : (
         <EmptyCard>
-          A11y score updates when{" "}
-          <span className="font-mono">dslinter-report.json</span> is available
-          (same fetch as Governance).
+          A11y score updates when <span className="font-mono">dslinter-report.json</span> is
+          available (same fetch as Governance).
         </EmptyCard>
       )}
     </>
@@ -277,9 +251,7 @@ export function PlaygroundApiReference({
                   {c.type === "select" ? (
                     <div className="flex flex-wrap items-center gap-1">
                       {c.options.map((o) => {
-                        const current = String(
-                          values[c.key] ?? c.default ?? "",
-                        );
+                        const current = String(values[c.key] ?? c.default ?? "");
                         const selected = current === o.value;
                         return (
                           <Badge
@@ -306,7 +278,7 @@ export function PlaygroundApiReference({
                       })}
                     </div>
                   ) : (
-                    <span className="font-mono text-xs flex items-center gap-1">
+                    <span className="flex items-center gap-1 font-mono text-xs">
                       {r.type}
                       {r.defaultBadge ? (
                         <Badge variant="secondary" size="sm">

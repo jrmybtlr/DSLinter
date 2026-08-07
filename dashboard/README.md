@@ -21,14 +21,14 @@ This package is **source-first**: entry points resolve to TypeScript/TSX under `
 
 The **`dslinter`** command orchestrates the Rust scanner (via **napi-rs**, same distribution model as **`oxlint`**) and, in a Vite host app, the dashboard dev loop.
 
-| Mode | Flag | Behavior |
-|------|------|----------|
-| Dev (default locally) | _(none)_ | `--serve`, watch, write `--output`, start Vite `--mode serve` |
-| Report | `--report` | One-shot scan; human stdout or `--json`; `--output` writes JSON; enriches playground prop kinds/options from TypeScript when `tsconfig.json` is present |
-| Watch | `--watch` | Watch + write JSON only; re-enriches playgrounds after each scan |
-| Build | `--build` | One-shot report to `--output` (with TS enrichment), then `vite build` |
-| MCP | `mcp` | Stdio MCP server for AI agents (catalog, findings, agent context) |
-| CI default | `CI=true` | Same as `--report` |
+| Mode                  | Flag       | Behavior                                                                                                                                                |
+| --------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dev (default locally) | _(none)_   | `--serve`, watch, write `--output`, start Vite `--mode serve`                                                                                           |
+| Report                | `--report` | One-shot scan; human stdout or `--json`; `--output` writes JSON; enriches playground prop kinds/options from TypeScript when `tsconfig.json` is present |
+| Watch                 | `--watch`  | Watch + write JSON only; re-enriches playgrounds after each scan                                                                                        |
+| Build                 | `--build`  | One-shot report to `--output` (with TS enrichment), then `vite build`                                                                                   |
+| MCP                   | `mcp`      | Stdio MCP server for AI agents (catalog, findings, agent context)                                                                                       |
+| CI default            | `CI=true`  | Same as `--report`                                                                                                                                      |
 
 Scanner flags: `--json`, `-p` / `--parallel`, `--fail-on-warnings`, `--max-warnings`, `--output`, `[PATH]`. Low-level: `--serve <port>` (watch + HTTP, no Vite).
 
@@ -36,11 +36,11 @@ Scanner flags: `--json`, `-p` / `--parallel`, `--fail-on-warnings`, `--max-warni
 
 On **`npm install dslinter`**, npm installs the platform **`@dslinter/binding-*`** optional dependency (darwin/linux/windows). No postinstall download or GitHub Releases API is required.
 
-| Variable | Purpose |
-|----------|---------|
-| `DSLINTER_BIN` | Use a cargo-built `dslinter` binary instead of the NAPI binding. |
-| `DSLINTER_ALLOW_PATH=1` | Allow `dslinter` on `PATH` when the binding is missing. |
-| `NAPI_RS_NATIVE_LIBRARY_PATH` | Point at a specific `.node` file (napi-rs escape hatch). |
+| Variable                      | Purpose                                                          |
+| ----------------------------- | ---------------------------------------------------------------- |
+| `DSLINTER_BIN`                | Use a cargo-built `dslinter` binary instead of the NAPI binding. |
+| `DSLINTER_ALLOW_PATH=1`       | Allow `dslinter` on `PATH` when the binding is missing.          |
+| `NAPI_RS_NATIVE_LIBRARY_PATH` | Point at a specific `.node` file (napi-rs escape hatch).         |
 
 ### Do not `cargo install dslint`
 
@@ -62,12 +62,12 @@ When dev mode prints both a **Dashboard** URL and a **Scanner API** URL, open th
 
 On first local run in an interactive terminal, `npx dslinter` asks whether to create minimal setup files (`.dslinter.json` and `public/`). In CI or with `--yes`, those files are created automatically. Set `DSLINTER_NO_SCAFFOLD=1` to skip all writes.
 
-| Flag / variable | Purpose |
-|-----------------|--------|
-| `--yes` / `-y` | Create minimal scaffold without prompting |
-| `DSLINTER_NO_SCAFFOLD=1` | Never write scaffold files |
+| Flag / variable                | Purpose                                                                             |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| `--yes` / `-y`                 | Create minimal scaffold without prompting                                           |
+| `DSLINTER_NO_SCAFFOLD=1`       | Never write scaffold files                                                          |
 | `DSLINTER_USE_CONSUMER_VITE=1` | Use your app's Vite dev server as the dashboard UI (embedded `<DashboardLayout />`) |
-| `DSLINTER_NO_EMBED_VITE=1` | Disable standalone embed dashboard dev server |
+| `DSLINTER_NO_EMBED_VITE=1`     | Disable standalone embed dashboard dev server                                       |
 
 ### Zero-config live previews (recommended)
 
@@ -87,7 +87,7 @@ For apps that already embed the dashboard (like this repo's `demo/`), dev mode u
 import dslinter from "dslinter/vite";
 
 export default defineConfig({
-  plugins: [dslinter(), /* your plugins */],
+  plugins: [dslinter() /* your plugins */],
 });
 ```
 
@@ -143,6 +143,7 @@ Use **`autoPlayground`** (above) for zero-config previews. Optionally scaffold a
 - `npx dslinter init --laravel` → `resources/js/playground/buildRegistry.ts`
 
 `npx dslinter init` now also scaffolds a starter `.dslinter.json` (unless one already exists), including:
+
 - `include_dirs` (directory scope for discovery)
 - `ignore_globs` (file/directory ignores)
 - `css_entrypoints` (main CSS entry files for token analysis)
@@ -152,7 +153,10 @@ import { useMemo } from "react";
 import { DashboardLayout, useWorkspaceReport } from "dslinter";
 import { buildPlaygroundEntries } from "./playground/buildRegistry";
 
-const dslinterReport = useWorkspaceReport({ reportUrl: "/dslinter-report.json", watchUrl: "/events" });
+const dslinterReport = useWorkspaceReport({
+  reportUrl: "/dslinter-report.json",
+  watchUrl: "/events",
+});
 const playgroundEntries = useMemo(
   () => buildPlaygroundEntries(dslinterReport.report),
   [dslinterReport.report],
@@ -176,10 +180,7 @@ Run the scanner from the **project root** (`npx dslinter .`) so `playgrounds[].r
 
 ```tsx
 import { useMemo } from "react";
-import {
-  useWorkspaceReport,
-  DashboardLayout,
-} from "dslinter";
+import { useWorkspaceReport, DashboardLayout } from "dslinter";
 import { buildPlaygroundEntries } from "./playground/buildRegistry";
 import { tokenCatalog } from "./tokenCatalog";
 

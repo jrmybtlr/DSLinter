@@ -67,7 +67,7 @@ export function CatalogPane({
             ← Governance
           </button>
         ) : null}
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           Inventory
         </p>
         <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
@@ -78,7 +78,7 @@ export function CatalogPane({
           Full catalog with prop usage and app references from the latest scan.
         </p>
       </header>
-      <div className="min-w-0 w-full px-6 py-8">
+      <div className="w-full min-w-0 px-6 py-8">
         <ComponentCatalog report={report} onOpenComponent={onOpenComponent} />
       </div>
     </div>

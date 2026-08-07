@@ -3,10 +3,10 @@ import { controlsFromDeclaredProps } from "./controls";
 
 describe("controlsFromDeclaredProps", () => {
   it("uses a readable default for stringArray errors props", () => {
-    const controls = controlsFromDeclaredProps(
-      ["errors", "title"],
-      { errors: "stringArray", title: "string" },
-    );
+    const controls = controlsFromDeclaredProps(["errors", "title"], {
+      errors: "stringArray",
+      title: "string",
+    });
     const errorsControl = controls.find((c) => c.key === "errors");
     expect(errorsControl?.type).toBe("stringArray");
     if (errorsControl?.type === "stringArray") {

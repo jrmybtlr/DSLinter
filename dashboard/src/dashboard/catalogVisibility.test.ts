@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { WorkspaceReport } from "../types/report";
+import { componentCatalogNamesFromReport, componentCatalogTreeFromReport } from "./aggregate";
 import {
-  componentCatalogNamesFromReport,
-  componentCatalogTreeFromReport,
-} from "./aggregate";
-import { isCatalogComponentHidden, pathMatchesPrefix, reportWithExtraHidden } from "./catalogVisibility";
+  isCatalogComponentHidden,
+  pathMatchesPrefix,
+  reportWithExtraHidden,
+} from "./catalogVisibility";
 
 function minimalReport(overrides: Partial<WorkspaceReport> = {}): WorkspaceReport {
   return {
@@ -25,9 +26,9 @@ function minimalReport(overrides: Partial<WorkspaceReport> = {}): WorkspaceRepor
 
 describe("catalogVisibility", () => {
   it("pathMatchesPrefix treats repo-relative paths", () => {
-    expect(pathMatchesPrefix("resources/js/components/ui/button.tsx", "resources/js/components")).toBe(
-      true,
-    );
+    expect(
+      pathMatchesPrefix("resources/js/components/ui/button.tsx", "resources/js/components"),
+    ).toBe(true);
     expect(pathMatchesPrefix("resources/js/pages/foo.tsx", "resources/js/components")).toBe(false);
   });
 

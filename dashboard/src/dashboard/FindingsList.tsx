@@ -62,19 +62,19 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
       >
         <ToggleGroupItem value="all" className="rounded-full px-2.5 text-xs font-medium">
           All
-          <span className="ml-1 tabular-nums text-muted-foreground">{findings.length}</span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{findings.length}</span>
         </ToggleGroupItem>
         <ToggleGroupItem value="warning" className="rounded-full px-2.5 text-xs font-medium">
           Warnings
-          <span className="ml-1 tabular-nums text-muted-foreground">{counts.warning}</span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{counts.warning}</span>
         </ToggleGroupItem>
         <ToggleGroupItem value="error" className="rounded-full px-2.5 text-xs font-medium">
           Errors
-          <span className="ml-1 tabular-nums text-muted-foreground">{counts.error}</span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{counts.error}</span>
         </ToggleGroupItem>
         <ToggleGroupItem value="info" className="rounded-full px-2.5 text-xs font-medium">
           Info
-          <span className="ml-1 tabular-nums text-muted-foreground">{counts.info}</span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{counts.info}</span>
         </ToggleGroupItem>
       </ToggleGroup>
 
@@ -111,7 +111,7 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
                     {f.severity}
                   </Badge>
                 </TableCell>
-                <TableCell className="min-w-0 whitespace-normal px-3 py-2">
+                <TableCell className="min-w-0 px-3 py-2 whitespace-normal">
                   <div className="font-mono text-xs text-muted-foreground">{f.rule_id}</div>
                   <div className="mt-0.5 text-xs text-pretty text-foreground">{f.message}</div>
                 </TableCell>

@@ -8,10 +8,10 @@ import {
 describe("formatVariantLabel", () => {
   it("joins axis keys and values", () => {
     expect(
-      formatVariantLabel(
-        { variant: "destructive", size: "default", asChild: false },
-        ["variant", "size"],
-      ),
+      formatVariantLabel({ variant: "destructive", size: "default", asChild: false }, [
+        "variant",
+        "size",
+      ]),
     ).toBe("variant=destructive size=default");
   });
 });
@@ -38,9 +38,7 @@ describe("playgroundA11yScore", () => {
       },
     ];
 
-    expect(
-      mergePlaygroundA11yFindings(staticFindings, variantFindings),
-    ).toHaveLength(2);
+    expect(mergePlaygroundA11yFindings(staticFindings, variantFindings)).toHaveLength(2);
     expect(playgroundA11yScore(staticFindings, variantFindings)).toBe(65);
   });
 });

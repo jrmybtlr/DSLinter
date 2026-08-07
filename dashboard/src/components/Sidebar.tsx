@@ -49,7 +49,7 @@ function familyToggleClass(active: boolean) {
 function sectionLabel(text: string) {
   return (
     <p
-      className="mb-1.5 mt-4 px-2.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50"
+      className="mt-4 mb-1.5 px-2.5 text-xs font-semibold tracking-wider text-sidebar-foreground/50 uppercase"
       className:first="mt-0"
     >
       {text}
@@ -138,7 +138,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={onOpenCommandPalette}
-            className="flex shrink-0 items-center gap-1.5 rounded-md pl-1.5 py-0 text-foreground/70 transition"
+            className="flex shrink-0 items-center gap-1.5 rounded-md py-0 pl-1.5 text-foreground/70 transition"
             className:hover="bg-accent text-accent-foreground"
             aria-label="Search components and views"
           >
@@ -286,7 +286,7 @@ export function Sidebar({
       </nav>
 
       <div className="shrink-0 border-t border-sidebar-border px-3 py-3">
-        <p className="mb-2 px-2.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+        <p className="mb-2 px-2.5 text-xs font-semibold tracking-wider text-sidebar-foreground/50 uppercase">
           Appearance
         </p>
         <ToggleGroup

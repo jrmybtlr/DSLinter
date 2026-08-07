@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  computeDrift,
-  evaluateDriftFailure,
-  extractDriftFlags,
-} from "./baseline-drift.mjs";
+import { computeDrift, evaluateDriftFailure, extractDriftFlags } from "./baseline-drift.mjs";
 
 describe("baseline-drift", () => {
   it("extracts drift flags from scanner args", () => {

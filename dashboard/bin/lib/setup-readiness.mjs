@@ -125,9 +125,7 @@ export async function ensureMinimalSetup(opts) {
     if (interactive && includeDir) {
       const rl = createInterface({ input, output });
       try {
-        const answer = (
-          await rl.question(`Components directory [${includeDir}]: `)
-        ).trim();
+        const answer = (await rl.question(`Components directory [${includeDir}]: `)).trim();
         if (answer) includeDir = answer;
       } finally {
         rl.close();

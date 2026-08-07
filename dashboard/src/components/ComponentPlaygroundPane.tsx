@@ -128,8 +128,8 @@ function BreakpointPresetSelect({
         aria-label={`Select ${kind} width preset`}
         title={`${kindLabel} — click to set a predefined width`}
         className={cn(
-          "h-auto w-auto gap-0 rounded-none border-0 last:border-l bg-transparent p-2.5 shadow-none",
-          "font-mono text-xs/none tabular-nums text-muted-foreground",
+          "h-auto w-auto gap-0 rounded-none border-0 bg-transparent p-2.5 shadow-none last:border-l",
+          "font-mono text-xs/none text-muted-foreground tabular-nums",
           "hover:bg-accent hover:text-accent-foreground",
           "focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
           "[&>svg]:hidden",
@@ -430,7 +430,7 @@ export function ComponentPlaygroundPane({
       <div className="min-h-0 flex-1 overflow-auto">
         <header
           id="source"
-          className="scroll-mt-20 border-b border-border bg-card p-6 flex flex-wrap items-center justify-between gap-4"
+          className="flex scroll-mt-20 flex-wrap items-center justify-between gap-4 border-b border-border bg-card p-6"
         >
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
@@ -439,7 +439,7 @@ export function ComponentPlaygroundPane({
                 <>
                   {" "}
                   <span className="text-muted-foreground/40">/</span>{" "}
-                  <span className="capitalize text-foreground/80">{entry.meta.group}</span>
+                  <span className="text-foreground/80 capitalize">{entry.meta.group}</span>
                 </>
               ) : null}
             </p>
@@ -475,7 +475,7 @@ export function ComponentPlaygroundPane({
             <div className="flex justify-center">
               <div
                 ref={previewFrameRef}
-                className="relative min-w-0 shrink-0 select-none rounded-lg border border-border bg-background shadow-xs will-change-[width]"
+                className="relative min-w-0 shrink-0 rounded-lg border border-border bg-background shadow-xs will-change-[width] select-none"
                 style={{ width: previewWidthPx }}
               >
                 <PreviewResizeHandle side="left" onPointerDown={attachSymmetricWidthDrag("left")} />
@@ -491,7 +491,7 @@ export function ComponentPlaygroundPane({
               </div>
             </div>
             {maxOuterPx > 0 ? (
-              <div className="mx-auto mt-4 flex h-6 w-fit items-center overflow-hidden rounded-sm border border-border bg-card text-center font-mono text-xs/none tabular-nums text-muted-foreground divide-x divide-border">
+              <div className="mx-auto mt-4 flex h-6 w-fit items-center divide-x divide-border overflow-hidden rounded-sm border border-border bg-card text-center font-mono text-xs/none text-muted-foreground tabular-nums">
                 <span ref={previewWidthLabelRef} className="p-2.5">
                   {Math.round(previewWidthPx)}px
                 </span>
@@ -512,7 +512,7 @@ export function ComponentPlaygroundPane({
           </div>
         </section>
 
-        <div className="min-w-0 w-full px-6 py-10" className:lg="px-12">
+        <div className="w-full min-w-0 px-6 py-10" className:lg="px-12">
           <div className:xl="grid grid-cols-[minmax(0,1fr)_12rem] gap-14">
             <div className="min-w-0 space-y-14">
               {hasControls ? (
@@ -566,12 +566,12 @@ export function ComponentPlaygroundPane({
               </Section>
             </div>
 
-            <aside className="mt-12 hidden self-start sticky top-8" className:xl="mt-0 block">
+            <aside className="sticky top-8 mt-12 hidden self-start" className:xl="mt-0 block">
               <nav
                 aria-label="On this page"
                 className="space-y-0.5 border-l border-border pl-4 text-sm"
               >
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   On this page
                 </p>
                 {tocItems.map(({ href, label, show = true }) =>
@@ -591,7 +591,7 @@ export function ComponentPlaygroundPane({
             id="variants"
             className="ds-playground-dot-surface mt-8 w-full scroll-mt-20 border-t pt-10 pb-12"
           >
-            <div className="min-w-0 w-full px-6" className:lg="px-12">
+            <div className="w-full min-w-0 px-6" className:lg="px-12">
               <h2 className="w-fit bg-card text-xl font-semibold tracking-tight text-foreground">
                 All variants
               </h2>

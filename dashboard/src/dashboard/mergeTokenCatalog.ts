@@ -106,22 +106,14 @@ export function buildMergedTokenView(
   }
 
   const unusedSet = new Set(summary.unused_tokens ?? []);
-  const usageByName = new Map(
-    (summary.usage_by_token ?? []).map((u) => [u.name, u]),
-  );
+  const usageByName = new Map((summary.usage_by_token ?? []).map((u) => [u.name, u]));
   const twMap = catalog ? catalogTwByCssName(catalog) : new Map<string, string>();
-  const displayMap = catalog
-    ? catalogDisplayByCssName(catalog)
-    : new Map<string, string>();
+  const displayMap = catalog ? catalogDisplayByCssName(catalog) : new Map<string, string>();
 
   const consumerPredicate = report?.root
-    ? (def: CssTokenDefinition) =>
-        isConsumerThemeDefinition(def, report.root)
+    ? (def: CssTokenDefinition) => isConsumerThemeDefinition(def, report.root)
     : undefined;
-  const resolvedLight = resolveLightTokenValues(
-    summary.definitions,
-    consumerPredicate,
-  );
+  const resolvedLight = resolveLightTokenValues(summary.definitions, consumerPredicate);
   const hasConsumerLight = Object.keys(resolvedLight).some(
     (name) => !name.startsWith("--color-") && !name.startsWith("--spacing-"),
   );
@@ -134,11 +126,7 @@ export function buildMergedTokenView(
     const referenceCount = usage?.reference_count ?? 0;
     const isUnused = unusedSet.has(def.name);
     const manualDisplay = displayMap.get(def.name);
-    const displayValue = displayValueForDefinition(
-      def,
-      manualDisplay,
-      resolvedLightForDisplay,
-    );
+    const displayValue = displayValueForDefinition(def, manualDisplay, resolvedLightForDisplay);
 
     return {
       cssName: def.name,
@@ -158,9 +146,7 @@ export function buildMergedTokenView(
 
   rows.sort((a, b) => a.cssName.localeCompare(b.cssName));
 
-  const themeRoot = rows.filter(
-    (r) => r.scope === "theme" || r.scope === "root",
-  );
+  const themeRoot = rows.filter((r) => r.scope === "theme" || r.scope === "root");
   const usedCount = themeRoot.filter((r) => !r.isUnused).length;
 
   return {

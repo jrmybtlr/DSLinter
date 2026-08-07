@@ -67,10 +67,7 @@ export function parseNumberArrayPanelValue(raw: unknown): number[] {
   return out;
 }
 
-function propKeysForPreview(
-  controls: PlaygroundControl[],
-  declaredProps: string[],
-): string[] {
+function propKeysForPreview(controls: PlaygroundControl[], declaredProps: string[]): string[] {
   if (controls.length > 0) {
     return controls.filter((c) => !isNonEditableControl(c)).map((c) => c.key);
   }

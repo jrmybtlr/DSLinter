@@ -513,10 +513,7 @@ export function buildCompoundPlaygroundEntryForTarget(
   modulePath: string,
   report: WorkspaceReport,
   modules: BuildPlaygroundModules,
-  options: Pick<
-    BuildCompoundPlaygroundOptions,
-    "controlOverrides" | "staticDefaults"
-  >,
+  options: Pick<BuildCompoundPlaygroundOptions, "controlOverrides" | "staticDefaults">,
 ): PlaygroundEntry | null {
   const def = family.exports.get(targetName);
   if (!def) return null;
@@ -538,9 +535,7 @@ export function buildCompoundPlaygroundEntryForTarget(
   // real context (e.g. BreadcrumbItem inside Breadcrumb → BreadcrumbList).
   const exampleTree = familyExampleTree(report, family);
   const exampleForTarget =
-    exampleTree && exampleTreeContainsElement(exampleTree, targetName)
-      ? exampleTree
-      : undefined;
+    exampleTree && exampleTreeContainsElement(exampleTree, targetName) ? exampleTree : undefined;
 
   let renderPreview: (values: PlaygroundArgs) => ReactNode;
   let usageSnippet: (values: PlaygroundArgs) => string;

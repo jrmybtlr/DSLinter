@@ -73,10 +73,7 @@ function readTsPaths(consumerRoot: string): TsPaths | null {
 }
 
 /** Convert tsconfig paths (e.g. @/* → ./resources/js/*) into Vite-style aliases. */
-export function flattenTsconfigPaths(
-  paths: TsPaths,
-  consumerRoot: string,
-): FlatAlias[] {
+export function flattenTsconfigPaths(paths: TsPaths, consumerRoot: string): FlatAlias[] {
   const root = resolve(consumerRoot);
   const out: FlatAlias[] = [];
 
@@ -87,9 +84,7 @@ export function flattenTsconfigPaths(
 
     if (find.endsWith("/*")) {
       const prefix = find.slice(0, -2);
-      const targetBase = target.endsWith("/*")
-        ? target.slice(0, -2)
-        : target.replace(/\*$/, "");
+      const targetBase = target.endsWith("/*") ? target.slice(0, -2) : target.replace(/\*$/, "");
       out.push({
         find: prefix,
         replacement: resolve(root, targetBase),
@@ -111,11 +106,7 @@ export function flattenTsconfigPaths(
 }
 
 function hasAtAlias(aliases: FlatAlias[]): boolean {
-  return aliases.some(
-    (a) =>
-      typeof a.find === "string" &&
-      (a.find === "@" || a.find === "@/"),
-  );
+  return aliases.some((a) => typeof a.find === "string" && (a.find === "@" || a.find === "@/"));
 }
 
 function laravelResourcesJsAlias(consumerRoot: string): FlatAlias | null {

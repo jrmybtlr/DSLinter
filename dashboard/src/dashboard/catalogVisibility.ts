@@ -31,9 +31,7 @@ export function pathMatchesPrefix(rel: string, prefix: string): boolean {
   return r === pre || r.startsWith(`${pre}/`);
 }
 
-export function reportConfig(
-  report: WorkspaceReport | null | undefined,
-): ReportConfig {
+export function reportConfig(report: WorkspaceReport | null | undefined): ReportConfig {
   return report?.config ?? {};
 }
 
@@ -51,9 +49,7 @@ export function hiddenComponentNames(
   return names;
 }
 
-export function hiddenPathPrefixes(
-  report: WorkspaceReport | null | undefined,
-): string[] {
+export function hiddenPathPrefixes(report: WorkspaceReport | null | undefined): string[] {
   return (reportConfig(report).hidden_paths ?? []).map(normalizePrefix).filter(Boolean);
 }
 

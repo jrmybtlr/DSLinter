@@ -27,8 +27,7 @@ export const CONTAINER_WIDTH_PRESETS = [
 ] as const;
 
 export type ScreenBreakpointLabel = (typeof SCREEN_WIDTH_PRESETS)[number]["label"];
-export type ContainerBreakpointLabel =
-  (typeof CONTAINER_WIDTH_PRESETS)[number]["label"];
+export type ContainerBreakpointLabel = (typeof CONTAINER_WIDTH_PRESETS)[number]["label"];
 
 /** Same thresholds as usemods `detectBreakpoint`, but for an arbitrary width. */
 export function screenBreakpointForWidth(width: number): ScreenBreakpointLabel {
@@ -41,9 +40,7 @@ export function screenBreakpointForWidth(width: number): ScreenBreakpointLabel {
 }
 
 /** Active Tailwind `@container` name for a given width (min-width semantics). */
-export function containerBreakpointForWidth(
-  width: number,
-): ContainerBreakpointLabel {
+export function containerBreakpointForWidth(width: number): ContainerBreakpointLabel {
   if (width >= 1280) return "@7xl";
   if (width >= 1152) return "@6xl";
   if (width >= 1024) return "@5xl";
