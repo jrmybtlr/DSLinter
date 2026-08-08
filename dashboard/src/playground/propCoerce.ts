@@ -74,6 +74,34 @@ function propKeysForPreview(controls: PlaygroundControl[], declaredProps: string
   return declaredProps.filter((k) => k !== "key" && k !== "ref");
 }
 
+function kindFromControlType(
+  type: PlaygroundControl["type"] | undefined,
+): DeclaredPropKind | undefined {
+  switch (type) {
+    case "boolean":
+      return "boolean";
+    case "number":
+      return "number";
+    case "string":
+    case "select":
+      return "string";
+    case "node":
+      return "node";
+    case "stringArray":
+      return "stringArray";
+    case "numberArray":
+      return "numberArray";
+    case "function":
+      return "function";
+    case "icon":
+      return "icon";
+    case "object":
+      return "object";
+    default:
+      return undefined;
+  }
+}
+
 export function valuesToComponentProps(
   controls: PlaygroundControl[],
   declaredProps: string[],
@@ -81,6 +109,7 @@ export function valuesToComponentProps(
   propKinds?: Partial<Record<string, DeclaredPropKind>>,
   exportName?: string,
 ): Record<string, unknown> {
+  const controlByKey = new Map(controls.map((c) => [c.key, c]));
   const o: Record<string, unknown> = {};
   for (const key of propKeysForPreview(controls, declaredProps)) {
     if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
@@ -95,7 +124,8 @@ export function valuesToComponentProps(
       if (coerced !== undefined) o[key] = coerced;
       continue;
     }
-    const kind = resolveEffectivePropKind(key, propKinds);
+    const kind =
+      resolveEffectivePropKind(key, propKinds) ?? kindFromControlType(controlByKey.get(key)?.type);
     if (kind === "function" || kind === "icon" || kind === "object") {
       continue;
     }

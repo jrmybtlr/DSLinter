@@ -1,6 +1,5 @@
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
-import prettier from 'eslint-config-prettier/flat';
 import importPlugin from 'eslint-plugin-import';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -116,7 +115,6 @@ export default [
             'resources/js/wayfinder/**',
         ],
     },
-    prettier,
     {
         plugins: {
             '@stylistic': stylistic,

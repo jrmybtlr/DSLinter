@@ -597,10 +597,8 @@ impl ExtractVisitor<'_> {
                 if input_is_hidden(&el.attributes) {
                     return;
                 }
-                // `id` often pairs with a `<label htmlFor>` elsewhere — skip to cut false positives.
-                if has_named_attribute(&el.attributes, "id") {
-                    return;
-                }
+                // Do not treat bare `id` as an accessible name — pairing with
+                // `<label htmlFor>` is not verified here.
                 if !has_named_attribute(&el.attributes, "aria-label")
                     && !has_named_attribute(&el.attributes, "aria-labelledby")
                 {
@@ -613,9 +611,6 @@ impl ExtractVisitor<'_> {
                 }
             }
             "select" => {
-                if has_named_attribute(&el.attributes, "id") {
-                    return;
-                }
                 if !has_named_attribute(&el.attributes, "aria-label")
                     && !has_named_attribute(&el.attributes, "aria-labelledby")
                 {
@@ -628,9 +623,6 @@ impl ExtractVisitor<'_> {
                 }
             }
             "textarea" => {
-                if has_named_attribute(&el.attributes, "id") {
-                    return;
-                }
                 if !has_named_attribute(&el.attributes, "aria-label")
                     && !has_named_attribute(&el.attributes, "aria-labelledby")
                 {
@@ -994,10 +986,17 @@ const Panel = () => <aside />;
     }
 
     #[test]
-    fn a11y_input_with_id_skips_label() {
+    fn a11y_input_with_id_still_requires_name() {
+        // Bare `id` does not prove a paired <label htmlFor>; still report.
         let src = r#"export function X() { return <input id="email" type="text" />; }"#;
         let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
-        assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-input-label"));
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-input-label"),
+            "{:?}",
+            scan.findings
+        );
     }
 
     #[test]

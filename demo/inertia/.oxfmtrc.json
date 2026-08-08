@@ -1,7 +1,6 @@
 {
   "$schema": "../../node_modules/oxfmt/configuration_schema.json",
   "semi": true,
-  "singleQuote": true,
   "singleAttributePerLine": false,
   "htmlWhitespaceSensitivity": "css",
   "printWidth": 80,
@@ -10,7 +9,8 @@
     "functions": [
       "clsx",
       "cn",
-      "cva"
+      "cva",
+      "classy"
     ]
   },
   "tabWidth": 4,

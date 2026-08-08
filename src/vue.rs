@@ -7,6 +7,7 @@ use std::sync::OnceLock;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind, PropertyKey,
+    TSType, TSTypeName,
 };
 use oxc_ast::visit::walk;
 use oxc_ast::Visit;
@@ -143,9 +144,11 @@ fn extract_vue_props_via_ast(script_src: &str) -> Option<VueDeclaredProps> {
     let ParserReturn {
         program,
         panicked,
+        errors,
         ..
     } = Parser::new(&allocator, script_src, source_type).parse();
-    if panicked {
+    // Recovered parses can leave an incomplete AST; fall back to regex.
+    if panicked || !errors.is_empty() {
         return None;
     }
 
@@ -215,6 +218,9 @@ impl DefinePropsVisitor<'_> {
                     self.props.extend(object_prop_keys(obj));
                     for (k, v) in object_string_defaults(obj) {
                         self.defaults.entry(k).or_insert(v);
+                    }
+                    for (k, v) in object_prop_type_options(obj) {
+                        self.options.entry(k).or_insert(v);
                     }
                 }
                 _ => {}
@@ -309,6 +315,81 @@ fn nested_default_string(obj: &ObjectExpression<'_>) -> Option<String> {
     None
 }
 
+/// From runtime validators `{ foo: { type: String as PropType<'a' | 'b'> } }`
+/// or shorthand `{ foo: String as PropType<'a' | 'b'> }`.
+fn object_prop_type_options(obj: &ObjectExpression<'_>) -> BTreeMap<String, Vec<String>> {
+    let mut out = BTreeMap::new();
+    for prop in &obj.properties {
+        let ObjectPropertyKind::ObjectProperty(p) = prop else {
+            continue;
+        };
+        if p.computed {
+            continue;
+        }
+        let key = match &p.key {
+            PropertyKey::StaticIdentifier(id) => id.name.as_str().to_string(),
+            PropertyKey::StringLiteral(s) => s.value.as_str().to_string(),
+            _ => continue,
+        };
+        let options = match &p.value {
+            Expression::ObjectExpression(inner) => nested_prop_type_options(inner),
+            other => options_from_prop_type_expression(other),
+        };
+        if let Some(opts) = options {
+            out.insert(key, opts);
+        }
+    }
+    out
+}
+
+fn nested_prop_type_options(obj: &ObjectExpression<'_>) -> Option<Vec<String>> {
+    for prop in &obj.properties {
+        let ObjectPropertyKind::ObjectProperty(p) = prop else {
+            continue;
+        };
+        if p.computed {
+            continue;
+        }
+        let is_type = match &p.key {
+            PropertyKey::StaticIdentifier(id) => id.name.as_str() == "type",
+            PropertyKey::StringLiteral(s) => s.value.as_str() == "type",
+            _ => false,
+        };
+        if is_type {
+            return options_from_prop_type_expression(&p.value);
+        }
+    }
+    None
+}
+
+fn options_from_prop_type_expression(expr: &Expression<'_>) -> Option<Vec<String>> {
+    let ty = match expr {
+        Expression::TSAsExpression(as_expr) => &as_expr.type_annotation,
+        Expression::TSTypeAssertion(assertion) => &assertion.type_annotation,
+        _ => return None,
+    };
+    options_from_prop_type_annotation(ty)
+}
+
+fn options_from_prop_type_annotation(ty: &TSType<'_>) -> Option<Vec<String>> {
+    let ty = ty.without_parenthesized();
+    match ty {
+        TSType::TSTypeReference(r) => {
+            let name = match &r.type_name {
+                TSTypeName::IdentifierReference(id) => id.name.as_str(),
+                _ => return None,
+            };
+            if name != "PropType" {
+                return None;
+            }
+            let params = r.type_parameters.as_ref()?;
+            let first = params.params.first()?;
+            ts_shape_map::options_from_prop_type_arg(first)
+        }
+        _ => ts_shape_map::options_from_prop_type_arg(ty),
+    }
+}
+
 fn dedupe_preserve_order(keys: &mut Vec<String>) {
     let mut seen = std::collections::HashSet::new();
     keys.retain(|k| seen.insert(k.clone()));
@@ -366,7 +447,7 @@ fn skip_js_comment_or_string(bytes: &[u8], i: &mut usize) -> bool {
             }
             _ => false,
         },
-        b'\'' | b'"' | b'`' => {
+        b'\'' | b'"' => {
             let quote = bytes[*i];
             *i += 1;
             while *i < bytes.len() {
@@ -377,6 +458,38 @@ fn skip_js_comment_or_string(bytes: &[u8], i: &mut usize) -> bool {
                 if bytes[*i] == quote {
                     *i += 1;
                     break;
+                }
+                *i += 1;
+            }
+            true
+        }
+        b'`' => {
+            // Template literals may contain `${ … }` with nested braces/strings.
+            *i += 1;
+            while *i < bytes.len() {
+                if bytes[*i] == b'\\' {
+                    *i = (*i + 2).min(bytes.len());
+                    continue;
+                }
+                if bytes[*i] == b'`' {
+                    *i += 1;
+                    break;
+                }
+                if bytes[*i] == b'$' && *i + 1 < bytes.len() && bytes[*i + 1] == b'{' {
+                    *i += 2;
+                    let mut depth = 1i32;
+                    while *i < bytes.len() && depth > 0 {
+                        if skip_js_comment_or_string(bytes, i) {
+                            continue;
+                        }
+                        match bytes[*i] {
+                            b'{' => depth += 1,
+                            b'}' => depth -= 1,
+                            _ => {}
+                        }
+                        *i += 1;
+                    }
+                    continue;
                 }
                 *i += 1;
             }
@@ -468,6 +581,16 @@ fn extract_vue_props_via_regex(script_src: &str) -> VueDeclaredProps {
 }
 
 /// Template-only accessibility checks (HTML in `<template>`).
+/// True when attrs already include aria-label / aria-labelledby (static or bound).
+fn vue_attrs_have_accessible_name(lower_attrs: &str) -> bool {
+    lower_attrs.contains("aria-label=")
+        || lower_attrs.contains("aria-labelledby=")
+        || lower_attrs.contains(":aria-label=")
+        || lower_attrs.contains("v-bind:aria-label=")
+        || lower_attrs.contains(":aria-labelledby=")
+        || lower_attrs.contains("v-bind:aria-labelledby=")
+}
+
 fn vue_template_a11y_findings(
     path: &Path,
     full_source: &str,
@@ -534,15 +657,8 @@ fn vue_template_a11y_findings(
         {
             continue;
         }
-        // Likely paired with <label for="…"> — skip to cut template-heuristic false positives.
-        if lower.contains("id=") || lower.contains(":id=") || lower.contains("v-bind:id") {
-            continue;
-        }
-        if lower.contains("aria-label=")
-            || lower.contains("aria-labelledby=")
-            || lower.contains(":aria-label")
-            || lower.contains("v-bind:aria-label")
-        {
+        // Bare `id` is not treated as an accessible name (label pairing not verified).
+        if vue_attrs_have_accessible_name(&lower) {
             continue;
         }
         let pos = template_inner_start + cap.get(0).unwrap().start();
@@ -550,7 +666,7 @@ fn vue_template_a11y_findings(
             "a11y-input-label",
             path.to_path_buf(),
             Some(offset_line(full_source, pos)),
-            Severity::Info,
+            Severity::Warning,
             a11y::INPUT_LABEL,
         ));
     }
@@ -558,14 +674,7 @@ fn vue_template_a11y_findings(
     for cap in select_re().captures_iter(template) {
         let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         let lower = attrs.to_ascii_lowercase();
-        if lower.contains("id=") || lower.contains(":id=") || lower.contains("v-bind:id") {
-            continue;
-        }
-        if lower.contains("aria-label=")
-            || lower.contains("aria-labelledby=")
-            || lower.contains(":aria-label")
-            || lower.contains("v-bind:aria-label")
-        {
+        if vue_attrs_have_accessible_name(&lower) {
             continue;
         }
         let pos = template_inner_start + cap.get(0).unwrap().start();
@@ -573,7 +682,7 @@ fn vue_template_a11y_findings(
             "a11y-select-name",
             path.to_path_buf(),
             Some(offset_line(full_source, pos)),
-            Severity::Info,
+            Severity::Warning,
             a11y::SELECT_NAME,
         ));
     }
@@ -581,14 +690,7 @@ fn vue_template_a11y_findings(
     for cap in textarea_re().captures_iter(template) {
         let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         let lower = attrs.to_ascii_lowercase();
-        if lower.contains("id=") || lower.contains(":id=") || lower.contains("v-bind:id") {
-            continue;
-        }
-        if lower.contains("aria-label=")
-            || lower.contains("aria-labelledby=")
-            || lower.contains(":aria-label")
-            || lower.contains("v-bind:aria-label")
-        {
+        if vue_attrs_have_accessible_name(&lower) {
             continue;
         }
         let pos = template_inner_start + cap.get(0).unwrap().start();
@@ -596,7 +698,7 @@ fn vue_template_a11y_findings(
             "a11y-textarea-name",
             path.to_path_buf(),
             Some(offset_line(full_source, pos)),
-            Severity::Info,
+            Severity::Warning,
             a11y::TEXTAREA_NAME,
         ));
     }
@@ -848,6 +950,32 @@ const x = 1
     }
 
     #[test]
+    fn vue_a11y_select_and_textarea_warn_without_name() {
+        let src = r#"<template>
+  <select data-testid="country"></select>
+  <textarea id="notes"></textarea>
+</template>
+<script setup lang="ts">
+defineProps({ label: String })
+</script>"#;
+        let scan = analyze_vue_file(&PathBuf::from("Form.vue"), src, &ImportFilter::default());
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-select-name" && f.severity == Severity::Warning),
+            "{:?}",
+            scan.findings
+        );
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-textarea-name" && f.severity == Severity::Warning),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
     fn vue_define_props_array_syntax() {
         let src = r#"<template><div /></template>
 <script setup lang="ts">
@@ -921,6 +1049,18 @@ const props = defineProps({
         assert_eq!(def.declared_prop_defaults.get("type").map(String::as_str), Some("button"));
         assert_eq!(def.declared_prop_defaults.get("color").map(String::as_str), Some("primary"));
         assert_eq!(def.declared_prop_defaults.get("size").map(String::as_str), Some("md"));
+        assert_eq!(
+            def.declared_prop_options.get("type").map(|v| v.as_slice()),
+            Some(&["button".to_string(), "reset".to_string(), "submit".to_string()][..])
+        );
+        assert_eq!(
+            def.declared_prop_options.get("color").map(|v| v.as_slice()),
+            Some(&["primary".to_string(), "secondary".to_string()][..])
+        );
+        assert_eq!(
+            def.declared_prop_options.get("size").map(|v| v.as_slice()),
+            Some(&["sm".to_string(), "md".to_string(), "lg".to_string()][..])
+        );
     }
 
     #[test]
@@ -997,6 +1137,17 @@ defineProps<{
         let body = balanced_object_body(src, 0).expect("balanced body");
         let keys = top_level_ident_keys(body);
         assert_eq!(keys, vec!["meta", "note", "label"], "{body:?} -> {keys:?}");
+    }
+
+    #[test]
+    fn balanced_object_body_ignores_braces_in_template_interpolations() {
+        let src = r#"{
+  payload: { default: `${'{'}nested${'}'}` },
+  title: String,
+}"#;
+        let body = balanced_object_body(src, 0).expect("balanced body");
+        let keys = top_level_ident_keys(body);
+        assert_eq!(keys, vec!["payload", "title"], "{body:?} -> {keys:?}");
     }
 
     #[test]

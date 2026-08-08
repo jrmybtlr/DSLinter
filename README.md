@@ -79,7 +79,7 @@ Legacy `exclude_globs` remains supported for backwards compatibility.
 
 - **Definitions:** functions, classes, `const` arrows, `forwardRef` / `memo`, exports
 - **Usage:** PascalCase JSX and Vue template usage, with prop lists (variant hints)
-- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` / `<input>` / `<select>` / `<textarea>` accessible names (JSX AST + Vue `<template>` heuristics; inputs/selects/textareas with `id` are skipped to reduce label false positives); governance scoring weights all `a11y-*` rules
+- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` / `<input>` / `<select>` / `<textarea>` accessible names (JSX AST + Vue `<template>` heuristics; bare `id` alone is **not** treated as an accessible name); governance scoring weights all `a11y-*` rules
 - **Code quality (`code-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
 - **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`), CSS custom-property inventory with used/unused tracking (`css_tokens` in `--json`); `token-unused-css-var` on by default (`check_unused_css_tokens`)
 - **Scores:** heuristic governance scores including optional `token_adoption` when CSS tokens or `known_tokens` are measurable; `--json` for dashboards and CI

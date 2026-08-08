@@ -1,18 +1,23 @@
-# DSLinter — active checklist
+# Fix PR #42 review findings
 
-See [ROADMAP.md](../ROADMAP.md) for phased product goals.
+Base: `improvements` → branch `cursor/fix-review-findings-ad81`
 
-## Address Copilot review on PR #42
+## Checklist
 
-- [x] Fix ComponentPlaygroundPane useEffect deps (`entry.controls` reset)
-- [x] Tighten `score_deltas` to `Partial<Record<keyof scores, number>>`
-- [x] Harden `balanced_object_body` (+ `top_level_ident_keys`) to skip strings/comments
-- [x] Relativize absolute paths in committed demo/dashboard reports
-- [x] Verify with tests
+- [ ] Breakpoint preset shows current value; avoid uncontrolled→controlled Select flip
+- [ ] Compound `valuesToProps` coerces `stringArray` (reuse propCoerce helpers)
+- [ ] Align compound control inference with “no faking” / non-editable controls
+- [ ] Remove/fix a11y bare-`id` skip; fix Vue `contains("id=")` false negatives
+- [ ] Align ECMA vs Vue select/textarea severities
+- [ ] Extract `declared_prop_options` from Vue runtime `PropType<'a'|'b'>`
+- [ ] Vue AST: don’t trust recovered parses with errors; harden template-literal skip
+- [ ] Tighten `score_deltas` JSDoc in baseline-drift.mjs
+- [ ] Fix ROADMAP links (public stub or retarget)
+- [ ] Document UseClassy + drift flags in dashboard README
+- [ ] Changelog + version bump to 0.7.1
+- [ ] Regenerate demo/inertia report; clean inertia format tooling
+- [ ] Tests for the above; verify
 
-### Review
+## Review
 
-- Restored Copilot’s playground/`score_deltas` fixes that local WIP had undone.
-- `report_console_error` serde/`Default` mismatch was already fixed (`default_true`).
-- Vue regex fallback now skips comments/strings when brace-balancing and key-scanning; covered by unit tests.
-- Committed `dslinter-report.json` files use `root: "."` and scan-root-relative paths (incl. `../…` for out-of-root CSS), so no machine-specific `/Users/…` paths remain.
+(pending)

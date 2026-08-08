@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.7.1
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.7.0...v0.7.1)
+
+### 🚀 Enhancements
+
+- Vue runtime `PropType<'a' | 'b'>` fills `declared_prop_options` for playground selects
+- Baseline drift CLI flags documented in package README; UseClassy consumer embed docs
+
+### 🩹 Fixes
+
+- Playground breakpoint presets show the active Screen/Container label
+- Compound playground coerces `stringArray` and stops inventing string editors for unknown props
+- A11y: bare `id` no longer suppresses input/select/textarea name findings; Vue severity matches JSX (`Warning`)
+- Vue AST prop extraction falls back when the parser recovers with errors; template-literal `${…}` brace balancing hardened
+- Public `ROADMAP.md`; regenerate inertia demo report for 0.7 schema
+
+### ⚠️ Breaking / behavior
+
+- `check_unused_css_tokens` / `report_console_error` default **true** (when unset)
+- Report schema: `implementation_class_*` removed; optional `token_adoption` score added
+- Playground control discriminant: `stringArray` (was `string` for array-like props)
+
 ## v0.7.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.6.0...v0.7.0)
