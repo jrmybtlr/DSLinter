@@ -38,3 +38,4 @@ package-lock.json
 demo/react/public/dslinter-report.json
 .DS_Store
 ROADMAP.md
+demo/inertia/public/dslinter-report.json
