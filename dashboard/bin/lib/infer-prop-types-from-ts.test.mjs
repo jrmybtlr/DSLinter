@@ -164,9 +164,7 @@ export function Toggle({ disabled }: { disabled?: boolean }) {
       const sf = bundle.program.getSourceFile(join(root, "Toggle.tsx"));
       const paramType = findComponentParamType(bundle.checker, sf, "Toggle");
       const sym = bundle.checker.getPropertyOfType(paramType, "disabled");
-      expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe(
-        "boolean",
-      );
+      expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe("boolean");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -192,9 +190,9 @@ export function AlertError({
       const sf = bundle.program.getSourceFile(join(root, "AlertError.tsx"));
       const paramType = findComponentParamType(bundle.checker, sf, "AlertError");
       const errorsSym = bundle.checker.getPropertyOfType(paramType, "errors");
-      expect(
-        classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(errorsSym)),
-      ).toBe("stringArray");
+      expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(errorsSym))).toBe(
+        "stringArray",
+      );
 
       const meta = inferPlaygroundPropMetadata(
         bundle.checker,
@@ -206,6 +204,56 @@ export function AlertError({
       );
       expect(meta.declared_prop_kinds.errors).toBe("stringArray");
       expect(meta.declared_prop_kinds.title).toBe("string");
+      expect(meta.declared_prop_optional.title).toBe(true);
+      expect(meta.declared_prop_optional.errors).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("classifies number[], function, LucideIcon, and object alias props", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-ts-"));
+    try {
+      writeProject(root, {
+        "PasskeyItem.tsx": `
+type LucideIcon = (props: { className?: string }) => null;
+type Passkey = {
+  id: number;
+  name: string;
+};
+
+export function PasskeyItem({
+  ids,
+  onDelete,
+  iconNode,
+  passkey,
+}: {
+  ids: number[];
+  onDelete: (id: number, onError: () => void) => void;
+  iconNode?: LucideIcon | null;
+  passkey: Passkey;
+}) {
+  return null;
+}
+`,
+      });
+      const bundle = createCheckerProgram(root);
+      const meta = inferPlaygroundPropMetadata(
+        bundle.checker,
+        bundle.program,
+        root,
+        "PasskeyItem.tsx",
+        "PasskeyItem",
+        ["ids", "onDelete", "iconNode", "passkey"],
+      );
+      expect(meta.declared_prop_kinds.ids).toBe("numberArray");
+      expect(meta.declared_prop_kinds.onDelete).toBe("function");
+      expect(meta.declared_prop_kinds.iconNode).toBe("icon");
+      expect(meta.declared_prop_kinds.passkey).toBe("object");
+      expect(meta.declared_prop_type_labels.iconNode).toBe("LucideIcon");
+      expect(meta.declared_prop_type_labels.passkey).toBe("Passkey");
+      expect(meta.declared_prop_type_labels.onDelete).toContain("=>");
+      expect(meta.declared_prop_optional.iconNode).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -234,9 +282,7 @@ export function Section({
       const paramType = findComponentParamType(bundle.checker, sf, "Section");
       for (const key of ["children", "actions"]) {
         const sym = bundle.checker.getPropertyOfType(paramType, key);
-        expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe(
-          "node",
-        );
+        expect(classifyPropType(bundle.checker, bundle.checker.getTypeOfSymbol(sym))).toBe("node");
       }
     } finally {
       rmSync(root, { recursive: true, force: true });

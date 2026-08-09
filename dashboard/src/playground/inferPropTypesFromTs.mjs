@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import ts from "typescript";
 
-/** @typedef {"boolean" | "string" | "number" | "node" | "stringArray"} PropKind */
+/** @typedef {"boolean" | "string" | "number" | "node" | "stringArray" | "numberArray" | "function" | "icon" | "object"} PropKind */
 
 const MAX_UNION_OPTIONS = 32;
 
@@ -36,8 +36,7 @@ function normalizePath(p) {
 function hasExportModifier(node) {
   return (
     ts.canHaveModifiers(node) &&
-    (ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ??
-      false)
+    (ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false)
   );
 }
 
@@ -137,9 +136,108 @@ function isStringElementArrayType(checker, type) {
   const elem = checker.getElementTypeOfArrayType(nn);
   if (!elem) return false;
   const elemNn = checker.getNonNullableType(elem);
-  return (
-    (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0
+  return (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0;
+}
+
+/** @param {ts.TypeChecker} checker @param {ts.Type} type */
+function isNumberElementArrayType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const elem = checker.getElementTypeOfArrayType(nn);
+  if (!elem) return false;
+  const elemNn = checker.getNonNullableType(elem);
+  return (elemNn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) !== 0;
+}
+
+/** @param {ts.TypeChecker} checker @param {ts.Type} type */
+function isFunctionPropType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  if (nn.getCallSignatures().length > 0) return true;
+  const text = checker.typeToString(nn);
+  return /^\(.*\)\s*=>/.test(text) || text.startsWith("Function");
+}
+
+const ICON_TYPE_NAMES = new Set([
+  "LucideIcon",
+  "ElementType",
+  "ComponentType",
+  "FC",
+  "FunctionComponent",
+  "Component",
+  "ForwardRefExoticComponent",
+  "JSXElementConstructor",
+]);
+
+/** @param {ts.TypeChecker} checker @param {ts.Type} type */
+function isIconPropType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (ICON_TYPE_NAMES.has(alias)) return true;
+  const symName = String(nn.getSymbol()?.escapedName ?? nn.getSymbol()?.name ?? "");
+  if (ICON_TYPE_NAMES.has(symName)) return true;
+  const text = checker.typeToString(nn);
+  return /LucideIcon|ElementType|ComponentType|ForwardRefExoticComponent|FunctionComponent|\bFC</.test(
+    text,
   );
+}
+
+/** @param {ts.TypeChecker} checker @param {ts.Type} type */
+function iconTypeLabel(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (ICON_TYPE_NAMES.has(alias)) return alias;
+  const text = checker.typeToString(nn);
+  for (const name of ICON_TYPE_NAMES) {
+    if (text.includes(name)) return name;
+  }
+  return text || "ComponentType";
+}
+
+/**
+ * Prefer alias/symbol name (`Passkey`) over expanded object text.
+ * @param {ts.TypeChecker} checker
+ * @param {ts.Type} type
+ */
+function objectTypeLabel(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (alias && alias !== "__type") return alias;
+  const symName = String(nn.getSymbol()?.escapedName ?? nn.getSymbol()?.name ?? "");
+  if (symName && symName !== "__type") return symName;
+  return checker.typeToString(nn) || "object";
+}
+
+/** @param {ts.TypeChecker} checker @param {ts.Type} type */
+function functionTypeLabel(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  return checker.typeToString(nn) || "function";
+}
+
+/**
+ * Non-primitive object / interface / type-literal (not arrays, already handled above).
+ * @param {ts.TypeChecker} checker
+ * @param {ts.Type} type
+ */
+function isObjectPropType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  if (checker.getElementTypeOfArrayType(nn)) return false;
+  if (nn.getCallSignatures().length > 0) return false;
+  if (nn.flags & ts.TypeFlags.Object) return true;
+  if (nn.flags & ts.TypeFlags.NonPrimitive) return true;
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (alias && alias !== "__type") return true;
+  return false;
+}
+
+/**
+ * @param {ts.TypeChecker} checker
+ * @param {ts.Type} type
+ * @param {PropKind} kind
+ */
+function typeLabelForKind(checker, type, kind) {
+  if (kind === "icon") return iconTypeLabel(checker, type);
+  if (kind === "function") return functionTypeLabel(checker, type);
+  if (kind === "object") return objectTypeLabel(checker, type);
+  return undefined;
 }
 
 /**
@@ -150,11 +248,13 @@ function isStringElementArrayType(checker, type) {
 export function classifyPropType(checker, type) {
   if (isReactNodeType(checker, type)) return "node";
   const nn = checker.getNonNullableType(type);
+  // Icon/component types are often callable — check before function.
+  if (isIconPropType(checker, nn)) return "icon";
+  if (isFunctionPropType(checker, nn)) return "function";
   if (isStringElementArrayType(checker, nn)) return "stringArray";
+  if (isNumberElementArrayType(checker, nn)) return "numberArray";
   if (nn.isUnion()) {
-    const parts = nn.types.map((u) =>
-      classifyPropType(checker, checker.getNonNullableType(u)),
-    );
+    const parts = nn.types.map((u) => classifyPropType(checker, checker.getNonNullableType(u)));
     const ok = parts.filter((p) => p !== null);
     if (!ok.length) return null;
     const set = new Set(ok);
@@ -165,6 +265,7 @@ export function classifyPropType(checker, type) {
   if (nn.flags & (ts.TypeFlags.Enum | ts.TypeFlags.EnumLiteral)) return "string";
   if (nn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) return "number";
   if (nn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) return "string";
+  if (isObjectPropType(checker, nn)) return "object";
   return null;
 }
 
@@ -173,11 +274,7 @@ function followTypeAlias(checker, type, seen = new Set()) {
   if (type.aliasSymbol) {
     if (seen.has(type.id)) return type;
     seen.add(type.id);
-    return followTypeAlias(
-      checker,
-      checker.getDeclaredTypeOfSymbol(type.aliasSymbol),
-      seen,
-    );
+    return followTypeAlias(checker, checker.getDeclaredTypeOfSymbol(type.aliasSymbol), seen);
   }
   return type;
 }
@@ -320,12 +417,16 @@ export function enrichPlaygroundSpecFromTs(spec, checker, program, projectRoot) 
   const declaredPropOptions = { ...spec.declared_prop_options };
   const declaredPropKinds = { ...spec.declared_prop_kinds };
   const declaredPropDefaults = { ...spec.declared_prop_defaults };
+  const declaredPropOptional = { ...spec.declared_prop_optional };
+  const declaredPropTypeLabels = { ...spec.declared_prop_type_labels };
 
   for (const prop of spec.declared_props) {
     if (prop === "key" || prop === "ref") continue;
     const sym = checker.getPropertyOfType(paramType, prop);
     if (!sym) continue;
     const propType = checker.getTypeOfSymbol(sym);
+
+    declaredPropOptional[prop] = !!(sym.flags & ts.SymbolFlags.Optional);
 
     if (!declaredPropOptions[prop]) {
       const literals = extractFiniteStringUnion(checker, propType);
@@ -341,6 +442,15 @@ export function enrichPlaygroundSpecFromTs(spec, checker, program, projectRoot) 
       const kind = classifyPropType(checker, propType);
       if (kind !== null) declaredPropKinds[prop] = kind;
     }
+
+    const kind = declaredPropKinds[prop];
+    if (
+      (kind === "icon" || kind === "function" || kind === "object") &&
+      !declaredPropTypeLabels[prop]
+    ) {
+      const label = typeLabelForKind(checker, propType, kind);
+      if (label) declaredPropTypeLabels[prop] = label;
+    }
   }
 
   /** @type {import("../types/report.js").PlaygroundSpec} */
@@ -353,6 +463,12 @@ export function enrichPlaygroundSpecFromTs(spec, checker, program, projectRoot) 
   }
   if (Object.keys(declaredPropDefaults).length) {
     next.declared_prop_defaults = declaredPropDefaults;
+  }
+  if (Object.keys(declaredPropOptional).length) {
+    next.declared_prop_optional = declaredPropOptional;
+  }
+  if (Object.keys(declaredPropTypeLabels).length) {
+    next.declared_prop_type_labels = declaredPropTypeLabels;
   }
   return next;
 }

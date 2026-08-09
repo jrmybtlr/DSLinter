@@ -19,7 +19,8 @@ describe("inferKitJsx", () => {
 
   it("reads root prop bindings from createElement", () => {
     const fromVite = Object.assign(() => null, {
-      toString: () => "({ variant }) => (0,createElement)(Alert, { variant }, (0,createElement)(AlertTitle, null, 'Hi'))",
+      toString: () =>
+        "({ variant }) => (0,createElement)(Alert, { variant }, (0,createElement)(AlertTitle, null, 'Hi'))",
     });
     expect(inferKitRootPropBindings(fromVite)).toEqual([
       { component: "Alert", prop: "variant", param: "variant" },

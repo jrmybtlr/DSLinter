@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  formatDevBanner,
-  LOGO,
-  shortenPath,
-  visibleLength,
-} from "./dev-banner.mjs";
+import { formatDevBanner, LOGO, shortenPath, visibleLength } from "./dev-banner.mjs";
 
 describe("shortenPath", () => {
   it("replaces home with tilde", () => {

@@ -11,8 +11,7 @@ export function getLanIpv4Addresses() {
     if (!entries) continue;
     for (const entry of entries) {
       const family = entry.family;
-      const isIpv4 =
-        family === "IPv4" || family === 4 || String(family) === "IPv4";
+      const isIpv4 = family === "IPv4" || family === 4 || String(family) === "IPv4";
       if (isIpv4 && !entry.internal) {
         addrs.push(entry.address);
       }

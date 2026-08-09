@@ -30,20 +30,16 @@ export async function runMcpMode(opts = {}) {
   const { scanPath, projectRoot } = resolveScanAndProjectRoots(scanPathArg, cwd);
   const reportPath = defaultReportPath(scanPath, null);
 
-  const child = spawnSync(
-    process.execPath,
-    [tsxCli, startTs, ...argv],
-    {
-      stdio: "inherit",
-      cwd,
-      env: {
-        ...process.env,
-        DSLINTER_SCAN_ROOT: scanPath,
-        DSLINTER_PROJECT_ROOT: projectRoot,
-        DSLINTER_REPORT_PATH: reportPath,
-      },
+  const child = spawnSync(process.execPath, [tsxCli, startTs, ...argv], {
+    stdio: "inherit",
+    cwd,
+    env: {
+      ...process.env,
+      DSLINTER_SCAN_ROOT: scanPath,
+      DSLINTER_PROJECT_ROOT: projectRoot,
+      DSLINTER_REPORT_PATH: reportPath,
     },
-  );
+  });
 
   process.exit(child.status === null ? 1 : child.status);
 }

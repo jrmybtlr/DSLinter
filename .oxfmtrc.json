@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/dashboard-dist/**",
+    "**/.classy/**",
+    "**/target/**",
+    "**/public/*report*.json",
+    "**/dslinter-report.json",
+    "demo/**"
+  ],
+  "sortTailwindcss": {
+    "stylesheet": "dashboard/embed/index.css",
+    "functions": ["clsx", "cn", "cva", "classy"]
+  }
+}

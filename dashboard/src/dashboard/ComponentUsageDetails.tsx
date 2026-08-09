@@ -15,17 +15,11 @@ import { SourceLocationLink } from "./SourceLocationLink";
 function formatCallSiteProps(loc: UsageLocation): string {
   if (!loc.props.length) return "—";
   return loc.props
-    .map((p) =>
-      loc.prop_values?.[p] != null
-        ? `${p}=${JSON.stringify(loc.prop_values[p])}`
-        : p,
-    )
+    .map((p) => (loc.prop_values?.[p] != null ? `${p}=${JSON.stringify(loc.prop_values[p])}` : p))
     .join(", ");
 }
 
-function sortedLocations(
-  locations: UsageLocation[] | undefined,
-): UsageLocation[] {
+function sortedLocations(locations: UsageLocation[] | undefined): UsageLocation[] {
   const list = [...(locations ?? [])];
   list.sort((a, b) => a.path.localeCompare(b.path) || a.line - b.line);
   return list;
@@ -46,14 +40,14 @@ export function ComponentUsageDetails({
   if (!report) {
     return (
       <p className="text-sm text-muted-foreground">
-        Load <span className="font-mono">dslinter-report.json</span> to see
-        where this component is used in the workspace.
+        Load <span className="font-mono">dslinter-report.json</span> to see where this component is
+        used in the workspace.
       </p>
     );
   }
 
   if (!usage) {
-    return <EmptyCard>0 imports of {componentId} found in codebase</EmptyCard>;
+    return <EmptyCard>No imports of {componentId} found in the current report.</EmptyCard>;
   }
 
   const rows = sortedLocations(usage.usage_locations);
@@ -61,14 +55,13 @@ export function ComponentUsageDetails({
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Usage totals exist but individual call sites were not recorded in this
-        report.
+        Usage totals exist but individual call sites were not recorded in this report.
       </p>
     );
   }
 
   return (
-    <Table className="[&>table]:table-fixed [&>table]:w-full">
+    <Table className="[&>table]:w-full [&>table]:table-fixed">
       <TableHeader>
         <TableRow>
           <TableHead className="w-[40%] min-w-0">Location</TableHead>
@@ -81,11 +74,7 @@ export function ComponentUsageDetails({
           return (
             <TableRow key={`${loc.path}-${loc.line}-${i}`}>
               <TableCell className="min-w-0">
-                <SourceLocationLink
-                  root={report.root}
-                  path={loc.path}
-                  line={loc.line}
-                />
+                <SourceLocationLink root={report.root} path={loc.path} line={loc.line} />
               </TableCell>
               <TableCell className="min-w-0">
                 <span

@@ -1,7 +1,4 @@
-import {
-  DashboardLayout,
-  useWorkspaceReport,
-} from "../src/index";
+import { DashboardLayout, useWorkspaceReport } from "../src/index";
 import { tokenCatalog } from "./tokenCatalog";
 
 export default function App() {

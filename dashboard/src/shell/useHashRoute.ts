@@ -26,11 +26,7 @@ function getServerPathSnapshot() {
 }
 
 export function useHashRoute(): [HashRoute, (next: HashRoute) => void] {
-  const pathname = useSyncExternalStore(
-    subscribe,
-    getPathSnapshot,
-    getServerPathSnapshot,
-  );
+  const pathname = useSyncExternalStore(subscribe, getPathSnapshot, getServerPathSnapshot);
   const route = parseHashRoute(pathname);
 
   useEffect(() => {

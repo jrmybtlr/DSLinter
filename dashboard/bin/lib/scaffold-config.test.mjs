@@ -37,15 +37,13 @@ describe("ensureDslintConfig", () => {
     const result = ensureDslintConfig({ targetDir: root, layout: "laravel" });
     const parsed = JSON.parse(readFileSync(result.path, "utf8"));
     expect(parsed.include_dirs).toEqual(["resources/js/Components"]);
-    expect(parsed.playground_groups.components).toEqual([
-      "resources/js/Components",
-    ]);
+    expect(parsed.playground_groups.components).toEqual(["resources/js/Components"]);
   });
 
   it("does not overwrite an existing config", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-scaffold-existing-"));
     const existing = join(root, ".dslinter.json");
-    writeFileSync(existing, "{\n  \"ignore_globs\": [\"custom/**\"]\n}\n");
+    writeFileSync(existing, '{\n  "ignore_globs": ["custom/**"]\n}\n');
 
     const result = ensureDslintConfig({ targetDir: root, layout: "default" });
     expect(result.created).toBe(false);

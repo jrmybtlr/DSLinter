@@ -8,7 +8,7 @@ Prebuilt native binaries ship with the **`dslinter`** npm package — you do not
 
 ## Alpha release
 
-This is an alpha release of the project. While it is functional and safe to use, it has known gaps and coverage tasks.
+This is an alpha release of the project. While it is functional and safe to use, it has known gaps — see [ROADMAP.md](ROADMAP.md) for the path to beta.
 
 ## Quick start
 
@@ -53,7 +53,7 @@ Put `.dslinter.json` at the repository root:
   },
   "check_unused_props": false,
   "check_dark_mode_contrast": false,
-  "check_unused_css_tokens": false,
+  "check_unused_css_tokens": true,
   "local_import_prefixes": ["@/", "~/"],
   "external_import_patterns": ["@radix-ui/*", "lucide-react"]
 }
@@ -63,6 +63,7 @@ Put `.dslinter.json` at the repository root:
 `ignore_globs` uses the same ignore semantics as `.gitignore`/`.dslinterignore`.  
 `css_entrypoints` scopes token analysis to selected CSS entry files (+ their `@import` graph).
 `check_unused_props` enables `unused-prop` findings for declared props that have no call-site usage.
+`check_unused_css_tokens` defaults to **true** (emits `token-unused-css-var`); set `false` to disable.
 `local_import_prefixes` marks import path prefixes as local (in-repo) modules.
 `external_import_patterns` excludes matching third-party modules from the component catalog.
 
@@ -78,13 +79,34 @@ Legacy `exclude_globs` remains supported for backwards compatibility.
 
 - **Definitions:** functions, classes, `const` arrows, `forwardRef` / `memo`, exports
 - **Usage:** PascalCase JSX and Vue template usage, with prop lists (variant hints)
-- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` and `<input>` accessible names (JSX AST + Vue `<template>` heuristics); governance scoring weights all `a11y-*` rules
+- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` / `<input>` / `<select>` / `<textarea>` accessible names (JSX AST + Vue `<template>` heuristics; bare `id` alone is **not** treated as an accessible name); governance scoring weights all `a11y-*` rules
 - **Code quality (`code-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
-- **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`), CSS custom-property inventory with used/unused tracking (`css_tokens` in `--json`)
-- **Scores:** heuristic governance scores (token pillar uses CSS token adoption when `css_tokens` is present, else `known_tokens` substring match); `--json` for dashboards and CI
-- **CSS tokens (`css_tokens` in JSON):** scans source `.css` (plus `@import` targets like `dslinter/theme.css`), classifies `--color-*` / `--spacing-*` / etc., and reports references from `var(--*)` and Tailwind utilities; optional `token-unused-css-var` when `check_unused_css_tokens` is true
+- **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`), CSS custom-property inventory with used/unused tracking (`css_tokens` in `--json`); `token-unused-css-var` on by default (`check_unused_css_tokens`)
+- **Scores:** heuristic governance scores including optional `token_adoption` when CSS tokens or `known_tokens` are measurable; `--json` for dashboards and CI
+- **CSS tokens (`css_tokens` in JSON):** scans source `.css` (plus `@import` targets like `dslinter/theme.css`), classifies `--color-*` / `--spacing-*` / etc., and reports references from `var(--*)` and Tailwind utilities
 
-Roadmap follows phased governance (tokens, deeper a11y, drift, AI compliance) described elsewhere in the project docs.
+Roadmap follows phased governance (tokens, deeper a11y, drift, AI compliance) — see [ROADMAP.md](ROADMAP.md).
+
+### Baseline drift (CLI / CI)
+
+Same baseline file as MCP (`.dslinter/mcp-baseline.json`):
+
+```bash
+npx dslinter --report . --update-baseline          # save scores + finding count
+npx dslinter --report . --diff-baseline            # print DriftSummary JSON
+npx dslinter --report . --fail-on-drift            # exit 1 on regressions
+npx dslinter --report . --fail-on-drift --max-finding-delta 5 --max-score-drop 2
+```
+
+`--fail-on-drift` fails when finding count rises or any score pillar drops beyond `--max-score-drop` (default 0).
+
+### Version alignment
+
+| Artifact | Version source |
+|----------|----------------|
+| npm `dslinter` | [`dashboard/package.json`](dashboard/package.json) |
+| Rust crate / CLI `--version` | [`Cargo.toml`](Cargo.toml) (kept in sync with npm) |
+| `@dslinter/binding-*` | Published by CI to match the npm release |
 
 ## MCP for AI agents
 

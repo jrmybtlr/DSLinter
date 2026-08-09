@@ -204,8 +204,6 @@ mod tests {
             declared_prop_options: BTreeMap::new(),
             declared_prop_defaults: BTreeMap::new(),
             cva_binding_name: None,
-            implementation_class_frequencies: BTreeMap::new(),
-            implementation_class_locations: Vec::new(),
         }];
         let picked = pick_definition(&defs, "PrimaryButton").unwrap();
         assert_eq!(picked.name, "PrimaryButton");
@@ -221,8 +219,6 @@ mod tests {
             declared_prop_options: BTreeMap::new(),
             declared_prop_defaults: BTreeMap::new(),
             cva_binding_name: None,
-            implementation_class_frequencies: BTreeMap::new(),
-            implementation_class_locations: Vec::new(),
         }];
         let picked = pick_definition(&defs, "DuplicateCardA").unwrap();
         assert_eq!(picked.name, "Card");
@@ -239,8 +235,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             },
             ComponentDefinition {
                 name: "DropdownMenuContent".into(),
@@ -250,8 +244,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             },
         ];
         let picked = pick_definition(&defs, "dropdown-menu").unwrap();
@@ -269,8 +261,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             },
             ComponentDefinition {
                 name: "InputOTPGroup".into(),
@@ -280,8 +270,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             },
         ];
         let picked = pick_definition(&defs, "input-otp").unwrap();
@@ -299,8 +287,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             },
             ComponentDefinition {
                 name: "B".into(),
@@ -310,8 +296,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             },
         ];
         assert!(pick_definition(&defs, "OtherStem").is_none());
@@ -350,8 +334,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             }],
             usages: vec![],
             parse_errors: vec![],
@@ -378,8 +360,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             }],
             usages: vec![],
             parse_errors: vec![],
@@ -413,8 +393,6 @@ mod tests {
             declared_prop_options: BTreeMap::new(),
             declared_prop_defaults: BTreeMap::new(),
             cva_binding_name: None,
-            implementation_class_frequencies: BTreeMap::new(),
-            implementation_class_locations: Vec::new(),
         };
 
         let small_tree = element("Breadcrumb", vec![element("BreadcrumbList", vec![])]);
@@ -515,8 +493,6 @@ mod tests {
                 declared_prop_options: BTreeMap::new(),
                 declared_prop_defaults: BTreeMap::new(),
                 cva_binding_name: None,
-                implementation_class_frequencies: BTreeMap::new(),
-                implementation_class_locations: Vec::new(),
             }],
             usages: vec![],
             parse_errors: vec![],

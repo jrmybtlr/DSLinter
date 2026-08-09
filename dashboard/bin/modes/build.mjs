@@ -1,10 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import {
-  defaultReportPath,
-  findViteRoot,
-  resolveViteBin,
-} from "../lib/project-root.mjs";
+import { defaultReportPath, findViteRoot, resolveViteBin } from "../lib/project-root.mjs";
 import { enrichPlaygroundsFromTs } from "../lib/enrich-playgrounds-from-ts.mjs";
 import { ensureMinimalSetup } from "../lib/setup-readiness.mjs";
 import { runScannerSync } from "../lib/run-scanner.mjs";
@@ -48,9 +44,7 @@ export async function runBuildMode({
 
   const viteRoot = findViteRoot(process.cwd());
   if (!viteRoot) {
-    process.stderr.write(
-      "dslinter: --build requires a Vite project (vite.config.* not found).\n",
-    );
+    process.stderr.write("dslinter: --build requires a Vite project (vite.config.* not found).\n");
     process.exit(1);
   }
 

@@ -17,9 +17,7 @@ describe("hideComponentInDslintConfig", () => {
     dirs.push(root);
     const result = hideComponentInDslintConfig(root, "Foo");
     expect(result.hidden_components).toEqual(["Foo"]);
-    const written = JSON.parse(
-      readFileSync(join(root, ".dslinter.json"), "utf8"),
-    );
+    const written = JSON.parse(readFileSync(join(root, ".dslinter.json"), "utf8"));
     expect(written.hidden_components).toEqual(["Foo"]);
   });
 

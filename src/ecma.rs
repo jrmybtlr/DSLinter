@@ -86,7 +86,10 @@ pub fn analyze_ecma_for_paths(
         ));
     }
 
-    let ast_extracts = crate::class_strings::collect_ast_extracts(source, &program);
+    let mut ast_extracts = crate::class_strings::collect_ast_extracts(source, &program);
+    ast_extracts
+        .class_strings
+        .extend(cva_extract::collect_cva_class_fragments(&newlines, &program));
 
     FileScan {
         path: report_path.to_path_buf(),
@@ -226,8 +229,6 @@ fn component_definition_from_params(
         declared_prop_options,
         declared_prop_defaults,
         cva_binding_name,
-        implementation_class_frequencies: BTreeMap::new(),
-        implementation_class_locations: Vec::new(),
     }
 }
 
@@ -599,6 +600,8 @@ impl ExtractVisitor<'_> {
                 if input_is_hidden(&el.attributes) {
                     return;
                 }
+                // Do not treat bare `id` as an accessible name — pairing with
+                // `<label htmlFor>` is not verified here.
                 if !has_named_attribute(&el.attributes, "aria-label")
                     && !has_named_attribute(&el.attributes, "aria-labelledby")
                 {
@@ -607,6 +610,30 @@ impl ExtractVisitor<'_> {
                         Severity::Warning,
                         "a11y-input-label",
                         a11y::INPUT_LABEL,
+                    );
+                }
+            }
+            "select" => {
+                if !has_named_attribute(&el.attributes, "aria-label")
+                    && !has_named_attribute(&el.attributes, "aria-labelledby")
+                {
+                    self.push_a11y(
+                        line,
+                        Severity::Warning,
+                        "a11y-select-name",
+                        a11y::SELECT_NAME,
+                    );
+                }
+            }
+            "textarea" => {
+                if !has_named_attribute(&el.attributes, "aria-label")
+                    && !has_named_attribute(&el.attributes, "aria-labelledby")
+                {
+                    self.push_a11y(
+                        line,
+                        Severity::Warning,
+                        "a11y-textarea-name",
+                        a11y::TEXTAREA_NAME,
                     );
                 }
             }
@@ -685,8 +712,6 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                         declared_prop_options: BTreeMap::new(),
                         declared_prop_defaults: BTreeMap::new(),
                         cva_binding_name: None,
-                        implementation_class_frequencies: BTreeMap::new(),
-                        implementation_class_locations: Vec::new(),
                     });
                 }
             }
@@ -746,8 +771,6 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
                     declared_prop_options: BTreeMap::new(),
                     declared_prop_defaults: BTreeMap::new(),
                     cva_binding_name: None,
-                    implementation_class_frequencies: BTreeMap::new(),
-                    implementation_class_locations: Vec::new(),
                 });
             }
             _ => {}
@@ -849,8 +872,6 @@ impl ExtractVisitor<'_> {
                     declared_prop_options: BTreeMap::new(),
                     declared_prop_defaults: BTreeMap::new(),
                     cva_binding_name: None,
-                    implementation_class_frequencies: BTreeMap::new(),
-                    implementation_class_locations: Vec::new(),
                 });
             }
         }
@@ -965,6 +986,40 @@ const Panel = () => <aside />;
         let src = r#"export function X() { return <input type="hidden" />; }"#;
         let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
         assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-input-label"));
+    }
+
+    #[test]
+    fn a11y_input_with_id_still_requires_name() {
+        // Bare `id` does not prove a paired <label htmlFor>; still report.
+        let src = r#"export function X() { return <input id="email" type="text" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-input-label"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_select_requires_name() {
+        let src = r#"export function X() { return <select />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(
+            scan.findings
+                .iter()
+                .any(|f| f.rule_id == "a11y-select-name"),
+            "{:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn a11y_textarea_with_aria_label_ok() {
+        let src = r#"export function X() { return <textarea aria-label="Notes" />; }"#;
+        let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
+        assert!(!scan.findings.iter().any(|f| f.rule_id == "a11y-textarea-name"));
     }
 
     #[test]

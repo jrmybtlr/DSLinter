@@ -26,9 +26,7 @@ export function flattenViteAlias(
   const out: FlatAlias[] = [];
 
   const push = (find: string | RegExp, replacement: string) => {
-    const rep = isAbsolute(replacement)
-      ? replacement
-      : resolve(root, replacement);
+    const rep = isAbsolute(replacement) ? replacement : resolve(root, replacement);
     out.push({ find: normalizeFind(find), replacement: rep });
   };
 
@@ -59,10 +57,7 @@ export function flattenViteAlias(
 /**
  * Resolve `id` using consumer aliases (longest prefix first for strings).
  */
-export function resolveWithConsumerAliases(
-  id: string,
-  aliases: FlatAlias[],
-): string | null {
+export function resolveWithConsumerAliases(id: string, aliases: FlatAlias[]): string | null {
   for (const { find, replacement } of aliases) {
     if (typeof find === "string") {
       if (find.endsWith("/")) {
@@ -92,10 +87,7 @@ export function resolveWithConsumerAliases(
 }
 
 /** True when `importer` is a file under `scanRoot`. */
-export function importerUnderScanRoot(
-  importer: string | undefined,
-  scanRoot: string,
-): boolean {
+export function importerUnderScanRoot(importer: string | undefined, scanRoot: string): boolean {
   if (!importer || importer === "\0virtual") return false;
   const root = resolve(scanRoot).replace(/\\/g, "/");
   let norm = importer.replace(/\\/g, "/");
@@ -106,9 +98,6 @@ export function importerUnderScanRoot(
   return norm === root || norm.startsWith(rootWithSlash);
 }
 
-export const INERTIA_SHIM_IDS = new Set([
-  "@inertiajs/react",
-  "@inertiajs/react/server",
-]);
+export const INERTIA_SHIM_IDS = new Set(["@inertiajs/react", "@inertiajs/react/server"]);
 
 export const ZIGGY_SHIM_ID = "ziggy-js";

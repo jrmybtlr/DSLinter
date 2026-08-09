@@ -155,8 +155,7 @@ function boxLines(lines, totalWidth) {
   out.push(`${BOX.tl}${BOX.h.repeat(totalWidth - 2)}${BOX.tr}`);
   for (const line of lines) {
     const plain = stripAnsi(line);
-    const clipped =
-      plain.length > contentWidth ? truncatePlain(plain, contentWidth) : line;
+    const clipped = plain.length > contentWidth ? truncatePlain(plain, contentWidth) : line;
     out.push(`${BOX.v} ${padVisible(clipped, contentWidth)} ${BOX.v}`);
   }
   out.push(`${BOX.bl}${BOX.h.repeat(totalWidth - 2)}${BOX.br}`);
@@ -185,9 +184,7 @@ export function formatDevBanner(opts) {
   const scanAbs = resolve(opts.scanPath);
   const dashboardUrl = opts.dashboardUrl ?? opts.bundledUrl ?? null;
   const scanPlain = shortenPath(scanAbs, 80);
-  const scannerWarnPlain = opts.apiAvailable
-    ? null
-    : `unavailable — port ${opts.apiPort} in use`;
+  const scannerWarnPlain = opts.apiAvailable ? null : `unavailable — port ${opts.apiPort} in use`;
   const scannerUrl = scannerApiUrl(opts.apiPort);
   const showScannerApi =
     opts.apiAvailable &&
@@ -196,17 +193,13 @@ export function formatDevBanner(opts) {
   const showMcpData = !showScannerApi;
   const mcpDataPlain = formatMcpDataStatus(opts.apiPort, opts.apiAvailable);
   const mcpConfigured =
-    opts.mcpConfigured ??
-    (opts.projectRoot ? hasMcpConfig(opts.projectRoot) : false);
+    opts.mcpConfigured ?? (opts.projectRoot ? hasMcpConfig(opts.projectRoot) : false);
   const mcpHintPlain = formatMcpAgentHint(mcpConfigured);
   const lanHost = opts.apiAvailable ? getLanIpv4Addresses()[0] : undefined;
   const networkUrl = lanHost ? httpUrl(opts.apiPort, lanHost) : null;
 
   /** @type {number[]} */
-  const plainWidths = [
-    ...LOGO.map((l) => visibleLength(l)),
-    14 + 2 + scanPlain.length,
-  ];
+  const plainWidths = [...LOGO.map((l) => visibleLength(l)), 14 + 2 + scanPlain.length];
   if (dashboardUrl) plainWidths.push(14 + 2 + dashboardUrl.length);
   if (showScannerApi) plainWidths.push(14 + 2 + scannerUrl.length);
   if (networkUrl) plainWidths.push(14 + 2 + networkUrl.length);
@@ -214,9 +207,7 @@ export function formatDevBanner(opts) {
   if (scannerWarnPlain) plainWidths.push(14 + 2 + scannerWarnPlain.length);
   if (opts.pollMs) plainWidths.push(14 + 2 + `polling every ${opts.pollMs} ms`.length);
   const footerLines = [
-    dashboardUrl
-      ? "  Open the Dashboard in your browser. Ctrl+C to stop."
-      : "  Ctrl+C to stop.",
+    dashboardUrl ? "  Open the Dashboard in your browser. Ctrl+C to stop." : "  Ctrl+C to stop.",
     `  ${mcpHintPlain}`,
   ];
   for (const line of footerLines) {
@@ -231,9 +222,7 @@ export function formatDevBanner(opts) {
   styledRows.push("");
   styledRows.push(...LOGO);
   styledRows.push("");
-  styledRows.push(
-    ...row(color.label("Scan path"), scanPlain, contentWidth, color.value),
-  );
+  styledRows.push(...row(color.label("Scan path"), scanPlain, contentWidth, color.value));
   if (opts.pollMs) {
     styledRows.push(
       ...row(color.label("Watch"), `polling every ${opts.pollMs} ms`, contentWidth, color.dim),
@@ -241,29 +230,19 @@ export function formatDevBanner(opts) {
   }
   styledRows.push("");
   if (dashboardUrl) {
-    styledRows.push(
-      ...row(color.label("Dashboard"), dashboardUrl, contentWidth, color.url),
-    );
+    styledRows.push(...row(color.label("Dashboard"), dashboardUrl, contentWidth, color.url));
   }
   if (showScannerApi) {
-    styledRows.push(
-      ...row(color.label("Scanner API"), scannerUrl, contentWidth, color.url),
-    );
+    styledRows.push(...row(color.label("Scanner API"), scannerUrl, contentWidth, color.url));
   }
   if (networkUrl) {
-    styledRows.push(
-      ...row(color.label("Network"), networkUrl, contentWidth, color.url),
-    );
+    styledRows.push(...row(color.label("Network"), networkUrl, contentWidth, color.url));
   }
   if (showMcpData) {
-    styledRows.push(
-      ...row(color.label("MCP data"), mcpDataPlain, contentWidth, color.value),
-    );
+    styledRows.push(...row(color.label("MCP data"), mcpDataPlain, contentWidth, color.value));
   }
   if (scannerWarnPlain) {
-    styledRows.push(
-      ...row(color.label("Scanner"), scannerWarnPlain, contentWidth, color.err),
-    );
+    styledRows.push(...row(color.label("Scanner"), scannerWarnPlain, contentWidth, color.err));
   }
   styledRows.push("");
   for (const line of footerLines) {

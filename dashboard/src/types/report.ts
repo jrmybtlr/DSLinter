@@ -22,15 +22,6 @@ export interface ComponentDefinition {
   /** Default values from CVA `defaultVariants`. */
   declared_prop_defaults?: Record<string, string>;
   cva_binding_name?: string;
-  /** Tailwind/class tokens from this component's JSX (including intrinsics). */
-  implementation_class_frequencies?: Record<string, number>;
-  /** Source lines for implementation class strings. */
-  implementation_class_locations?: ImplementationClassLocation[];
-}
-
-export interface ImplementationClassLocation {
-  line: number;
-  classes: string;
 }
 
 export interface JsxUsage {
@@ -65,6 +56,8 @@ export interface GovernanceScores {
   ux_consistency: number;
   accessibility: number;
   maintainability: number;
+  /** CSS / known_tokens adoption 0–100 when measurable. */
+  token_adoption?: number | null;
 }
 
 export interface DuplicateComponent {
@@ -105,6 +98,10 @@ export type DeclaredPropKind =
   | "number"
   | "node"
   | "stringArray"
+  | "numberArray"
+  | "function"
+  | "icon"
+  | "object"
   | "unknown";
 
 /** Statically-known literal prop value inside an `ExampleNode`. */
@@ -149,6 +146,10 @@ export interface PlaygroundSpec {
   declared_prop_options?: Record<string, string[]>;
   /** Default values from CVA `defaultVariants`. */
   declared_prop_defaults?: Record<string, string>;
+  /** True when the TS prop is optional (`title?`). */
+  declared_prop_optional?: Record<string, boolean>;
+  /** Display type strings for complex kinds (e.g. icon → `LucideIcon`, object → `Passkey`). */
+  declared_prop_type_labels?: Record<string, string>;
   /**
    * Representative composition captured from a real call site (compound
    * components); replayed as the default preview when present.
@@ -156,12 +157,7 @@ export interface PlaygroundSpec {
   example_tree?: ExampleNode;
 }
 
-export type CssTokenCategory =
-  | "color"
-  | "spacing"
-  | "radius"
-  | "typography"
-  | "other";
+export type CssTokenCategory = "color" | "spacing" | "radius" | "typography" | "other";
 
 export type CssTokenScope = "theme" | "root" | "selector";
 

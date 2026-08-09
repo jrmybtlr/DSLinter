@@ -32,15 +32,11 @@ describe("expandEditorOpenCommand", () => {
 
 describe("isPathUnderRoot", () => {
   it("accepts files under the scan root", () => {
-    expect(
-      isPathUnderRoot("/repo/src/Button.tsx", "/repo"),
-    ).toBe(true);
+    expect(isPathUnderRoot("/repo/src/Button.tsx", "/repo")).toBe(true);
   });
 
   it("rejects paths outside the scan root", () => {
-    expect(
-      isPathUnderRoot("/etc/passwd", "/repo"),
-    ).toBe(false);
+    expect(isPathUnderRoot("/etc/passwd", "/repo")).toBe(false);
   });
 });
 
@@ -52,12 +48,11 @@ describe("resolveEditorOpenArgv", () => {
   };
 
   it("uses configured command when provided", () => {
-    expect(
-      resolveEditorOpenArgv(
-        ctx,
-        "my-editor --jump {file}:{line}:{column}",
-      ),
-    ).toEqual(["my-editor", "--jump", "/repo/src/Button.tsx:10:1"]);
+    expect(resolveEditorOpenArgv(ctx, "my-editor --jump {file}:{line}:{column}")).toEqual([
+      "my-editor",
+      "--jump",
+      "/repo/src/Button.tsx:10:1",
+    ]);
   });
 });
 

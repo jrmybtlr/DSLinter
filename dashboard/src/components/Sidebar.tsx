@@ -48,7 +48,10 @@ function familyToggleClass(active: boolean) {
 
 function sectionLabel(text: string) {
   return (
-    <p className="mb-1.5 mt-4 px-2.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 first:mt-0">
+    <p
+      className="mt-4 mb-1.5 px-2.5 text-xs font-semibold tracking-wider text-sidebar-foreground/50 uppercase"
+      className:first="mt-0"
+    >
       {text}
     </p>
   );
@@ -115,7 +118,7 @@ export function Sidebar({
   };
 
   return (
-    <aside className="fixed flex h-full w-[240px] shrink-0 flex-col overflow-hidden border-r border-border bg-background text-sidebar-foreground">
+    <aside className="fixed flex h-full w-60 shrink-0 flex-col overflow-hidden border-r border-border bg-background text-sidebar-foreground">
       <div className="sticky top-0 z-10 shrink-0 border-b border-border bg-background px-6 py-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center text-foreground">
@@ -135,7 +138,8 @@ export function Sidebar({
           <button
             type="button"
             onClick={onOpenCommandPalette}
-            className="flex shrink-0 items-center gap-1.5 rounded-md pl-1.5 py-0 text-foreground/70 transition hover:bg-accent hover:text-accent-foreground"
+            className="flex shrink-0 items-center gap-1.5 rounded-md py-0 pl-1.5 text-foreground/70 transition"
+            className:hover="bg-accent text-accent-foreground"
             aria-label="Search components and views"
           >
             <IconSearch className="size-4 shrink-0" aria-hidden />
@@ -282,7 +286,7 @@ export function Sidebar({
       </nav>
 
       <div className="shrink-0 border-t border-sidebar-border px-3 py-3">
-        <p className="mb-2 px-2.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+        <p className="mb-2 px-2.5 text-xs font-semibold tracking-wider text-sidebar-foreground/50 uppercase">
           Appearance
         </p>
         <ToggleGroup

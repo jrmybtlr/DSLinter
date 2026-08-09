@@ -1,9 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import {
-  CONFIG_FILE_NAMES,
-  DEFAULT_CONFIG_FILE_NAME,
-} from "./paths.mjs";
+import { CONFIG_FILE_NAMES, DEFAULT_CONFIG_FILE_NAME } from "./paths.mjs";
 
 /**
  * @param {string} targetDir
@@ -172,11 +169,7 @@ export function writeDslintConfig(opts) {
   const payload = buildStarterConfig(targetDir, opts.layout);
   if (opts.includeDir) {
     payload.include_dirs = [opts.includeDir];
-    const groupPrefix = pickPlaygroundGroupPrefix(
-      targetDir,
-      opts.layout,
-      payload.include_dirs,
-    );
+    const groupPrefix = pickPlaygroundGroupPrefix(targetDir, opts.layout, payload.include_dirs);
     if (groupPrefix) {
       payload.playground_groups = { components: [groupPrefix] };
     }

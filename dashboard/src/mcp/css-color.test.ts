@@ -37,10 +37,7 @@ describe("css-color", () => {
   });
 
   it("resolves var() chains before matching", () => {
-    const defs = [
-      colorDef("--primary", "#93c5fd"),
-      colorDef("--color-primary", "var(--primary)"),
-    ];
+    const defs = [colorDef("--primary", "#93c5fd"), colorDef("--color-primary", "var(--primary)")];
     const token = findColorTokenForHex(defs, "#93c5fd");
     expect(token?.name).toBe("--color-primary");
   });

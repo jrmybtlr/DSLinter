@@ -16,9 +16,7 @@ describe("scannerApiUrl", () => {
 
 describe("formatMcpDataStatus", () => {
   it("shows live data URL when scanner is up", () => {
-    expect(formatMcpDataStatus(7878, true)).toBe(
-      "live @ http://127.0.0.1:7878",
-    );
+    expect(formatMcpDataStatus(7878, true)).toBe("live @ http://127.0.0.1:7878");
   });
 
   it("notes offline scanner", () => {

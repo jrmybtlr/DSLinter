@@ -5,15 +5,11 @@ import type { PlaygroundControl } from "../types/controls";
 describe("formatJsxPropAssignment", () => {
   it("uses string attribute syntax for simple strings", () => {
     expect(formatJsxPropAssignment("size", "lg")).toBe('size="lg"');
-    expect(formatJsxPropAssignment("variant", "outline")).toBe(
-      'variant="outline"',
-    );
+    expect(formatJsxPropAssignment("variant", "outline")).toBe('variant="outline"');
   });
 
   it("uses expression syntax for non-literal strings", () => {
-    expect(formatJsxPropAssignment("title", 'Say "hi"')).toBe(
-      'title={"Say \\"hi\\""}',
-    );
+    expect(formatJsxPropAssignment("title", 'Say "hi"')).toBe('title={"Say \\"hi\\""}');
   });
 
   it("uses boolean shorthand and explicit false", () => {
@@ -33,8 +29,8 @@ describe("genericUsageSnippet", () => {
   ];
 
   it("renders select props with JSX string attributes", () => {
-    expect(
-      genericUsageSnippet("Toggle", { size: "lg", variant: "default" }, controls),
-    ).toBe('<Toggle size="lg" />');
+    expect(genericUsageSnippet("Toggle", { size: "lg", variant: "default" }, controls)).toBe(
+      '<Toggle size="lg" />',
+    );
   });
 });

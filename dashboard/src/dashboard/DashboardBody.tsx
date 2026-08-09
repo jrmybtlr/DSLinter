@@ -39,8 +39,7 @@ const sectionMeta: Record<
   unused: {
     id: "unused-components",
     title: "Unused components",
-    description:
-      "Scanned definitions with no JSX references elsewhere in the workspace.",
+    description: "Scanned definitions with no JSX references elsewhere in the workspace.",
   },
 };
 
@@ -56,14 +55,8 @@ export function DashboardBody({
   const [tab, setTab] = useState<GovernanceInventoryTab>("all");
 
   const counts = useMemo(() => governanceTabCounts(report), [report]);
-  const filteredFindings = useMemo(
-    () => findingsForGovernanceTab(report, tab),
-    [report, tab],
-  );
-  const unusedComponents = useMemo(
-    () => unusedComponentsFromReport(report),
-    [report],
-  );
+  const filteredFindings = useMemo(() => findingsForGovernanceTab(report, tab), [report, tab]);
+  const unusedComponents = useMemo(() => unusedComponentsFromReport(report), [report]);
   const section = sectionMeta[tab];
 
   return (
@@ -72,40 +65,41 @@ export function DashboardBody({
         <ScoreStrip scores={report.scores} />
       </div>
 
-      <div className="min-w-0 w-full px-6 py-8">
-      {report.duplicate_components.length > 0 ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
-          <span className="font-semibold">Duplicate component names: </span>
-          {report.duplicate_components.map((d) => d.name).join(", ")}
-        </div>
-      ) : null}
+      <div className="w-full min-w-0 px-6 py-8">
+        {report.duplicate_components.length > 0 ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
+            <span className="font-semibold">Duplicate component names: </span>
+            {report.duplicate_components.map((d) => d.name).join(", ")}
+          </div>
+        ) : null}
 
-      <GovernanceInventoryTabs value={tab} onChange={setTab} counts={counts} />
+        <GovernanceInventoryTabs value={tab} onChange={setTab} counts={counts} />
 
-      <Section id={section.id}>
-        {tab === "unused" ? (
-          <UnusedComponentsList
-            components={unusedComponents}
-            root={report.root}
-            onOpenComponent={onOpenComponent}
-          />
-        ) : (
-          <FindingsList findings={filteredFindings} root={report.root} />
-        )}
-      </Section>
+        <Section id={section.id}>
+          {tab === "unused" ? (
+            <UnusedComponentsList
+              components={unusedComponents}
+              root={report.root}
+              onOpenComponent={onOpenComponent}
+            />
+          ) : (
+            <FindingsList findings={filteredFindings} root={report.root} />
+          )}
+        </Section>
 
-      {onOpenCatalog ? (
-        <p className="text-sm text-muted-foreground">
-          <button
-            type="button"
-            onClick={onOpenCatalog}
-            className="font-medium text-foreground underline decoration-dotted underline-offset-2 transition hover:decoration-solid"
-          >
-            View all components
-          </button>{" "}
-          for prop usage and app reference details.
-        </p>
-      ) : null}
+        {onOpenCatalog ? (
+          <p className="text-sm text-muted-foreground">
+            <button
+              type="button"
+              onClick={onOpenCatalog}
+              className="font-medium text-foreground underline decoration-dotted underline-offset-2 transition"
+              className:hover="decoration-solid"
+            >
+              View all components
+            </button>{" "}
+            for prop usage and app reference details.
+          </p>
+        ) : null}
       </div>
     </div>
   );

@@ -21,10 +21,7 @@ const controllerHandler: ProxyHandler<Record<string, ActionMethod>> = {
   },
 };
 
-const controllerStub = new Proxy(
-  {} as Record<string, ActionMethod>,
-  controllerHandler,
-);
+const controllerStub = new Proxy({} as Record<string, ActionMethod>, controllerHandler);
 
 /** Default export used as `ProfileController.destroy.form()`. */
 export default controllerStub;

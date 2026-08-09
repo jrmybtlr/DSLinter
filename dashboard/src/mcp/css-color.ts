@@ -30,11 +30,7 @@ export function parseCssColor(raw: string): string | null {
 const VAR_REF_RE = /var\(\s*(--[a-zA-Z0-9][a-zA-Z0-9_-]*)/;
 const MAX_VAR_DEPTH = 8;
 
-function resolveTokenValue(
-  value: string,
-  varMap: Map<string, string>,
-  depth = 0,
-): string | null {
+function resolveTokenValue(value: string, varMap: Map<string, string>, depth = 0): string | null {
   if (depth > MAX_VAR_DEPTH) return null;
   const trimmed = value.trim();
   const varMatch = trimmed.match(VAR_REF_RE);

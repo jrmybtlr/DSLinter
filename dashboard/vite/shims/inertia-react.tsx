@@ -51,13 +51,7 @@ export function Head({ children }: { children?: ReactNode }) {
 }
 
 /** Stub for components that use Inertia `<Form>` in playground previews. */
-export function Form({
-  children,
-  ...rest
-}: {
-  children?: ReactNode;
-  [key: string]: unknown;
-}) {
+export function Form({ children, ...rest }: { children?: ReactNode; [key: string]: unknown }) {
   return <form {...rest}>{children}</form>;
 }
 

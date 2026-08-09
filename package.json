@@ -7,8 +7,8 @@
     "dashboard"
   ],
   "scripts": {
-    "fmt": "oxfmt demo/react demo/inertia dashboard",
-    "fmt:check": "oxfmt --check demo/react demo/inertia dashboard",
+    "fmt": "oxfmt dashboard",
+    "fmt:check": "oxfmt --check dashboard",
     "lint": "oxlint --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia dashboard",
     "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia dashboard",
     "build:napi": "pnpm --filter dslinter run build:napi",

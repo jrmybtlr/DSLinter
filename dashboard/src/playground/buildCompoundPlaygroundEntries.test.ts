@@ -6,6 +6,7 @@ import {
   buildCompoundPlaygroundEntries,
   detectCompoundFamily,
   findCompoundFamilies,
+  valuesToProps,
 } from "./buildCompoundPlaygroundEntries";
 import { buildPlaygroundEntriesFromReportWithSkips } from "./buildPlaygroundEntriesFromReport";
 import { resolvePlaygroundEntry } from "./buildPlaygroundEntriesFromReport";
@@ -321,13 +322,8 @@ describe("buildCompoundPlaygroundEntries", () => {
           createElement("div", { "data-root": "dropdown-menu" }, children),
         DropdownMenuTrigger: ({ children }: { children?: ReactNode }) =>
           createElement("button", { type: "button" }, children),
-        DropdownMenuContent: ({
-          children,
-          align,
-        }: {
-          children?: ReactNode;
-          align?: string;
-        }) => createElement("div", { "data-content": true, "data-align": align }, children),
+        DropdownMenuContent: ({ children, align }: { children?: ReactNode; align?: string }) =>
+          createElement("div", { "data-content": true, "data-align": align }, children),
         DropdownMenuItem: ({ children }: { children?: ReactNode }) =>
           createElement("div", { "data-item": true }, children),
       },
@@ -344,5 +340,36 @@ describe("buildCompoundPlaygroundEntries", () => {
     expect(html).toContain('data-root="dropdown-menu"');
     expect(html).toContain('data-content="true"');
     expect(html).toContain('data-align="end"');
+  });
+});
+
+describe("valuesToProps", () => {
+  it("coerces stringArray panel text into string[]", () => {
+    const props = valuesToProps(
+      [{ key: "tags", label: "tags", type: "stringArray", default: "" }],
+      { tags: "alpha\nbeta\nalpha\n" },
+    );
+    expect(props.tags).toEqual(["alpha", "beta"]);
+  });
+
+  it("coerces numberArray panel text into number[]", () => {
+    const props = valuesToProps(
+      [{ key: "ids", label: "ids", type: "numberArray", default: "" }],
+      { ids: "1\n2\n2\nx\n" },
+    );
+    expect(props.ids).toEqual([1, 2]);
+  });
+
+  it("skips non-editable control types", () => {
+    const props = valuesToProps(
+      [
+        { key: "onClick", label: "onClick", type: "function", default: "" },
+        { key: "meta", label: "meta", type: "object", default: "" },
+        { key: "icon", label: "icon", type: "icon", default: "" },
+        { key: "label", label: "label", type: "string", default: "Hi" },
+      ],
+      { onClick: "fn", meta: "{}", icon: "Star", label: "Hello" },
+    );
+    expect(props).toEqual({ label: "Hello" });
   });
 });

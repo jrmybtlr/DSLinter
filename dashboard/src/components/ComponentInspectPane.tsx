@@ -12,7 +12,6 @@ import {
   propFrequenciesForComponent,
 } from "../dashboard/ComponentPropUsageDetail";
 import { ComponentUsageDetails } from "../dashboard/ComponentUsageDetails";
-import { ComponentImplementationClasses } from "./ComponentImplementationClasses";
 import { FindingsList } from "../dashboard/FindingsList";
 import { shortPath } from "../dashboard/paths";
 import { findingsForComponent } from "../report/findingsForComponent";
@@ -25,14 +24,7 @@ import type { WorkspaceReport } from "../types/report";
 import { HideFromCatalogButton } from "./HideFromCatalogButton";
 import { Section } from "./Section";
 import { TruncatedPath } from "./TruncatedPath";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 type Props = {
   componentId: string;
@@ -107,48 +99,33 @@ export function ComponentInspectPane({
 }: Props) {
   const report = reportReady ? workspaceReport : null;
   const playgroundSpec = findPlaygroundSpec(workspaceReport, componentId);
-  const joinDetail = playgroundJoinDetailMessage(
-    playgroundJoinSkip,
-    playgroundSpec,
-  );
+  const joinDetail = playgroundJoinDetailMessage(playgroundJoinSkip, playgroundSpec);
 
-  const {
-    definitions,
-    declared,
-    unusedProps,
-    propFrequencies,
-    findings,
-    childComponents,
-  } = useMemo(() => {
-    if (!workspaceReport) {
+  const { definitions, declared, unusedProps, propFrequencies, findings, childComponents } =
+    useMemo(() => {
+      if (!workspaceReport) {
+        return {
+          definitions: [] as DefinitionSite[],
+          declared: [] as string[],
+          unusedProps: new Set<string>(),
+          propFrequencies: {},
+          findings: [],
+          childComponents: [] as string[],
+        };
+      }
+
+      const declared = aggregateDeclaredProps(workspaceReport).get(componentId) ?? [];
+      const family = componentCatalogFamilyForName(workspaceReport, componentId);
+
       return {
-        definitions: [] as DefinitionSite[],
-        declared: [] as string[],
-        unusedProps: new Set<string>(),
-        propFrequencies: {},
-        findings: [],
-        childComponents: [] as string[],
-      };
-    }
-
-    const declared =
-      aggregateDeclaredProps(workspaceReport).get(componentId) ?? [];
-    const family = componentCatalogFamilyForName(workspaceReport, componentId);
-
-    return {
-      definitions:
-        aggregateDefinitions(workspaceReport).get(componentId) ?? [],
-      declared,
-      unusedProps: buildUnusedPropSetForComponent(
-        workspaceReport,
-        componentId,
+        definitions: aggregateDefinitions(workspaceReport).get(componentId) ?? [],
         declared,
-      ),
-      propFrequencies: propFrequenciesForComponent(workspaceReport, componentId),
-      findings: findingsForComponent(workspaceReport, componentId),
-      childComponents: catalogChildComponentsFor(family, componentId),
-    };
-  }, [workspaceReport, componentId]);
+        unusedProps: buildUnusedPropSetForComponent(workspaceReport, componentId, declared),
+        propFrequencies: propFrequenciesForComponent(workspaceReport, componentId),
+        findings: findingsForComponent(workspaceReport, componentId),
+        childComponents: catalogChildComponentsFor(family, componentId),
+      };
+    }, [workspaceReport, componentId]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
@@ -156,9 +133,7 @@ export function ComponentInspectPane({
         <header className="border-b border-border bg-card px-8 py-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-muted-foreground">
-                Components
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Components</p>
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 {componentId}
               </h1>
@@ -172,10 +147,7 @@ export function ComponentInspectPane({
               ) : null}
             </div>
             {onHideFromCatalog ? (
-              <HideFromCatalogButton
-                componentName={componentId}
-                onHidden={onHideFromCatalog}
-              />
+              <HideFromCatalogButton componentName={componentId} onHidden={onHideFromCatalog} />
             ) : null}
           </div>
         </header>
@@ -186,10 +158,7 @@ export function ComponentInspectPane({
             title="Definitions"
             description="Source files where this component is defined."
           >
-            <DefinitionsTable
-              definitions={definitions}
-              root={workspaceReport?.root}
-            />
+            <DefinitionsTable definitions={definitions} root={workspaceReport?.root} />
           </Section>
 
           {childComponents.length > 0 ? (
@@ -198,13 +167,14 @@ export function ComponentInspectPane({
               title="Subcomponents"
               description="Related exports detected in the same compound component module."
             >
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2" className:sm="grid-cols-2">
                 {childComponents.map((child) => (
                   <button
                     key={child}
                     type="button"
                     onClick={() => onOpenComponent(child)}
-                    className="rounded-md border border-border bg-card px-3 py-2 text-left text-sm font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
+                    className="rounded-md border border-border bg-card px-3 py-2 text-left text-sm font-medium text-foreground transition"
+                    className:hover="bg-accent text-accent-foreground"
                   >
                     {child}
                   </button>
@@ -231,25 +201,11 @@ export function ComponentInspectPane({
           </Section>
 
           <Section
-            id="implementation-classes"
-            title="Implementation classes"
-            description="Tailwind and class strings from this component's JSX, including intrinsics."
-          >
-            <ComponentImplementationClasses
-              report={report}
-              componentName={componentId}
-            />
-          </Section>
-
-          <Section
             id="usage"
             title="App usage"
             description="Where this component is used in the workspace."
           >
-            <ComponentUsageDetails
-              report={workspaceReport}
-              componentId={componentId}
-            />
+            <ComponentUsageDetails report={workspaceReport} componentId={componentId} />
           </Section>
 
           <Section

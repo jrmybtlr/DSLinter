@@ -15,10 +15,7 @@ function isIdentChar(code: number): boolean {
 }
 
 /** Parse `var(--name)` or `var(--name, fallback)` starting at `start`. */
-function parseVarFunction(
-  value: string,
-  start: number,
-): { name: string; end: number } | null {
+function parseVarFunction(value: string, start: number): { name: string; end: number } | null {
   if (!value.startsWith("var(", start)) return null;
 
   let i = start + 4;
@@ -51,10 +48,7 @@ function parseVarFunction(
   return { name, end: i };
 }
 
-function substituteVarReferences(
-  value: string,
-  resolveRef: (name: string) => string,
-): string {
+function substituteVarReferences(value: string, resolveRef: (name: string) => string): string {
   let out = "";
   let i = 0;
 
@@ -72,9 +66,7 @@ function substituteVarReferences(
   return out;
 }
 
-export function resolveCssVariables(
-  vars: Map<string, string>,
-): Record<string, string> {
+export function resolveCssVariables(vars: Map<string, string>): Record<string, string> {
   const resolved = new Map<string, string>();
 
   const resolveOne = (name: string, seen: Set<string>): string => {
@@ -123,10 +115,6 @@ export function resolveLightTokenValues(
   definitions: CssTokenDefinition[],
   predicate?: (def: CssTokenDefinition) => boolean,
 ): Record<string, string> {
-  const vars = variableMapForScopes(
-    definitions,
-    new Set(["root", "theme"]),
-    predicate,
-  );
+  const vars = variableMapForScopes(definitions, new Set(["root", "theme"]), predicate);
   return resolveCssVariables(vars);
 }

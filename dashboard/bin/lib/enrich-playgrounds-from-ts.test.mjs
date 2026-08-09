@@ -40,9 +40,7 @@ describe("enrich-playgrounds-from-ts", () => {
               moduleResolution: "bundler",
               noEmit: true,
               skipLibCheck: true,
-              typeRoots: [
-                join(process.cwd(), "node_modules/@types"),
-              ],
+              typeRoots: [join(process.cwd(), "node_modules/@types")],
             },
             include: ["**/*.tsx"],
           },

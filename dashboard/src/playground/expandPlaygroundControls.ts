@@ -5,7 +5,7 @@ export type CompactPlaygroundControl =
   | string
   | number
   | boolean
-  | Partial<PlaygroundControl> & { key?: string };
+  | (Partial<PlaygroundControl> & { key?: string });
 
 /** Shorthand: list prop keys; defaults and placeholders use the key name. */
 export type PlaygroundControlKeys = readonly string[];

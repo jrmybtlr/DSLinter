@@ -27,9 +27,7 @@ export const usageExamplesInput = z.object({
 });
 
 export const tokensInput = z.object({
-  category: z
-    .enum(["color", "spacing", "radius", "typography", "other"])
-    .optional(),
+  category: z.enum(["color", "spacing", "radius", "typography", "other"]).optional(),
 });
 
 export const agentContextInput = z.object({

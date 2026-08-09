@@ -5,10 +5,10 @@ import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
 
 describe("collectDefinedPlaygrounds", () => {
   it("collects definePlayground exports from eager modules", () => {
-    const defined = definePlayground(
-      () => createElement("span", null, "menu"),
-      { id: "DropdownMenu", group: "ui" },
-    );
+    const defined = definePlayground(() => createElement("span", null, "menu"), {
+      id: "DropdownMenu",
+      group: "ui",
+    });
     const modules = {
       "../components/ui/dropdown-menu.playground.tsx": {
         dropdownMenuPlayground: defined,

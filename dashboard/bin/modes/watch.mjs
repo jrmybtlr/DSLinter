@@ -16,12 +16,7 @@ import { spawnScanner } from "../lib/run-scanner.mjs";
  *   scannerArgs: string[];
  * }} opts
  */
-export async function runWatchMode({
-  scanPath,
-  projectRoot,
-  outputPath,
-  scannerArgs,
-}) {
+export async function runWatchMode({ scanPath, projectRoot, outputPath, scannerArgs }) {
   const scanAbs = resolve(scanPath);
   const projectAbs = resolve(projectRoot);
   const reportPath = defaultReportPath(scanAbs, outputPath);

@@ -9,3 +9,7 @@ pub const INPUT_LABEL: &str =
     "`<input>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label>`).";
 pub const BUTTON_NAME: &str =
     "`<button>` needs visible text, `aria-label`, `aria-labelledby`, or `title`.";
+pub const SELECT_NAME: &str =
+    "`<select>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label>`).";
+pub const TEXTAREA_NAME: &str =
+    "`<textarea>` should expose an accessible name (`aria-label`, `aria-labelledby`, or associated `<label>`).";

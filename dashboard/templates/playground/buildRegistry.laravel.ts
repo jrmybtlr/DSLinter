@@ -19,8 +19,6 @@ export function buildPlaygroundEntries(
   return buildWithSkips(report).entries;
 }
 
-export function getPlaygroundJoinSkips(
-  report: WorkspaceReport | null | undefined,
-) {
+export function getPlaygroundJoinSkips(report: WorkspaceReport | null | undefined) {
   return buildWithSkips(report).skipped;
 }

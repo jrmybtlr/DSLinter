@@ -71,7 +71,8 @@ export function useWorkspaceReport(
         if (!cancelledRef.current) setReport(r);
       })
       .catch((e: unknown) => {
-        if (!cancelledRef.current) setError(e instanceof Error ? e.message : "Failed to load report");
+        if (!cancelledRef.current)
+          setError(e instanceof Error ? e.message : "Failed to load report");
       })
       .finally(() => {
         if (!cancelledRef.current && showLoading) setLoading(false);

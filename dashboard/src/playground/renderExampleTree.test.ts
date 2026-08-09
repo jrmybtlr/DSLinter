@@ -32,8 +32,7 @@ const placeholder = (hint: string): ExampleNode => ({ type: "placeholder", hint 
 const cardModule = {
   Card: ({ children, ...props }: { children?: ReactNode }) =>
     createElement("div", { "data-card": true, ...props }, children),
-  CardTitle: ({ children }: { children?: ReactNode }) =>
-    createElement("h3", null, children),
+  CardTitle: ({ children }: { children?: ReactNode }) => createElement("h3", null, children),
 };
 
 const otherModule = {

@@ -1,4 +1,5 @@
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
+import { isNonEditableControl } from "../types/controls";
 import type { DeclaredPropKind, PlaygroundSpec } from "../types/report";
 import {
   childrenPropForPreview,
@@ -16,6 +17,10 @@ export function coerceDeclaredPropKind(v: unknown): DeclaredPropKind | undefined
     v === "number" ||
     v === "node" ||
     v === "stringArray" ||
+    v === "numberArray" ||
+    v === "function" ||
+    v === "icon" ||
+    v === "object" ||
     v === "unknown"
   ) {
     return v;
@@ -48,12 +53,53 @@ export function parseStringArrayPanelValue(raw: unknown): string[] {
   ];
 }
 
-function propKeysForPreview(
-  controls: PlaygroundControl[],
-  declaredProps: string[],
-): string[] {
-  if (controls.length > 0) return controls.map((c) => c.key);
+export function parseNumberArrayPanelValue(raw: unknown): number[] {
+  const text = String(raw ?? "").trim();
+  if (!text) return [];
+  const out: number[] = [];
+  const seen = new Set<number>();
+  for (const line of text.split(/\r?\n/)) {
+    const n = Number(line.trim());
+    if (!Number.isFinite(n) || seen.has(n)) continue;
+    seen.add(n);
+    out.push(n);
+  }
+  return out;
+}
+
+function propKeysForPreview(controls: PlaygroundControl[], declaredProps: string[]): string[] {
+  if (controls.length > 0) {
+    return controls.filter((c) => !isNonEditableControl(c)).map((c) => c.key);
+  }
   return declaredProps.filter((k) => k !== "key" && k !== "ref");
+}
+
+function kindFromControlType(
+  type: PlaygroundControl["type"] | undefined,
+): DeclaredPropKind | undefined {
+  switch (type) {
+    case "boolean":
+      return "boolean";
+    case "number":
+      return "number";
+    case "string":
+    case "select":
+      return "string";
+    case "node":
+      return "node";
+    case "stringArray":
+      return "stringArray";
+    case "numberArray":
+      return "numberArray";
+    case "function":
+      return "function";
+    case "icon":
+      return "icon";
+    case "object":
+      return "object";
+    default:
+      return undefined;
+  }
 }
 
 export function valuesToComponentProps(
@@ -63,6 +109,7 @@ export function valuesToComponentProps(
   propKinds?: Partial<Record<string, DeclaredPropKind>>,
   exportName?: string,
 ): Record<string, unknown> {
+  const controlByKey = new Map(controls.map((c) => [c.key, c]));
   const o: Record<string, unknown> = {};
   for (const key of propKeysForPreview(controls, declaredProps)) {
     if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
@@ -77,7 +124,11 @@ export function valuesToComponentProps(
       if (coerced !== undefined) o[key] = coerced;
       continue;
     }
-    const kind = resolveEffectivePropKind(key, propKinds);
+    const kind =
+      resolveEffectivePropKind(key, propKinds) ?? kindFromControlType(controlByKey.get(key)?.type);
+    if (kind === "function" || kind === "icon" || kind === "object") {
+      continue;
+    }
     if (kind === "boolean") {
       o[key] = Boolean(values[key]);
       continue;
@@ -92,6 +143,10 @@ export function valuesToComponentProps(
       o[key] = parseStringArrayPanelValue(values[key]);
       continue;
     }
+    if (kind === "numberArray") {
+      o[key] = parseNumberArrayPanelValue(values[key]);
+      continue;
+    }
     if (kind === "string" || kind === "node") {
       o[key] = values[key];
       continue;
@@ -104,7 +159,8 @@ export function valuesToComponentProps(
       o[key] = parseStringArrayPanelValue(values[key]);
       continue;
     }
-    o[key] = values[key];
+    // Unclassified without a control kind: do not invent values.
+    continue;
   }
   return o;
 }

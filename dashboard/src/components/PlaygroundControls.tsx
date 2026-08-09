@@ -24,15 +24,15 @@ export function PlaygroundControls({ controls, values, onChange, onReset, bare }
 
   const inner = (
     <>
-      <div className="flex p-3 pl-5 flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-3 pb-3 pl-5">
+        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           Controls
         </p>
         <Button type="button" variant="outline" size="sm" onClick={onReset}>
           Reset defaults
         </Button>
       </div>
-      <div className=" p-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 p-3" className:sm="grid-cols-2" className:lg="grid-cols-3">
         {controls.map((c) => (
           <div key={c.key}>
             <PlaygroundControlField

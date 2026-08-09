@@ -1,8 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import {
-  monospaceCharCountThatFits,
-  truncatePathMiddle,
-} from "../dashboard/paths";
+import { monospaceCharCountThatFits, truncatePathMiddle } from "../dashboard/paths";
 import { cn } from "../lib/utils";
 
 export function TruncatedPath({
@@ -33,11 +30,7 @@ export function TruncatedPath({
   }, [path]);
 
   return (
-    <span
-      ref={ref}
-      className={cn("block min-w-0 font-mono", className)}
-      title={title ?? path}
-    >
+    <span ref={ref} className={cn("block min-w-0 font-mono", className)} title={title ?? path}>
       {displayPath}
     </span>
   );

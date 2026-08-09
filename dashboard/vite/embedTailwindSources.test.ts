@@ -53,9 +53,7 @@ describe("embedTailwindSources", () => {
     const out = buildEmbedIndexCss(base, ["../../demo/react/src/components"]);
     expect(out).toContain('@source "../src";');
     expect(out).toContain('@source "../../demo/react/src/components";');
-    expect(out.indexOf('../src";')).toBeLessThan(
-      out.indexOf("demo/react/src/components"),
-    );
+    expect(out.indexOf('../src";')).toBeLessThan(out.indexOf("demo/react/src/components"));
   });
 
   it("shouldInjectEmbedConsumerSources when scan root differs from package root", () => {
@@ -67,8 +65,6 @@ describe("embedTailwindSources", () => {
     );
 
     expect(shouldInjectEmbedConsumerSources(root, packageRoot)).toBe(true);
-    expect(shouldInjectEmbedConsumerSources(packageRoot, packageRoot)).toBe(
-      false,
-    );
+    expect(shouldInjectEmbedConsumerSources(packageRoot, packageRoot)).toBe(false);
   });
 });

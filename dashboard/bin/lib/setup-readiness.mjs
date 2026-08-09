@@ -66,14 +66,32 @@ export async function ensureMinimalSetup(opts) {
   const reportPath = resolve(opts.reportPath);
   const noScaffold = readEnv("NO_SCAFFOLD") === "1";
 
-  const issues = assessSetupReadiness(targetDir, reportPath);
+  /** @type {string[]} */
+  const applied = [];
+
+  // Always create the report parent dir — low risk and required for live report writes.
+  const publicIssues = assessSetupReadiness(targetDir, reportPath).filter(
+    (i) => i.kind === "missing_public",
+  );
+  if (publicIssues.length && !noScaffold) {
+    ensurePublicDir(reportPath);
+    applied.push(dirname(reportPath));
+    process.stderr.write(`dslinter: created ${dirname(reportPath)}/\n`);
+  }
+
+  const issues = assessSetupReadiness(targetDir, reportPath).filter(
+    (i) => i.kind === "missing_config",
+  );
   if (!issues.length || noScaffold) {
     if (issues.length && noScaffold) {
       process.stderr.write(
         `dslinter: setup incomplete (${issues.map((i) => i.label).join(", ")}). Set DSLINTER_NO_SCAFFOLD=0 or run with --yes to create.\n`,
       );
     }
-    return { applied: [], skipped: noScaffold && issues.length > 0 };
+    return {
+      applied,
+      skipped: noScaffold && issues.length > 0,
+    };
   }
 
   const ci = process.env.CI === "true" || process.env.CI === "1";
@@ -91,18 +109,15 @@ export async function ensureMinimalSetup(opts) {
     process.stderr.write(
       `dslinter: setup incomplete (${issues.map((i) => i.label).join(", ")}). Run with --yes or use an interactive terminal.\n`,
     );
-    return { applied: [], skipped: true };
+    return { applied, skipped: true };
   }
 
   if (!shouldApply) {
     process.stderr.write(
       "dslinter: continuing without scaffold — previews and governance may be limited.\n",
     );
-    return { applied: [], skipped: true };
+    return { applied, skipped: true };
   }
-
-  /** @type {string[]} */
-  const applied = [];
 
   if (issues.some((i) => i.kind === "missing_config")) {
     const layout = detectInitLayout(targetDir);
@@ -110,9 +125,7 @@ export async function ensureMinimalSetup(opts) {
     if (interactive && includeDir) {
       const rl = createInterface({ input, output });
       try {
-        const answer = (
-          await rl.question(`Components directory [${includeDir}]: `)
-        ).trim();
+        const answer = (await rl.question(`Components directory [${includeDir}]: `)).trim();
         if (answer) includeDir = answer;
       } finally {
         rl.close();
@@ -125,12 +138,6 @@ export async function ensureMinimalSetup(opts) {
     });
     applied.push(result.path);
     process.stderr.write(`dslinter: created ${result.path}\n`);
-  }
-
-  if (issues.some((i) => i.kind === "missing_public")) {
-    ensurePublicDir(reportPath);
-    applied.push(dirname(reportPath));
-    process.stderr.write(`dslinter: created ${dirname(reportPath)}/\n`);
   }
 
   return { applied, skipped: false };

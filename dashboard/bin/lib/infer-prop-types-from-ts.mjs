@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 
-/** @typedef {"boolean" | "string" | "number" | "node" | "stringArray"} DeclaredPropKind */
+/** @typedef {"boolean" | "string" | "number" | "node" | "stringArray" | "numberArray" | "function" | "icon" | "object"} DeclaredPropKind */
 
 /**
  * @param {string} projectRoot
@@ -167,9 +167,127 @@ function isStringElementArrayType(checker, type) {
   const elem = checker.getElementTypeOfArrayType(nn);
   if (!elem) return false;
   const elemNn = checker.getNonNullableType(elem);
-  return (
-    (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0
+  return (elemNn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) !== 0;
+}
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ */
+function isNumberElementArrayType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const elem = checker.getElementTypeOfArrayType(nn);
+  if (!elem) return false;
+  const elemNn = checker.getNonNullableType(elem);
+  return (elemNn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) !== 0;
+}
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ */
+function isFunctionPropType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  if (nn.getCallSignatures().length > 0) return true;
+  const text = checker.typeToString(nn);
+  return /^\(.*\)\s*=>/.test(text) || text.startsWith("Function");
+}
+
+const ICON_TYPE_NAMES = new Set([
+  "LucideIcon",
+  "ElementType",
+  "ComponentType",
+  "FC",
+  "FunctionComponent",
+  "Component",
+  "ForwardRefExoticComponent",
+  "JSXElementConstructor",
+]);
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ */
+function isIconPropType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (ICON_TYPE_NAMES.has(alias)) return true;
+  const symName = String(nn.getSymbol()?.escapedName ?? nn.getSymbol()?.name ?? "");
+  if (ICON_TYPE_NAMES.has(symName)) return true;
+  const text = checker.typeToString(nn);
+  return /LucideIcon|ElementType|ComponentType|ForwardRefExoticComponent|FunctionComponent|\bFC</.test(
+    text,
   );
+}
+
+/**
+ * Prefer a short display label for icon/component props.
+ *
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ */
+function iconTypeLabel(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (ICON_TYPE_NAMES.has(alias)) return alias;
+  const text = checker.typeToString(nn);
+  for (const name of ICON_TYPE_NAMES) {
+    if (text.includes(name)) return name;
+  }
+  return text || "ComponentType";
+}
+
+/**
+ * Prefer alias/symbol name (`Passkey`) over expanded object text.
+ *
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ */
+function objectTypeLabel(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (alias && alias !== "__type") return alias;
+  const symName = String(nn.getSymbol()?.escapedName ?? nn.getSymbol()?.name ?? "");
+  if (symName && symName !== "__type") return symName;
+  return checker.typeToString(nn) || "object";
+}
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ */
+function functionTypeLabel(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  return checker.typeToString(nn) || "function";
+}
+
+/**
+ * Non-primitive object / interface / type-literal (not arrays).
+ *
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ */
+function isObjectPropType(checker, type) {
+  const nn = checker.getNonNullableType(type);
+  if (checker.getElementTypeOfArrayType(nn)) return false;
+  if (nn.getCallSignatures().length > 0) return false;
+  if (nn.flags & ts.TypeFlags.Object) return true;
+  if (nn.flags & ts.TypeFlags.NonPrimitive) return true;
+  const alias = String(nn.aliasSymbol?.escapedName ?? nn.aliasSymbol?.name ?? "");
+  if (alias && alias !== "__type") return true;
+  return false;
+}
+
+/**
+ * @param {import("typescript").TypeChecker} checker
+ * @param {import("typescript").Type} type
+ * @param {DeclaredPropKind} kind
+ */
+function typeLabelForKind(checker, type, kind) {
+  if (kind === "icon") return iconTypeLabel(checker, type);
+  if (kind === "function") return functionTypeLabel(checker, type);
+  if (kind === "object") return objectTypeLabel(checker, type);
+  return undefined;
 }
 
 /**
@@ -180,11 +298,13 @@ function isStringElementArrayType(checker, type) {
 export function classifyPropType(checker, type) {
   if (isReactNodeType(checker, type)) return "node";
   const nn = checker.getNonNullableType(type);
+  // Icon/component types are often callable — check before function.
+  if (isIconPropType(checker, nn)) return "icon";
+  if (isFunctionPropType(checker, nn)) return "function";
   if (isStringElementArrayType(checker, nn)) return "stringArray";
+  if (isNumberElementArrayType(checker, nn)) return "numberArray";
   if (nn.isUnion()) {
-    const parts = nn.types.map((u) =>
-      classifyPropType(checker, checker.getNonNullableType(u)),
-    );
+    const parts = nn.types.map((u) => classifyPropType(checker, checker.getNonNullableType(u)));
     const ok = parts.filter((p) => p !== null);
     if (!ok.length) return null;
     const set = new Set(ok);
@@ -197,6 +317,7 @@ export function classifyPropType(checker, type) {
   if (nn.flags & (ts.TypeFlags.Enum | ts.TypeFlags.EnumLiteral)) return "string";
   if (nn.flags & (ts.TypeFlags.Number | ts.TypeFlags.NumberLike)) return "number";
   if (nn.flags & (ts.TypeFlags.String | ts.TypeFlags.StringLike)) return "string";
+  if (isObjectPropType(checker, nn)) return "object";
   return null;
 }
 
@@ -206,10 +327,7 @@ export function classifyPropType(checker, type) {
  */
 function isPlainStringType(checker, type) {
   const nn = checker.getNonNullableType(type);
-  return (
-    (nn.flags & ts.TypeFlags.String) !== 0 &&
-    (nn.flags & ts.TypeFlags.StringLiteral) === 0
-  );
+  return (nn.flags & ts.TypeFlags.String) !== 0 && (nn.flags & ts.TypeFlags.StringLiteral) === 0;
 }
 
 /**
@@ -304,6 +422,8 @@ function sourceFileForRelPath(program, projectRoot, relPath) {
  *   declared_prop_options?: Record<string, string[]>;
  *   declared_prop_defaults?: Record<string, string>;
  *   declared_prop_kinds?: Record<string, string>;
+ *   declared_prop_optional?: Record<string, boolean>;
+ *   declared_prop_type_labels?: Record<string, string>;
  * }} [existing]
  */
 export function inferPlaygroundPropMetadata(
@@ -321,6 +441,8 @@ export function inferPlaygroundPropMetadata(
       declared_prop_kinds: existing.declared_prop_kinds ?? {},
       declared_prop_options: existing.declared_prop_options ?? {},
       declared_prop_defaults: existing.declared_prop_defaults ?? {},
+      declared_prop_optional: existing.declared_prop_optional ?? {},
+      declared_prop_type_labels: existing.declared_prop_type_labels ?? {},
     };
   }
 
@@ -330,6 +452,8 @@ export function inferPlaygroundPropMetadata(
       declared_prop_kinds: existing.declared_prop_kinds ?? {},
       declared_prop_options: existing.declared_prop_options ?? {},
       declared_prop_defaults: existing.declared_prop_defaults ?? {},
+      declared_prop_optional: existing.declared_prop_optional ?? {},
+      declared_prop_type_labels: existing.declared_prop_type_labels ?? {},
     };
   }
 
@@ -339,6 +463,10 @@ export function inferPlaygroundPropMetadata(
   const options = { ...existing.declared_prop_options };
   /** @type {Record<string, string>} */
   const defaults = { ...existing.declared_prop_defaults };
+  /** @type {Record<string, boolean>} */
+  const optional = { ...existing.declared_prop_optional };
+  /** @type {Record<string, string>} */
+  const typeLabels = { ...existing.declared_prop_type_labels };
 
   for (const key of declaredProps) {
     if (key === "key" || key === "ref") continue;
@@ -347,9 +475,17 @@ export function inferPlaygroundPropMetadata(
     if (!sym) continue;
     const propType = checker.getTypeOfSymbol(sym);
 
+    optional[key] = !!(sym.flags & ts.SymbolFlags.Optional);
+
     if (!kinds[key]) {
       const kind = classifyPropType(checker, propType);
       if (kind !== null) kinds[key] = kind;
+    }
+
+    const kind = kinds[key];
+    if ((kind === "icon" || kind === "function" || kind === "object") && !typeLabels[key]) {
+      const label = typeLabelForKind(checker, propType, kind);
+      if (label) typeLabels[key] = label;
     }
 
     if (!options[key]) {
@@ -367,6 +503,8 @@ export function inferPlaygroundPropMetadata(
     declared_prop_kinds: kinds,
     declared_prop_options: options,
     declared_prop_defaults: defaults,
+    declared_prop_optional: optional,
+    declared_prop_type_labels: typeLabels,
   };
 }
 

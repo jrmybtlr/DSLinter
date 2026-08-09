@@ -5,10 +5,11 @@ import {
   shouldUseExampleTreePreview,
 } from "./shouldUseExampleTreePreview";
 
-const el = (
-  name: string,
-  children: ExampleNode[] = [],
-): ExampleNode => ({ type: "element", name, children });
+const el = (name: string, children: ExampleNode[] = []): ExampleNode => ({
+  type: "element",
+  name,
+  children,
+});
 
 const report: WorkspaceReport = {
   root: "/repo",
@@ -72,10 +73,7 @@ describe("shouldUseExampleTreePreview", () => {
       example_tree: tree,
     };
     expect(shouldUseExampleTreePreview(spec, tree, report)).toBe(false);
-    expect(nestedComponentNamesInTree(tree, "Button")).toEqual([
-      "Avatar",
-      "AvatarImage",
-    ]);
+    expect(nestedComponentNamesInTree(tree, "Button")).toEqual(["Avatar", "AvatarImage"]);
   });
 
   it("keeps example tree for same-module compound kits", () => {

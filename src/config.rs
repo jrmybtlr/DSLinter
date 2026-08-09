@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 const DEFAULT_CONFIG_NAMES: &[&str] = &[".dslinter.json", "dslinter.json"];
 
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct CodeQualityConfig {
     /// Rule ids or prefixes (`code-*` quality heuristics; `smell-*` aliases) to silence for this repo.
     #[serde(default)]
@@ -18,11 +18,20 @@ pub struct CodeQualityConfig {
     pub report_console_error: bool,
 }
 
+impl Default for CodeQualityConfig {
+    fn default() -> Self {
+        Self {
+            disabled_rules: Vec::new(),
+            report_console_error: true,
+        }
+    }
+}
+
 fn default_true() -> bool {
     true
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct DslintConfig {
     /// Restrict component/file discovery to these directory prefixes (relative to repo root).
     /// When empty, all directories are eligible (subject to ignores).
@@ -65,7 +74,8 @@ pub struct DslintConfig {
     #[serde(default)]
     pub check_dark_mode_contrast: bool,
     /// When true, emit `token-unused-css-var` for theme/root CSS variables with no references.
-    #[serde(default)]
+    /// Defaults to true; set `false` in `.dslinter.json` to disable.
+    #[serde(default = "default_true")]
     pub check_unused_css_tokens: bool,
     /// Prefixes for in-repo import paths (e.g. `@/components`). Imports starting with `./`,
     /// `../`, or any of these prefixes are treated as local design-system modules.
@@ -81,6 +91,29 @@ pub struct DslintConfig {
     /// `"cursor --goto {file}:{line}:{column}"`).
     #[serde(default)]
     pub editor_open_command: Option<String>,
+}
+
+impl Default for DslintConfig {
+    fn default() -> Self {
+        Self {
+            include_dirs: Vec::new(),
+            ignore_globs: Vec::new(),
+            css_entrypoints: Vec::new(),
+            deprecated_components: Vec::new(),
+            known_tokens: Vec::new(),
+            playground_groups: HashMap::new(),
+            hidden_components: Vec::new(),
+            hidden_paths: Vec::new(),
+            exclude_globs: Vec::new(),
+            code_quality: CodeQualityConfig::default(),
+            check_unused_props: false,
+            check_dark_mode_contrast: false,
+            check_unused_css_tokens: true,
+            local_import_prefixes: default_local_import_prefixes(),
+            external_import_patterns: default_external_import_patterns(),
+            editor_open_command: None,
+        }
+    }
 }
 
 fn default_local_import_prefixes() -> Vec<String> {

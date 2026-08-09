@@ -10,10 +10,7 @@ import {
   resolveModuleKeyForRelPath,
   type PlaygroundJoinSkip,
 } from "./playgroundJoin";
-import {
-  definitionPathsForName,
-  isCatalogComponentHidden,
-} from "../dashboard/catalogVisibility";
+import { definitionPathsForName, isCatalogComponentHidden } from "../dashboard/catalogVisibility";
 import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
 import { catalogIdFromPlaygroundExport } from "./catalogIdFromPlaygroundExport";
 import {
@@ -24,11 +21,7 @@ import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
 import { getModuleExport } from "./playgroundModuleExport";
 import { mergeReportControlsForKit, type PlaygroundKitHints } from "./enrichKitControls";
 import { shouldUseExampleTreePreview } from "./shouldUseExampleTreePreview";
-import {
-  componentAcceptsChildren,
-  controlsForSpec,
-  ensureChildrenControl,
-} from "./controls";
+import { componentAcceptsChildren, controlsForSpec, ensureChildrenControl } from "./controls";
 import { genericUsageSnippet } from "./snippet";
 import { mergeStaticDefaults, normalizedPropKinds, valuesToComponentProps } from "./propCoerce";
 import {
@@ -37,7 +30,9 @@ import {
   renderExampleTree,
 } from "./renderExampleTree";
 
-function isDefinedPlayground(value: unknown): value is import("./definePlayground").DefinedPlayground {
+function isDefinedPlayground(
+  value: unknown,
+): value is import("./definePlayground").DefinedPlayground {
   if (!value || typeof value !== "object") return false;
   const o = value as Record<string, unknown>;
   if (typeof o.playgroundMeta !== "object" || o.playgroundMeta === null) return false;
@@ -90,8 +85,7 @@ function enrichManualEntriesFromReport(
     if (!mod || typeof mod !== "object") continue;
     for (const [exportName, value] of Object.entries(mod)) {
       if (!isDefinedPlayground(value)) continue;
-      const catalogId =
-        value.playgroundMeta.id || catalogIdFromPlaygroundExport(exportName) || "";
+      const catalogId = value.playgroundMeta.id || catalogIdFromPlaygroundExport(exportName) || "";
       if (!catalogId) continue;
       definedById.set(catalogId, value);
     }
@@ -99,11 +93,7 @@ function enrichManualEntriesFromReport(
 
   return entries.map((entry) => {
     const defined = definedById.get(entry.id);
-    const bindings = fallbackRootPropBindings(
-      entry,
-      defined?.playgroundKitHints,
-      report,
-    );
+    const bindings = fallbackRootPropBindings(entry, defined?.playgroundKitHints, report);
     if (!bindings.length) return entry;
     const controls = mergeReportControlsForKit(entry.controls, bindings, report, entry.id);
     return controls === entry.controls ? entry : { ...entry, controls };
@@ -137,9 +127,7 @@ function usageForExportName(
  * Drop empty control values so they don't clobber props captured in the
  * example tree (e.g. an empty `className` control vs. the real call site's).
  */
-function compactExampleOverrides(
-  props: Record<string, unknown>,
-): Record<string, unknown> {
+function compactExampleOverrides(props: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null || value === "") continue;
@@ -187,8 +175,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
   options: BuildPlaygroundOptions = {},
 ): BuildPlaygroundResult {
   const specs = report?.playgrounds;
-  const globKeyFromRelPath =
-    options.globKeyFromRelPath ?? defaultEmbedGlobKeyFromRelPath;
+  const globKeyFromRelPath = options.globKeyFromRelPath ?? defaultEmbedGlobKeyFromRelPath;
   const controlOverrides = options.controlOverrides ?? {};
   const staticDefaultsMap = options.staticDefaults ?? {};
 
@@ -231,6 +218,8 @@ export function buildPlaygroundEntriesFromReportWithSkips(
         spec.declared_prop_defaults,
         controlOverrides,
         spec.export_name,
+        spec.declared_prop_optional,
+        spec.declared_prop_type_labels,
       ),
       // Example trees carry their own children — a children control would fight them.
       !shouldUseExampleTreePreview(spec, spec.example_tree, report) &&
@@ -306,10 +295,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     modules,
     report,
   );
-  const merged = mergePlaygroundEntries(
-    [...autoEntries, ...compoundEntries],
-    manualEntries,
-  );
+  const merged = mergePlaygroundEntries([...autoEntries, ...compoundEntries], manualEntries);
   return {
     entries: filterCatalogVisiblePlaygroundEntries(report, merged),
     skipped,
@@ -332,11 +318,7 @@ function filterCatalogVisiblePlaygroundEntries(
   if (!report) return entries;
   return entries.filter(
     (entry) =>
-      !isCatalogComponentHidden(
-        entry.meta.id,
-        report,
-        entryPathsForCatalog(report, entry),
-      ),
+      !isCatalogComponentHidden(entry.meta.id, report, entryPathsForCatalog(report, entry)),
   );
 }
 

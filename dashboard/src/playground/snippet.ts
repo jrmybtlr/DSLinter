@@ -39,9 +39,15 @@ function valueMatchesPlaygroundDefault(
       return Number.isFinite(n) && n === control.default;
     }
     case "string":
+    case "stringArray":
+    case "numberArray":
     case "node":
     case "select":
       return String(value ?? "") === String(control.default);
+    case "icon":
+    case "object":
+    case "function":
+      return true;
     default:
       return false;
   }
@@ -62,22 +68,16 @@ export function genericUsageSnippet(
     return !valueMatchesPlaygroundDefault(c, panelValues[key]);
   };
 
-  const hasChildrenKey = Object.prototype.hasOwnProperty.call(
-    panelValues,
-    "children",
-  );
+  const hasChildrenKey = Object.prototype.hasOwnProperty.call(panelValues, "children");
   const childVal = hasChildrenKey ? panelValues.children : undefined;
 
   const propKeys = Object.keys(propsForSnippet)
     .filter((k) => k !== "children")
     .filter(emitPropKey)
     .sort((a, b) => a.localeCompare(b));
-  const propsStr = propKeys
-    .map((k) => formatJsxPropAssignment(k, propsForSnippet[k]))
-    .join(" ");
+  const propsStr = propKeys.map((k) => formatJsxPropAssignment(k, propsForSnippet[k])).join(" ");
 
-  const openWithProps =
-    propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
+  const openWithProps = propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
 
   if (!hasChildrenKey) {
     return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
@@ -87,16 +87,11 @@ export function genericUsageSnippet(
     const allKeys = Object.keys(propsForSnippet)
       .filter(emitPropKey)
       .sort((a, b) => a.localeCompare(b));
-    const allProps = allKeys
-      .map((k) => formatJsxPropAssignment(k, propsForSnippet[k]))
-      .join(" ");
-    return allKeys.length === 0
-      ? `<${exportName} />`
-      : `<${exportName} ${allProps} />`;
+    const allProps = allKeys.map((k) => formatJsxPropAssignment(k, propsForSnippet[k])).join(" ");
+    return allKeys.length === 0 ? `<${exportName} />` : `<${exportName} ${allProps} />`;
   }
 
-  const asText =
-    typeof childVal === "number" ? String(childVal) : String(childVal ?? "");
+  const asText = typeof childVal === "number" ? String(childVal) : String(childVal ?? "");
   if (asText.length === 0) {
     return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
   }

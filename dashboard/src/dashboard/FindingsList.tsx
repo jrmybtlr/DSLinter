@@ -16,12 +16,7 @@ import { SourceLocationLink } from "./SourceLocationLink";
 type Filter = "all" | Severity;
 
 function isFilter(value: string): value is Filter {
-  return (
-    value === "all" ||
-    value === "error" ||
-    value === "warning" ||
-    value === "info"
-  );
+  return value === "all" || value === "error" || value === "warning" || value === "info";
 }
 
 function emptyFilterMessage(filter: Exclude<Filter, "all">): string {
@@ -30,13 +25,7 @@ function emptyFilterMessage(filter: Exclude<Filter, "all">): string {
   return "No info findings in these findings.";
 }
 
-export function FindingsList({
-  findings,
-  root,
-}: {
-  findings: LintFinding[];
-  root: string;
-}) {
+export function FindingsList({ findings, root }: { findings: LintFinding[]; root: string }) {
   const [filter, setFilter] = useState<Filter>("all");
 
   const counts = useMemo(() => {
@@ -50,10 +39,7 @@ export function FindingsList({
   }, [findings]);
 
   const filtered = useMemo(
-    () =>
-      filter === "all"
-        ? findings
-        : findings.filter((f) => f.severity === filter),
+    () => (filter === "all" ? findings : findings.filter((f) => f.severity === filter)),
     [findings, filter],
   );
 
@@ -74,41 +60,21 @@ export function FindingsList({
         aria-label="Filter findings by severity"
         className="contents"
       >
-        <ToggleGroupItem
-          value="all"
-          className="rounded-full px-2.5 text-xs font-medium"
-        >
+        <ToggleGroupItem value="all" className="rounded-full px-2.5 text-xs font-medium">
           All
-          <span className="ml-1 tabular-nums text-muted-foreground">
-            {findings.length}
-          </span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{findings.length}</span>
         </ToggleGroupItem>
-        <ToggleGroupItem
-          value="warning"
-          className="rounded-full px-2.5 text-xs font-medium"
-        >
+        <ToggleGroupItem value="warning" className="rounded-full px-2.5 text-xs font-medium">
           Warnings
-          <span className="ml-1 tabular-nums text-muted-foreground">
-            {counts.warning}
-          </span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{counts.warning}</span>
         </ToggleGroupItem>
-        <ToggleGroupItem
-          value="error"
-          className="rounded-full px-2.5 text-xs font-medium"
-        >
+        <ToggleGroupItem value="error" className="rounded-full px-2.5 text-xs font-medium">
           Errors
-          <span className="ml-1 tabular-nums text-muted-foreground">
-            {counts.error}
-          </span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{counts.error}</span>
         </ToggleGroupItem>
-        <ToggleGroupItem
-          value="info"
-          className="rounded-full px-2.5 text-xs font-medium"
-        >
+        <ToggleGroupItem value="info" className="rounded-full px-2.5 text-xs font-medium">
           Info
-          <span className="ml-1 tabular-nums text-muted-foreground">
-            {counts.info}
-          </span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{counts.info}</span>
         </ToggleGroupItem>
       </ToggleGroup>
 
@@ -129,7 +95,8 @@ export function FindingsList({
             {filtered.map((f, i) => (
               <TableRow
                 key={`${f.rule_id}-${f.path}-${f.line ?? "x"}-${i}`}
-                className="border-border hover:bg-transparent"
+                className="border-border"
+                className:hover="bg-transparent"
               >
                 <TableCell className="px-3 py-2">
                   <Badge
@@ -144,20 +111,12 @@ export function FindingsList({
                     {f.severity}
                   </Badge>
                 </TableCell>
-                <TableCell className="min-w-0 whitespace-normal px-3 py-2">
-                  <div className="font-mono text-xs text-muted-foreground">
-                    {f.rule_id}
-                  </div>
-                  <div className="mt-0.5 text-xs text-pretty text-foreground">
-                    {f.message}
-                  </div>
+                <TableCell className="min-w-0 px-3 py-2 whitespace-normal">
+                  <div className="font-mono text-xs text-muted-foreground">{f.rule_id}</div>
+                  <div className="mt-0.5 text-xs text-pretty text-foreground">{f.message}</div>
                 </TableCell>
                 <TableCell className="min-w-0 px-3 py-2">
-                  <SourceLocationLink
-                    root={root}
-                    path={f.path}
-                    line={f.line}
-                  />
+                  <SourceLocationLink root={root} path={f.path} line={f.line} />
                 </TableCell>
               </TableRow>
             ))}

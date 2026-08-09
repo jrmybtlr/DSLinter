@@ -7,7 +7,6 @@ import {
   fileStemToCatalogGroupLabel,
   findingsForGovernanceTab,
   governanceTabCounts,
-  implementationClassFrequenciesForComponent,
   resolveFamilyNavigationTarget,
   unusedComponentsFromReport,
 } from "./aggregate";
@@ -95,9 +94,7 @@ describe("componentCatalogFamiliesFromReport", () => {
     );
 
     expect(componentCatalogFamiliesFromReport(report)).toEqual([]);
-    expect(componentCatalogTreeFromReport(report)).toEqual([
-      { type: "component", name: "Button" },
-    ]);
+    expect(componentCatalogTreeFromReport(report)).toEqual([{ type: "component", name: "Button" }]);
   });
 
   it("folds usage-only root exports into the file group instead of duplicating the label", () => {
@@ -145,13 +142,7 @@ describe("componentCatalogFamiliesFromReport", () => {
     expect(componentCatalogFamiliesFromReport(report)).toEqual([
       {
         parent: "Select",
-        children: [
-          "Select",
-          "SelectContent",
-          "SelectItem",
-          "SelectTrigger",
-          "SelectValue",
-        ],
+        children: ["Select", "SelectContent", "SelectItem", "SelectTrigger", "SelectValue"],
         path: selectPath,
       },
     ]);
@@ -159,13 +150,7 @@ describe("componentCatalogFamiliesFromReport", () => {
       {
         type: "family",
         parent: "Select",
-        children: [
-          "Select",
-          "SelectContent",
-          "SelectItem",
-          "SelectTrigger",
-          "SelectValue",
-        ],
+        children: ["Select", "SelectContent", "SelectItem", "SelectTrigger", "SelectValue"],
         path: selectPath,
       },
     ]);
@@ -225,12 +210,7 @@ describe("resolveFamilyNavigationTarget", () => {
   it("prefers a child export whose normalized name matches the file stem", () => {
     const family = {
       parent: "DropdownMenu",
-      children: [
-        "DropdownMenu",
-        "DropdownMenuContent",
-        "DropdownMenuItem",
-        "DropdownMenuTrigger",
-      ],
+      children: ["DropdownMenu", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuTrigger"],
       path: "/repo/src/components/ui/dropdown-menu.tsx",
     };
     const names = componentCatalogNamesFromReport(reportWithDefinitions([]));
@@ -253,9 +233,7 @@ describe("resolveFamilyNavigationTarget", () => {
       path: "/repo/src/components/icons.tsx",
     };
 
-    expect(resolveFamilyNavigationTarget(family, ["IconCheck", "IconSearch"])).toBe(
-      "IconCheck",
-    );
+    expect(resolveFamilyNavigationTarget(family, ["IconCheck", "IconSearch"])).toBe("IconCheck");
   });
 });
 
@@ -328,30 +306,6 @@ describe("unusedComponentsFromReport", () => {
     };
 
     expect(unusedComponentsFromReport(report)).toEqual([]);
-  });
-});
-
-describe("implementationClassFrequenciesForComponent", () => {
-  it("merges class tokens from component definitions including intrinsics", () => {
-    const report = reportWithDefinitions([
-      {
-        name: "AppearanceToggleTab",
-        kind: "function",
-        line: 8,
-        implementation_class_frequencies: {
-          "ml-1.5": 1,
-          "-ml-1": 1,
-          "text-sm": 1,
-        },
-      },
-    ]);
-    expect(
-      implementationClassFrequenciesForComponent(report, "AppearanceToggleTab"),
-    ).toMatchObject({
-      "ml-1.5": 1,
-      "-ml-1": 1,
-      "text-sm": 1,
-    });
   });
 });
 

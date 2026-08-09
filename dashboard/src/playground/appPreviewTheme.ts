@@ -1,13 +1,7 @@
-import {
-  resolveCssVariables,
-  variableMapForScopes,
-} from "../css/resolveCssVariables";
+import { resolveCssVariables, variableMapForScopes } from "../css/resolveCssVariables";
 import type { CssTokenDefinition, CssTokenSummary, WorkspaceReport } from "../types/report";
 
-const DASHBOARD_THEME_PATH_MARKERS = [
-  "dashboard-theme.css",
-  "dslinter/theme.css",
-] as const;
+const DASHBOARD_THEME_PATH_MARKERS = ["dashboard-theme.css", "dslinter/theme.css"] as const;
 
 export type AppPreviewTheme = {
   light: Record<string, string>;
@@ -17,15 +11,10 @@ export type AppPreviewTheme = {
 
 export function isDashboardThemePath(path: string): boolean {
   const normalized = path.replace(/\\/g, "/");
-  return DASHBOARD_THEME_PATH_MARKERS.some((marker) =>
-    normalized.includes(marker),
-  );
+  return DASHBOARD_THEME_PATH_MARKERS.some((marker) => normalized.includes(marker));
 }
 
-export function isConsumerThemeDefinition(
-  def: CssTokenDefinition,
-  reportRoot?: string,
-): boolean {
+export function isConsumerThemeDefinition(def: CssTokenDefinition, reportRoot?: string): boolean {
   if (isDashboardThemePath(def.path)) return false;
 
   const normalizedPath = def.path.replace(/\\/g, "/");
@@ -61,12 +50,8 @@ export function buildAppPreviewTheme(
   const definitions = summary?.definitions;
   if (!definitions?.length) return null;
 
-  const light = resolveCssVariables(
-    definitionsForMode(definitions, "light", reportRoot),
-  );
-  const dark = resolveCssVariables(
-    definitionsForMode(definitions, "dark", reportRoot),
-  );
+  const light = resolveCssVariables(definitionsForMode(definitions, "light", reportRoot));
+  const dark = resolveCssVariables(definitionsForMode(definitions, "dark", reportRoot));
 
   const sourcePaths = [
     ...new Set(

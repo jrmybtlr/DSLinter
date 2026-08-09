@@ -18,18 +18,11 @@ function formatAxisValue(value: string | number | boolean | undefined): string {
   return JSON.stringify(value);
 }
 
-export function formatVariantLabel(
-  combo: PlaygroundArgs,
-  axisKeys: string[],
-): string {
-  return axisKeys
-    .map((key) => `${key}=${formatAxisValue(combo[key])}`)
-    .join(" ");
+export function formatVariantLabel(combo: PlaygroundArgs, axisKeys: string[]): string {
+  return axisKeys.map((key) => `${key}=${formatAxisValue(combo[key])}`).join(" ");
 }
 
-function axeImpactToSeverity(
-  impact: string | null | undefined,
-): Severity {
+function axeImpactToSeverity(impact: string | null | undefined): Severity {
   if (impact === "critical" || impact === "serious") return "error";
   if (impact === "moderate") return "warning";
   return "info";
@@ -59,9 +52,7 @@ export async function scanElementA11y(
     for (const node of violation.nodes) {
       findings.push({
         rule_id: `a11y-playground-${violation.id}`,
-        message: node.failureSummary
-          ? `${summary} (${node.failureSummary})`
-          : summary,
+        message: node.failureSummary ? `${summary} (${node.failureSummary})` : summary,
         path: "",
         line: null,
         severity,
@@ -101,7 +92,5 @@ export function playgroundA11yScore(
   staticFindings: LintFinding[],
   variantFindings: PlaygroundA11yFinding[],
 ): number {
-  return a11yScoreFromFindings(
-    mergePlaygroundA11yFindings(staticFindings, variantFindings),
-  );
+  return a11yScoreFromFindings(mergePlaygroundA11yFindings(staticFindings, variantFindings));
 }

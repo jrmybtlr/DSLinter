@@ -109,7 +109,9 @@ function buildKitPlayground<T extends PlaygroundArgs>(
   };
 }
 
-function isComponentPropsOptions(value: unknown): value is DefineWithComponent<Record<string, unknown>> {
+function isComponentPropsOptions(
+  value: unknown,
+): value is DefineWithComponent<Record<string, unknown>> {
   return typeof value === "object" && value !== null && "props" in value;
 }
 
@@ -134,7 +136,11 @@ export function definePlayground<T extends PlaygroundArgs>(
 export function definePlayground(options: DefineWithRender): DefinedPlayground;
 
 export function definePlayground<P extends Record<string, unknown>, T extends PlaygroundArgs>(
-  componentOrKitOrOptions: ComponentType<P> | ((args: T) => ReactNode) | DefineWithKit<T> | DefineWithRender,
+  componentOrKitOrOptions:
+    | ComponentType<P>
+    | ((args: T) => ReactNode)
+    | DefineWithKit<T>
+    | DefineWithRender,
   options?: DefineWithComponent<P> | (PlaygroundMetaOptions & { defaults?: Partial<T> }),
 ): DefinedPlayground {
   if (typeof componentOrKitOrOptions === "function" && isComponentPropsOptions(options)) {

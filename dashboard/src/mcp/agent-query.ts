@@ -67,27 +67,16 @@ function deprecatedSet(report: WorkspaceReport): Set<string> {
   return new Set(configSnapshot(report).deprecated_components ?? []);
 }
 
-function playgroundForComponent(
-  report: WorkspaceReport,
-  name: string,
-): PlaygroundSpec | undefined {
-  return (report.playgrounds ?? []).find(
-    (p) => p.export_name === name || p.id === name,
-  );
+function playgroundForComponent(report: WorkspaceReport, name: string): PlaygroundSpec | undefined {
+  return (report.playgrounds ?? []).find((p) => p.export_name === name || p.id === name);
 }
 
-function importPathForComponent(
-  report: WorkspaceReport,
-  name: string,
-): string | null {
+function importPathForComponent(report: WorkspaceReport, name: string): string | null {
   const pg = playgroundForComponent(report, name);
   return pg?.rel_path ?? null;
 }
 
-function duplicateLocations(
-  report: WorkspaceReport,
-  name: string,
-): string[] | null {
+function duplicateLocations(report: WorkspaceReport, name: string): string[] | null {
   const dup = (report.duplicate_components ?? []).find((d) => d.name === name);
   return dup ? dup.locations : null;
 }
@@ -117,10 +106,7 @@ function valuesFromUsageLocation(loc: UsageLocation): Record<string, unknown> {
   return values;
 }
 
-function exampleJsxForComponent(
-  report: WorkspaceReport,
-  name: string,
-): string | null {
+function exampleJsxForComponent(report: WorkspaceReport, name: string): string | null {
   const usage = usageMap(report).get(name);
   const pg = playgroundForComponent(report, name);
   const declared = aggregateDeclaredProps(report).get(name) ?? pg?.declared_props ?? [];
@@ -175,24 +161,17 @@ export function catalogSummary(
   if (q) {
     entries = entries.filter(
       (e) =>
-        e.name.toLowerCase().includes(q) ||
-        (e.import_path?.toLowerCase().includes(q) ?? false),
+        e.name.toLowerCase().includes(q) || (e.import_path?.toLowerCase().includes(q) ?? false),
     );
   }
 
-  entries.sort(
-    (a, b) =>
-      b.reference_count - a.reference_count || a.name.localeCompare(b.name),
-  );
+  entries.sort((a, b) => b.reference_count - a.reference_count || a.name.localeCompare(b.name));
 
   const limit = opts.limit ?? 100;
   return entries.slice(0, limit);
 }
 
-export function componentSpec(
-  report: WorkspaceReport,
-  name: string,
-): ComponentSpec | null {
+export function componentSpec(report: WorkspaceReport, name: string): ComponentSpec | null {
   const defs = aggregateDefinitions(report);
   if (!defs.has(name) && !usageMap(report).has(name)) {
     return null;
@@ -217,22 +196,13 @@ export function componentSpec(
   };
 }
 
-export function findingsQuery(
-  report: WorkspaceReport,
-  filters: FindingsQuery,
-): LintFinding[] {
+export function findingsQuery(report: WorkspaceReport, filters: FindingsQuery): LintFinding[] {
   let rows = [...(report.findings ?? [])];
 
   if (filters.component) {
     const componentFindings = findingsForComponent(report, filters.component);
-    const ids = new Set(
-      componentFindings.map(
-        (f) => `${f.rule_id}:${f.path}:${f.line ?? "x"}`,
-      ),
-    );
-    rows = rows.filter((f) =>
-      ids.has(`${f.rule_id}:${f.path}:${f.line ?? "x"}`),
-    );
+    const ids = new Set(componentFindings.map((f) => `${f.rule_id}:${f.path}:${f.line ?? "x"}`));
+    rows = rows.filter((f) => ids.has(`${f.rule_id}:${f.path}:${f.line ?? "x"}`));
   }
 
   if (filters.rule_prefix) {
@@ -264,10 +234,7 @@ export function findingsQuery(
   return rows.slice(0, limit);
 }
 
-export function findingsForPaths(
-  report: WorkspaceReport,
-  paths: string[],
-): LintFinding[] {
+export function findingsForPaths(report: WorkspaceReport, paths: string[]): LintFinding[] {
   const normalized = paths.map((p) => p.replace(/\\/g, "/"));
   return (report.findings ?? [])
     .filter((f) => normalized.some((p) => findingMatchesPath(f, p)))
@@ -295,9 +262,7 @@ export function tokenSummary(
   if (!css) return { tokens: [], unused_count: 0 };
 
   const unusedSet = new Set(css.unused_tokens ?? []);
-  const usageByName = new Map(
-    (css.usage_by_token ?? []).map((u) => [u.name, u.reference_count]),
-  );
+  const usageByName = new Map((css.usage_by_token ?? []).map((u) => [u.name, u.reference_count]));
 
   let tokens: TokenSummaryEntry[] = css.definitions.map((d) => ({
     name: d.name,

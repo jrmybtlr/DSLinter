@@ -10,8 +10,6 @@ export function a11yScoreFromSeverities(severities: Severity[]): number {
   return Math.max(0, Math.min(100, Math.round(100 - penalty)));
 }
 
-export function a11yScoreFromFindings(
-  findings: ReadonlyArray<{ severity: Severity }>,
-): number {
+export function a11yScoreFromFindings(findings: ReadonlyArray<{ severity: Severity }>): number {
   return a11yScoreFromSeverities(findings.map((f) => f.severity));
 }

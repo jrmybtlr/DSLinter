@@ -7,20 +7,20 @@ export function ScoreStrip({ scores }: { scores: GovernanceScores }) {
     { label: "Accessibility", value: scores.accessibility },
     { label: "Maintainability", value: scores.maintainability },
   ];
+  if (scores.token_adoption != null) {
+    items.push({ label: "Token adoption", value: scores.token_adoption });
+  }
+
+  const cols = items.length <= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-5";
 
   return (
-    <section className="grid grid-cols-2 divide-x divide-border border-b md:grid-cols-4">
+    <section className={`grid divide-x divide-border border-b bg-white ${cols}`}>
       {items.map(({ label, value }) => (
-        <div
-          key={label}
-          className="px-6 py-8 text-center text-card-foreground shadow-xs"
-        >
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+        <div key={label} className="px-6 py-8 text-center text-card-foreground shadow-xs">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground/70 uppercase">
             {label}
           </p>
-          <p className="mt-1.5 text-4xl font-semibold tabular-nums text-foreground">
-            {value}
-          </p>
+          <p className="mt-1.5 text-4xl font-semibold text-foreground tabular-nums">{value}</p>
         </div>
       ))}
     </section>

@@ -41,9 +41,7 @@ export function GovernanceInventoryTabs({
           className="rounded-full px-2.5 text-xs font-medium"
         >
           {tab.label}
-          <span className="ml-1 tabular-nums text-muted-foreground">
-            {counts[tab.id]}
-          </span>
+          <span className="ml-1 text-muted-foreground tabular-nums">{counts[tab.id]}</span>
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

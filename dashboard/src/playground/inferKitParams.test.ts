@@ -10,9 +10,7 @@ describe("inferKitParams", () => {
 
   it("reads inline defaults from destructuring", () => {
     const kit = ({ placeholder = "Pick a stack" }: { placeholder?: string }) => placeholder;
-    expect(inferKitParams(kit)).toEqual([
-      { key: "placeholder", defaultValue: "Pick a stack" },
-    ]);
+    expect(inferKitParams(kit)).toEqual([{ key: "placeholder", defaultValue: "Pick a stack" }]);
   });
 
   it("reads boolean defaults", () => {
@@ -32,10 +30,7 @@ describe("inferKitParams", () => {
 
   it("builds control defaults from inferred params", () => {
     expect(
-      controlsFromKitParams([
-        { key: "title" },
-        { key: "placeholder", defaultValue: "Pick one" },
-      ]),
+      controlsFromKitParams([{ key: "title" }, { key: "placeholder", defaultValue: "Pick one" }]),
     ).toEqual({ title: "title", placeholder: "Pick one" });
   });
 });

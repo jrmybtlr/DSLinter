@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { expandPlaygroundControls, exampleProps, propsFromControls } from "./expandPlaygroundControls";
+import {
+  expandPlaygroundControls,
+  exampleProps,
+  propsFromControls,
+} from "./expandPlaygroundControls";
 
 describe("expandPlaygroundControls", () => {
   it("expands string shorthand to string controls", () => {
     const controls = expandPlaygroundControls({ title: "Hello" });
-    expect(controls).toEqual([
-      { key: "title", label: "Title", type: "string", default: "Hello" },
-    ]);
+    expect(controls).toEqual([{ key: "title", label: "Title", type: "string", default: "Hello" }]);
   });
 
   it("expands prop key list with prop-name defaults", () => {

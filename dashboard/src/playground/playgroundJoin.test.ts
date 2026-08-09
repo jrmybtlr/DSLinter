@@ -93,9 +93,7 @@ describe("diagnosePlaygroundJoinSkips", () => {
         },
       ],
     };
-    const key = defaultConsumerGlobKeyFromRelPath(
-      "resources/js/components/app-logo-icon.tsx",
-    );
+    const key = defaultConsumerGlobKeyFromRelPath("resources/js/components/app-logo-icon.tsx");
     const modules = {
       [key]: {
         default: function AppLogoIcon() {
@@ -155,9 +153,7 @@ describe("isStaticBundledPreviewUnavailable", () => {
         reason: "module_not_found" as const,
       },
     ];
-    expect(isStaticBundledPreviewUnavailable(skipped, { production: true })).toBe(
-      true,
-    );
+    expect(isStaticBundledPreviewUnavailable(skipped, { production: true })).toBe(true);
   });
 
   it("returns false in dev mode", () => {
@@ -169,8 +165,6 @@ describe("isStaticBundledPreviewUnavailable", () => {
         reason: "module_not_found" as const,
       },
     ];
-    expect(isStaticBundledPreviewUnavailable(skipped, { production: false })).toBe(
-      false,
-    );
+    expect(isStaticBundledPreviewUnavailable(skipped, { production: false })).toBe(false);
   });
 });

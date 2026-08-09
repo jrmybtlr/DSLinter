@@ -44,6 +44,8 @@ export function enrichWorkspaceReport(report, projectRoot) {
       kinds: spec.declared_prop_kinds ?? {},
       options: spec.declared_prop_options ?? {},
       defaults: spec.declared_prop_defaults ?? {},
+      optional: spec.declared_prop_optional ?? {},
+      typeLabels: spec.declared_prop_type_labels ?? {},
     });
 
     const meta = inferPlaygroundPropMetadata(
@@ -57,6 +59,8 @@ export function enrichWorkspaceReport(report, projectRoot) {
         declared_prop_kinds: spec.declared_prop_kinds,
         declared_prop_options: spec.declared_prop_options,
         declared_prop_defaults: spec.declared_prop_defaults,
+        declared_prop_optional: spec.declared_prop_optional,
+        declared_prop_type_labels: spec.declared_prop_type_labels,
       },
     );
 
@@ -69,11 +73,19 @@ export function enrichWorkspaceReport(report, projectRoot) {
     if (Object.keys(meta.declared_prop_defaults).length) {
       spec.declared_prop_defaults = meta.declared_prop_defaults;
     }
+    if (Object.keys(meta.declared_prop_optional).length) {
+      spec.declared_prop_optional = meta.declared_prop_optional;
+    }
+    if (Object.keys(meta.declared_prop_type_labels).length) {
+      spec.declared_prop_type_labels = meta.declared_prop_type_labels;
+    }
 
     const after = JSON.stringify({
       kinds: spec.declared_prop_kinds ?? {},
       options: spec.declared_prop_options ?? {},
       defaults: spec.declared_prop_defaults ?? {},
+      optional: spec.declared_prop_optional ?? {},
+      typeLabels: spec.declared_prop_type_labels ?? {},
     });
     if (before !== after) changed = true;
   }
@@ -128,16 +140,10 @@ export function enrichReportFileBestEffort(reportPath, projectRoot) {
  * @param {EnrichOptions} opts
  * @returns {Promise<boolean>} true when enrichment ran and wrote the report
  */
-export async function enrichPlaygroundsFromTs({
-  projectRoot,
-  reportPath,
-  logPrefix = "dslinter",
-}) {
+export async function enrichPlaygroundsFromTs({ projectRoot, reportPath, logPrefix = "dslinter" }) {
   if (!createCheckerProgram(projectRoot)) {
     if (process.env.DSLINTER_DEBUG?.trim() === "1") {
-      process.stderr.write(
-        `${logPrefix}: skip playground TS enrichment (no tsconfig.json)\n`,
-      );
+      process.stderr.write(`${logPrefix}: skip playground TS enrichment (no tsconfig.json)\n`);
     }
     return false;
   }

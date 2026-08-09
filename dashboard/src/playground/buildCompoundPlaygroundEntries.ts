@@ -2,6 +2,7 @@ import { createElement, type ReactNode } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
 import type {
   ComponentDefinition,
+  DeclaredPropKind,
   DefinitionKind,
   ExampleNode,
   PlaygroundSpec,
@@ -16,13 +17,27 @@ import { resolveModuleKeyForRelPath } from "./playgroundJoin";
 import {
   childrenControl,
   childrenPropForPreview,
+  functionControlForProp,
+  iconControlForProp,
   isLikelyBooleanProp,
+  isLikelyFunctionProp,
   isPassthroughStringProp,
+  mergeControlOverrides,
+  nodeControlForProp,
+  numberArrayControlForProp,
+  objectControlForProp,
   resolveEffectivePropKind,
   SKIP_PLAYGROUND_PROPS,
   stringArrayControlForProp,
   stringDefaultForProp,
+  unknownControlForProp,
 } from "./controls";
+import {
+  mergeStaticDefaults,
+  normalizedPropKinds,
+  parseNumberArrayPanelValue,
+  parseStringArrayPanelValue,
+} from "./propCoerce";
 import { formatJsxPropAssignment } from "./snippet";
 import {
   createExampleComponentResolver,
@@ -204,15 +219,21 @@ function usageForExportName(report: WorkspaceReport, exportName: string): UsageS
   return report.usage_by_component?.find((u) => u.component === exportName);
 }
 
+function propKindsForExport(
+  report: WorkspaceReport,
+  exportName: string,
+): Partial<Record<string, DeclaredPropKind>> | undefined {
+  const playground = report.playgrounds?.find((p) => p.export_name === exportName);
+  return normalizedPropKinds(playground?.declared_prop_kinds);
+}
+
 function controlsFromDefinitionAndUsage(
   def: ComponentDefinition,
   usage: UsageSummary | undefined,
   controlOverrides: Record<string, PlaygroundControl[]>,
   catalogId: string,
+  propKinds?: Partial<Record<string, DeclaredPropKind>>,
 ): PlaygroundControl[] {
-  const override = controlOverrides[catalogId];
-  if (override) return override;
-
   const declared = def.declared_props ?? [];
   const skip = new Set([...SKIP_PLAYGROUND_PROPS, "as", "asChild"]);
   const propKeys = new Set<string>(declared);
@@ -264,12 +285,26 @@ function controlsFromDefinitionAndUsage(
       continue;
     }
 
-    const kind = resolveEffectivePropKind(key);
-    if (kind === "boolean" || isLikelyBooleanProp(key)) {
+    const kind = resolveEffectivePropKind(key, propKinds);
+    if (kind === "function" || (!kind && isLikelyFunctionProp(key))) {
+      out.push({ ...functionControlForProp(key), defaultSource: "example" });
+      continue;
+    }
+    if (kind === "boolean" || (!kind && isLikelyBooleanProp(key))) {
       out.push({ key, label: key, type: "boolean", default: false, defaultSource: "example" });
+    } else if (kind === "number") {
+      out.push({ key, label: key, type: "number", default: 0, defaultSource: "example" });
+    } else if (kind === "node") {
+      out.push({ ...nodeControlForProp(key), defaultSource: "example" });
     } else if (kind === "stringArray") {
       out.push({ ...stringArrayControlForProp(key), defaultSource: "example" });
-    } else {
+    } else if (kind === "numberArray") {
+      out.push({ ...numberArrayControlForProp(key), defaultSource: "example" });
+    } else if (kind === "icon") {
+      out.push({ ...iconControlForProp(key), defaultSource: "example" });
+    } else if (kind === "object") {
+      out.push({ ...objectControlForProp(key), defaultSource: "example" });
+    } else if (kind === "string" || isPassthroughStringProp(key)) {
       out.push({
         key,
         label: key,
@@ -278,6 +313,9 @@ function controlsFromDefinitionAndUsage(
         defaultSource: "example",
         placeholder: isPassthroughStringProp(key) ? undefined : key,
       });
+    } else {
+      // No faking: unclassified props are display-only, never string editors.
+      out.push({ ...unknownControlForProp(key), defaultSource: "example" });
     }
   }
 
@@ -288,10 +326,11 @@ function controlsFromDefinitionAndUsage(
     out.push({ ...childrenControl(catalogId), defaultSource: "example" });
   }
 
-  return out;
+  return mergeControlOverrides(out, controlOverrides[catalogId]);
 }
 
-function valuesToProps(
+/** Coerce playground panel values for compound previews (exported for unit tests). */
+export function valuesToProps(
   controls: PlaygroundControl[],
   values: PlaygroundArgs,
   exportName?: string,
@@ -300,6 +339,9 @@ function valuesToProps(
   for (const control of controls) {
     const key = control.key;
     if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
+    if (control.type === "icon" || control.type === "object" || control.type === "function") {
+      continue;
+    }
     if (key === "children") {
       const coerced = childrenPropForPreview(exportName, values.children);
       if (coerced !== undefined) o[key] = coerced;
@@ -317,21 +359,13 @@ function valuesToProps(
       const raw = values[key];
       const n = typeof raw === "number" ? raw : Number(raw);
       o[key] = Number.isFinite(n) ? n : 0;
+    } else if (control.type === "stringArray") {
+      o[key] = parseStringArrayPanelValue(values[key]);
+    } else if (control.type === "numberArray") {
+      o[key] = parseNumberArrayPanelValue(values[key]);
     } else {
       o[key] = values[key];
     }
-  }
-  return o;
-}
-
-function mergeStaticDefaults(
-  fromValues: Record<string, unknown>,
-  staticDefaults: Record<string, unknown>,
-): Record<string, unknown> {
-  const o = { ...fromValues };
-  for (const [k, v] of Object.entries(staticDefaults)) {
-    const cur = o[k];
-    if (cur === undefined || (cur === "" && k !== "children")) o[k] = v;
   }
   return o;
 }
@@ -487,21 +521,20 @@ export function buildCompoundPlaygroundEntryForTarget(
   modulePath: string,
   report: WorkspaceReport,
   modules: BuildPlaygroundModules,
-  options: Pick<
-    BuildCompoundPlaygroundOptions,
-    "controlOverrides" | "staticDefaults"
-  >,
+  options: Pick<BuildCompoundPlaygroundOptions, "controlOverrides" | "staticDefaults">,
 ): PlaygroundEntry | null {
   const def = family.exports.get(targetName);
   if (!def) return null;
   if (!getModuleExport(mod, targetName)) return null;
 
   const usage = usageForExportName(report, targetName);
+  const propKinds = propKindsForExport(report, targetName);
   const controls = controlsFromDefinitionAndUsage(
     def,
     usage,
     options.controlOverrides ?? {},
     targetName,
+    propKinds,
   );
   const staticDefaults = options.staticDefaults?.[targetName] ?? {};
 
@@ -512,9 +545,7 @@ export function buildCompoundPlaygroundEntryForTarget(
   // real context (e.g. BreadcrumbItem inside Breadcrumb → BreadcrumbList).
   const exampleTree = familyExampleTree(report, family);
   const exampleForTarget =
-    exampleTree && exampleTreeContainsElement(exampleTree, targetName)
-      ? exampleTree
-      : undefined;
+    exampleTree && exampleTreeContainsElement(exampleTree, targetName) ? exampleTree : undefined;
 
   let renderPreview: (values: PlaygroundArgs) => ReactNode;
   let usageSnippet: (values: PlaygroundArgs) => string;

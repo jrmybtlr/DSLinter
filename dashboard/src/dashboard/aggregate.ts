@@ -6,10 +6,7 @@ import type {
   UsageSummary,
   WorkspaceReport,
 } from "../types/report";
-import {
-  definitionPathsForName,
-  isCatalogComponentHidden,
-} from "./catalogVisibility";
+import { definitionPathsForName, isCatalogComponentHidden } from "./catalogVisibility";
 
 export interface DefinitionSite {
   kind: ComponentDefinition["kind"];
@@ -112,25 +109,6 @@ export function aggregateDeclaredProps(report: WorkspaceReport): Map<string, str
   return map;
 }
 
-/** Tailwind/class tokens from component JSX implementations (includes intrinsics). */
-export function implementationClassFrequenciesForComponent(
-  report: WorkspaceReport,
-  componentName: string,
-): Record<string, number> {
-  const merged: Record<string, number> = {};
-  for (const file of report.files ?? []) {
-    for (const def of file.definitions ?? []) {
-      if (def.name !== componentName) continue;
-      for (const [token, count] of Object.entries(
-        def.implementation_class_frequencies ?? {},
-      )) {
-        merged[token] = (merged[token] ?? 0) + count;
-      }
-    }
-  }
-  return merged;
-}
-
 export function usageMap(report: WorkspaceReport): Map<string, UsageSummary> {
   const m = new Map<string, UsageSummary>();
   for (const row of report.usage_by_component ?? []) {
@@ -140,11 +118,7 @@ export function usageMap(report: WorkspaceReport): Map<string, UsageSummary> {
 }
 
 function isVisibleCatalogName(report: WorkspaceReport, name: string): boolean {
-  return !isCatalogComponentHidden(
-    name,
-    report,
-    definitionPathsForName(report, name),
-  );
+  return !isCatalogComponentHidden(name, report, definitionPathsForName(report, name));
 }
 
 export function catalogComponentNames(
@@ -273,13 +247,7 @@ function enrichCatalogFamily(
 ): CatalogFamily {
   const children = new Set(family.children);
   for (const name of catalogNames) {
-    if (
-      shouldAttachNameToFamily(
-        name,
-        family,
-        definitionPathsForName(report, name),
-      )
-    ) {
+    if (shouldAttachNameToFamily(name, family, definitionPathsForName(report, name))) {
       children.add(name);
     }
   }
@@ -338,9 +306,7 @@ export function componentCatalogTreeFromReport(
     items.push({ type: "component", name });
   }
 
-  return items.sort((a, b) =>
-    catalogTreeSortKey(a).localeCompare(catalogTreeSortKey(b)),
-  );
+  return items.sort((a, b) => catalogTreeSortKey(a).localeCompare(catalogTreeSortKey(b)));
 }
 
 export function componentCatalogFamilyForName(

@@ -34,19 +34,12 @@ export function buildMcpConfig(opts: {
   ttlMs?: number;
 }): McpConfig {
   const cwd = opts.cwd ?? process.cwd();
-  const scanPath = resolve(
-    process.env.DSLINTER_SCAN_ROOT?.trim() || opts.scanPath,
-  );
+  const scanPath = resolve(process.env.DSLINTER_SCAN_ROOT?.trim() || opts.scanPath);
   const projectRoot = resolve(opts.projectRoot);
   const reportPath = resolve(
-    process.env.DSLINTER_REPORT_PATH?.trim() ||
-      opts.reportPath ||
-      resolveReportFilePath(scanPath),
+    process.env.DSLINTER_REPORT_PATH?.trim() || opts.reportPath || resolveReportFilePath(scanPath),
   );
-  const devUrl =
-    opts.devUrl ??
-    process.env.DSLINTER_MCP_DEV_URL?.trim() ??
-    "http://127.0.0.1:7878";
+  const devUrl = opts.devUrl ?? process.env.DSLINTER_MCP_DEV_URL?.trim() ?? "http://127.0.0.1:7878";
   const ttlMs = opts.ttlMs ?? envInt("DSLINTER_MCP_TTL_MS", 60_000);
 
   return { cwd, scanPath, projectRoot, reportPath, devUrl, ttlMs };

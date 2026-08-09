@@ -11,8 +11,7 @@ function breadcrumbModule() {
   return {
     Breadcrumb: ({ children, ...props }: { children?: ReactNode }) =>
       createElement("nav", { "aria-label": "breadcrumb", ...props }, children),
-    BreadcrumbList: ({ children }: { children?: ReactNode }) =>
-      createElement("ol", null, children),
+    BreadcrumbList: ({ children }: { children?: ReactNode }) => createElement("ol", null, children),
     BreadcrumbItem: ({ children, ...props }: { children?: ReactNode }) =>
       createElement("li", props, children),
     BreadcrumbLink: ({ asChild, children }: { asChild?: boolean; children?: ReactNode }) =>
@@ -142,9 +141,7 @@ describe("usage-derived example tree previews", () => {
     const item = entries.find((e) => e.id === "BreadcrumbItem");
     expect(item).toBeDefined();
 
-    const html = renderToStaticMarkup(
-      item!.renderPreview({ className: "highlight" }) as never,
-    );
+    const html = renderToStaticMarkup(item!.renderPreview({ className: "highlight" }) as never);
     // Full family context, not a bare <li> mounted under the root.
     expect(html).toContain('aria-label="breadcrumb"');
     expect(html).toContain("<ol>");
@@ -212,11 +209,7 @@ describe("usage-derived example tree previews", () => {
       ],
     };
     expect(
-      shouldUseExampleTreePreview(
-        buttonReport.playgrounds![0]!,
-        buttonTree,
-        buttonReport,
-      ),
+      shouldUseExampleTreePreview(buttonReport.playgrounds![0]!, buttonTree, buttonReport),
     ).toBe(false);
 
     const modules = {
@@ -225,11 +218,9 @@ describe("usage-derived example tree previews", () => {
           createElement("button", props, children),
       },
     };
-    const { entries } = buildPlaygroundEntriesFromReportWithSkips(
-      buttonReport,
-      modules,
-      { globKeyFromRelPath: (rel) => `@dslinter-scan/${rel}` },
-    );
+    const { entries } = buildPlaygroundEntriesFromReportWithSkips(buttonReport, modules, {
+      globKeyFromRelPath: (rel) => `@dslinter-scan/${rel}`,
+    });
     const button = entries.find((e) => e.id === "Button")!;
     const html = renderToStaticMarkup(button.renderPreview({ variant: "default" }) as never);
     expect(html).toContain("<button");

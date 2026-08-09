@@ -39,18 +39,6 @@ pub struct ComponentDefinition {
     /// Resolved `VariantProps<typeof binding>` CVA binding name, when present.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cva_binding_name: Option<String>,
-    /// Tailwind/class tokens used inside this component's JSX (`span`, `button`, …).
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub implementation_class_frequencies: BTreeMap<String, u32>,
-    /// Source locations for implementation class strings (traceability).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub implementation_class_locations: Vec<ImplementationClassLocation>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct ImplementationClassLocation {
-    pub line: u32,
-    pub classes: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -158,6 +146,8 @@ pub enum ClassStringKind {
     JsxAttr,
     ClassHelper,
     VueTemplate,
+    /// `cva("base", { variants: { …: "…" } })` class literals.
+    Cva,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -237,6 +227,9 @@ pub struct GovernanceScores {
     pub ux_consistency: u8,
     pub accessibility: u8,
     pub maintainability: u8,
+    /// CSS / known_tokens adoption percentage when measurable (omitted from JSON when null).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token_adoption: Option<u8>,
 }
 
 #[derive(Debug, Clone, Serialize)]
