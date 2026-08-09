@@ -1,6 +1,6 @@
 {
   "name": "dslinter",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "DSLinter dashboard UI: playground shell, token wall, and governance panels (consumes dslinter-report.json).",
   "keywords": [
     "dashboard",
@@ -112,7 +112,7 @@
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.1.0",
     "vite": "^7.3.5",
-"vitest": "^4.1.10"
+    "vitest": "^4.1.10"
   },
   "peerDependencies": {
     "react": "^19.0.0",

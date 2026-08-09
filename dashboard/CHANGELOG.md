@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.8.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.7.0...v0.8.0)
+
+### 🩹 Fixes
+
+- Remove entry.controls from useEffect dependency array in ComponentPlaygroundPane ([9f2531e](https://github.com/jrmybtlr/DSLinter/commit/9f2531e))
+- Tighten score_deltas type to Partial<Record<keyof WorkspaceReport[\"scores\"], number>> ([d367bfa](https://github.com/jrmybtlr/DSLinter/commit/d367bfa))
+- Address PR #42 review findings for 0.7.1 ([#42](https://github.com/jrmybtlr/DSLinter/issues/42))
+- Require `=` after bound aria-label/aria-labelledby in vue_attrs_have_accessible_name ([9f97c31](https://github.com/jrmybtlr/DSLinter/commit/9f97c31))
+
+### 💅 Refactors
+
+- Update ComponentPlaygroundPane to use SelectValue for accessibility, enhance PlaygroundA11yAndCode to display optional props, and improve cva_extract for class-string fragment collection ([3739bb5](https://github.com/jrmybtlr/DSLinter/commit/3739bb5))
+- Reorganize dslinter plugin to inject consumer @source before Tailwind processing, enhance load functionality, and add tests for embed/index.css integration ([fc7540c](https://github.com/jrmybtlr/DSLinter/commit/fc7540c))
+
+### 🏡 Chore
+
+- Resolve Dependabot alerts and trim pnpm overrides ([7af9586](https://github.com/jrmybtlr/DSLinter/commit/7af9586))
+- Update .gitignore to include .DS_Store ([9ab9ba3](https://github.com/jrmybtlr/DSLinter/commit/9ab9ba3))
+- **deps-dev:** Bump the npm-development group with 13 updates ([6949e16](https://github.com/jrmybtlr/DSLinter/commit/6949e16))
+- Update version to 0.7.0, add beta checklist to CONTRIBUTING.md, and remove ComponentImplementationClasses ([02efda6](https://github.com/jrmybtlr/DSLinter/commit/02efda6))
+- Update .gitignore to exclude specific dslinter-report.json paths ([fa3b099](https://github.com/jrmybtlr/DSLinter/commit/fa3b099))
+- Update .gitignore to exclude generated Classy files, enhance PlaygroundControlField styles for consistency, and add search functionality for token rows in the dashboard ([6d6b521](https://github.com/jrmybtlr/DSLinter/commit/6d6b521))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+- Cursor Agent ([@cursoragent](https://github.com/cursoragent))
+
 ## v0.7.1
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.7.0...v0.7.1)
