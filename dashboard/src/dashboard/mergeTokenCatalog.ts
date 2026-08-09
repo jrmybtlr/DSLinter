@@ -1,5 +1,9 @@
 import { isConsumerThemeDefinition } from "../playground/appPreviewTheme";
-import { resolveLightTokenValues } from "../css/resolveCssVariables";
+import {
+  resolveCssVariables,
+  resolveLightTokenValues,
+  variableMapForScopes,
+} from "../css/resolveCssVariables";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { CssTokenDefinition, WorkspaceReport } from "../types/report";
 
@@ -17,8 +21,14 @@ export type ScannedTokenRow = {
   isUnused: boolean;
   /** From manual catalog when names align */
   tw?: string;
-  /** Display swatch / resolved color for the wall */
+  /** Display swatch / resolved color for the wall (light / sole) */
   displayValue?: string;
+  /** Raw value from a `.dark` (selector) override when present */
+  darkValue?: string;
+  /** Resolved swatch color for the dark override */
+  darkDisplayValue?: string;
+  darkPath?: string;
+  darkLine?: number;
   usageFiles: string[];
 };
 
@@ -81,18 +91,58 @@ function isParseableColor(value: string): boolean {
 function displayValueForDefinition(
   def: CssTokenDefinition,
   manualDisplay: string | undefined,
-  resolvedLight: Record<string, string>,
+  resolved: Record<string, string>,
 ): string {
   if (manualDisplay != null) return manualDisplay;
 
-  const resolved = resolvedLight[def.name];
-  if (resolved != null && isParseableColor(resolved)) return resolved;
+  const resolvedValue = resolved[def.name];
+  if (resolvedValue != null && isParseableColor(resolvedValue)) return resolvedValue;
 
   if (def.category === "color" && isParseableColor(def.value)) {
     return def.value;
   }
 
   return def.value;
+}
+
+/** Prefer `:root`, then `@theme`, for the light (or sole) definition. */
+function pickLightDefinition(defs: CssTokenDefinition[]): CssTokenDefinition | undefined {
+  let theme: CssTokenDefinition | undefined;
+  for (const d of defs) {
+    if (d.scope === "root") return d;
+    if (d.scope === "theme" && !theme) theme = d;
+  }
+  return theme;
+}
+
+function pickDarkDefinition(defs: CssTokenDefinition[]): CssTokenDefinition | undefined {
+  return defs.find((d) => d.scope === "selector");
+}
+
+/** Dark mode = light map with selector overrides on top, then resolve `var()`. */
+function resolveDarkTokenValues(
+  definitions: CssTokenDefinition[],
+  predicate?: (def: CssTokenDefinition) => boolean,
+): Record<string, string> {
+  const light = variableMapForScopes(definitions, new Set(["root", "theme"]), predicate);
+  const dark = variableMapForScopes(definitions, new Set(["selector"]), predicate);
+  const merged = new Map(light);
+  for (const [name, value] of dark) {
+    merged.set(name, value);
+  }
+  return resolveCssVariables(merged);
+}
+
+function groupDefinitionsByName(
+  definitions: CssTokenDefinition[],
+): Map<string, CssTokenDefinition[]> {
+  const byName = new Map<string, CssTokenDefinition[]>();
+  for (const def of definitions) {
+    const list = byName.get(def.name);
+    if (list) list.push(def);
+    else byName.set(def.name, [def]);
+  }
+  return byName;
 }
 
 export function buildMergedTokenView(
@@ -121,28 +171,55 @@ export function buildMergedTokenView(
     ? resolvedLight
     : resolveLightTokenValues(summary.definitions);
 
-  const rows: ScannedTokenRow[] = summary.definitions.map((def) => {
-    const usage = usageByName.get(def.name);
-    const referenceCount = usage?.reference_count ?? 0;
-    const isUnused = unusedSet.has(def.name);
-    const manualDisplay = displayMap.get(def.name);
-    const displayValue = displayValueForDefinition(def, manualDisplay, resolvedLightForDisplay);
+  const resolvedDarkForDisplay = hasConsumerLight
+    ? resolveDarkTokenValues(summary.definitions, consumerPredicate)
+    : resolveDarkTokenValues(summary.definitions);
 
-    return {
-      cssName: def.name,
-      value: def.value,
-      category: def.category,
-      scope: def.scope,
-      path: def.path,
-      line: def.line,
+  const rows: ScannedTokenRow[] = [];
+
+  for (const [, defs] of groupDefinitionsByName(summary.definitions)) {
+    const lightDef = pickLightDefinition(defs);
+    const darkDef = pickDarkDefinition(defs);
+    const primary = lightDef ?? darkDef;
+    if (!primary) continue;
+
+    const usage = usageByName.get(primary.name);
+    const referenceCount = usage?.reference_count ?? 0;
+    const isUnused = unusedSet.has(primary.name);
+    const manualDisplay = displayMap.get(primary.name);
+
+    const displayValue = lightDef
+      ? displayValueForDefinition(lightDef, manualDisplay, resolvedLightForDisplay)
+      : displayValueForDefinition(primary, manualDisplay, resolvedDarkForDisplay);
+
+    const row: ScannedTokenRow = {
+      cssName: primary.name,
+      value: primary.value,
+      category: primary.category,
+      scope: primary.scope,
+      path: primary.path,
+      line: primary.line,
       referenceCount,
       fileCount: usage?.file_count ?? 0,
       isUnused,
-      tw: twMap.get(def.name),
+      tw: twMap.get(primary.name),
       displayValue,
       usageFiles: usage?.files ?? [],
     };
-  });
+
+    if (darkDef && lightDef) {
+      row.darkValue = darkDef.value;
+      row.darkDisplayValue = displayValueForDefinition(
+        darkDef,
+        undefined,
+        resolvedDarkForDisplay,
+      );
+      row.darkPath = darkDef.path;
+      row.darkLine = darkDef.line;
+    }
+
+    rows.push(row);
+  }
 
   rows.sort((a, b) => a.cssName.localeCompare(b.cssName));
 
@@ -157,7 +234,7 @@ export function buildMergedTokenView(
   };
 }
 
-/** Stable React key — cssName alone is not unique across scope/path. */
+/** Stable React key — cssName alone is not unique across path when unpaired. */
 export function scannedTokenRowKey(row: ScannedTokenRow): string {
   return `${row.cssName}|${row.scope}|${row.path}|${row.line}`;
 }
@@ -169,4 +246,17 @@ export function filterTokenRows(
   if (filter === "all") return rows;
   if (filter === "used") return rows.filter((r) => !r.isUnused);
   return rows.filter((r) => r.isUnused);
+}
+
+/** Case-insensitive match on token name, values, or Tailwind class. */
+export function searchTokenRows(rows: ScannedTokenRow[], query: string): ScannedTokenRow[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return rows;
+  return rows.filter((row) => {
+    if (row.cssName.toLowerCase().includes(q)) return true;
+    if (row.value.toLowerCase().includes(q)) return true;
+    if (row.darkValue?.toLowerCase().includes(q)) return true;
+    if (row.tw?.toLowerCase().includes(q)) return true;
+    return false;
+  });
 }

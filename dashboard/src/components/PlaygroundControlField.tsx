@@ -5,6 +5,9 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const labelClass = "text-xs font-medium text-muted-foreground";
+/** Match Input defaults (h-9, text-sm at md+) so selects don't render smaller. */
+const controlFieldClass = "h-9 text-sm";
+const controlFieldWideClass = `${controlFieldClass} max-w-xs min-w-40`;
 
 export type PlaygroundControlFieldProps = {
   control: PlaygroundControl;
@@ -81,7 +84,7 @@ export function PlaygroundControlField({
               value={String(values[c.key] ?? "")}
               placeholder={c.placeholder}
               onChange={(e) => patch(c.key, e.target.value)}
-              className="h-8 text-xs"
+              className={controlFieldClass}
             />
           </div>
         );
@@ -114,7 +117,7 @@ export function PlaygroundControlField({
                 const v = e.target.valueAsNumber;
                 patch(c.key, Number.isFinite(v) ? v : c.default);
               }}
-              className="h-8 text-xs"
+              className={controlFieldClass}
             />
           </div>
         );
@@ -127,12 +130,12 @@ export function PlaygroundControlField({
               {c.label}
             </Label>
             <Select value={v} onValueChange={(next: string) => patch(c.key, next)}>
-              <SelectTrigger id={id} className="h-8 text-xs">
+              <SelectTrigger id={id} className={controlFieldClass}>
                 <SelectValue placeholder={c.label} />
               </SelectTrigger>
               <SelectContent>
                 {c.options.map((o) => (
-                  <SelectItem key={o.value} value={o.value} className="text-xs">
+                  <SelectItem key={o.value} value={o.value}>
                     {o.label}
                   </SelectItem>
                 ))}
@@ -176,7 +179,7 @@ export function PlaygroundControlField({
           value={String(values[c.key] ?? "")}
           placeholder={c.placeholder}
           onChange={(e) => patch(c.key, e.target.value)}
-          className="h-8 max-w-xs min-w-40 text-xs"
+          className={controlFieldWideClass}
           aria-label={c.label}
         />
       );
@@ -204,7 +207,7 @@ export function PlaygroundControlField({
             const v = e.target.valueAsNumber;
             patch(c.key, Number.isFinite(v) ? v : c.default);
           }}
-          className="h-8 w-24 text-xs"
+          className={`${controlFieldClass} w-24`}
           aria-label={c.label}
         />
       );
@@ -213,12 +216,12 @@ export function PlaygroundControlField({
       const v = String(values[c.key] ?? c.default ?? "");
       return (
         <Select value={v} onValueChange={(next: string) => patch(c.key, next)}>
-          <SelectTrigger id={id} className="h-8 max-w-xs min-w-40 text-xs" aria-label={c.label}>
+          <SelectTrigger id={id} className={controlFieldWideClass} aria-label={c.label}>
             <SelectValue placeholder={c.label} />
           </SelectTrigger>
           <SelectContent>
             {c.options.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">
+              <SelectItem key={o.value} value={o.value}>
                 {o.label}
               </SelectItem>
             ))}
