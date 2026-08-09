@@ -11,7 +11,7 @@ demo/react/src/**/*.js
 dashboard/dashboard-dist/
 .classy/
 **/.classy/
-demo/public/dslinter-report.json
+**/dslinter-report.json
 demo-inertia/vendor/
 demo-inertia/node_modules/
 demo-inertia/.env
@@ -38,4 +38,5 @@ package-lock.json
 demo/react/public/dslinter-report.json
 .DS_Store
 ROADMAP.md
+demo/inertia/public/dslinter-report.json
 demo/inertia/public/dslinter-report.json
