@@ -86,7 +86,10 @@ pub fn analyze_ecma_for_paths(
         ));
     }
 
-    let ast_extracts = crate::class_strings::collect_ast_extracts(source, &program);
+    let mut ast_extracts = crate::class_strings::collect_ast_extracts(source, &program);
+    ast_extracts
+        .class_strings
+        .extend(cva_extract::collect_cva_class_fragments(&newlines, &program));
 
     FileScan {
         path: report_path.to_path_buf(),

@@ -135,11 +135,9 @@ function BreakpointPresetSelect({
           "[&>svg]:hidden",
         )}
       >
-        <span>
+        <SelectValue>
           {kindLabel}:&nbsp;{value}
-        </span>
-        {/* Visible label above; SelectValue kept for Radix a11y. */}
-        <SelectValue className="sr-only" />
+        </SelectValue>
       </SelectTrigger>
       <SelectContent align="center" className="min-w-36">
         {presets.map((preset) => (

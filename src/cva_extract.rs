@@ -7,6 +7,9 @@ use oxc_ast::ast::{
     Statement, TSType, TSTypeName, TSTypeQueryExprName, VariableDeclarator,
 };
 
+use crate::lines::line_of_offset;
+use crate::model::{ClassStringFragment, ClassStringKind};
+
 /// Parsed `cva` config: variant option keys per prop, class literals, and `defaultVariants`.
 #[derive(Debug, Clone, Default)]
 pub struct CvaBinding {
@@ -20,27 +23,45 @@ pub struct CvaBinding {
 
 /// Map `buttonVariants` → parsed CVA config from top-level `const x = cva(...)`.
 pub fn collect_cva_bindings<'a>(program: &'a Program<'a>) -> HashMap<String, CvaBinding> {
-    let mut out = HashMap::new();
-    for stmt in &program.body {
-        ingest_statement_for_cva(stmt, &mut out);
-    }
-    out
+    collect_cva(program, None).0
 }
 
-fn ingest_statement_for_cva<'a>(
-    stmt: &'a Statement<'a>,
+/// Class-string fragments from `cva(...)` base + variant option literals (for token/class rules).
+pub fn collect_cva_class_fragments(
+    newlines: &[usize],
+    program: &Program<'_>,
+) -> Vec<ClassStringFragment> {
+    collect_cva(program, Some(newlines)).1
+}
+
+fn collect_cva(
+    program: &Program<'_>,
+    newlines: Option<&[usize]>,
+) -> (HashMap<String, CvaBinding>, Vec<ClassStringFragment>) {
+    let mut out = HashMap::new();
+    let mut fragments = Vec::new();
+    for stmt in &program.body {
+        ingest_statement_for_cva(stmt, &mut out, newlines, &mut fragments);
+    }
+    (out, fragments)
+}
+
+fn ingest_statement_for_cva(
+    stmt: &Statement<'_>,
     out: &mut HashMap<String, CvaBinding>,
+    newlines: Option<&[usize]>,
+    fragments: &mut Vec<ClassStringFragment>,
 ) {
     match stmt {
         Statement::VariableDeclaration(decl) => {
             for d in &decl.declarations {
-                record_cva_declarator(d, out);
+                record_cva_declarator(d, out, newlines, fragments);
             }
         }
         Statement::ExportNamedDeclaration(ex) => {
             if let Some(Declaration::VariableDeclaration(decl)) = &ex.declaration {
                 for d in &decl.declarations {
-                    record_cva_declarator(d, out);
+                    record_cva_declarator(d, out, newlines, fragments);
                 }
             }
         }
@@ -48,9 +69,11 @@ fn ingest_statement_for_cva<'a>(
     }
 }
 
-fn record_cva_declarator<'a>(
-    decl: &'a VariableDeclarator<'a>,
+fn record_cva_declarator(
+    decl: &VariableDeclarator<'_>,
     out: &mut HashMap<String, CvaBinding>,
+    newlines: Option<&[usize]>,
+    fragments: &mut Vec<ClassStringFragment>,
 ) {
     let oxc_ast::ast::BindingPatternKind::BindingIdentifier(id) = &decl.id.kind else {
         return;
@@ -58,13 +81,36 @@ fn record_cva_declarator<'a>(
     let Some(init) = decl.init.as_ref() else {
         return;
     };
-    let Some(parsed) = parse_cva_call(init) else {
+    let Some(parsed) = parse_cva_call(init, newlines, fragments) else {
         return;
     };
     out.insert(id.name.as_str().to_string(), parsed);
 }
 
-fn parse_cva_call(expr: &Expression<'_>) -> Option<CvaBinding> {
+fn push_cva_class_fragment(
+    newlines: Option<&[usize]>,
+    fragments: &mut Vec<ClassStringFragment>,
+    span_start: u32,
+    text: &str,
+) {
+    let Some(newlines) = newlines else {
+        return;
+    };
+    if text.is_empty() {
+        return;
+    }
+    fragments.push(ClassStringFragment {
+        line: line_of_offset(newlines, span_start as usize),
+        text: text.to_string(),
+        kind: ClassStringKind::Cva,
+    });
+}
+
+fn parse_cva_call(
+    expr: &Expression<'_>,
+    newlines: Option<&[usize]>,
+    fragments: &mut Vec<ClassStringFragment>,
+) -> Option<CvaBinding> {
     let Expression::CallExpression(call) = expr else {
         return None;
     };
@@ -75,8 +121,10 @@ fn parse_cva_call(expr: &Expression<'_>) -> Option<CvaBinding> {
         return None;
     }
     let mut binding = CvaBinding::default();
+    let mut pending_fragments: Vec<(u32, String)> = Vec::new();
     if let Some(Argument::StringLiteral(base)) = call.arguments.first() {
         binding.base_classes = base.value.to_string();
+        pending_fragments.push((base.span.start, base.value.to_string()));
     }
     let config = call.arguments.get(1)?;
     let Argument::ObjectExpression(obj) = config else {
@@ -102,13 +150,17 @@ fn parse_cva_call(expr: &Expression<'_>) -> Option<CvaBinding> {
                     };
                     let mut options = Vec::new();
                     let mut classes_by_option = BTreeMap::new();
+                    let mut axis_fragments: Vec<(u32, String)> = Vec::new();
                     for op in &options_obj.properties {
                         let ObjectPropertyKind::ObjectProperty(oprop) = op else {
                             continue;
                         };
                         if let Some(opt_key) = static_property_key(&oprop.key) {
                             options.push(opt_key.clone());
-                            if let Some(classes) = string_literal_value(&oprop.value) {
+                            if let Some((classes, span_start)) =
+                                string_literal_with_span(&oprop.value)
+                            {
+                                axis_fragments.push((span_start, classes.clone()));
                                 classes_by_option.insert(opt_key, classes);
                             }
                         }
@@ -118,6 +170,7 @@ fn parse_cva_call(expr: &Expression<'_>) -> Option<CvaBinding> {
                         if !classes_by_option.is_empty() {
                             binding.variant_classes.insert(prop_name, classes_by_option);
                         }
+                        pending_fragments.extend(axis_fragments);
                     }
                 }
             }
@@ -141,6 +194,9 @@ fn parse_cva_call(expr: &Expression<'_>) -> Option<CvaBinding> {
     if binding.variant_options.is_empty() {
         return None;
     }
+    for (span_start, text) in pending_fragments {
+        push_cva_class_fragment(newlines, fragments, span_start, &text);
+    }
     Some(binding)
 }
 
@@ -153,8 +209,12 @@ fn static_property_key(key: &PropertyKey<'_>) -> Option<String> {
 }
 
 fn string_literal_value(expr: &Expression<'_>) -> Option<String> {
+    string_literal_with_span(expr).map(|(s, _)| s)
+}
+
+fn string_literal_with_span(expr: &Expression<'_>) -> Option<(String, u32)> {
     match expr {
-        Expression::StringLiteral(s) => Some(s.value.to_string()),
+        Expression::StringLiteral(s) => Some((s.value.to_string(), s.span.start)),
         _ => None,
     }
 }
@@ -303,6 +363,80 @@ function Button({ variant, size }: VariantProps<typeof buttonVariants>) {
         assert_eq!(
             btn.declared_prop_defaults.get("variant").map(String::as_str),
             Some("default")
+        );
+    }
+
+    #[test]
+    fn folds_cva_class_literals_into_ast_extracts() {
+        use crate::model::ClassStringKind;
+
+        let src = r#"
+const buttonVariants = cva("inline-flex", {
+  variants: {
+    variant: {
+      default: "bg-primary text-primary-foreground",
+      destructive: "bg-destructive text-white shadow-xs",
+    },
+  },
+  defaultVariants: { variant: "default" },
+});
+function Button({
+  className,
+  variant,
+}: React.ComponentProps<"button"> & VariantProps<typeof buttonVariants>) {
+  return <button className={cn(buttonVariants({ variant, className }))} />;
+}
+"#;
+        let scan = analyze_ecma_file(&PathBuf::from("button.tsx"), src);
+        let cva_frags: Vec<_> = scan
+            .ast_extracts
+            .class_strings
+            .iter()
+            .filter(|c| c.kind == ClassStringKind::Cva)
+            .collect();
+        assert!(
+            cva_frags.iter().any(|c| c.text.contains("text-white")),
+            "expected destructive text-white in class_strings: {:?}",
+            scan.ast_extracts.class_strings
+        );
+        assert!(
+            cva_frags.iter().any(|c| c.text.contains("inline-flex")),
+            "expected base classes: {:?}",
+            cva_frags
+        );
+        let destructive = cva_frags
+            .iter()
+            .find(|c| c.text.contains("text-white"))
+            .expect("destructive frag");
+        assert!(
+            destructive.line > 1,
+            "expected line near variant literal, got {}",
+            destructive.line
+        );
+    }
+
+    #[test]
+    fn inertia_button_cva_includes_text_white() {
+        use crate::model::ClassStringKind;
+
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("demo/inertia/resources/js/components/ui/button.tsx");
+        let src = std::fs::read_to_string(&path).expect("read button.tsx");
+        let scan = analyze_ecma_file(&path, &src);
+        assert!(
+            scan.ast_extracts
+                .class_strings
+                .iter()
+                .any(|c| c.kind == ClassStringKind::Cva && c.text.contains("text-white")),
+            "demo Button destructive CVA should contribute text-white: {:?}",
+            scan.ast_extracts.class_strings
+        );
+        assert!(
+            scan.ast_extracts
+                .class_strings
+                .iter()
+                .any(|c| c.kind == ClassStringKind::Cva && c.text.contains("bg-destructive")),
+            "demo Button destructive CVA should contribute bg-destructive"
         );
     }
 

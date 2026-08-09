@@ -146,6 +146,8 @@ pub enum ClassStringKind {
     JsxAttr,
     ClassHelper,
     VueTemplate,
+    /// `cva("base", { variants: { …: "…" } })` class literals.
+    Cva,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -246,7 +246,10 @@ export function PlaygroundApiReference({
             if (!r) return null;
             return (
               <TableRow key={c.key}>
-                <TableCell className="font-medium">{r.prop}</TableCell>
+                <TableCell className="font-medium">
+                  {c.key}
+                  {c.optional ? <span className="text-muted-foreground">?</span> : null}
+                </TableCell>
                 <TableCell>
                   {c.type === "select" ? (
                     <div className="flex flex-wrap items-center gap-1">
