@@ -188,29 +188,27 @@ export default function dslinter(options: DslinterVitePluginOptions = {}): Plugi
     },
 
     load(id) {
-      if (id !== RESOLVED_VIRTUAL_ID) return;
-      return generatePlaygroundModulesSource(scanRoot, relPaths);
-    },
-
-    transform(code, id) {
-      const normalizedId = id.split("?")[0]!.replace(/\\/g, "/");
-      if (!normalizedId.endsWith("/embed/index.css")) return;
-
-      if (!shouldInjectEmbedConsumerSources(scanRoot, packageRoot)) {
-        return null;
+      if (id === RESOLVED_VIRTUAL_ID) {
+        return generatePlaygroundModulesSource(scanRoot, relPaths);
       }
 
+      // Inject consumer `@source` in `load` (not `transform`) so it runs before
+      // `@tailwindcss/vite` (also `enforce: "pre"`). A post-Tailwind transform is
+      // too late — compiled CSS no longer contains the `@source` splice point, so
+      // utilities used only in the scanned app (e.g. CVA `text-white`) never emit.
+      const cssPath = id.split("?")[0]!.replace(/\\/g, "/");
+      if (!cssPath.endsWith("/embed/index.css")) return;
+
+      if (!shouldInjectEmbedConsumerSources(scanRoot, packageRoot)) return;
       const consumerSources = embedSourcePathsRelativeToCss(
         scanRoot,
         packageRoot,
         embedIndexCssPath,
       );
-      if (consumerSources.length === 0) return null;
+      if (consumerSources.length === 0) return;
 
-      return {
-        code: buildEmbedIndexCss(code, consumerSources),
-        map: null,
-      };
+      const base = readFileSync(embedIndexCssPath, "utf8");
+      return buildEmbedIndexCss(base, consumerSources);
     },
 
     configureServer(server) {

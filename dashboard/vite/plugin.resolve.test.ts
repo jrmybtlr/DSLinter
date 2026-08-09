@@ -56,4 +56,28 @@ describe("dslinter vite plugin resolveId", () => {
       await server.close();
     }
   });
+
+  it("injects consumer @source into embed/index.css via load (before Tailwind)", async () => {
+    const embedCss = join(packageRoot, "embed/index.css");
+    const server = await createServer({
+      configFile: false,
+      root: packageRoot,
+      plugins: [
+        dslinter({
+          scanRoot: demoInertiaRoot,
+          consumerViteRoot: demoInertiaRoot,
+        }),
+      ],
+      server: { fs: { allow: [packageRoot, demoInertiaRoot] } },
+    });
+
+    try {
+      const loaded = await server.pluginContainer.load(embedCss);
+      const code = typeof loaded === "string" ? loaded : loaded && "code" in loaded ? loaded.code : null;
+      expect(code).toContain('@source "../src"');
+      expect(code).toMatch(/demo\/inertia\/resources\/js\/components/);
+    } finally {
+      await server.close();
+    }
+  });
 });

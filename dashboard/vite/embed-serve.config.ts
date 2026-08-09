@@ -47,9 +47,10 @@ export default defineConfig(() => ({
   root: packageRoot,
   plugins: [
     useClassy({ language: "react" }),
+    // Before `@tailwindcss/vite` so consumer `@source` injection is visible to the compiler.
+    dslinter({ scanRoot, consumerViteRoot }),
     tailwindcss(),
     react(),
-    dslinter({ scanRoot, consumerViteRoot }),
   ],
   server: {
     host: "127.0.0.1",
