@@ -65,7 +65,9 @@ jobs:
         with:
           cache-targets: "true"
 
-      - run: pnpm install --frozen-lockfile --no-optional --ignore-scripts
+      # Need optional deps: @napi-rs/cross-toolchain-* for --use-napi-cross.
+      # Keep --ignore-scripts so workspace prepublishOnly/vitest does not run here.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build native binding
         shell: bash

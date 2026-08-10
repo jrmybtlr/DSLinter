@@ -1,23 +1,17 @@
-# Fix PR #42 review findings
-
-Base: `improvements` → branch `cursor/fix-review-findings-ad81`
+# Fix NAPI release CI (v0.8.0)
 
 ## Checklist
 
-- [ ] Breakpoint preset shows current value; avoid uncontrolled→controlled Select flip
-- [ ] Compound `valuesToProps` coerces `stringArray` (reuse propCoerce helpers)
-- [ ] Align compound control inference with “no faking” / non-editable controls
-- [ ] Remove/fix a11y bare-`id` skip; fix Vue `contains("id=")` false negatives
-- [ ] Align ECMA vs Vue select/textarea severities
-- [ ] Extract `declared_prop_options` from Vue runtime `PropType<'a'|'b'>`
-- [ ] Vue AST: don’t trust recovered parses with errors; harden template-literal skip
-- [ ] Tighten `score_deltas` JSDoc in baseline-drift.mjs
-- [ ] Fix ROADMAP links (public stub or retarget)
-- [ ] Document UseClassy + drift flags in dashboard README
-- [ ] Changelog + version bump to 0.7.1
-- [ ] Regenerate demo/inertia report; clean inertia format tooling
-- [ ] Tests for the above; verify
+- [x] Diagnose failed `Release NAPI bindings` run (31343209989)
+- [x] Fix build job install so `--use-napi-cross` can load toolchain bindings
+- [ ] Commit + re-run release workflow for `v0.8.0` (or retag)
 
 ## Review
 
-(pending)
+Linux build jobs failed with:
+
+`Failed to set up the --use-napi-cross toolchain … Cannot find native binding`
+
+Cause: build matrix used `pnpm install --no-optional`, which skips `@napi-rs/cross-toolchain-*` (and `@napi-rs/lzma` / `@napi-rs/tar` platform packages). Publish job already installs optional deps; build did not.
+
+Fix: drop `--no-optional` on the build job; keep `--ignore-scripts`.
