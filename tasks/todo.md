@@ -6,7 +6,7 @@
 - [x] Fix build job install so `--use-napi-cross` can load toolchain bindings
 - [x] Commit + re-run release workflow for `v0.8.0` (or retag)
 - [x] Fix mold rustflags breaking napi-cross gcc (`-fuse-ld=mold`)
-- [ ] Retag `v0.8.0` and confirm publish succeeds
+- [x] Retag `v0.8.0` and confirm publish succeeds
 
 ## Review
 
