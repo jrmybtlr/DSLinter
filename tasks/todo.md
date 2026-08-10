@@ -11,5 +11,5 @@
 ## Review
 
 1. `--no-optional` skipped `@napi-rs/cross-toolchain-*` → fixed by installing optional deps.
-2. Follow-up: `.cargo/config.toml` injects `-fuse-ld=mold`; napi-cross gcc rejects it.
-   Clear `CARGO_TARGET_*_LINUX_*_RUSTFLAGS` on the release build step.
+2. Empty `CARGO_TARGET_*_RUSTFLAGS` did not override `.cargo/config.toml` (mold still applied).
+   Moved mold out of `.cargo/config.toml` into native-build CI env only.

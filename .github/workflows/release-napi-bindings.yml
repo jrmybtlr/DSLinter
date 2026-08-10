@@ -57,10 +57,6 @@ jobs:
         with:
           targets: ${{ matrix.target == 'darwin' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target }}
 
-      - name: Install mold linker (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y mold clang
-
       - uses: Swatinem/rust-cache@v2
         with:
           cache-targets: "true"
@@ -71,10 +67,6 @@ jobs:
 
       - name: Build native binding
         shell: bash
-        env:
-          # .cargo/config.toml adds -fuse-ld=mold for Linux; napi-cross gcc rejects it.
-          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS: ""
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS: ""
         run: |
           build_one() {
             pnpm exec napi build \
@@ -135,6 +127,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y mold clang
 
       - name: Build NAPI binding
+        env:
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: clang
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS: "-C link-arg=-fuse-ld=mold"
         run: pnpm run build:napi
 
       - name: Generate demo workspace report for tests
