@@ -71,6 +71,10 @@ jobs:
 
       - name: Build native binding
         shell: bash
+        env:
+          # .cargo/config.toml adds -fuse-ld=mold for Linux; napi-cross gcc rejects it.
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS: ""
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS: ""
         run: |
           build_one() {
             pnpm exec napi build \

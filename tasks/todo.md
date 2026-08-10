@@ -4,14 +4,12 @@
 
 - [x] Diagnose failed `Release NAPI bindings` run (31343209989)
 - [x] Fix build job install so `--use-napi-cross` can load toolchain bindings
-- [ ] Commit + re-run release workflow for `v0.8.0` (or retag)
+- [x] Commit + re-run release workflow for `v0.8.0` (or retag)
+- [x] Fix mold rustflags breaking napi-cross gcc (`-fuse-ld=mold`)
+- [ ] Retag `v0.8.0` and confirm publish succeeds
 
 ## Review
 
-Linux build jobs failed with:
-
-`Failed to set up the --use-napi-cross toolchain … Cannot find native binding`
-
-Cause: build matrix used `pnpm install --no-optional`, which skips `@napi-rs/cross-toolchain-*` (and `@napi-rs/lzma` / `@napi-rs/tar` platform packages). Publish job already installs optional deps; build did not.
-
-Fix: drop `--no-optional` on the build job; keep `--ignore-scripts`.
+1. `--no-optional` skipped `@napi-rs/cross-toolchain-*` → fixed by installing optional deps.
+2. Follow-up: `.cargo/config.toml` injects `-fuse-ld=mold`; napi-cross gcc rejects it.
+   Clear `CARGO_TARGET_*_LINUX_*_RUSTFLAGS` on the release build step.
