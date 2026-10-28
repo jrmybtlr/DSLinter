@@ -146,7 +146,8 @@ pub fn build_playground_specs(
             continue;
         }
         let rel = rel_path_under_root(root, path);
-        if rel.is_empty() || !file_in_playground_scope(&rel, config) {
+        if rel.is_empty() || !file_in_playground_scope(&rel, config)
+            || !crate::scan::in_include_scope(root, path, config) {
             continue;
         }
         let stem = path

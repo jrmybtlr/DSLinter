@@ -173,7 +173,7 @@ export function buildKitControls(
   options: {
     controls?: Parameters<typeof expandPlaygroundControls>[0];
     defaults?: Record<string, string | number | boolean>;
-    report?: { playgrounds?: PlaygroundSpec[] } | null;
+    report?: WorkspaceReport | null;
     catalogId?: string;
   },
 ): { controls: PlaygroundControl[]; hints: PlaygroundKitHints } {

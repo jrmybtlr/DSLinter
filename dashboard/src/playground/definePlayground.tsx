@@ -79,12 +79,12 @@ function resolveMeta(
   };
 }
 
-function resolveKitControls(
-  kit: (args: PlaygroundArgs) => ReactNode,
-  opts: PlaygroundDefinitionBase & { defaults?: Partial<PlaygroundArgs> },
+function resolveKitControls<T extends PlaygroundArgs>(
+  kit: (args: T) => ReactNode,
+  opts: PlaygroundDefinitionBase & { defaults?: Partial<T> },
   catalogId: string,
 ): { controls: PlaygroundControl[]; hints: PlaygroundKitHints } {
-  return buildKitControls(kit, {
+  return buildKitControls(kit as (args: any) => ReactNode, {
     controls: opts.controls,
     defaults: opts.defaults as Record<string, string | number | boolean> | undefined,
     catalogId: catalogId || undefined,
@@ -167,8 +167,9 @@ export function definePlayground<P extends Record<string, unknown>, T extends Pl
 
   const meta = resolveMeta(opts, undefined);
   const controls = expandPlaygroundControls(opts.controls);
+  const render = (opts as DefineWithRender).render;
   function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
-    return <>{opts.render(values)}</>;
+    return <>{render(values)}</>;
   }
   PlaygroundPreview.displayName = `${meta.id}PlaygroundPreview`;
   return { playgroundMeta: meta, playgroundControls: controls, PlaygroundPreview };

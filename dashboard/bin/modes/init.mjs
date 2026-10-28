@@ -14,6 +14,35 @@ export function runInitMode(opts = {}) {
   const targetDir = resolve(
     opts.targetDir ?? argv.find((a) => !a.startsWith("-")) ?? process.cwd(),
   );
+  if (!argv.includes("--legacy")) {
+    const path = join(targetDir, "dslinter.preview.ts");
+    const existing = ["dslinter.preview.ts", "dslinter.preview.tsx", "dslinter.preview.js"].some(
+      (name) => existsSync(join(targetDir, name)),
+    );
+    if (!existing) {
+      mkdirSync(targetDir, { recursive: true });
+      writeFileSync(
+        path,
+        [
+          'import type { PreviewAdapter } from "dslinter/preview";',
+          "",
+          "export default {",
+          '  // Optional: styles: ["src/styles.css"],',
+          "  // Prefer canonical component ids when names are duplicated.",
+          "  fixtures: {},",
+          "  previews: {},",
+          "  // React: react: { wrap: (children) => createElement(YourProviders, null, children) },",
+          "  // Vue: vue: { setup: (app) => app.use(yourPlugin) },",
+          "} satisfies PreviewAdapter;",
+          "",
+        ].join("\n"),
+      );
+    }
+    process.stdout.write(
+      `dslinter init: ${existing ? "kept existing preview adapter" : `wrote ${path}`}\n`,
+    );
+    return;
+  }
   const layout = opts.layout ?? (forceLaravel ? "laravel" : detectInitLayout(targetDir));
 
   const registryDir =

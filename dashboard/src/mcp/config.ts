@@ -1,11 +1,10 @@
 import { resolve } from "node:path";
-
-const REPORT_FILE_NAME = "dslinter-report.json";
+import { defaultReportPath } from "../../bin/lib/project-root.mjs";
 
 function resolveReportFilePath(scanRoot: string): string {
   const fromEnv = process.env.DSLINTER_REPORT_PATH?.trim();
   if (fromEnv) return resolve(fromEnv);
-  return resolve(scanRoot, "public", REPORT_FILE_NAME);
+  return defaultReportPath(scanRoot, null);
 }
 
 export type McpConfig = {

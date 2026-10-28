@@ -82,7 +82,6 @@ export type {
   ComponentDefinition,
   FileScan,
   PlaygroundSpec,
-  ReportConfig,
   DeclaredPropKind,
   CssTokenSummary,
   CssTokenDefinition,

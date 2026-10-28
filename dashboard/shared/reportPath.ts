@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { REPORT_FILE_NAME } from "./paths.ts";
+import { defaultReportPath } from "../bin/lib/project-root.mjs";
 
 /** Resolve on-disk report path for embed/consumer dev servers. */
 export function resolveReportFilePath(
@@ -8,5 +8,5 @@ export function resolveReportFilePath(
 ): string {
   const fromEnv = env.DSLINTER_REPORT_PATH?.trim();
   if (fromEnv) return resolve(fromEnv);
-  return resolve(scanRoot, "public", REPORT_FILE_NAME);
+  return defaultReportPath(scanRoot, null);
 }

@@ -72,7 +72,7 @@ export function expandPlaygroundControls(
   if (!input) return [];
   if (Array.isArray(input)) {
     if (isPropKeyList(input)) {
-      return input.map((key) => expandPropNameControl(key));
+      return [...(input as readonly string[])].map((key) => expandPropNameControl(key));
     }
     return input;
   }

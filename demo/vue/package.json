@@ -1,0 +1,20 @@
+{
+  "name": "dslinter-vue-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "vue": "^3.5.0",
+    "reka-ui": "^2.0.0",
+    "@inertiajs/vue3": "^3.0.0",
+    "@dslinter/fixture-ui": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^7.3.5",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "typescript": "~6.0.3"
+  }
+}

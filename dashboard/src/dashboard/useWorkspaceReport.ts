@@ -68,7 +68,10 @@ export function useWorkspaceReport(
     }
     loadReport(url)
       .then((r) => {
-        if (!cancelledRef.current) setReport(r);
+        if (!cancelledRef.current) {
+          setReport(r);
+          setError(null);
+        }
       })
       .catch((e: unknown) => {
         if (!cancelledRef.current)
@@ -115,7 +118,7 @@ export function useWorkspaceReport(
 
   // Polling fallback (only when watchUrl is absent and refreshIntervalMs > 0).
   useEffect(() => {
-    if (watchUrl || refreshIntervalMs <= 0) return;
+    if (refreshIntervalMs <= 0) return;
 
     pollCancelledRef.current = false;
 

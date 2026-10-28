@@ -24,7 +24,9 @@ pub fn read_and_scan_file(path: &Path, config: &DslintConfig) -> (FileScan, Opti
     }
 }
 
-fn merge_scan_pairs(pairs: Vec<(FileScan, Option<String>)>) -> (Vec<FileScan>, HashMap<PathBuf, String>) {
+fn merge_scan_pairs(
+    pairs: Vec<(FileScan, Option<String>)>,
+) -> (Vec<FileScan>, HashMap<PathBuf, String>) {
     let mut pairs = pairs;
     pairs.sort_by(|a, b| a.0.path.cmp(&b.0.path));
 
@@ -72,10 +74,52 @@ pub fn scan_workspace_files(
     config: &DslintConfig,
     parallel: bool,
 ) -> anyhow::Result<(Vec<FileScan>, HashMap<PathBuf, String>)> {
-    let paths = crate::scan::collect_component_files(scan_root, project_root, config)?;
+    let config = with_workspace_imports(scan_root, config);
+    let paths = crate::scan::collect_component_files(scan_root, project_root, &config)?;
     Ok(if should_scan_parallel(parallel, paths.len()) {
-        scan_paths_parallel(&paths, config)
+        scan_paths_parallel(&paths, &config)
     } else {
-        scan_paths_sequential(&paths, config)
+        scan_paths_sequential(&paths, &config)
     })
+}
+
+/// Local workspace package imports must survive the third-party usage filter.
+pub fn with_workspace_imports(root: &Path, config: &DslintConfig) -> DslintConfig {
+    let mut config = config.clone();
+    let mut alias_dirs = std::collections::HashSet::new();
+    for entry in walkdir::WalkDir::new(root)
+        .into_iter()
+        .filter_entry(|entry| {
+            !matches!(
+                entry.file_name().to_str(),
+                Some("node_modules" | ".git" | "target" | "vendor" | "dist" | "build")
+            )
+        })
+    {
+        let Ok(entry) = entry else {
+            continue;
+        };
+        let name = entry.file_name().to_string_lossy();
+        if name == "tsconfig.json" || name == "jsconfig.json" || name.starts_with("vite.config.") {
+            let dir = entry.path().parent().unwrap();
+            if alias_dirs.insert(dir.to_path_buf()) {
+                config.local_import_prefixes.extend(
+                    crate::project_aliases::read_aliases(dir)
+                        .keys()
+                        .map(|pattern| pattern.trim_end_matches('*').to_string()),
+                );
+            }
+        }
+        if name != "package.json" {
+            continue;
+        }
+        if let Ok(source) = std::fs::read_to_string(entry.path()) {
+            if let Ok(package) = serde_json::from_str::<serde_json::Value>(&source) {
+                if let Some(name) = package["name"].as_str() {
+                    config.local_import_prefixes.push(name.into());
+                }
+            }
+        }
+    }
+    config
 }

@@ -154,6 +154,8 @@ export class ReportCache {
     }
 
     let report = normalizeReportPaths(JSON.parse(json) as WorkspaceReport);
+    await mkdir(dirname(this.config.reportPath), { recursive: true });
+    await writeFile(this.config.reportPath, json);
     await enrichPlaygroundsFromTs({
       projectRoot: this.config.projectRoot,
       reportPath: this.config.reportPath,

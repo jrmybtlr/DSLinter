@@ -120,6 +120,7 @@ export type ExampleNode =
       type: "element";
       /** JSX name as written (`Breadcrumb`, `Stack.Item`, or intrinsic `nav`). */
       name: string;
+      slot?: string;
       props?: Record<string, ExampleValue>;
       children?: ExampleNode[];
     }
@@ -155,6 +156,24 @@ export interface PlaygroundSpec {
    * components); replayed as the default preview when present.
    */
   example_tree?: ExampleNode;
+  sample_props?: Record<string, unknown>;
+  slots?: string[];
+  models?: string[];
+  emits?: string[];
+  manual_preview?: { rel_path: string; export_name: string };
+  native_element?: "input" | "button";
+}
+
+export interface CatalogComponent {
+  id: string;
+  name: string;
+  framework: "react" | "vue";
+  preview: PlaygroundSpec;
+  usages: UsageLocation[];
+  bindings: Record<string, string>;
+  dependencies: string[];
+  example_source?: { path: string; line: number };
+  legacy_ambiguous?: boolean;
 }
 
 export type CssTokenCategory = "color" | "spacing" | "radius" | "typography" | "other";
@@ -203,6 +222,7 @@ export interface WorkspaceReport {
   /** ISO 8601 UTC timestamp when the report was generated. */
   generated_at?: string;
   root: string;
+  components?: CatalogComponent[];
   files: FileScan[];
   findings: LintFinding[];
   duplicate_components: DuplicateComponent[];
