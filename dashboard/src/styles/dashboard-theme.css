@@ -92,7 +92,8 @@ html:has([data-dashboard-theme="dark"]) {
 }
 
 :root,
-[data-dashboard-theme="light"] {
+[data-dashboard-theme="light"],
+[data-preview-theme="light"] {
   color-scheme: only light;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -129,7 +130,8 @@ html:has([data-dashboard-theme="dark"]) {
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-[data-dashboard-theme="dark"] {
+[data-dashboard-theme="dark"],
+[data-preview-theme="dark"] {
   color-scheme: only dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -183,6 +185,14 @@ html:has([data-dashboard-theme="dark"]) {
   }
 
   [data-dashboard-theme="dark"] .ds-playground-dot-surface {
+    background-image: radial-gradient(circle, rgb(148 163 184 / 0.15) 1px, transparent 1px);
+  }
+
+  [data-preview-theme="light"].ds-playground-dot-surface {
+    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+  }
+
+  [data-preview-theme="dark"].ds-playground-dot-surface {
     background-image: radial-gradient(circle, rgb(148 163 184 / 0.15) 1px, transparent 1px);
   }
 }

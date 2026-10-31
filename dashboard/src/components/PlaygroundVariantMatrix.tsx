@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { PlaygroundArgs } from "../types/controls";
 import { scanVariantPreviews, type PlaygroundA11yFinding } from "../playground/scanVariantA11y";
@@ -12,6 +12,7 @@ type Props = {
   totalCount: number;
   capped: boolean;
   onVariantA11yScan?: (findings: PlaygroundA11yFinding[]) => void;
+  pageSize?: number;
 };
 
 function formatValue(value: string | number | boolean): string {
@@ -30,10 +31,17 @@ export function PlaygroundVariantMatrix({
   totalCount,
   capped,
   onVariantA11yScan,
+  pageSize,
 }: Props) {
+  const [page, setPage] = useState(0);
   const previewRefs = useRef(new Map<string, HTMLDivElement>());
 
-  const visibleCombinations = combinations.filter((combo) => combo.asChild !== true);
+  const allCombinations = combinations.filter((combo) => combo.asChild !== true);
+  const pages = pageSize ? Math.max(1, Math.ceil(allCombinations.length / pageSize)) : 1;
+  const currentPage = Math.min(page, pages - 1);
+  const visibleCombinations = pageSize
+    ? allCombinations.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
+    : allCombinations;
   const visibleAxisKeys = finiteAxisKeys.filter((key) => key !== "asChild");
   const skipsAsChildAxis = finiteAxisKeys.includes("asChild");
   const adjustedTotalCount = skipsAsChildAxis ? Math.ceil(totalCount / 2) : totalCount;
@@ -80,9 +88,32 @@ export function PlaygroundVariantMatrix({
 
   return (
     <>
+      {pageSize && pages > 1 && (
+        <div className="mt-4 flex items-center gap-3 text-sm">
+          <button
+            type="button"
+            className="rounded border border-border px-3 py-1 disabled:opacity-40"
+            disabled={currentPage === 0}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Previous variants
+          </button>
+          <span className="text-muted-foreground">
+            Page {currentPage + 1} of {pages}
+          </span>
+          <button
+            type="button"
+            className="rounded border border-border px-3 py-1 disabled:opacity-40"
+            disabled={currentPage + 1 >= pages}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Next variants
+          </button>
+        </div>
+      )}
       {capped ? (
         <p className="rounded-md border border-border px-3 py-2 text-sm text-muted-foreground">
-          Showing {visibleCombinations.length} of {adjustedTotalCount} combinations (limit{" "}
+          Showing {allCombinations.length} of {adjustedTotalCount} combinations (limit{" "}
           {PLAYGROUND_VARIANT_MATRIX_CAP}). Reduce select options or split controls to preview more
           here.
         </p>
@@ -93,7 +124,7 @@ export function PlaygroundVariantMatrix({
           return (
             <div
               key={key}
-              className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-xs"
+              className="flex min-w-0 flex-col overflow-hidden rounded-md border border-border bg-card text-card-foreground shadow-xs"
             >
               <div className="flex flex-wrap gap-1 border-b p-2">
                 {visibleAxisKeys.map((k) => {

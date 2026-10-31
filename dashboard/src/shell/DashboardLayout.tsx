@@ -1,14 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  createContext,
-  lazy,
-  Suspense,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import type { PlaygroundEntry } from "../types/playground";
 import type { TokenCatalog } from "../types/tokenCatalog";
 import type { DslinterReportState } from "../dashboard/useWorkspaceReport";
@@ -31,86 +22,9 @@ import { useHashRoute } from "./useHashRoute";
 
 const DashboardLayoutAuto = lazy(() => import("./DashboardLayoutAuto"));
 
-const STORAGE_KEY = "dslinter-dashboard-theme";
-
-export type DashboardThemePreference = "light" | "dark";
-export type DashboardResolvedTheme = DashboardThemePreference;
-
-function readStored(): DashboardThemePreference | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const LEGACY_KEY = "dslinter-workbench-theme";
-    let v = localStorage.getItem(STORAGE_KEY);
-    if (v == null) {
-      v = localStorage.getItem(LEGACY_KEY);
-      if (v === "light" || v === "dark") {
-        localStorage.setItem(STORAGE_KEY, v);
-        localStorage.removeItem(LEGACY_KEY);
-      }
-    }
-    if (v === "light" || v === "dark") return v;
-    /** Migrate legacy `system` (and any unknown) — OS preference is ignored. */
-    if (v != null) {
-      localStorage.setItem(STORAGE_KEY, "light");
-      return "light";
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
-function readInitialTheme(): DashboardThemePreference {
-  return readStored() ?? "light";
-}
-
-type DashboardThemeContextValue = {
-  theme: DashboardThemePreference;
-  setTheme: (next: DashboardThemePreference) => void;
-  /** Same as `theme`; kept for callers that already used `resolvedTheme`. */
-  resolvedTheme: DashboardResolvedTheme;
-};
-
-const DashboardThemeContext = createContext<DashboardThemeContextValue | null>(null);
-
-export function DashboardThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<DashboardThemePreference>(() => readInitialTheme());
-
-  const setTheme = useCallback((next: DashboardThemePreference) => {
-    setThemeState(next);
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, theme);
-    } catch {
-      /* ignore */
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== STORAGE_KEY || e.newValue == null) return;
-      if (e.newValue === "light" || e.newValue === "dark") {
-        setThemeState(e.newValue);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  const value = useMemo(() => ({ theme, setTheme, resolvedTheme: theme }), [theme, setTheme]);
-
-  return <DashboardThemeContext.Provider value={value}>{children}</DashboardThemeContext.Provider>;
-}
-
-export function useDashboardTheme(): DashboardThemeContextValue {
-  const ctx = useContext(DashboardThemeContext);
-  if (!ctx) {
-    throw new Error("useDashboardTheme must be used within DashboardThemeProvider");
-  }
-  return ctx;
-}
+import { DashboardThemeProvider, useDashboardTheme } from "./DashboardTheme";
+export { DashboardThemeProvider, useDashboardTheme } from "./DashboardTheme";
+export type { DashboardThemePreference, DashboardResolvedTheme } from "./DashboardTheme";
 
 export type DashboardLayoutProps = {
   /**
@@ -154,7 +68,7 @@ export function DashboardLayoutInner({
   const [route, navigate] = useHashRoute();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [optimisticHidden, setOptimisticHidden] = useState<string[]>([]);
-  const { theme, setTheme, resolvedTheme } = useDashboardTheme();
+  const { resolvedTheme } = useDashboardTheme();
 
   const catalogReport = useMemo(
     () => reportWithExtraHidden(dslinterReport.report, optimisticHidden),
@@ -220,7 +134,6 @@ export function DashboardLayoutInner({
         dslinterReportHint={dslinterReportHint}
         dslinterReport={dslinterReport}
         onOpenComponent={(name) => navigate({ view: "component", componentId: name })}
-        onBackToGovernance={() => navigate({ view: "governance" })}
       />
     );
   } else if (route.view === "component") {
@@ -238,7 +151,6 @@ export function DashboardLayoutInner({
           entry={entry}
           workspaceReport={dslinterReport.report}
           reportReady={reportReady}
-          onOpenComponent={(name) => navigate({ view: "component", componentId: name })}
           onHideFromCatalog={handleHideFromCatalog}
         />
       );
@@ -284,8 +196,6 @@ export function DashboardLayoutInner({
         route={route}
         onNavigate={navigate}
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-        theme={theme}
-        onThemeChange={setTheme}
         catalogNames={catalogNames}
       />
       <div className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">{main}</div>

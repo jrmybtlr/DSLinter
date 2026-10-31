@@ -318,8 +318,21 @@ pub struct CssTokenSummary {
     pub unused_tokens: Vec<String>,
 }
 
+/// A real component export reachable through the preview's local source dependencies.
+#[derive(Debug, Clone, Serialize)]
+pub struct ProviderCandidate {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
+    pub id: String,
+    pub name: String,
+    pub rel_path: String,
+    pub export_name: String,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct PlaygroundSpec {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub provider_candidates: Vec<ProviderCandidate>,
     /// Stable id (file stem), used in URLs / sidebar.
     pub id: String,
     /// Named export to render (`Card` when file stem is `DuplicateCardA`, etc.).

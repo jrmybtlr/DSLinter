@@ -13,14 +13,9 @@ import { a11ySummaryForModule } from "../report/a11yForModule";
 import { codeScoreSummaryForModule } from "../report/codeScoreForModule";
 import { tokenStyleFindingsForModule } from "../report/tokenStyleFindingsForModule";
 import type { WorkspaceReport } from "../types/report";
-import {
-  aggregateDeclaredProps,
-  catalogChildComponentsFor,
-  componentCatalogFamilyForName,
-  usageMap,
-} from "../dashboard/aggregate";
+import { aggregateDeclaredProps, usageMap } from "../dashboard/aggregate";
 import { defaultArgsFromControls } from "../types/controls";
-import type { PlaygroundArgs } from "../types/controls";
+import type { PlaygroundArgs, PlaygroundValuesUpdater } from "../types/controls";
 import type { PlaygroundEntry } from "../types/playground";
 import { ComponentUsageDetails } from "../dashboard/ComponentUsageDetails";
 import {
@@ -46,19 +41,34 @@ import {
   type PlaygroundA11yFinding,
 } from "../playground/scanVariantA11y";
 import { HideFromCatalogButton } from "./HideFromCatalogButton";
+import { IconInfo } from "./icons";
 import { OpenInEditorButton } from "./OpenInEditorButton";
+import { SourcePathActions } from "./SourcePathActions";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ScoreGauge } from "./ScoreGauge";
 import { Section } from "./Section";
 import { resolveModuleAbsolutePath } from "../dashboard/editorLink";
 import { cn } from "../lib/utils";
+import { useDashboardTheme, type DashboardResolvedTheme } from "../shell/DashboardTheme";
+import { PreviewSectionThemeContext } from "../shell/previewSectionTheme";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 type Props = {
   entry: PlaygroundEntry;
   workspaceReport: WorkspaceReport | null;
   reportReady: boolean;
-  onOpenComponent: (componentId: string) => void;
   onHideFromCatalog?: (componentId: string) => void;
+  /** Immediate hide, without the catalog config dialog. */
+  onHideComponent?: () => void;
+  values?: PlaygroundArgs;
+  onValuesChange?: PlaygroundValuesUpdater;
+  onResetControls?: () => void;
+  headerActions?: ReactNode;
+  renderVariantPreview?: (values: PlaygroundArgs) => ReactNode;
+  runtimeA11y?: { findings: PlaygroundA11yFinding[]; pending: boolean; message?: string };
+  isolatedPreview?: boolean;
+  /** Providers the live preview wrapped in without a configured adapter. */
+  suppliedProviders?: string[];
 };
 
 const MIN_PREVIEW_PX = 280;
@@ -128,7 +138,7 @@ function BreakpointPresetSelect({
         aria-label={`Select ${kind} width preset`}
         title={`${kindLabel}: ${value} — click to set a predefined width`}
         className={cn(
-          "h-auto w-auto gap-0 rounded-none border-0 bg-transparent p-2.5 shadow-none last:border-l",
+          "h-full w-auto gap-0 rounded-none border-0 bg-transparent px-2.5 py-0 shadow-none last:border-l",
           "font-mono text-xs/none text-muted-foreground tabular-nums",
           "hover:bg-accent hover:text-accent-foreground",
           "focus:ring-0 focus:ring-offset-0 data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
@@ -156,7 +166,17 @@ function BreakpointPresetSelect({
   );
 }
 
-function TocLink({ href, children }: { href: string; children: ReactNode }) {
+function TocLink({
+  href,
+  active,
+  onActivate,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  onActivate: () => void;
+  children: ReactNode;
+}) {
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     // Modifier keys / non-primary clicks → fall back to default browser behaviour.
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
@@ -166,6 +186,7 @@ function TocLink({ href, children }: { href: string; children: ReactNode }) {
     const target = id ? document.getElementById(id) : null;
     if (!target) return;
     e.preventDefault();
+    onActivate();
     target.scrollIntoView({ behavior: "smooth", block: "start" });
     if (typeof window !== "undefined" && window.history?.replaceState) {
       window.history.replaceState(null, "", `#${id}`);
@@ -176,7 +197,11 @@ function TocLink({ href, children }: { href: string; children: ReactNode }) {
     <a
       href={href}
       onClick={handleClick}
-      className="block rounded-md py-1 text-muted-foreground transition"
+      aria-current={active ? "location" : undefined}
+      className={cn(
+        "block rounded-md px-2 py-1 transition",
+        active ? "bg-accent font-medium text-foreground" : "text-muted-foreground",
+      )}
       className:hover="bg-accent text-accent-foreground"
     >
       {children}
@@ -184,21 +209,74 @@ function TocLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
+/** Section whose heading is in the scrollport, preferring the one at the reading position. */
+function useActiveSection(rootRef: { current: HTMLElement | null }, idsKey: string) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const scroller = rootRef.current;
+    if (!scroller) return;
+    const ids = idsKey ? idsKey.split("\0") : [];
+
+    const update = () => {
+      const rootRect = scroller.getBoundingClientRect();
+      const focusY = rootRect.top + rootRect.height * 0.4;
+      let current: string | null = null;
+      let bestDistance = Infinity;
+      for (const id of ids) {
+        const section = document.getElementById(id);
+        if (!section) continue;
+        const rect = section.getBoundingClientRect();
+        const inView = rect.bottom > rootRect.top + 8 && rect.top < rootRect.bottom - 8;
+        if (!inView) continue;
+        const distance = Math.abs((rect.top + rect.bottom) / 2 - focusY);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          current = id;
+        }
+      }
+      setActiveId((previous) => (previous === current ? previous : current));
+    };
+
+    update();
+    scroller.addEventListener("scroll", update, { passive: true });
+    const resize = new ResizeObserver(update);
+    resize.observe(scroller);
+    if (scroller.firstElementChild) resize.observe(scroller.firstElementChild);
+    return () => {
+      scroller.removeEventListener("scroll", update);
+      resize.disconnect();
+    };
+  }, [idsKey, rootRef]);
+
+  return [activeId, setActiveId] as const;
+}
+
 export function ComponentPlaygroundPane({
   entry,
   workspaceReport,
   reportReady,
-  onOpenComponent: _onOpenComponent,
   onHideFromCatalog,
+  onHideComponent,
+  values: controlledValues,
+  onValuesChange,
+  onResetControls,
+  headerActions,
+  renderVariantPreview,
+  runtimeA11y,
+  isolatedPreview = false,
+  suppliedProviders = [],
 }: Props) {
   const { renderPreview } = entry;
   const sourceAbsolutePath = workspaceReport?.root
     ? resolveModuleAbsolutePath(workspaceReport.root, entry.modulePath)
     : undefined;
 
-  const [values, setValues] = useState<PlaygroundArgs>(() =>
+  const [localValues, setLocalValues] = useState<PlaygroundArgs>(() =>
     defaultArgsFromControls(entry.controls),
   );
+  const values = controlledValues ?? localValues;
+  const setValues = onValuesChange ?? setLocalValues;
 
   const controlsSignature = entry.controls
     .map((c) => {
@@ -210,8 +288,8 @@ export function ComponentPlaygroundPane({
     .join("|");
 
   useEffect(() => {
-    setValues(defaultArgsFromControls(entry.controls));
-  }, [entry.id, controlsSignature]);
+    if (controlledValues === undefined) setLocalValues(defaultArgsFromControls(entry.controls));
+  }, [entry.id, controlsSignature, controlledValues]);
 
   const a11y = useMemo(
     () => a11ySummaryForModule(reportReady ? workspaceReport : null, entry.modulePath),
@@ -239,6 +317,10 @@ export function ComponentPlaygroundPane({
   }, [workspaceReport, entry.id, reportReady]);
 
   const previewMeasureRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useDashboardTheme();
+  const [previewTheme, setPreviewTheme] = useState<DashboardResolvedTheme | null>(null);
+  const sectionTheme = previewTheme ?? resolvedTheme;
   const previewFrameRef = useRef<HTMLDivElement>(null);
   const previewWidthLabelRef = useRef<HTMLSpanElement>(null);
   const livePreviewWidthRef = useRef(DEFAULT_PREVIEW_PX);
@@ -371,9 +453,7 @@ export function ComponentPlaygroundPane({
     [entry.controls, values],
   );
 
-  const showVariantsSection =
-    hasControls &&
-    (variantEnumeration.combinations.length > 0 || variantEnumeration.totalCount === 0);
+  const showVariantsSection = hasControls && variantEnumeration.combinations.length > 0;
 
   const [variantA11yFindings, setVariantA11yFindings] = useState<PlaygroundA11yFinding[]>([]);
   const [variantScanComplete, setVariantScanComplete] = useState(false);
@@ -389,70 +469,72 @@ export function ComponentPlaygroundPane({
   }, []);
 
   const combinedA11y = useMemo(() => {
-    const findings = mergePlaygroundA11yFindings(a11y.findings, variantA11yFindings);
+    const runtimeFindings = runtimeA11y?.findings ?? variantA11yFindings;
+    const findings = mergePlaygroundA11yFindings(a11y.findings, runtimeFindings);
     return {
       ...a11y,
       findings,
       issueCount: findings.length,
-      score: playgroundA11yScore(a11y.findings, variantA11yFindings),
+      score: playgroundA11yScore(a11y.findings, runtimeFindings),
     };
-  }, [a11y, variantA11yFindings]);
+  }, [a11y, variantA11yFindings, runtimeA11y]);
 
   const hasVariantMatrix = variantEnumeration.combinations.length > 0;
-  const variantScanPending = hasVariantMatrix && !variantScanComplete;
+  const variantScanPending = runtimeA11y?.pending ?? (hasVariantMatrix && !variantScanComplete);
   const a11yScoreLabel =
     reportReady || variantScanComplete
       ? `${combinedA11y.score}/100${variantScanPending ? "…" : ""}`
       : "—";
 
   const report = reportReady ? workspaceReport : null;
-  const family = useMemo(() => componentCatalogFamilyForName(report, entry.id), [report, entry.id]);
-  const childComponents = catalogChildComponentsFor(family, entry.id);
-  const resetControls = () => setValues(defaultArgsFromControls(entry.controls));
+  const resetControls = () =>
+    onResetControls ? onResetControls() : setValues(defaultArgsFromControls(entry.controls));
 
   const tocItems: { href: string; label: string; show?: boolean }[] = [
     { href: "#api-reference", label: "API reference", show: hasControls },
     { href: "#usage", label: "Usage" },
-    {
-      href: "#subcomponents",
-      label: "Subcomponents",
-      show: childComponents.length > 0,
-    },
     { href: "#repo-usage", label: "Repo usage" },
-    { href: "#design-tokens", label: "Design tokens" },
+    { href: "#design-tokens", label: "Token drift" },
     { href: "#code-score", label: "Code score" },
     { href: "#accessibility", label: "Accessibility" },
     { href: "#variants", label: "Variants", show: showVariantsSection },
   ];
+  const tocKey = tocItems
+    .filter((item) => item.show !== false)
+    .map((item) => item.href.slice(1))
+    .join("\0");
+  const [activeSection, setActiveSection] = useActiveSection(scrollRef, tocKey);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
         <header
           id="source"
           className="flex scroll-mt-20 flex-wrap items-center justify-between gap-4 border-b border-border bg-card p-6"
         >
           <div className="min-w-0">
-            <p className="text-sm font-medium text-muted-foreground">
-              Components
-              {entry.meta.group ? (
-                <>
-                  {" "}
-                  <span className="text-muted-foreground/40">/</span>{" "}
-                  <span className="text-foreground/80 capitalize">{entry.meta.group}</span>
-                </>
-              ) : null}
-            </p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
               {entry.meta.title}
             </h1>
+            {isolatedPreview && entry.modulePath ? (
+              <SourcePathActions
+                displayPath={entry.modulePath}
+                filePath={sourceAbsolutePath}
+                componentName={entry.meta.id}
+                onHideFromCatalog={onHideFromCatalog}
+                onHideComponent={onHideComponent}
+              />
+            ) : null}
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              {sourceAbsolutePath ? <OpenInEditorButton filePath={sourceAbsolutePath} /> : null}
-              {onHideFromCatalog ? (
+              {isolatedPreview ? null : headerActions}
+              {isolatedPreview || !sourceAbsolutePath ? null : (
+                <OpenInEditorButton filePath={sourceAbsolutePath} />
+              )}
+              {isolatedPreview || !onHideFromCatalog ? null : (
                 <HideFromCatalogButton componentName={entry.meta.id} onHidden={onHideFromCatalog} />
-              ) : null}
+              )}
             </div>
             <div className="flex items-start gap-5">
               <ScoreGauge
@@ -470,51 +552,114 @@ export function ComponentPlaygroundPane({
           </div>
         </header>
 
-        <section id="examples" className="ds-playground-dot-surface border-b px-16 py-10">
-          <div ref={previewMeasureRef}>
-            <div className="flex justify-center">
-              <div
-                ref={previewFrameRef}
-                className="relative min-w-0 shrink-0 rounded-lg border border-border bg-background shadow-xs will-change-[width] select-none"
-                style={{ width: previewWidthPx }}
-              >
-                <PreviewResizeHandle side="left" onPointerDown={attachSymmetricWidthDrag("left")} />
-                <PreviewResizeHandle
-                  side="right"
-                  onPointerDown={attachSymmetricWidthDrag("right")}
-                />
-                <PlaygroundAppThemeWrapper workspaceReport={report} className="min-w-0 p-8">
-                  <PlaygroundPreviewErrorBoundary componentName={entry.meta.title}>
-                    {renderPreview(values)}
-                  </PlaygroundPreviewErrorBoundary>
-                </PlaygroundAppThemeWrapper>
+        <section
+          id="examples"
+          data-preview-theme={sectionTheme}
+          className="ds-playground-dot-surface relative border-b bg-background px-16 py-24"
+        >
+          <PreviewSectionThemeContext.Provider value={sectionTheme}>
+            <div ref={previewMeasureRef}>
+              <div className="flex justify-center">
+                <div
+                  ref={previewFrameRef}
+                  className="relative min-w-0 shrink-0 rounded-md border border-border bg-background shadow-xs will-change-[width] select-none"
+                  style={{ width: previewWidthPx }}
+                >
+                  <PreviewResizeHandle
+                    side="left"
+                    onPointerDown={attachSymmetricWidthDrag("left")}
+                  />
+                  <PreviewResizeHandle
+                    side="right"
+                    onPointerDown={attachSymmetricWidthDrag("right")}
+                  />
+                  <PlaygroundAppThemeWrapper
+                    workspaceReport={isolatedPreview ? null : report}
+                    className={
+                      isolatedPreview ? "min-w-0 overflow-hidden rounded-md" : "min-w-0 p-8"
+                    }
+                  >
+                    <PlaygroundPreviewErrorBoundary componentName={entry.meta.title}>
+                      {renderPreview(values)}
+                    </PlaygroundPreviewErrorBoundary>
+                  </PlaygroundAppThemeWrapper>
+                </div>
               </div>
+              {maxOuterPx > 0 ? (
+                <div className="mx-auto mt-4 flex w-fit items-center gap-2">
+                  <div className="flex h-6 w-fit items-center divide-x divide-border overflow-hidden rounded-sm border border-border bg-card text-center font-mono text-xs/none text-muted-foreground tabular-nums">
+                    <span ref={previewWidthLabelRef} className="px-2.5">
+                      {Math.round(previewWidthPx)}px
+                    </span>
+                    <BreakpointPresetSelect
+                      kind="screen"
+                      value={screenBreakpoint}
+                      presets={SCREEN_WIDTH_PRESETS}
+                      onSelectWidth={setPreviewWidthFromPreset}
+                    />
+                    <BreakpointPresetSelect
+                      kind="container"
+                      value={containerBreakpoint}
+                      presets={CONTAINER_WIDTH_PRESETS}
+                      onSelectWidth={setPreviewWidthFromPreset}
+                    />
+                  </div>
+                  <div className="flex h-6 overflow-hidden rounded-sm border border-border bg-card text-xs">
+                    {(
+                      [
+                        ["light", "Light"],
+                        ["dark", "Dark"],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={sectionTheme === value}
+                        onClick={() => setPreviewTheme(value)}
+                        className={cn(
+                          "px-2.5 transition",
+                          sectionTheme === value
+                            ? "bg-accent font-medium text-foreground"
+                            : "text-muted-foreground",
+                        )}
+                        className:hover="bg-accent text-foreground"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {suppliedProviders.length > 0 ? (
+                    <HoverCard openDelay={200} closeDelay={100}>
+                      <HoverCardTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex size-6 items-center justify-center rounded-sm border border-border bg-card text-muted-foreground transition"
+                          className:hover="bg-accent text-foreground"
+                          aria-label={`Context supplied automatically: ${suppliedProviders.join(", ")}`}
+                        >
+                          <IconInfo className="size-3.5" aria-hidden />
+                        </button>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-72 p-3 text-xs" align="end">
+                        <p className="font-medium text-foreground">
+                          Context supplied automatically
+                        </p>
+                        <p className="mt-2 text-muted-foreground">
+                          DSLinter added {suppliedProviders.join(", ")} as required parents so this
+                          preview can render.
+                        </p>
+                      </HoverCardContent>
+                    </HoverCard>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
-            {maxOuterPx > 0 ? (
-              <div className="mx-auto mt-4 flex h-6 w-fit items-center divide-x divide-border overflow-hidden rounded-sm border border-border bg-card text-center font-mono text-xs/none text-muted-foreground tabular-nums">
-                <span ref={previewWidthLabelRef} className="p-2.5">
-                  {Math.round(previewWidthPx)}px
-                </span>
-                <BreakpointPresetSelect
-                  kind="screen"
-                  value={screenBreakpoint}
-                  presets={SCREEN_WIDTH_PRESETS}
-                  onSelectWidth={setPreviewWidthFromPreset}
-                />
-                <BreakpointPresetSelect
-                  kind="container"
-                  value={containerBreakpoint}
-                  presets={CONTAINER_WIDTH_PRESETS}
-                  onSelectWidth={setPreviewWidthFromPreset}
-                />
-              </div>
-            ) : null}
-          </div>
+          </PreviewSectionThemeContext.Provider>
         </section>
 
         <div className="w-full min-w-0 px-6 py-10" className:lg="px-12">
           <div className:xl="grid grid-cols-[minmax(0,1fr)_12rem] gap-14">
-            <div className="min-w-0 space-y-14">
+            <div className="min-w-0 space-y-10">
               {hasControls ? (
                 <PlaygroundApiReference
                   entry={entry}
@@ -536,7 +681,7 @@ export function ComponentPlaygroundPane({
 
               <Section
                 id="design-tokens"
-                title="Design tokens and colors"
+                title="Token drift"
                 description="Hardcoded colors and non-token styling flagged by DSLinter for this module's source file."
               >
                 <PlaygroundTokenStyleSection
@@ -556,8 +701,17 @@ export function ComponentPlaygroundPane({
               <Section
                 id="accessibility"
                 title={`Accessibility: ${a11yScoreLabel}`}
-                description="Static accessibility rules from the DSLinter report, plus runtime color-contrast checks on each variant preview below."
+                description={
+                  isolatedPreview
+                    ? "Static accessibility rules and runtime color-contrast checks from loaded preview frames."
+                    : "Static accessibility rules from the DSLinter report, plus runtime color-contrast checks on each variant preview below."
+                }
               >
+                {runtimeA11y?.message && (
+                  <p role="status" className="mb-3 text-sm text-muted-foreground">
+                    {runtimeA11y.message}
+                  </p>
+                )}
                 <PlaygroundA11ySection
                   a11y={combinedA11y}
                   reportReady={reportReady || variantScanComplete}
@@ -576,7 +730,12 @@ export function ComponentPlaygroundPane({
                 </p>
                 {tocItems.map(({ href, label, show = true }) =>
                   show ? (
-                    <TocLink key={href} href={href}>
+                    <TocLink
+                      key={href}
+                      href={href}
+                      active={activeSection === href.slice(1)}
+                      onActivate={() => setActiveSection(href.slice(1))}
+                    >
                       {label}
                     </TocLink>
                   ) : null,
@@ -596,12 +755,13 @@ export function ComponentPlaygroundPane({
                 All variants
               </h2>
               <PlaygroundVariantMatrix
-                renderPreview={renderPreview}
+                renderPreview={renderVariantPreview ?? renderPreview}
                 combinations={variantEnumeration.combinations}
                 finiteAxisKeys={variantEnumeration.finiteAxisKeys}
                 totalCount={variantEnumeration.totalCount}
                 capped={variantEnumeration.capped}
-                onVariantA11yScan={handleVariantA11yScan}
+                onVariantA11yScan={isolatedPreview ? undefined : handleVariantA11yScan}
+                pageSize={isolatedPreview ? 12 : undefined}
               />
             </div>
           </section>

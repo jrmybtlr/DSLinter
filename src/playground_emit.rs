@@ -164,6 +164,7 @@ pub fn build_playground_specs(
         let group = playground_spec_group(&rel, config);
         let example_tree = example_trees.get(def.name.as_str()).map(|t| (*t).clone());
         out.push(PlaygroundSpec {
+            provider_candidates: vec![],
             id: def.name.clone(),
             export_name: def.name.clone(),
             rel_path: rel,

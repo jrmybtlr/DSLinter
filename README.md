@@ -32,11 +32,15 @@ DSLinter tries, in order:
 3. A built-in composition recipe.
 4. A generated example with bounded sample data inferred from types.
 
-Generated data and substituted Inertia context are labelled. If all strategies fail, the explorer shows the attempts and error alongside the API and source usage. It never removes a component merely because its preview failed.
+Generated data, automatically revealed content, and substituted Inertia context are labelled. Object-array samples retain their structure, and untouched optional controls leave component defaults intact. Family recipes include the selected export and its required ancestors; content previews open their owner when needed. Component and provider imports use Vite-managed module entries to share context across hot updates. If all strategies fail, the explorer shows the attempts and error alongside the API and source usage. It never removes a component merely because its preview failed.
 
-The initial recipe set covers Button, Input, Checkbox, Switch, Card, Dialog, Select, Tabs, Popover, and Tooltip. React shadcn compositions and Vue/Reka compositions use their actual exports. Customized or incomplete contracts fall back to source examples and generated demos. Arbitrary application providers and backend data may still need an adapter.
+The initial recipe set covers Button, Input, Checkbox, Switch, Card, Dialog, Select, Tabs, Popover, and Tooltip. React shadcn compositions and Vue/Reka compositions use their actual exports. Customized or incomplete contracts fall back to source examples and generated demos. React and Vue previews can recover from missing-provider errors when exactly one matching export is verified in the component's local source dependencies. DSLinter mounts that real provider, labels the supplied context, and includes it in copied snippets. Canonical-id adapter fixtures can supply provider props. Recovery stops at four added providers; ambiguous requirements and bare Vue injection warnings show configuration guidance. Explicit previews and configured wrappers remain authoritative. Providers requiring application services or backend data may still need an adapter.
 
 Supported preview hosts are React and Vue 3 applications using Vite, including Laravel/Inertia. Next.js and Nuxt runtime integration are outside this release. The dashboard retains token and governance views, CI reporting, baseline drift, and MCP access.
+
+The original dashboard layout is available throughout the explorer: grouped component navigation, command search, light/dark themes, governance scores, issue filters, and the full inventory table. Component pages include the API reference, repository call sites, related components, token findings, code/accessibility scores, and a resizable preview with screen/container presets. Variant previews are paginated and load near the viewport; color-contrast checks run inside the loaded application frames.
+
+Hide Component affects this browser's catalog preferences and can be undone from the sidebar. It does not create or edit project configuration.
 
 ## One optional adapter
 
@@ -64,6 +68,8 @@ export default {
 ```
 
 Styles resolve relative to the adapter. Fixture and preview keys accept a unique component name or a canonical id such as `packages/ui/src/UserCard.tsx#UserCard`. Use the id when names are duplicated. An app-local adapter takes precedence over the workspace adapter.
+
+For complete, verified examples such as a Sonner notification host, the explorer offers **Add preview setup**. Clicking it creates the app's `dslinter.preview.ts` or adds the component's entry to the existing adapter, then reloads the preview. Existing entries are preserved. Dynamic configurations and setups that still need user-supplied data retain the copyable example for manual configuration. Startup and automatic recovery do not create project files.
 
 Existing `definePlayground` APIs and embedded dashboards remain available. `npx dslinter init --legacy` retains the original JSON config and registry scaffolding; `DSLINTER_USE_CONSUMER_VITE=1` selects the original embedded dev flow. See [the package guide](dashboard/README.md).
 

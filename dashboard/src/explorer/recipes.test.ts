@@ -93,3 +93,77 @@ describe("composition recipes", () => {
     expect(demoSnippet(vue, "vue")).not.toContain("</template #footer>");
   });
 });
+
+describe("selected family members", () => {
+  const roles: Record<string, string[]> = {
+    Breadcrumb: [
+      "Breadcrumb",
+      "BreadcrumbList",
+      "BreadcrumbItem",
+      "BreadcrumbLink",
+      "BreadcrumbPage",
+      "BreadcrumbSeparator",
+      "BreadcrumbEllipsis",
+    ],
+    DropdownMenu: [
+      "DropdownMenu",
+      "DropdownMenuTrigger",
+      "DropdownMenuContent",
+      "DropdownMenuItem",
+      "DropdownMenuGroup",
+      "DropdownMenuCheckboxItem",
+      "DropdownMenuRadioGroup",
+      "DropdownMenuRadioItem",
+      "DropdownMenuLabel",
+      "DropdownMenuSeparator",
+      "DropdownMenuShortcut",
+      "DropdownMenuPortal",
+      "DropdownMenuSub",
+      "DropdownMenuSubContent",
+      "DropdownMenuSubTrigger",
+    ],
+    Sheet: [
+      "Sheet",
+      "SheetTrigger",
+      "SheetContent",
+      "SheetHeader",
+      "SheetFooter",
+      "SheetTitle",
+      "SheetDescription",
+      "SheetClose",
+    ],
+    InputOTP: ["InputOTP", "InputOTPGroup", "InputOTPSlot", "InputOTPSeparator"],
+    Collapsible: ["Collapsible", "CollapsibleTrigger", "CollapsibleContent"],
+    ToggleGroup: ["ToggleGroup", "ToggleGroupItem"],
+    Avatar: ["Avatar", "AvatarImage", "AvatarFallback"],
+    NavigationMenu: [
+      "NavigationMenu",
+      "NavigationMenuList",
+      "NavigationMenuItem",
+      "NavigationMenuTrigger",
+      "NavigationMenuContent",
+      "NavigationMenuLink",
+      "NavigationMenuIndicator",
+      "NavigationMenuViewport",
+    ],
+  };
+  for (const [family, members] of Object.entries(roles)) {
+    it(`contains every selected ${family} member in its real composition`, () => {
+      const components = catalog(
+        members,
+        family === "InputOTP" ? "input-otp" : "@radix-ui/react-slot",
+      );
+      for (const component of components) component.preview.rel_path = `ui/${family}.tsx`;
+      for (const component of components) {
+        const tree = recipeFor(component, components);
+        expect(tree, component.name).toBeDefined();
+        expect(demoSnippet(tree!, "react"), component.name).toContain(`<${component.name}`);
+      }
+    });
+  }
+  it("never substitutes an ordinary input for an OTP slot", () => {
+    const components = catalog(["Input", "InputOTPSlot"], "@radix-ui/react-slot");
+    components[0].preview.native_element = "input";
+    expect(recipeFor(components[1], components)).toBeUndefined();
+  });
+});

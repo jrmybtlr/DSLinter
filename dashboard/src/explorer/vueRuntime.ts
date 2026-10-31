@@ -2,6 +2,7 @@ import { createApp, h, shallowRef, nextTick, type Component } from "vue";
 import type { CatalogComponent } from "../types/report";
 import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
+import { isMissingInjectionWarning, contextRequirement } from "./providerRecovery";
 
 export async function mount(
   container: HTMLElement,
@@ -15,10 +16,12 @@ export async function mount(
 ): Promise<FrameworkMount> {
   const values = shallowRef(initialValues);
   let failure: Error | undefined;
+  let mounting = true;
+  let updating = false;
   function render(node: DemoNode | string): any {
     if (typeof node === "string") return node;
     const type = components[node.name] || node.name;
-    const target = type === components[component.name];
+    const target = type === components[component.name] && node.target !== false;
     const props: Record<string, any> = { ...node.props, ...(target ? values.value : {}) };
     const slots: Record<string, () => any> = {};
     if (target) {
@@ -58,18 +61,38 @@ export async function mount(
     return h(type, props, slots);
   }
   const app = createApp({ render: () => (override ? h(override, values.value) : render(tree)) });
-  app.config.errorHandler = (error) => {
-    failure = error instanceof Error ? error : new Error(String(error));
-    emit("preview:error", failure.message);
-  };
+  function capture(error: unknown): void {
+    if (!failure || contextRequirement(error))
+      failure = error instanceof Error ? error : new Error(String(error));
+    if (!mounting && !updating) emit("preview:error", failure.message);
+  }
   try {
     adapter.vue?.setup?.(app);
+    const previousError = app.config.errorHandler;
+    const previousWarning = app.config.warnHandler;
+    app.config.errorHandler = (error, instance, info) => {
+      capture(error);
+      previousError?.(error, instance, info);
+    };
+    app.config.warnHandler = (message, instance, trace) => {
+      if (isMissingInjectionWarning(message)) capture(new Error(message));
+      if (previousWarning) previousWarning(message, instance, trace);
+      else if (!isMissingInjectionWarning(message)) console.warn(`[Vue warn]: ${message}${trace}`);
+    };
     app.mount(container);
     await nextTick();
     if (failure) throw failure;
+    mounting = false;
     return {
-      update(next) {
-        values.value = { ...values.value, ...next };
+      async update(next) {
+        updating = true;
+        try {
+          values.value = { ...values.value, ...next };
+          await nextTick();
+          if (failure) throw failure;
+        } finally {
+          updating = false;
+        }
       },
       unmount() {
         app.unmount();

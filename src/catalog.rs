@@ -12,7 +12,7 @@ use oxc_span::SourceType;
 
 use crate::config::DslintConfig;
 use crate::model::{
-    CatalogComponent, ExampleNode, ExampleSource, FileScan, PlaygroundSpec, UsageLocation,
+    CatalogComponent, ExampleNode, ExampleSource, FileScan, PlaygroundSpec, ProviderCandidate, UsageLocation,
 };
 
 #[derive(Default)]
@@ -321,6 +321,24 @@ impl Graph {
         None
     }
 
+    fn reachable_modules(&self, start: &Path) -> HashSet<PathBuf> {
+        let mut seen = HashSet::new();
+        let mut pending = vec![start.to_path_buf()];
+        while let Some(path) = pending.pop() {
+            if !seen.insert(path.clone()) {
+                continue;
+            }
+            if let Some(module) = self.modules.get(&path) {
+                for spec in module.dependencies.iter().chain(module.stars.iter()) {
+                    if let Some(target) = self.resolve_module(&path, spec) {
+                        pending.push(target);
+                    }
+                }
+            }
+        }
+        seen
+    }
+
     fn binding_origin(&self, path: &Path, name: &str) -> Option<(PathBuf, String)> {
         let module = self.modules.get(path)?;
         let (root, member) = name.split_once('.').unwrap_or((name, ""));
@@ -475,6 +493,7 @@ pub fn build_catalog(
                     .unwrap_or(if vue { "vue" } else { "react" })
                     .into(),
                 preview: PlaygroundSpec {
+                    provider_candidates: vec![],
                     id,
                     export_name: export.clone(),
                     rel_path: rel,
@@ -563,6 +582,57 @@ pub fn build_catalog(
                 component.bindings = bindings;
             }
         }
+    }
+    // Resolve by source reachability, never by a workspace-wide component name.
+    let mut reachable = HashMap::new();
+    for component in &out {
+        let path = root.join(&component.preview.rel_path);
+        reachable
+            .entry(path.clone())
+            .or_insert_with(|| graph.reachable_modules(&path));
+    }
+    let candidates: Vec<_> = out
+        .iter()
+        .map(|component| {
+            (
+                component.framework.clone(),
+                ProviderCandidate {
+                    aliases: {
+                        let module = &graph.modules[&root.join(&component.preview.rel_path)];
+                        module
+                            .exports
+                            .get(&component.preview.export_name)
+                            .map(|(_, local)| {
+                                module
+                                    .imports
+                                    .get(local)
+                                    .map(|(_, imported)| imported)
+                                    .unwrap_or(local)
+                            })
+                            .filter(|name| name.starts_with(char::is_uppercase))
+                            .cloned()
+                            .into_iter()
+                            .collect()
+                    },
+                    id: component.id.clone(),
+                    name: component.name.clone(),
+                    rel_path: component.preview.rel_path.clone(),
+                    export_name: component.preview.export_name.clone(),
+                },
+            )
+        })
+        .collect();
+    for component in &mut out {
+        let modules = &reachable[&root.join(&component.preview.rel_path)];
+        component.preview.provider_candidates = candidates
+            .iter()
+            .filter(|(framework, candidate)| {
+                framework == &component.framework
+                    && candidate.id != component.id
+                    && modules.contains(&root.join(&candidate.rel_path))
+            })
+            .map(|(_, candidate)| candidate.clone())
+            .collect();
     }
     out.sort_by(|a, b| a.id.cmp(&b.id));
     out

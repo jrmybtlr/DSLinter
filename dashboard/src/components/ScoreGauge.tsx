@@ -112,17 +112,14 @@ export function ScoreGauge({ label, value, href, pending = false, className }: S
           {value == null ? "—" : clamped}
         </span>
       </div>
-      <span className="mt-1 max-w-22 text-center text-xs leading-tight text-muted-foreground">
-        {label}
-        {pending ? "…" : null}
-      </span>
+      <span className="mt-1 text-center text-xs leading-tight text-muted-foreground">{label}</span>
     </>
   );
 
   const rootClass = cn(
     "flex flex-col items-center gap-0",
     href &&
-      "rounded-lg transition hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+      "rounded-md transition hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
     className,
   );
 

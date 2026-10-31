@@ -4,6 +4,7 @@ import { flushSync } from "react-dom";
 import type { CatalogComponent } from "../types/report";
 import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
+import { contextRequirement } from "./providerRecovery";
 
 export async function mount(
   container: HTMLElement,
@@ -15,7 +16,13 @@ export async function mount(
   emit: (event: string, value: unknown) => void,
   override?: any,
 ): Promise<FrameworkMount> {
-  const root = createRoot(container);
+  let mounting = true;
+  let updating = false;
+  const root = createRoot(container, {
+    onCaughtError(error, info) {
+      if (!contextRequirement(error)) console.error(error, info.componentStack);
+    },
+  });
   let update: (values: Record<string, unknown>) => void = () => {};
   let failure: Error | undefined;
   class Boundary extends React.Component<{ children: React.ReactNode }, { error: boolean }> {
@@ -25,7 +32,7 @@ export async function mount(
     }
     componentDidCatch(error: Error) {
       failure = error;
-      emit("preview:error", error.message);
+      if (!mounting && !updating) emit("preview:error", error.message);
     }
     render() {
       return this.state.error ? null : this.props.children;
@@ -37,7 +44,7 @@ export async function mount(
     function render(node: DemoNode | string, key: number | string): React.ReactNode {
       if (typeof node === "string") return node;
       const type = components[node.name] || node.name;
-      const target = type === components[component.name];
+      const target = type === components[component.name] && node.target !== false;
       const props: Record<string, any> = { ...node.props, ...(target ? values : {}), key };
       if (target) {
         for (const [event, prop] of [
@@ -99,10 +106,16 @@ export async function mount(
   try {
     flushSync(() => root.render(React.createElement(Boundary, null, React.createElement(Demo))));
     if (failure) throw failure;
+    mounting = false;
     return {
       update(values) {
-        flushSync(() => update(values));
-        if (failure) throw failure;
+        updating = true;
+        try {
+          flushSync(() => update(values));
+          if (failure) throw failure;
+        } finally {
+          updating = false;
+        }
       },
       unmount() {
         root.unmount();

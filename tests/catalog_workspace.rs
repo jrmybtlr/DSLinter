@@ -215,3 +215,83 @@ fn discovers_vue_primitive_reexports_as_public_component_contracts() {
         .iter()
         .all(|component| component.name != "useForwardProps"));
 }
+
+#[test]
+fn provider_candidates_follow_hooks_aliases_barrels_and_cycles_without_cross_app_names() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    put(
+        root,
+        "tsconfig.json",
+        r#"{"compilerOptions":{"paths":{"@/*":["src/*"]}}}"#,
+    );
+    put(root, "src/ui/sidebar.tsx", "import { useBrand } from '../hooks'; export function SidebarProvider({children}) { return <div>{children}</div> } export function SidebarMenuButton(){ return <button>Brand</button> }");
+    put(root, "src/ui/index.ts", "export * from './sidebar';");
+    put(root, "src/hooks.ts", "import {SidebarMenuButton} from '@/ui'; export function useBrand(){ return SidebarMenuButton }");
+    put(root, "src/Brand.tsx", "import {useBrand} from './hooks'; export function Brand(){ const Button = useBrand(); return <Button/> }");
+    put(
+        root,
+        "other/SidebarProvider.tsx",
+        "export function SidebarProvider(){return <div/>}",
+    );
+    let report = dslinter::scan_workspace(root).unwrap();
+    let brand = report
+        .components
+        .iter()
+        .find(|c| c.name == "Brand")
+        .unwrap();
+    let candidates = &brand.preview.provider_candidates;
+    assert!(candidates
+        .iter()
+        .any(|c| c.id == "src/ui/sidebar.tsx#SidebarProvider"));
+    assert!(candidates.iter().all(|c| !c.id.starts_with("other/")));
+    assert!(candidates.iter().all(|c| c.id != brand.id));
+    assert_eq!(report.schema_version, 4);
+}
+
+#[test]
+fn vue_provider_candidates_include_sfc_and_original_reka_export_names() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    put(
+        root,
+        "ui/index.ts",
+        "export { SelectRoot as Select } from 'reka-ui';",
+    );
+    put(root, "ContextProvider.vue", "<template><slot /></template>");
+    put(root, "Child.vue", "<script setup>import {Select} from './ui'; import ContextProvider from './ContextProvider.vue';</script><template><span>Child</span></template>");
+    let report = dslinter::scan_workspace(root).unwrap();
+    let child = report
+        .components
+        .iter()
+        .find(|c| c.name == "Child")
+        .unwrap();
+    assert!(child
+        .preview
+        .provider_candidates
+        .iter()
+        .any(|c| c.name == "ContextProvider" && c.export_name == "default"));
+    let select = child
+        .preview
+        .provider_candidates
+        .iter()
+        .find(|c| c.name == "Select")
+        .unwrap();
+    assert!(select.aliases.contains(&"SelectRoot".to_string()));
+}
+
+#[test]
+fn real_sidebar_brand_discovers_its_nested_provider_dependency() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("demo/inertia");
+    let report = dslinter::scan_workspace(&root).unwrap();
+    let brand = report
+        .components
+        .iter()
+        .find(|c| c.name == "SidebarNavBrand")
+        .unwrap();
+    assert!(brand
+        .preview
+        .provider_candidates
+        .iter()
+        .any(|c| c.id == "resources/js/components/ui/sidebar.tsx#SidebarProvider"));
+}

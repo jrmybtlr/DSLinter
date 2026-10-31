@@ -1,20 +1,16 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { Plugin, UserConfig, ViteDevServer } from "vite";
 import { transformWithEsbuild } from "vite";
+import { previewModuleLoader } from "./previewModuleLoader";
 import { cachedUseClassy } from "./cachedUseClassy";
 import { workspaceCacheDir } from "../bin/lib/cache.mjs";
 import { loadConsumerAliases } from "./loadConsumerAliases";
+import { findPreviewAdapter, type PreviewApp } from "./previewAdapter";
 
-export type PreviewApp = {
-  id: string;
-  name: string;
-  root: string;
-  config: string;
-  framework: "react" | "vue";
-};
+export type { PreviewApp } from "./previewAdapter";
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 function json(path: string): Record<string, any> {
@@ -92,13 +88,7 @@ export async function createPreviewServer(
   );
   const config: UserConfig = loaded?.config || {};
   const styles = detectPreviewStyles(app, config);
-  const adapter =
-    ["dslinter.preview.ts", "dslinter.preview.tsx", "dslinter.preview.js"]
-      .map((name) => join(app.root, name))
-      .find(existsSync) ||
-    ["dslinter.preview.ts", "dslinter.preview.tsx", "dslinter.preview.js"]
-      .map((name) => join(scanRoot, name))
-      .find(existsSync);
+  const adapter = findPreviewAdapter(app.root, scanRoot);
   const frameworkFile = resolve(packageRoot, "src/explorer", `${app.framework}Runtime.ts`);
   const runtimeFile = resolve(packageRoot, "src/explorer/runtime.ts");
   const shimFile = resolve(
@@ -116,7 +106,10 @@ export async function createPreviewServer(
       },
     },
     resolveId(id, importer) {
+      if (id === "./providerRecovery" && importer === "\0dslinter-framework.ts")
+        return resolve(packageRoot, "src/explorer/providerRecovery.ts");
       if (id === "virtual:dslinter/framework") return "\0dslinter-framework.ts";
+      if (id === "virtual:dslinter/axe") return "\0dslinter-axe";
       if (id === "virtual:dslinter/adapter") return "\0dslinter-adapter";
       if (id === "virtual:dslinter/frame-entry") return "\0dslinter-frame-entry";
       if (id === "/__dslinter/entry.js") return "\0dslinter-frame-entry";
@@ -128,6 +121,13 @@ export async function createPreviewServer(
         return resolve(packageRoot, "vite/shims/ziggy-js.ts");
     },
     async load(id) {
+      if (id === "\0dslinter-axe") {
+        // Serve the tool's browser bundle in this document, including in Vue-only installs.
+        const toolRequire = createRequire(join(packageRoot, "package.json"));
+        return (
+          readFileSync(toolRequire.resolve("axe-core"), "utf8") + "\nexport default window.axe;"
+        );
+      }
       if (id === "\0dslinter-framework.ts" || id === "\0dslinter-inertia.ts") {
         const path = id === "\0dslinter-framework.ts" ? frameworkFile : shimFile;
         return transformWithEsbuild(readFileSync(path, "utf8"), path, {
@@ -145,7 +145,7 @@ export async function createPreviewServer(
         return [
           ...styles.map((style) => `import ${JSON.stringify(style)};`),
           `import { boot } from ${JSON.stringify(runtimeFile)};`,
-          `boot(${JSON.stringify({ root: scanRoot, app: app.id, framework: app.framework, styles, adapterRoot: adapter ? dirname(adapter) : app.root })});`,
+          `boot(${JSON.stringify({ root: scanRoot, moduleRoot: config.root ? resolve(app.root, config.root) : app.root, app: app.id, framework: app.framework, styles, moduleLoader: true, adapterRoot: realpathSync(adapter ? dirname(adapter) : app.root) })});`,
         ].join("\n");
     },
     configureServer(server) {
@@ -168,11 +168,13 @@ export async function createPreviewServer(
     publicDir: config.publicDir ?? "public",
     cacheDir: join(
       workspaceCacheDir(scanRoot),
-      "node_modules/.vite",
+      "node_modules/.vite/hosts",
+      String(process.pid),
       Buffer.from(app.id).toString("hex"),
     ),
     plugins: [
       host,
+      previewModuleLoader([scanRoot, app.root, packageRoot]),
       ...cachedUseClassy(
         join(workspaceCacheDir(scanRoot), "manifests", Buffer.from(app.id).toString("hex")),
         app.framework,
@@ -190,13 +192,36 @@ export async function createPreviewServer(
       entries: [],
       include: [
         ...(config.optimizeDeps?.include || []),
+        ...(json(join(app.root, "package.json")).dependencies?.["@laravel/passkeys"]
+          ? ["@laravel/passkeys/react"]
+          : []),
+        ...Object.keys(json(join(app.root, "package.json")).dependencies || {}).filter((name) =>
+          /^(?:@radix-ui\/react-|@headlessui\/react$|@base-ui\/react|@laravel\/passkeys$|reka-ui$|radix-vue$|input-otp$|lucide-react$|sonner$|class-variance-authority$|clsx$|tailwind-merge$)/.test(
+            name,
+          ),
+        ),
         ...(app.framework === "vue"
           ? ["vue"]
-          : ["react", "react-dom", "react-dom/client", "react/jsx-runtime"]),
+          : [
+              "react",
+              "react-dom",
+              "react-dom/client",
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
+              "react/compiler-runtime",
+            ]),
       ],
       exclude: (config.optimizeDeps?.exclude || []).filter(
         (name) =>
-          !["vue", "react", "react-dom", "react-dom/client", "react/jsx-runtime"].includes(name),
+          ![
+            "vue",
+            "react",
+            "react-dom",
+            "react-dom/client",
+            "react/jsx-runtime",
+            "react/jsx-dev-runtime",
+            "react/compiler-runtime",
+          ].includes(name),
       ),
     },
     server: {

@@ -30,6 +30,8 @@ export default {
 
 Keys accept unique names or source ids (`src/components/Button.tsx#Button`). Existing adjacent `.playground.tsx` files can supply React examples and controls. Automatic previews otherwise try captured usage, a matching composition recipe, and generated sample props/slots. Runtime errors stay within the frame.
 
+Complete, verified examples can offer **Add preview setup**. This explicit action creates or safely merges the component's entry into the app's preview adapter and reloads the preview. It preserves configured entries; dynamic configurations keep the copyable example for manual setup.
+
 ## Legacy source embeds
 
 The existing React source API is retained for applications already embedding the dashboard. These embeds require React 19 and a bundler that compiles TypeScript dependencies. The standalone explorer resolves the selected app's framework independently.

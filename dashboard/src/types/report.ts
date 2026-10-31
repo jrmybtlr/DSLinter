@@ -156,12 +156,31 @@ export interface PlaygroundSpec {
    * components); replayed as the default preview when present.
    */
   example_tree?: ExampleNode;
+  provider_candidates?: ProviderCandidate[];
+  source_imports?: Record<string, PreviewImport>;
+  component_imports?: Record<string, PreviewImport>;
+  visibility_props?: string[];
+  visibility_values?: Record<string, string | boolean>;
   sample_props?: Record<string, unknown>;
   slots?: string[];
   models?: string[];
   emits?: string[];
   manual_preview?: { rel_path: string; export_name: string };
   native_element?: "input" | "button";
+}
+
+export interface PreviewImport {
+  specifier: string;
+  importer: string;
+  export_name: string;
+}
+
+export interface ProviderCandidate {
+  aliases?: string[];
+  id: string;
+  name: string;
+  rel_path: string;
+  export_name: string;
 }
 
 export interface CatalogComponent {

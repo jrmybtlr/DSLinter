@@ -108,3 +108,31 @@ describe("catalog metadata", () => {
     expect(component.preview.declared_prop_kinds.disabled).toBe("boolean");
   });
 });
+
+it("preserves structured arrays and source-backed visibility/import metadata", () => {
+  const { root, report, component } = project(`import { Circle as Glyph } from 'lucide-react';
+    export default function Example({items, canShow = false, open = false}: {items: {title:string; href:string}[]; canShow?:boolean; open?:boolean}) {
+      if (!canShow) return null;
+      return <div><Glyph />{items.map(item=><span>{item.title}</span>)}</div>
+    }`);
+  component.example_source = { path: "src/Example.tsx", line: 2 };
+  enrichCatalog(report, root);
+  expect(component.preview.declared_prop_kinds.items).toBe("object");
+  expect(component.preview.sample_props.items).toEqual([{ title: "Example title", href: "#" }]);
+  expect(component.preview.visibility_props).toEqual(["canShow"]);
+  expect(component.preview.source_imports.Glyph).toEqual({
+    specifier: "lucide-react",
+    importer: "src/Example.tsx",
+    export_name: "Circle",
+  });
+});
+
+it("infers Vue template visibility guards without enabling unrelated flags", () => {
+  const { root, report, component } = project(
+    '<script setup lang="ts">defineProps<{ visible?: boolean; disabled?: boolean }>();</script><template><span v-if="visible">Content</span></template>',
+    "vue",
+  );
+  enrichCatalog(report, root);
+  expect(component.preview.visibility_props).toEqual(["visible"]);
+  expect(component.preview.visibility_values).toEqual({ visible: true });
+});

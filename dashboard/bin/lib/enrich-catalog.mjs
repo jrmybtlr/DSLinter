@@ -81,7 +81,7 @@ function applyType(spec, checker, type, location) {
     if (["ref", "key", "props"].includes(property.name)) continue;
     if (!spec.declared_props.includes(property.name)) spec.declared_props.push(property.name);
     const type = checker.getTypeOfSymbolAtLocation(property, property.valueDeclaration || location);
-    spec.declared_prop_kinds[property.name] ||= classifyPropType(checker, type) || "unknown";
+    spec.declared_prop_kinds[property.name] = classifyPropType(checker, type) || "unknown";
     spec.declared_prop_optional[property.name] = Boolean(property.flags & ts.SymbolFlags.Optional);
     spec.declared_prop_type_labels[property.name] = checker.typeToString(type);
     const options = extractFiniteStringUnion(checker, type);
@@ -306,6 +306,79 @@ function captureVueExamples(report, root) {
   }
 }
 
+function sourceImports(path, root) {
+  const text = readFileSync(path, "utf8");
+  const source = path.endsWith(".vue")
+    ? [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((match) => match[1]).join("\n")
+    : text;
+  const sf = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const bindings = {};
+  for (const statement of sf.statements) {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      statement.importClause?.isTypeOnly ||
+      !statement.importClause
+    )
+      continue;
+    const specifier = statement.moduleSpecifier.text;
+    const importer = relative(root, path).replaceAll("\\", "/");
+    const clause = statement.importClause;
+    if (clause.name) bindings[clause.name.text] = { specifier, importer, export_name: "default" };
+    if (clause.namedBindings && ts.isNamespaceImport(clause.namedBindings))
+      bindings[clause.namedBindings.name.text] = { specifier, importer, export_name: "*" };
+    else
+      for (const binding of clause.namedBindings?.elements || [])
+        if (!binding.isTypeOnly)
+          bindings[binding.name.text] = {
+            specifier,
+            importer,
+            export_name: binding.propertyName?.text || binding.name.text,
+          };
+  }
+  return bindings;
+}
+
+function visibilityProps(path, spec) {
+  const sf = ts.createSourceFile(
+    path,
+    readFileSync(path, "utf8"),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const candidates = new Set();
+  function collect(node) {
+    if (
+      ts.isIdentifier(node) &&
+      /^(?:open$|isOpen$|visible$|isVisible$|show[A-Z]|can[A-Z]|message$|title$|description$|label$|children$)/.test(
+        node.text,
+      ) &&
+      ["boolean", "string", "node"].includes(spec.declared_prop_kinds?.[node.text])
+    )
+      candidates.add(node.text);
+    ts.forEachChild(node, collect);
+  }
+  function visit(node) {
+    if (ts.isIfStatement(node) || ts.isConditionalExpression(node))
+      collect(node.condition || node.expression);
+    if (
+      ts.isJsxAttribute(node) &&
+      ["open", "visible"].includes(node.name.getText(sf)) &&
+      node.initializer
+    )
+      collect(node.initializer);
+    ts.forEachChild(node, visit);
+  }
+  visit(sf);
+  if (path.endsWith(".vue")) {
+    const text = readFileSync(path, "utf8");
+    for (const match of text.matchAll(/(?:v-if|:(?:open|visible))=["']([^"']+)["']/g)) {
+      collect(ts.createSourceFile("condition.ts", `(${match[1]})`, ts.ScriptTarget.Latest, true));
+    }
+  }
+  return [...candidates].slice(0, 4);
+}
+
 export function enrichCatalog(report, root) {
   if (!Array.isArray(report.components)) return false;
   const before = JSON.stringify(report.components);
@@ -315,6 +388,11 @@ export function enrichCatalog(report, root) {
     const spec = component.preview;
     spec.declared_props ||= [];
     const path = resolve(root, spec.rel_path);
+    try {
+      if (component.example_source)
+        spec.source_imports = sourceImports(resolve(root, component.example_source.path), root);
+      spec.component_imports = sourceImports(path, root);
+    } catch {}
     try {
       const native = readFileSync(path, "utf8").match(/<(input|button)(?:\s|\/?>)/);
       if (native) spec.native_element = native[1];
@@ -430,6 +508,13 @@ export function enrichCatalog(report, root) {
           }
         }
       }
+      spec.visibility_props = visibilityProps(path, spec);
+      spec.visibility_values = Object.fromEntries(
+        spec.visibility_props.map((key) => [
+          key,
+          spec.declared_prop_kinds[key] === "boolean" ? true : `Example ${key}`,
+        ]),
+      );
       delete component.metadata_error;
     } catch (error) {
       component.metadata_error = error instanceof Error ? error.message : String(error);

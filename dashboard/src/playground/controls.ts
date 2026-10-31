@@ -117,7 +117,7 @@ export function resolveEffectivePropKind(
 ): DeclaredPropKind | undefined {
   const kind = propKinds?.[key];
   if (kind && kind !== "unknown") return kind;
-  if (isLikelyStringArrayProp(key)) return "stringArray";
+  if (kind === undefined && isLikelyStringArrayProp(key)) return "stringArray";
   if (isLikelyFunctionProp(key)) return "function";
   return kind;
 }

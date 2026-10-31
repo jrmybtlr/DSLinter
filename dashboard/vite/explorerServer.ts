@@ -7,12 +7,16 @@ import tailwind from "@tailwindcss/vite";
 import { cachedUseClassy } from "./cachedUseClassy";
 import { createPreviewServer, type PreviewApp } from "./previewHost";
 import { openFileInEditor } from "./openFileInEditor.mjs";
+import { reactGrab } from "./reactGrab";
+import { randomBytes } from "node:crypto";
+import { previewSetupMiddleware } from "./previewSetup";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const scanRoot = process.env.DSLINTER_SCAN_ROOT!;
 const cache = process.env.DSLINTER_CACHE_PATH!;
 const apps: PreviewApp[] = JSON.parse(process.env.DSLINTER_APPS || "[]");
 const previews = new Map<string, Promise<ViteDevServer>>();
+const setupToken = randomBytes(24).toString("hex");
 const plugin: Plugin = {
   name: "dslinter-explorer",
   resolveId(id) {
@@ -22,9 +26,22 @@ const plugin: Plugin = {
   load(id) {
     if (id === "\0dslinter-legacy-modules") return "export const scanPlaygroundModules = {};";
     if (id === "\0dslinter-explorer")
-      return `export default ${JSON.stringify({ apps, selectedApp: process.env.DSLINTER_SELECTED_APP, root: scanRoot })};`;
+      return `export default ${JSON.stringify({ apps, selectedApp: process.env.DSLINTER_SELECTED_APP, root: scanRoot, setupToken })};`;
   },
   configureServer(server) {
+    server.middlewares.use(
+      previewSetupMiddleware({
+        token: setupToken,
+        apps,
+        scanRoot,
+        report: () => JSON.parse(readFileSync(process.env.DSLINTER_REPORT_PATH!, "utf8")),
+        onSaved: async (app) => {
+          const pending = previews.get(app.id);
+          previews.delete(app.id);
+          if (pending) await (await pending).close();
+        },
+      }),
+    );
     server.middlewares.use(async (req, res, next) => {
       const url = new URL(req.url || "/", "http://localhost");
       if (url.pathname === "/dslinter-report.json") {
@@ -92,12 +109,13 @@ const plugin: Plugin = {
 const shell = await createServer({
   configFile: false,
   root: packageRoot,
-  cacheDir: join(cache, "node_modules/.vite/shell"),
+  cacheDir: join(cache, "node_modules/.vite/hosts", String(process.pid), "shell"),
   plugins: [
     plugin,
     ...cachedUseClassy(join(cache, "manifests/shell"), "react", packageRoot),
     tailwind(),
     react(),
+    reactGrab(),
   ],
   server: {
     host: "127.0.0.1",

@@ -1,8 +1,10 @@
+import { familyRecipe, includesTarget } from "./familyRecipes";
 import type { CatalogComponent, ExampleNode } from "../types/report";
 
 export type DemoNode = {
   name: string;
   slot?: string;
+  target?: boolean;
   props?: Record<string, unknown>;
   children?: (DemoNode | string)[];
 };
@@ -40,7 +42,7 @@ export function familyComponents(
   );
 }
 
-export function recipeFor(
+function baseRecipeFor(
   component: CatalogComponent,
   catalog: CatalogComponent[],
 ): DemoNode | undefined {
@@ -132,14 +134,39 @@ export function recipeFor(
       return node(
         "TooltipProvider",
         [
-          node("Tooltip", [
-            node("TooltipTrigger", ["Hover or focus here"]),
-            node("TooltipContent", ["Example tooltip"]),
-          ]),
+          node(
+            "Tooltip",
+            [
+              node("TooltipTrigger", ["Hover or focus here"]),
+              node("TooltipContent", ["Example tooltip"]),
+            ],
+            { defaultOpen: component.name === "TooltipContent" },
+          ),
         ],
         { delayDuration: 0 },
       );
   }
+}
+
+export function recipeFor(
+  component: CatalogComponent,
+  catalog: CatalogComponent[],
+): DemoNode | undefined {
+  const tree =
+    familyRecipe(component, catalog) ||
+    (component.name.startsWith("InputOTP") ? undefined : baseRecipeFor(component, catalog));
+  if (!tree || !includesTarget(tree, new Set([component.name]))) return;
+  let selected = false;
+  function mark(node: DemoNode | string): void {
+    if (typeof node === "string") return;
+    if (node.name === component.name) {
+      node.target = !selected;
+      selected = true;
+    }
+    node.children?.forEach(mark);
+  }
+  mark(tree);
+  return tree;
 }
 
 export function demoFromExample(tree: ExampleNode): DemoNode | string {
@@ -197,7 +224,7 @@ export function demoWithValues(
   values: Record<string, unknown>,
 ): DemoNode | string {
   if (typeof tree === "string") return tree;
-  const target = targetNames.has(tree.name);
+  const target = targetNames.has(tree.name) && tree.target !== false;
   const props = { ...tree.props, ...(target ? values : {}) };
   const children =
     target && typeof props.children === "string"

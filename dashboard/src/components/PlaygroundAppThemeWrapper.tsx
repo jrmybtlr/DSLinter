@@ -4,7 +4,7 @@ import {
   buildAppPreviewThemeFromReport,
   cssVariablesForPreviewTheme,
 } from "../playground/appPreviewTheme";
-import { useDashboardTheme } from "../shell/DashboardLayout";
+import { usePreviewSectionTheme } from "../shell/previewSectionTheme";
 import { cn } from "../lib/utils";
 
 type Props = {
@@ -15,7 +15,7 @@ type Props = {
 
 export const PlaygroundAppThemeWrapper = forwardRef<HTMLDivElement, Props>(
   function PlaygroundAppThemeWrapper({ children, workspaceReport, className }, ref) {
-    const { resolvedTheme } = useDashboardTheme();
+    const resolvedTheme = usePreviewSectionTheme();
     const previewTheme = useMemo(
       () => buildAppPreviewThemeFromReport(workspaceReport),
       [workspaceReport],

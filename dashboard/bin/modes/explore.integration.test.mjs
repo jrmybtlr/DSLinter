@@ -119,6 +119,12 @@ it.skipIf(process.env.DSLINTER_E2E !== "1")(
       const framework = await waitFor(`${previewOrigin}${frameworkPath}`);
       expect(framework).toContain("createRoot");
       expect(framework).not.toContain("../types/report");
+      const recoveryPath = framework.match(/from "([^"]*providerRecovery[^"]*)"/)?.[1];
+      expect(recoveryPath).toBeTruthy();
+      const recovery = await waitFor(`${previewOrigin}${recoveryPath}`);
+      expect(recovery).toContain("contextRequirement");
+      const contrastScanner = await waitFor(`${previewOrigin}/@id/__x00__dslinter-axe`);
+      expect(contrastScanner).toContain("window.axe");
       expect(snapshot(root)).toEqual(before);
       const updated =
         'import "./style.css"; import { Button } from "./Button"; export function Page(){ return <Button>Updated</Button> }';
