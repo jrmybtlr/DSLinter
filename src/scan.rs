@@ -21,6 +21,10 @@ const SKIP_DIR_NAMES: &[&str] = &[
     "coverage",
     "vendor",
     "__pycache__",
+    "dashboard-dist",
+    ".output",
+    ".cache",
+    ".turbo",
 ];
 
 fn is_skipped_dir(entry: &DirEntry) -> bool {
@@ -30,10 +34,8 @@ fn is_skipped_dir(entry: &DirEntry) -> bool {
         .is_some_and(|name| SKIP_DIR_NAMES.contains(&name))
 }
 
-fn build_ignore_engine(root: &Path, config: &DslintConfig) -> anyhow::Result<Option<IgnoreEngine>> {
+fn build_ignore_engine(_root: &Path, config: &DslintConfig) -> anyhow::Result<Option<IgnoreEngine>> {
     let mut lines = Vec::new();
-    lines.extend(load_ignore_file_lines(&root.join(".gitignore"))?);
-    lines.extend(load_ignore_file_lines(&root.join(".dslinterignore"))?);
     lines.extend(config.ignore_globs.iter().cloned());
     lines.extend(config.exclude_globs.iter().cloned());
     IgnoreEngine::from_patterns(&lines)
@@ -73,7 +75,7 @@ fn path_starts_with_ignore_case(path: &Path, prefix: &Path) -> bool {
     }
 }
 
-fn in_include_scope(root: &Path, path: &Path, config: &DslintConfig) -> bool {
+pub fn in_include_scope(root: &Path, path: &Path, config: &DslintConfig) -> bool {
     if config.include_dirs.is_empty() {
         return true;
     }
@@ -97,6 +99,22 @@ where
     F: FnMut(&Path) -> bool,
 {
     let engine = build_ignore_engine(project_root, config)?;
+    let mut scoped_ignores = Vec::new();
+    let mut seen_dirs = std::collections::HashSet::new();
+    let mut add_ignore = |dir: &Path| -> anyhow::Result<()> {
+        if seen_dirs.insert(dir.to_path_buf()) {
+            let mut lines = load_ignore_file_lines(&dir.join(".gitignore"))?;
+            lines.extend(load_ignore_file_lines(&dir.join(".dslinterignore"))?);
+            if let Some(engine) = IgnoreEngine::from_patterns(&lines)? { scoped_ignores.push((dir.to_path_buf(), engine)); }
+        }
+        Ok(())
+    };
+    let ancestors: Vec<_> = scan_root.ancestors().collect();
+    for dir in ancestors.into_iter().rev() { add_ignore(dir)?; }
+    // Load nested scopes before matching their files; WalkDir visits parent directories first.
+    for entry in WalkDir::new(scan_root).into_iter().filter_entry(|e| !is_skipped_dir(e)) {
+        if let Ok(entry) = entry { if entry.file_type().is_dir() { add_ignore(entry.path())?; } }
+    }
     let mut out = Vec::new();
     for entry in WalkDir::new(scan_root)
         .into_iter()
@@ -109,11 +127,12 @@ where
             continue;
         }
         let path = entry.path().to_path_buf();
+        let mut ignored = false;
+        for (scope, matcher) in &scoped_ignores { if let Some(decision) = matcher.decision(scope, &path) { ignored = decision; } }
         if let Some(ref eng) = engine {
-            if eng.matches(project_root, &path) {
-                continue;
-            }
+            if let Some(decision) = eng.decision(project_root, &path) { ignored = decision; }
         }
+        if ignored { continue; }
         if accept(&path) {
             out.push(path);
         }
@@ -136,14 +155,11 @@ pub fn collect_component_files(
         if !path_canon.starts_with(&scan_canon) {
             return false;
         }
-        if !in_include_scope(project_root, path, config) {
-            return false;
-        }
         let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
             return false;
         };
         let ext = ext.to_ascii_lowercase();
-        matches!(ext.as_str(), "tsx" | "jsx" | "vue")
+        matches!(ext.as_str(), "tsx" | "jsx" | "vue" | "ts" | "js" | "mts" | "mjs")
     })
 }
 
@@ -178,7 +194,7 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn include_dirs_limits_component_scan_scope() {
+    fn include_dirs_keeps_usage_scan_workspace_wide() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         std::fs::create_dir_all(root.join("src/components")).unwrap();
@@ -196,7 +212,7 @@ mod tests {
             .filter_map(|p| p.strip_prefix(root).ok())
             .map(|p| p.to_string_lossy().replace('\\', "/"))
             .collect();
-        assert_eq!(rels, vec!["src/components/Button.tsx"]);
+        assert_eq!(rels, vec!["other/Outside.tsx", "src/components/Button.tsx"]);
     }
 
     #[test]
@@ -254,7 +270,7 @@ mod tests {
     }
 
     #[test]
-    fn excludes_plain_ts_and_js_files() {
+    fn includes_plain_ts_and_js_for_import_resolution() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         std::fs::create_dir_all(root.join("src/components")).unwrap();
@@ -281,7 +297,7 @@ mod tests {
             .filter_map(|p| p.strip_prefix(root).ok())
             .map(|p| p.to_string_lossy().replace('\\', "/"))
             .collect();
-        assert_eq!(rels, vec!["src/components/Button.tsx"]);
+        assert_eq!(rels, vec!["src/components/Button.tsx", "src/components/legacy.js", "src/components/utils.ts"]);
     }
 
     #[test]

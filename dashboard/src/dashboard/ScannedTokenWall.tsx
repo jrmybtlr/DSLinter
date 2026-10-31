@@ -173,15 +173,12 @@ function ColorSection({ rows }: { rows: ScannedTokenRow[] }) {
   if (colors.length === 0) return null;
 
   return (
-    <TokenSection
-      title="Colors"
-      subtitle="CSS custom properties from @theme, :root, and .dark."
-    >
+    <TokenSection title="Colors" subtitle="CSS custom properties from @theme, :root, and .dark.">
       <ul className="mt-4 grid gap-2" className:sm="grid-cols-2" className:xl="grid-cols-3">
         {colors.map((row) => (
           <li
             key={scannedTokenRowKey(row)}
-            className="flex items-center gap-2.5 rounded-lg border border-border bg-card p-2 pr-3"
+            className="flex items-center gap-2.5 rounded-md border border-border bg-card p-2 pr-3"
             title={row.darkValue ? `Light: ${row.value}; Dark: ${row.darkValue}` : row.value}
           >
             <ColorSwatch row={row} />
@@ -215,7 +212,7 @@ function ListSection({
 
   return (
     <TokenSection title={title} subtitle={subtitle}>
-      <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
+      <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-card">
         {items.map((row) => (
           <li
             key={scannedTokenRowKey(row)}
@@ -267,7 +264,7 @@ export function ScannedTokenWall({ view }: { view: MergedTokenView }) {
               className="h-8 pl-8 text-xs"
             />
           </div>
-          <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-0.5">
+          <div className="flex gap-1 rounded-md border border-border bg-muted/50 p-0.5">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}

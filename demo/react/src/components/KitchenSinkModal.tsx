@@ -25,7 +25,7 @@ export function KitchenSinkModal(props: KitchenSinkModalProps) {
     <div
       role="dialog"
       aria-label={title}
-      className="rounded-lg border border-gray-300 bg-white p-4 shadow-lg"
+      className="rounded-md border border-gray-300 bg-white p-4 shadow-lg"
     >
       <h2 className="text-lg font-semibold">{title}</h2>
       {subtitle ? <p className="text-sm text-gray-600">{subtitle}</p> : null}

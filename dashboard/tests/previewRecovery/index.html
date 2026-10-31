@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Provider recovery browser tests</title>
+    <style>
+      /* Match the dashboard's base reset and iframe layout without its full stylesheet. */
+      * {
+        box-sizing: border-box;
+      }
+      body,
+      p {
+        margin: 0;
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        border: 0;
+      }
+      [role="alert"] {
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="tests"></div>
+    <pre id="results">Running…</pre>
+    <script type="module" src="/dashboard/tests/previewRecovery/suite.tsx"></script>
+  </body>
+</html>

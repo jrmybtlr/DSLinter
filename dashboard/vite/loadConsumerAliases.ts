@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { AliasOptions } from "vite";
+import ts from "typescript";
 import { flattenViteAlias, type FlatAlias } from "./consumerAlias.ts";
 
 const TSCONFIG_NAMES = ["tsconfig.json", "jsconfig.json"] as const;
@@ -53,18 +54,23 @@ export function stripJsonComments(text: string): string {
 
 type TsPaths = Record<string, string[]>;
 
-function readTsPaths(consumerRoot: string): TsPaths | null {
+function readTsPaths(consumerRoot: string): { paths: TsPaths; base: string } | null {
   const root = resolve(consumerRoot);
   for (const name of TSCONFIG_NAMES) {
     const filePath = join(root, name);
     if (!existsSync(filePath)) continue;
     try {
-      const raw = readFileSync(filePath, "utf8");
-      const parsed = JSON.parse(stripJsonComments(raw)) as {
-        compilerOptions?: { paths?: TsPaths };
-      };
-      const paths = parsed.compilerOptions?.paths;
-      if (paths && typeof paths === "object") return paths;
+      const config = ts.readConfigFile(filePath, ts.sys.readFile);
+      const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
+      const paths = parsed.options.paths;
+      if (paths)
+        return {
+          paths,
+          base:
+            parsed.options.baseUrl ||
+            (parsed.options as { pathsBasePath?: string }).pathsBasePath ||
+            root,
+        };
     } catch {
       // try next file
     }
@@ -126,16 +132,32 @@ export function loadConsumerAliases(
   const fromVite = flattenViteAlias(viteAlias, root);
   merged.push(...fromVite);
 
-  if (!hasAtAlias(merged)) {
-    const paths = readTsPaths(root);
-    if (paths) {
-      merged.push(...flattenTsconfigPaths(paths, root));
-    }
+  const paths = readTsPaths(root);
+  if (paths) {
+    merged.push(...flattenTsconfigPaths(paths.paths, paths.base));
   }
 
   if (!hasAtAlias(merged)) {
     const laravel = laravelResourcesJsAlias(root);
     if (laravel) merged.push(laravel);
+  }
+
+  if (!hasAtAlias(merged)) {
+    try {
+      const metadata = JSON.parse(readFileSync(join(root, "components.json"), "utf8"));
+      for (const value of Object.values(metadata.aliases || {})) {
+        if (typeof value !== "string" || !value.startsWith("@/")) continue;
+        const base = [join(root, "src"), root].find((base) =>
+          existsSync(join(base, value.slice(2))),
+        );
+        if (base) {
+          merged.push({ find: "@", replacement: base });
+          break;
+        }
+      }
+    } catch {
+      /* Metadata is optional. */
+    }
   }
 
   return merged.sort((a, b) => {

@@ -14,7 +14,7 @@ export function ScoreStrip({ scores }: { scores: GovernanceScores }) {
   const cols = items.length <= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-5";
 
   return (
-    <section className={`grid divide-x divide-border border-b bg-white ${cols}`}>
+    <section className={`grid divide-x divide-border border-b bg-card ${cols}`}>
       {items.map(({ label, value }) => (
         <div key={label} className="px-6 py-8 text-center text-card-foreground shadow-xs">
           <p className="text-xs font-medium tracking-wide text-muted-foreground/70 uppercase">

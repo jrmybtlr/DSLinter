@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { IconChevronDown, IconMoon, IconSearch, IconSun } from "./icons";
-import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { IconChevronDown, IconSearch } from "./icons";
 
 import {
   componentCatalogTreeFromReport,
   resolveFamilyNavigationTarget,
+  type CatalogTreeItem,
 } from "../dashboard/aggregate";
+import {
+  scoreAlertsByComponent,
+  worstScoreAlert,
+  type ScoreAlertLevel,
+} from "../report/scoreAlert";
 import type { WorkspaceReport } from "../types/report";
 import type { HashRoute } from "../shell/hashRoute";
-import type { DashboardThemePreference } from "../shell/DashboardLayout";
 
 type Props = {
   report: WorkspaceReport | null;
@@ -17,13 +21,15 @@ type Props = {
   route: HashRoute;
   onNavigate: (next: HashRoute) => void;
   onOpenCommandPalette: () => void;
-  theme: DashboardThemePreference;
-  onThemeChange: (next: DashboardThemePreference) => void;
   catalogNames: string[];
+  catalogTree?: CatalogTreeItem[];
+  catalogLabels?: Record<string, { label: string; description?: string }>;
+  contextPicker?: ReactNode;
+  footer?: ReactNode;
 };
 
 function navButtonClass(active: boolean) {
-  return `w-full rounded-md truncate px-2.5 py-1.5 text-left text-sm transition ${
+  return `flex w-full min-w-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition ${
     active
       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-xs"
       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -31,18 +37,18 @@ function navButtonClass(active: boolean) {
 }
 
 function familyParentButtonClass(active: boolean) {
-  return `min-w-0 flex-1 rounded-l-md truncate px-2.5 py-1.5 text-left text-sm transition ${
+  return `flex min-w-0 flex-1 items-center gap-2 rounded-l-md px-2.5 py-1.5 text-left text-sm transition ${
     active
-      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-xs"
-      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      ? "text-sidebar-primary-foreground"
+      : "text-sidebar-foreground/80 group-hover/family:text-sidebar-accent-foreground"
   }`;
 }
 
 function familyToggleClass(active: boolean) {
-  return `flex h-[32px] w-8 shrink-0 items-center justify-center rounded-r-md transition ${
+  return `flex h-8 w-8 shrink-0 items-center justify-center rounded-r-md transition ${
     active
-      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-xs"
-      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      ? "text-sidebar-primary-foreground"
+      : "text-sidebar-foreground/70 group-hover/family:text-sidebar-accent-foreground"
   }`;
 }
 
@@ -54,6 +60,53 @@ function sectionLabel(text: string) {
     >
       {text}
     </p>
+  );
+}
+
+const DOT_CLASS: Record<ScoreAlertLevel, string> = {
+  muted: "bg-muted-foreground/20",
+  warning: "bg-warning",
+  critical: "bg-destructive",
+};
+
+const DOT_LABEL: Record<ScoreAlertLevel, string> = {
+  muted: "Code or accessibility score below 100",
+  warning: "Code or accessibility score below 90",
+  critical: "Code or accessibility score below 70",
+};
+
+function ScoreAlertDot({ level }: { level: ScoreAlertLevel }) {
+  return (
+    <span
+      role="img"
+      aria-label={DOT_LABEL[level]}
+      title={DOT_LABEL[level]}
+      className={`size-1.5 shrink-0 rounded-full ${DOT_CLASS[level]}`}
+    />
+  );
+}
+
+function NavItemLabel({
+  label,
+  description,
+  alert,
+}: {
+  label: string;
+  description?: string;
+  alert: ScoreAlertLevel | null;
+}) {
+  return (
+    <>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate">{label}</span>
+        {description ? (
+          <span className="mt-0.5 block truncate text-[10px] opacity-60" title={description}>
+            {description}
+          </span>
+        ) : null}
+      </span>
+      {alert ? <ScoreAlertDot level={alert} /> : null}
+    </>
   );
 }
 
@@ -77,11 +130,19 @@ export function Sidebar({
   route,
   onNavigate,
   onOpenCommandPalette,
-  theme,
-  onThemeChange,
   catalogNames,
+  catalogTree: suppliedTree,
+  catalogLabels = {},
+  contextPicker,
+  footer,
 }: Props) {
-  const catalogTree = useMemo(() => componentCatalogTreeFromReport(report), [report]);
+  const catalogTree = useMemo(
+    () => suppliedTree ?? componentCatalogTreeFromReport(report),
+    [report, suppliedTree],
+  );
+  const scoreAlerts = useMemo(() => scoreAlertsByComponent(report), [report]);
+  const labelFor = (id: string) => catalogLabels[id]?.label ?? id;
+  const alertFor = (names: string[]) => worstScoreAlert(names.map((name) => scoreAlerts.get(name)));
   const navRef = useRef<HTMLElement>(null);
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(() => new Set());
   const tokensActive = route.view === "tokens";
@@ -110,12 +171,6 @@ export function Sidebar({
     const frame = requestAnimationFrame(() => scrollActiveNavItemToTop(nav));
     return () => cancelAnimationFrame(frame);
   }, [route, catalogTree, expandedFamilies, catalogNames.length]);
-
-  const onThemeValueChange = (value: string) => {
-    // Radix ToggleGroup (single) emits "" when re-clicking the active item — keep selection.
-    if (value !== "light" && value !== "dark") return;
-    onThemeChange(value);
-  };
 
   return (
     <aside className="fixed flex h-full w-60 shrink-0 flex-col overflow-hidden border-r border-border bg-background text-sidebar-foreground">
@@ -202,7 +257,11 @@ export function Sidebar({
                   className={navButtonClass(active)}
                   data-nav-active={active ? "true" : undefined}
                 >
-                  {item.name}
+                  <NavItemLabel
+                    label={labelFor(item.name)}
+                    description={catalogLabels[item.name]?.description}
+                    alert={alertFor([item.name])}
+                  />
                 </button>
               );
             }
@@ -215,7 +274,9 @@ export function Sidebar({
             const expanded = expandedFamilies.has(item.parent);
             return (
               <div key={item.path}>
-                <div className="flex min-w-0">
+                <div
+                  className={`group/family flex min-w-0 rounded-md ${familyActive ? "bg-sidebar-primary shadow-xs" : "hover:bg-sidebar-accent"}`}
+                >
                   <button
                     type="button"
                     onClick={() =>
@@ -227,7 +288,11 @@ export function Sidebar({
                     className={familyParentButtonClass(familyActive)}
                     data-nav-active={parentNavActive ? "true" : undefined}
                   >
-                    {item.parent}
+                    <NavItemLabel
+                      label={labelFor(item.parent)}
+                      description={catalogLabels[item.parent]?.description}
+                      alert={alertFor([item.parent, ...item.children])}
+                    />
                   </button>
                   <button
                     type="button"
@@ -245,8 +310,8 @@ export function Sidebar({
                     className={familyToggleClass(familyActive)}
                     aria-label={
                       expanded
-                        ? `Collapse ${item.parent} subcomponents`
-                        : `Expand ${item.parent} subcomponents`
+                        ? `Collapse ${labelFor(item.parent)} subcomponents${catalogLabels[item.parent]?.description ? ` (${catalogLabels[item.parent].description})` : ""}`
+                        : `Expand ${labelFor(item.parent)} subcomponents${catalogLabels[item.parent]?.description ? ` (${catalogLabels[item.parent].description})` : ""}`
                     }
                     aria-expanded={expanded}
                   >
@@ -273,7 +338,11 @@ export function Sidebar({
                           className={`${navButtonClass(active)} text-xs`}
                           data-nav-active={active ? "true" : undefined}
                         >
-                          {child}
+                          <NavItemLabel
+                            label={labelFor(child)}
+                            description={catalogLabels[child]?.description}
+                            alert={alertFor([child])}
+                          />
                         </button>
                       );
                     })}
@@ -283,30 +352,12 @@ export function Sidebar({
             );
           })}
         </div>
+        {contextPicker}
       </nav>
 
-      <div className="shrink-0 border-t border-sidebar-border px-3 py-3">
-        <p className="mb-2 px-2.5 text-xs font-semibold tracking-wider text-sidebar-foreground/50 uppercase">
-          Appearance
-        </p>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          size="sm"
-          spacing={0}
-          className="w-full"
-          value={theme}
-          onValueChange={onThemeValueChange}
-          aria-label="Color theme"
-        >
-          <ToggleGroupItem value="light" className="flex-1" aria-label="Light theme" title="Light">
-            <IconSun className="size-4" aria-hidden />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="dark" className="flex-1" aria-label="Dark theme" title="Dark">
-            <IconMoon className="size-4" aria-hidden />
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      {footer ? (
+        <div className="shrink-0 border-t border-sidebar-border px-3 py-3">{footer}</div>
+      ) : null}
     </aside>
   );
 }

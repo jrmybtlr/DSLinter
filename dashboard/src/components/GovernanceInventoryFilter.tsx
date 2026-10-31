@@ -1,4 +1,4 @@
-import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import type { GovernanceInventoryTab } from "../dashboard/aggregate";
 
 const tabs: { id: GovernanceInventoryTab; label: string }[] = [
@@ -13,7 +13,7 @@ function isGovernanceInventoryTab(value: string): value is GovernanceInventoryTa
   return tabs.some((tab) => tab.id === value);
 }
 
-export function GovernanceInventoryTabs({
+export function GovernanceInventoryFilter({
   value,
   onChange,
   counts,
@@ -23,27 +23,26 @@ export function GovernanceInventoryTabs({
   counts: Record<GovernanceInventoryTab, number>;
 }) {
   return (
-    <ToggleGroup
-      type="single"
+    <Select
+      name="category"
       value={value}
       onValueChange={(next) => {
         if (isGovernanceInventoryTab(next)) onChange(next);
       }}
-      variant="outline"
-      size="sm"
-      aria-label="Filter governance inventory"
-      className="contents"
     >
-      {tabs.map((tab) => (
-        <ToggleGroupItem
-          key={tab.id}
-          value={tab.id}
-          className="rounded-full px-2.5 text-xs font-medium"
-        >
-          {tab.label}
-          <span className="ml-1 text-muted-foreground tabular-nums">{counts[tab.id]}</span>
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
+      <SelectTrigger
+        aria-label="Filter governance inventory"
+        className="w-auto min-w-44 shrink-0 gap-3 bg-card text-base shadow-none sm:text-sm"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="end">
+        {tabs.map((tab) => (
+          <SelectItem key={tab.id} value={tab.id}>
+            {tab.label} · {counts[tab.id]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

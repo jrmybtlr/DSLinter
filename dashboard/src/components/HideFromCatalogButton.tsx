@@ -13,10 +13,23 @@ import {
 type Props = {
   componentName: string;
   onHidden: (componentName: string) => void;
+  /** Controlled dialog, used when another control opens the confirm step. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Omit the default button when a menu item opens the dialog. */
+  hideTrigger?: boolean;
 };
 
-export function HideFromCatalogButton({ componentName, onHidden }: Props) {
-  const [open, setOpen] = useState(false);
+export function HideFromCatalogButton({
+  componentName,
+  onHidden,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
+}: Props) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,22 +46,24 @@ export function HideFromCatalogButton({ componentName, onHidden }: Props) {
     } finally {
       setPending(false);
     }
-  }, [componentName, onHidden]);
+  }, [componentName, onHidden, setOpen]);
 
   return (
     <>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled={pending}
-        onClick={() => {
-          setError(null);
-          setOpen(true);
-        }}
-      >
-        Hide Component
-      </Button>
+      {hideTrigger ? null : (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={pending}
+          onClick={() => {
+            setError(null);
+            setOpen(true);
+          }}
+        >
+          Hide Component
+        </Button>
+      )}
       <Dialog
         open={open}
         onOpenChange={(next) => {
@@ -57,11 +72,20 @@ export function HideFromCatalogButton({ componentName, onHidden }: Props) {
       >
         <DialogContent showCloseButton={!pending}>
           <DialogHeader>
-            <DialogTitle>Hide from catalog?</DialogTitle>
-            <DialogDescription>
-              Hide <span className="font-medium text-foreground">{componentName}</span> from the
-              component catalog. This updates <code className="text-xs">hidden_components</code> in{" "}
-              <code className="text-xs">.dslinter.json</code>.
+            <DialogTitle>Hide from library?</DialogTitle>
+            <DialogDescription className="space-y-2">
+              <span className="block">
+                This hides{" "}
+                <span className="font-medium text-foreground">{componentName}</span> from the
+                DSLint library. Nothing is deleted — the source file stays in your project, and
+                DSLint still scans it. It just will not appear in the sidebar, command palette, or
+                playground.
+              </span>
+              <span className="block">
+                Show it again by removing the name from{" "}
+                <code className="text-xs">hidden_components</code> in{" "}
+                <code className="text-xs">.dslinter.json</code>.
+              </span>
             </DialogDescription>
           </DialogHeader>
           {error ? (
@@ -79,7 +103,7 @@ export function HideFromCatalogButton({ componentName, onHidden }: Props) {
               Cancel
             </Button>
             <Button type="button" disabled={pending} onClick={() => void handleConfirm()}>
-              {pending ? "Hiding…" : "Hide component"}
+              {pending ? "Hiding…" : "Hide from library"}
             </Button>
           </DialogFooter>
         </DialogContent>

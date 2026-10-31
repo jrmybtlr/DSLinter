@@ -2,7 +2,7 @@
  * Parse dslinter CLI argv into mode + scanner args (no subprocess).
  */
 
-import { resolveScanAndProjectRoots } from "./resolve-project.mjs";
+import { resolveScanAndProjectRoots, SCANNER_VALUE_FLAGS } from "./resolve-project.mjs";
 
 const MODE_FLAGS = new Set(["--report", "--watch", "--build"]);
 const YES_FLAGS = new Set(["--yes", "-y"]);
@@ -24,6 +24,7 @@ function parseServePort(raw) {
  *   outputPath: string | null;
  *   servePort: number | null;
  *   yes: boolean;
+ *   app: string | null;
  *   explicitScanPath: string | null;
  * }}
  */
@@ -31,8 +32,20 @@ export function parseDslinterArgs(argv) {
   const modes = [];
   const scannerArgs = [];
   let yes = false;
+  let app = null;
 
-  for (const arg of argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--app") {
+      app = argv[++i];
+      if (!app || app.startsWith("-"))
+        throw new Error("dslinter: --app requires an application path or name");
+      continue;
+    }
+    if (arg.startsWith("--app=")) {
+      app = arg.slice(6);
+      continue;
+    }
     if (MODE_FLAGS.has(arg)) modes.push(arg.slice(2));
     else if (YES_FLAGS.has(arg)) yes = true;
     else scannerArgs.push(arg);
@@ -52,12 +65,16 @@ export function parseDslinterArgs(argv) {
     const arg = scannerArgs[i];
     if (arg === "--serve") {
       servePort = parseServePort(scannerArgs[i + 1]);
+      i++;
     } else if (arg.startsWith("--serve=")) {
       servePort = parseServePort(arg.slice("--serve=".length));
     } else if (arg === "--output" || arg === "-o") {
       outputPath = scannerArgs[i + 1] ?? null;
+      i++;
     } else if (arg.startsWith("--output=")) {
       outputPath = arg.slice("--output=".length);
+    } else if (SCANNER_VALUE_FLAGS.has(arg)) {
+      i++;
     } else if (!arg.startsWith("-") && positional === null) {
       positional = arg;
     }
@@ -86,6 +103,7 @@ export function parseDslinterArgs(argv) {
     outputPath,
     servePort,
     yes,
+    app,
     explicitScanPath,
   };
 }

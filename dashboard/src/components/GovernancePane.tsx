@@ -14,7 +14,7 @@ type Props = {
   dslinterReportHint?: string;
   dslinterReport: DslinterReportState;
   onOpenComponent?: (name: string) => void;
-  onOpenCatalog?: () => void;
+  componentLabels?: Record<string, { label: string; description?: string }>;
 };
 
 export function GovernancePane({
@@ -23,7 +23,7 @@ export function GovernancePane({
   dslinterReportHint = "npm run dslinter:report",
   dslinterReport,
   onOpenComponent,
-  onOpenCatalog,
+  componentLabels,
 }: Props) {
   const { report, error, loading } = dslinterReport;
   const componentCatalogCount = report ? componentCatalogNamesFromReport(report).length : 0;
@@ -66,10 +66,7 @@ export function GovernancePane({
     <div className="min-h-0 flex-1 overflow-auto bg-muted/40">
       {landing}
       <header className="border-b border-border bg-card px-8 py-6">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Inventory
-        </p>
-        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
           Governance
           <span className="font-normal text-muted-foreground">
             {" "}
@@ -77,15 +74,12 @@ export function GovernancePane({
             {componentCatalogCount} total
           </span>
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Governance scores, workspace findings, and components with no usage from the latest
-          DSLinter snapshot
-        </p>
+        <p className="text-sm text-muted-foreground">Scores, findings, and unused components.</p>
       </header>
       <DashboardBody
         report={report}
         onOpenComponent={onOpenComponent}
-        onOpenCatalog={onOpenCatalog}
+        componentLabels={componentLabels}
       />
     </div>
   );

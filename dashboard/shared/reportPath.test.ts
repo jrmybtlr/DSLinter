@@ -1,11 +1,14 @@
+import { workspaceCacheDir } from "../bin/lib/cache.mjs";
 import { describe, expect, it } from "vitest";
 import { join, resolve } from "node:path";
 import { resolveReportFilePath } from "./reportPath";
 
 describe("resolveReportFilePath", () => {
-  it("defaults to public/dslinter-report.json under scan root", () => {
+  it("defaults to the external workspace cache", () => {
     const root = "/app/demo/inertia";
-    expect(resolveReportFilePath(root, {})).toBe(resolve(root, "public", "dslinter-report.json"));
+    expect(resolveReportFilePath(root, {})).toBe(
+      resolve(workspaceCacheDir(root), "dslinter-report.json"),
+    );
   });
 
   it("uses DSLINTER_REPORT_PATH when set", () => {
