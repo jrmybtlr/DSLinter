@@ -1,7 +1,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/** Class-based dark only — never `prefers-color-scheme` or host `.dark`. */
+/**
+ * Class-based dark only. `DashboardThemeProvider` resolves the `system`
+ * preference via `prefers-color-scheme` and sets `data-dashboard-theme`;
+ * never match the host's `.dark` class.
+ */
 @custom-variant dark (&:is([data-dashboard-theme="dark"] *));
 
 html:has([data-dashboard-theme="light"]) {
@@ -180,7 +184,7 @@ html:has([data-dashboard-theme="dark"]) {
 /** Subtle dot grid for playground preview areas (examples, variant matrix). */
 @layer utilities {
   .ds-playground-dot-surface {
-    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-image: radial-gradient(circle, #e9edf1 1px, transparent 1px);
     background-size: 10px 10px;
   }
 
@@ -189,7 +193,7 @@ html:has([data-dashboard-theme="dark"]) {
   }
 
   [data-preview-theme="light"].ds-playground-dot-surface {
-    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-image: radial-gradient(circle, #edf0f3 1px, transparent 1px);
   }
 
   [data-preview-theme="dark"].ds-playground-dot-surface {

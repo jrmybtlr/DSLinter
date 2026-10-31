@@ -134,34 +134,61 @@ function relativeImport(from: string, root: string, path: string): string {
   return result.startsWith(".") ? result : `./${result}`;
 }
 
+function previewKey(component: CatalogComponent): string {
+  return /^[A-Za-z_$][\w$]*$/.test(component.name)
+    ? component.name
+    : JSON.stringify(component.id);
+}
+
 export function notificationAdapterExample(
   component: CatalogComponent,
   adapterRoot: string,
   scanRoot: string,
+  format: "tsx" | "js" = "tsx",
 ): string | undefined {
   if (component.framework !== "react" || !isNotificationHost(component)) return;
   const binding =
     component.preview.export_name === "default"
       ? "PreviewTarget"
       : `{ ${component.preview.export_name} as PreviewTarget }`;
+  const from = JSON.stringify(relativeImport(adapterRoot, scanRoot, component.preview.rel_path));
+  const key = previewKey(component);
+  if (format === "js") {
+    return [
+      'import { createElement, Fragment } from "react";',
+      'import { toast } from "sonner";',
+      'import { preview } from "dslinter/preview";',
+      `import ${binding} from ${from};`,
+      "",
+      "export default {",
+      "  previews: {",
+      `    ${key}: preview(PreviewTarget, ({ node }) =>`,
+      "      createElement(Fragment, null,",
+      "        node,",
+      '        createElement("button", {',
+      '          type: "button",',
+      '          onClick: () => toast("Example notification"),',
+      '        }, "Show notification"),',
+      "      )),",
+      "  },",
+      "};",
+    ].join("\n");
+  }
   return [
-    'import { createElement, type ComponentProps } from "react";',
+    'import { preview, type PreviewAdapter } from "dslinter/preview";',
     'import { toast } from "sonner";',
-    'import type { PreviewAdapter } from "dslinter/preview";',
-    `import ${binding} from ${JSON.stringify(relativeImport(adapterRoot, scanRoot, component.preview.rel_path))};`,
+    `import ${binding} from ${from};`,
     "",
     "export default {",
     "  previews: {",
-    `    ${JSON.stringify(component.id)}: {`,
-    "      PlaygroundPreview: ({ values }: { values: ComponentProps<typeof PreviewTarget> }) =>",
-    '        createElement("div", null,',
-    "          createElement(PreviewTarget, values),",
-    '          createElement("button", {',
-    '            type: "button",',
-    '            onClick: () => toast("Example notification"),',
-    '          }, "Show notification"),',
-    "        ),",
-    "    },",
+    `    ${key}: preview(PreviewTarget, ({ node }) => (`,
+    "      <>",
+    "        {node}",
+    '        <button type="button" onClick={() => toast("Example notification")}>',
+    "          Show notification",
+    "        </button>",
+    "      </>",
+    "    )),",
     "  },",
     "} satisfies PreviewAdapter;",
   ].join("\n");
@@ -173,44 +200,42 @@ export function contextAdapterExample(
   adapterRoot: string,
   scanRoot: string,
 ): string {
+  const vue = component.framework === "vue";
   const imports = [
-    'import type { PreviewAdapter } from "dslinter/preview";',
-    ...(component.framework === "vue"
-      ? ['import { defineComponent, h } from "vue";']
-      : ['import type { ComponentProps } from "react";']),
+    'import { preview, type PreviewAdapter } from "dslinter/preview";',
+    ...(vue ? ['import { h } from "vue";'] : []),
     ...[component.preview, ...providers].map((item, index) => {
       const name = index ? `PreviewProvider${index}` : "PreviewTarget";
       const binding = item.export_name === "default" ? name : `{ ${item.export_name} as ${name} }`;
       return `import ${binding} from ${JSON.stringify(relativeImport(adapterRoot, scanRoot, item.rel_path))};`;
     }),
   ];
-  let render =
-    component.framework === "vue" ? "h(PreviewTarget, values)" : "<PreviewTarget {...values} />";
+  let body = vue ? "node" : "{node}";
   providers.forEach((_, index) => {
     const name = `PreviewProvider${index + 1}`;
-    render =
-      component.framework === "vue"
-        ? `h(${name}, {}, { default: () => ${render} })`
-        : `<${name}>${render}</${name}>`;
+    body = vue
+      ? `h(${name}, {}, { default: () => ${body} })`
+      : `<${name}>${body}</${name}>`;
   });
-  // React uses the PlaygroundPreview contract; Vue overrides receive props directly.
-  const entry =
-    component.framework === "vue"
-      ? `defineComponent({ inheritAttrs: false, setup: (_, { attrs }) => () => { const values = attrs; return ${render}; } })`
-      : `{ PlaygroundPreview: ({ values }: { values: ComponentProps<typeof PreviewTarget> }) => (${render}) }`;
+  const decorate =
+    providers.length === 0
+      ? "preview(PreviewTarget)"
+      : vue
+        ? `preview(PreviewTarget, ({ node }) => ${body})`
+        : `preview(PreviewTarget, ({ node }) => (${body}))`;
   return [
     ...imports,
     "",
     "export default {",
     "  previews: {",
-    `    ${JSON.stringify(component.id)}: ${entry},`,
+    `    ${previewKey(component)}: ${decorate},`,
     "  },",
     ...(providers.length
       ? []
       : [
-          component.framework === "vue"
+          vue
             ? "  // Configure the verified service here: vue: { setup: (app) => app.provide(key, value) }."
-            : "  // Import the required provider and wrap PreviewTarget above.",
+            : "  // Import the required provider and wrap with preview(PreviewTarget, ({ node }) => <Provider>{node}</Provider>).",
         ]),
     "} satisfies PreviewAdapter;",
   ].join("\n");

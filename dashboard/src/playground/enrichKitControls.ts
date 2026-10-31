@@ -1,5 +1,5 @@
-import type { PlaygroundControl } from "../types/controls";
-import type { ComponentDefinition, PlaygroundSpec, WorkspaceReport } from "../types/report";
+import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
+import type { PlaygroundSpec, WorkspaceReport } from "../types/report";
 import { controlsForSpec } from "./controls";
 import {
   inferKitRootPropBindings,
@@ -11,7 +11,8 @@ import {
 } from "./inferKitJsx";
 import type { InferredKitParam } from "./inferKitParams";
 import { inferKitParams } from "./inferKitParams";
-import { expandPlaygroundControls } from "./expandPlaygroundControls";
+import { expandPlaygroundControls, type PlaygroundControlsInput } from "./expandPlaygroundControls";
+import { definitionForExport, findPlaygroundSpec } from "./reportQueries";
 
 export type PlaygroundKitHints = {
   rootComponent?: string;
@@ -80,26 +81,6 @@ function mergeInferredParams(
   return [...byKey.values()];
 }
 
-function specForCatalog(
-  report: { playgrounds?: PlaygroundSpec[] } | null | undefined,
-  catalogId: string,
-): PlaygroundSpec | undefined {
-  return report?.playgrounds?.find(
-    (spec) => spec.export_name === catalogId || spec.id === catalogId,
-  );
-}
-
-function definitionForExport(
-  report: WorkspaceReport | null | undefined,
-  exportName: string,
-): ComponentDefinition | undefined {
-  for (const file of report?.files ?? []) {
-    const def = file.definitions?.find((d) => d.name === exportName);
-    if (def) return def;
-  }
-  return undefined;
-}
-
 function propMetadataForCatalog(
   report: WorkspaceReport | null | undefined,
   catalogId: string,
@@ -113,7 +94,7 @@ function propMetadataForCatalog(
       propTypeLabels: Record<string, string>;
     }
   | undefined {
-  const spec = specForCatalog(report, catalogId);
+  const spec = findPlaygroundSpec(report, catalogId);
   if (!spec || !report) return undefined;
 
   const def = definitionForExport(report, spec.export_name);
@@ -168,11 +149,11 @@ export function mergeReportControlsForKit(
   return [...byKey.values()];
 }
 
-export function buildKitControls(
-  kit: (args: Record<string, unknown>) => unknown,
+export function buildKitControls<T extends PlaygroundArgs>(
+  kit: (args: T) => unknown,
   options: {
-    controls?: Parameters<typeof expandPlaygroundControls>[0];
-    defaults?: Record<string, string | number | boolean>;
+    controls?: PlaygroundControlsInput;
+    defaults?: Partial<T>;
     report?: WorkspaceReport | null;
     catalogId?: string;
   },
@@ -185,7 +166,7 @@ export function buildKitControls(
   if (options.controls !== undefined) {
     controls = expandPlaygroundControls(options.controls);
   } else if (options.defaults !== undefined && Object.keys(options.defaults).length > 0) {
-    controls = expandPlaygroundControls(options.defaults);
+    controls = expandPlaygroundControls(options.defaults as PlaygroundControlsInput);
   } else if (params.length > 0) {
     controls = expandPlaygroundControls(
       Object.fromEntries(params.map((param) => [param.key, param.defaultValue ?? param.key])),

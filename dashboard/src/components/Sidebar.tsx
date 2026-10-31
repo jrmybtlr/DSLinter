@@ -202,8 +202,6 @@ export function Sidebar({
         </div>
       </div>
 
-      {contextPicker}
-
       <nav ref={navRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {sectionLabel("Explore")}
         <button
@@ -354,6 +352,7 @@ export function Sidebar({
             );
           })}
         </div>
+        {contextPicker}
       </nav>
 
       {footer ? (

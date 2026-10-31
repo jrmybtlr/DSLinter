@@ -69,6 +69,8 @@ type Props = {
   isolatedPreview?: boolean;
   /** Providers the live preview wrapped in without a configured adapter. */
   suppliedProviders?: string[];
+  /** Explanation of example values applied to make the live preview visible. */
+  previewNote?: string;
 };
 
 const MIN_PREVIEW_PX = 280;
@@ -266,6 +268,7 @@ export function ComponentPlaygroundPane({
   runtimeA11y,
   isolatedPreview = false,
   suppliedProviders = [],
+  previewNote,
 }: Props) {
   const { renderPreview } = entry;
   const sourceAbsolutePath = workspaceReport?.root
@@ -628,26 +631,38 @@ export function ComponentPlaygroundPane({
                       </button>
                     ))}
                   </div>
-                  {suppliedProviders.length > 0 ? (
+                  {suppliedProviders.length > 0 || previewNote ? (
                     <HoverCard openDelay={200} closeDelay={100}>
                       <HoverCardTrigger asChild>
                         <button
                           type="button"
                           className="flex size-6 items-center justify-center rounded-sm border border-border bg-card text-muted-foreground transition"
                           className:hover="bg-accent text-foreground"
-                          aria-label={`Context supplied automatically: ${suppliedProviders.join(", ")}`}
+                          aria-label="Preview information"
                         >
                           <IconInfo className="size-3.5" aria-hidden />
                         </button>
                       </HoverCardTrigger>
                       <HoverCardContent className="w-72 p-3 text-xs" align="end">
-                        <p className="font-medium text-foreground">
-                          Context supplied automatically
-                        </p>
-                        <p className="mt-2 text-muted-foreground">
-                          DSLinter added {suppliedProviders.join(", ")} as required parents so this
-                          preview can render.
-                        </p>
+                        <div className="space-y-3">
+                          {suppliedProviders.length > 0 ? (
+                            <div>
+                              <p className="font-medium text-foreground">
+                                Context supplied automatically
+                              </p>
+                              <p className="mt-2 text-muted-foreground">
+                                DSLinter added {suppliedProviders.join(", ")} as required parents so
+                                this preview can render.
+                              </p>
+                            </div>
+                          ) : null}
+                          {previewNote ? (
+                            <div>
+                              <p className="font-medium text-foreground">Example values applied</p>
+                              <p className="mt-2 text-muted-foreground">{previewNote}</p>
+                            </div>
+                          ) : null}
+                        </div>
                       </HoverCardContent>
                     </HoverCard>
                   ) : null}

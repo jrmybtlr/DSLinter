@@ -1,24 +1,10 @@
 import { createElement } from "react";
-import type { DefinedPlayground } from "./definePlayground";
+import { isDefinedPlayground, type DefinedPlayground } from "./definePlayground";
 import type { PlaygroundEntry } from "../types/playground";
 import type { PlaygroundPreviewComponent } from "../types/preview";
 import type { PlaygroundArgs } from "../types/controls";
 import type { BuildPlaygroundModules } from "./buildPlaygroundEntriesFromReport";
 import { catalogIdFromPlaygroundExport } from "./catalogIdFromPlaygroundExport";
-
-function isDefinedPlayground(value: unknown): value is DefinedPlayground {
-  if (!value || typeof value !== "object") return false;
-  const o = value as Record<string, unknown>;
-  if (typeof o.playgroundMeta !== "object" || o.playgroundMeta === null) return false;
-  const meta = o.playgroundMeta as { id?: unknown; title?: unknown; group?: unknown };
-  return (
-    typeof meta.id === "string" &&
-    typeof meta.title === "string" &&
-    (meta.group === undefined || typeof meta.group === "string") &&
-    Array.isArray(o.playgroundControls) &&
-    typeof o.PlaygroundPreview === "function"
-  );
-}
 
 function resolveDefinedMeta(
   defined: DefinedPlayground,

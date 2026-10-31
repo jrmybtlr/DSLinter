@@ -98,8 +98,12 @@ export function addPreviewSetup(
     throw new PreviewSetupConflict(
       "The component source has changed. Refresh the scan before adding its preview setup.",
     );
-  const path = findPreviewAdapter(app.root, scanRoot) || join(app.root, "dslinter.preview.ts");
-  if (!within(app.root, dirname(path)) && !within(scanRoot, dirname(path)))
+  const found = findPreviewAdapter(app.root, scanRoot);
+  const path = found || join(app.root, "dslinter.preview.tsx");
+  // JSX examples need .tsx; rename an init stub .ts when adding the first generated entry.
+  const writePath =
+    path.endsWith(".ts") && !path.endsWith(".tsx") ? path.replace(/\.ts$/, ".tsx") : path;
+  if (!within(app.root, dirname(writePath)) && !within(scanRoot, dirname(writePath)))
     throw new PreviewSetupConflict(
       "The preview configuration is outside this workspace. Use the copyable example instead.",
     );
@@ -118,10 +122,12 @@ export function addPreviewSetup(
       "The configuration and component could not resolve the same notification package. Select the component's app, or merge the example manually.",
     );
   }
+  const format = writePath.endsWith(".js") ? "js" : "tsx";
   const example = notificationAdapterExample(
     component,
-    realpathSync(dirname(path)),
+    realpathSync(dirname(writePath)),
     realpathSync(report.root),
+    format,
   );
   if (!example)
     throw new PreviewSetupConflict(
@@ -129,24 +135,25 @@ export function addPreviewSetup(
     );
   const original = existing ? readFileSync(path, "utf8") : "";
   const output = existing
-    ? mergePreviewSetup(original, example, component.id, component.name, path)
+    ? mergePreviewSetup(original, example, component.id, component.name, writePath)
     : `${example}\n`;
   if (!existing) {
-    writeFileSync(path, output, { flag: "wx" });
+    writeFileSync(writePath, output, { flag: "wx" });
   } else {
-    const temporary = `${path}.${randomBytes(8).toString("hex")}.tmp`;
+    const temporary = `${writePath}.${randomBytes(8).toString("hex")}.tmp`;
     try {
       writeFileSync(temporary, output, { flag: "wx", mode: lstatSync(path).mode & 0o777 });
       if (lstatSync(path).isSymbolicLink() || readFileSync(path, "utf8") !== original)
         throw new PreviewSetupConflict(
           "The configuration changed while saving. Its changes were preserved. Try again.",
         );
-      renameSync(temporary, path);
+      renameSync(temporary, writePath);
+      if (writePath !== path) unlinkSync(path);
     } finally {
       if (existsSync(temporary)) unlinkSync(temporary);
     }
   }
-  return { path: relative(scanRoot, path).replaceAll("\\", "/"), created: !existing };
+  return { path: relative(scanRoot, writePath).replaceAll("\\", "/"), created: !existing };
 }
 
 export function previewSetupMiddleware(options: {

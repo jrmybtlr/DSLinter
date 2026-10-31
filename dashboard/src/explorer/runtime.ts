@@ -28,6 +28,8 @@ import {
 import type { ContextDiagnostic } from "./providerRecovery";
 import { includesTarget } from "./familyRecipes";
 import { hasVisiblePreview } from "./previewVisibility";
+import { applyPreviewInset } from "./previewInset";
+import { observePreviewSize } from "./previewSizing";
 import { EMPTY_PREVIEW_MESSAGE } from "./previewMessages";
 import type { ProviderCandidate } from "../types/report";
 
@@ -49,7 +51,7 @@ export function boot(context: Context): void {
   if (!parentOrigin) return;
   const root = document.getElementById("dslinter-preview")!;
   document.body.style.margin = "0";
-  root.style.cssText = "padding:32px;box-sizing:border-box";
+  root.style.cssText = "padding:64px;box-sizing:border-box";
   let active: FrameworkMount | undefined;
   let activeProviders: ProviderCandidate[] = [];
   let generation = 0;
@@ -89,10 +91,10 @@ export function boot(context: Context): void {
     }
     parent.postMessage({ protocol: PREVIEW_PROTOCOL, ...message }, parentOrigin!);
   }
-  function publishSize(): void {
-    const height = Math.ceil(root.getBoundingClientRect().height);
-    if (height) send({ type: "resize", height });
-  }
+  const sizing = observePreviewSize(root, (height) => send({ type: "resize", height }));
+  window.addEventListener("pagehide", (event) => {
+    if (!event.persisted) sizing.disconnect();
+  });
   function reportActiveFailure(error: unknown): void {
     const component = command?.component;
     const requirement = contextRequirement(error);
@@ -187,7 +189,9 @@ export function boot(context: Context): void {
     activeProviders = [];
     publishSnippet = undefined;
     if (next.type === "unmount" || !next.component) return;
-    root.style.padding = next.compact ? "16px" : "32px";
+    // Stage padding until mount; chrome surfaces replace it after render.
+    root.style.padding = next.compact ? "32px" : "64px";
+    sizing.reset(Boolean(next.compact));
     applyTheme(next.theme);
     const component = next.component;
     const catalog = next.catalog || [];
@@ -426,6 +430,7 @@ export function boot(context: Context): void {
           active = session;
           activeProviders = providers;
           providerCache.set(cacheKey, providers);
+          applyPreviewInset(root, Boolean(next.compact));
           const targetNames = new Set([
             component.name,
             ...Object.entries(resolved)
@@ -466,7 +471,7 @@ export function boot(context: Context): void {
             });
           publishSnippet(values);
           requestAnimationFrame(() => {
-            if (generation === token) publishSize();
+            if (generation === token) sizing.schedule();
           });
           return;
         } catch (error) {
@@ -496,7 +501,7 @@ export function boot(context: Context): void {
         }
       }
       throw new Error(
-        "Every automatic preview strategy failed. Add fixtures, providers, or a preview override in dslinter.preview.ts.",
+        "Every automatic preview strategy failed. Add fixtures, providers, or a preview override in dslinter.preview.tsx.",
       );
     } catch (error) {
       if (generation === token) {
@@ -573,7 +578,9 @@ export function boot(context: Context): void {
       void (async () => {
         try {
           await session.update(next.values || {});
-          if (generation === token && active === session) publishSnippet?.(values);
+          if (generation !== token || active !== session) return;
+          applyPreviewInset(root, Boolean(command?.compact));
+          publishSnippet?.(values);
         } catch (error) {
           if (generation !== token || active !== session) return;
           reportActiveFailure(error);
@@ -588,7 +595,6 @@ export function boot(context: Context): void {
       });
     } else void render(next);
   });
-  new ResizeObserver(() => publishSize()).observe(root);
   window.addEventListener("error", (event) =>
     send({ type: "error", failurePhase: active ? "update" : "render", message: event.message }),
   );

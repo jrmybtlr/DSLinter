@@ -13,16 +13,17 @@ See the [project guide](https://github.com/jrmybtlr/DSLinter#readme) for example
 
 ## Preview adapters
 
-`npx dslinter init` creates one optional `dslinter.preview.ts` file. Rename it to `.tsx` for JSX.
+`npx dslinter init` creates one optional `dslinter.preview.tsx` file.
 
-```ts
-import type { PreviewAdapter } from "dslinter/preview";
+```tsx
+import { preview, type PreviewAdapter } from "dslinter/preview";
 
 export default {
   fixtures: {},
   previews: {},
   // styles: ["src/app.css"],
-  // react: { wrap: (children) => createElement(Providers, null, children) },
+  // Example: Button: preview(Button, ({ node }) => <Theme>{node}</Theme>),
+  // react: { wrap: (children) => <Providers>{children}</Providers> },
   // vue: { setup: (app) => app.use(yourPlugin) },
   // pageProps: { auth: { user: sampleUser } },
 } satisfies PreviewAdapter;

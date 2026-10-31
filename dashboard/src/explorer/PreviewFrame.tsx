@@ -4,7 +4,7 @@ import type { CatalogComponent } from "../types/report";
 import { usePreviewSectionTheme } from "../shell/previewSectionTheme";
 import { PREVIEW_PROTOCOL, type PreviewCommand, type PreviewResponse } from "./protocol";
 import { PreviewFailureNotice } from "./PreviewFailureNotice";
-import { automaticStateMessage } from "./previewMessages";
+import { previewHeightLimit } from "./previewSizing";
 
 type Props = {
   component: CatalogComponent;
@@ -137,7 +137,7 @@ export function PreviewFrame({
           message.height > 0
         ) {
           // Viewport-sized consumer layouts can otherwise grow the iframe on every resize.
-          const limit = compact ? 384 : 720;
+          const limit = previewHeightLimit(compact);
           setHeight(Math.min(Math.ceil(message.height), limit));
           setHeightLimited(message.height > limit);
         }
@@ -242,11 +242,6 @@ export function PreviewFrame({
       {!failed && heightLimited && (
         <p className="border-t border-border p-3 text-xs text-muted-foreground">
           Scroll within the preview to see more.
-        </p>
-      )}
-      {status?.type === "rendered" && Boolean(Object.keys(status.revealedValues || {}).length) && (
-        <p className="border-t border-border p-3 text-xs text-muted-foreground">
-          {automaticStateMessage(status.revealedValues || {})}
         </p>
       )}
       {failed && (

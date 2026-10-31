@@ -16,6 +16,23 @@ export type DefinedPlayground = {
   playgroundKitHints?: PlaygroundKitHints;
 };
 
+/** Shape check for exports consumed by {@link collectDefinedPlaygrounds}. */
+export function isDefinedPlayground(value: unknown): value is DefinedPlayground {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  if (typeof candidate.playgroundMeta !== "object" || candidate.playgroundMeta === null) {
+    return false;
+  }
+  const meta = candidate.playgroundMeta as { id?: unknown; title?: unknown; group?: unknown };
+  return (
+    typeof meta.id === "string" &&
+    typeof meta.title === "string" &&
+    (meta.group === undefined || typeof meta.group === "string") &&
+    Array.isArray(candidate.playgroundControls) &&
+    typeof candidate.PlaygroundPreview === "function"
+  );
+}
+
 type PlaygroundDefinitionBase = {
   /**
    * Stable sidebar / URL id. Defaults to the component’s `displayName` or function `name`
@@ -28,10 +45,6 @@ type PlaygroundDefinitionBase = {
   group?: string;
   /** @deprecated Use `group` — kept for older call sites. */
   section?: string;
-  controls?: PlaygroundControlsInput;
-};
-
-type PlaygroundMetaOptions = Omit<PlaygroundDefinitionBase, "controls"> & {
   controls?: PlaygroundControlsInput;
 };
 
@@ -58,18 +71,11 @@ function getComponentLabel(Component: unknown): string | undefined {
   return fn.displayName ?? fn.name;
 }
 
-function inferId(nameFallback: string | undefined): string {
-  if (nameFallback && nameFallback.length > 0) return nameFallback;
-  throw new Error(
-    "definePlayground: set `id` in options when the component has no usable `name` / `displayName`, or when using a `render`-only definition.",
-  );
-}
-
 function resolveMeta(
   base: PlaygroundDefinitionBase,
   nameFallback: string | undefined,
 ): PlaygroundMeta {
-  const id = base.id ?? (nameFallback ? inferId(nameFallback) : "");
+  const id = base.id ?? nameFallback ?? "";
   const title = base.title ?? (id || "");
   const group = base.group ?? base.section;
   return {
@@ -79,24 +85,16 @@ function resolveMeta(
   };
 }
 
-function resolveKitControls<T extends PlaygroundArgs>(
-  kit: (args: T) => ReactNode,
-  opts: PlaygroundDefinitionBase & { defaults?: Partial<T> },
-  catalogId: string,
-): { controls: PlaygroundControl[]; hints: PlaygroundKitHints } {
-  return buildKitControls(kit as (args: any) => ReactNode, {
-    controls: opts.controls,
-    defaults: opts.defaults as Record<string, string | number | boolean> | undefined,
-    catalogId: catalogId || undefined,
-  });
-}
-
 function buildKitPlayground<T extends PlaygroundArgs>(
   kit: (args: T) => ReactNode,
   opts: PlaygroundDefinitionBase & { defaults?: Partial<T> },
 ): DefinedPlayground {
   const meta = resolveMeta(opts, undefined);
-  const { controls, hints } = resolveKitControls(kit, opts, meta.id);
+  const { controls, hints } = buildKitControls(kit, {
+    controls: opts.controls,
+    defaults: opts.defaults,
+    catalogId: meta.id || undefined,
+  });
   function PlaygroundPreview({ values }: PlaygroundPreviewProps) {
     return <>{kit(propsFromControls(controls, values, opts.defaults))}</>;
   }
@@ -116,8 +114,19 @@ function isComponentPropsOptions(
 }
 
 /**
- * Declare dashboard playground exports manually. Pass a kit callback directly — control
- * keys are inferred from destructured parameters (inline defaults become panel defaults).
+ * Declare dashboard playground exports manually.
+ *
+ * ```tsx
+ * // Infer controls from the callback's destructured params.
+ * export const AlertPlayground = definePlayground(({ title = "Heads up" }) => (
+ *   <Alert><AlertTitle>{title}</AlertTitle></Alert>
+ * ));
+ *
+ * // Map panel values onto an existing component.
+ * export const ButtonPlayground = definePlayground(Button, {
+ *   props: ({ label }) => ({ children: label }),
+ * });
+ * ```
  */
 export function definePlayground<P extends Record<string, unknown>>(
   component: ComponentType<P>,
@@ -126,7 +135,7 @@ export function definePlayground<P extends Record<string, unknown>>(
 
 export function definePlayground<T extends PlaygroundArgs>(
   kit: (args: T) => ReactNode,
-  meta?: PlaygroundMetaOptions & { defaults?: Partial<T> },
+  meta?: PlaygroundDefinitionBase & { defaults?: Partial<T> },
 ): DefinedPlayground;
 
 export function definePlayground<T extends PlaygroundArgs>(
@@ -141,7 +150,7 @@ export function definePlayground<P extends Record<string, unknown>, T extends Pl
     | ((args: T) => ReactNode)
     | DefineWithKit<T>
     | DefineWithRender,
-  options?: DefineWithComponent<P> | (PlaygroundMetaOptions & { defaults?: Partial<T> }),
+  options?: DefineWithComponent<P> | (PlaygroundDefinitionBase & { defaults?: Partial<T> }),
 ): DefinedPlayground {
   if (typeof componentOrKitOrOptions === "function" && isComponentPropsOptions(options)) {
     const Component = componentOrKitOrOptions as ComponentType<P>;

@@ -43,7 +43,7 @@ export function renderErrorExplanation(
       description:
         "The component tried to use a value that was missing or had the wrong shape. Its preview may need props or application data.",
       nextStep:
-        "Check the component controls. For objects, lists, or app data, supply sample values in dslinter.preview.ts. See Technical details for the original error.",
+        "Check the component controls. For objects, lists, or app data, supply sample values in dslinter.preview.tsx. See Technical details for the original error.",
     };
   return {
     title,
@@ -76,28 +76,28 @@ export function previewFailureExplanation(
         description:
           "This component uses a Vue service that is not available in the isolated preview.",
         nextStep:
-          "Register the service in dslinter.preview.ts using vue.setup with app.provide or app.use.",
+          "Register the service in dslinter.preview.tsx using vue.setup with app.provide or app.use.",
       };
     const parents = diagnostic.required.join(" or ");
     const explanation = {
       title: `${name} needs ${parents}`,
       description: `This component needs ${parents} around it. DSLinter could not provide a working version of that setup.`,
-      nextStep: `Wrap ${name} with ${parents} in a custom preview in dslinter.preview.ts.`,
+      nextStep: `Wrap ${name} with ${parents} in a custom preview in dslinter.preview.tsx.`,
     };
     if (/authoritative|configured preview or wrapper/i.test(diagnostic.reason))
-      explanation.nextStep = `Update the existing custom preview or wrapper in dslinter.preview.ts to supply ${parents}. Your configured setup takes priority.`;
+      explanation.nextStep = `Update the existing custom preview or wrapper in dslinter.preview.tsx to supply ${parents}. Your configured setup takes priority.`;
     else if (diagnostic.candidates.length > 1)
-      explanation.nextStep = `Choose the intended ${parents} in dslinter.preview.ts. More than one matching parent was found; their locations are in Technical details.`;
+      explanation.nextStep = `Choose the intended ${parents} in dslinter.preview.tsx. More than one matching parent was found; their locations are in Technical details.`;
     else if (/already present|cycle/i.test(diagnostic.reason))
       explanation.nextStep = `The required parent is already included, but the component still cannot use it. Check how the parent and component are connected in your preview setup.`;
     else if (/four added providers/i.test(diagnostic.reason))
       explanation.nextStep =
-        "This preview needs several layers of parents. Set up the complete parent chain in dslinter.preview.ts; automatic recovery stopped after four additions.";
+        "This preview needs several layers of parents. Set up the complete parent chain in dslinter.preview.tsx; automatic recovery stopped after four additions.";
     else if (/composition failed/i.test(diagnostic.reason))
       explanation.nextStep =
-        "A required parent also failed to render. Supply the data it needs in dslinter.preview.ts. Technical details include that error.";
+        "A required parent also failed to render. Supply the data it needs in dslinter.preview.tsx. Technical details include that error.";
     else if (/after the preview mounted/i.test(diagnostic.reason))
-      explanation.nextStep = `Retry to rebuild the preview with ${parents}. If it fails again, supply the parent in dslinter.preview.ts.`;
+      explanation.nextStep = `Retry to rebuild the preview with ${parents}. If it fails again, supply the parent in dslinter.preview.tsx.`;
     else
       explanation.nextStep +=
         " A matching parent could not be verified in the component's local imports.";
@@ -114,7 +114,7 @@ export function previewFailureExplanation(
         description: `${name} displays notifications after one is triggered. No notification appeared in this preview.`,
         nextStep: status.adapterExample
           ? "Use a custom preview with a button that shows a sample notification. Open Preview setup below for a copyable example."
-          : "Add a custom preview in dslinter.preview.ts with a button that shows a sample notification.",
+          : "Add a custom preview in dslinter.preview.tsx with a button that shows a sample notification.",
       };
     const iconProps = Object.entries(component.preview.declared_prop_kinds || {})
       .filter(([, kind]) => kind === "icon")
@@ -123,21 +123,21 @@ export function previewFailureExplanation(
       return {
         title: `${name} needs a sample icon`,
         description: `The ${iconProps.join(", ")} input expects an icon component. No icon was visible in this preview.`,
-        nextStep: `Import an icon component in dslinter.preview.ts and assign it to ${iconProps.join(", ")} in this component's fixtures.`,
+        nextStep: `Import an icon component in dslinter.preview.tsx and assign it to ${iconProps.join(", ")} in this component's fixtures.`,
       };
     return {
       title: `${name} has no visible content`,
       description:
         "The available examples did not show any visible content. The component may be hidden, empty, or waiting for data or an interaction.",
       nextStep:
-        "Check its content and visibility controls. If it needs data or a parent component, supply a custom example in dslinter.preview.ts.",
+        "Check its content and visibility controls. If it needs data or a parent component, supply a custom example in dslinter.preview.tsx.",
     };
   }
   if (/Ambiguous adapter key/.test(errors))
     return {
       title: "Choose which component this preview belongs to",
       description: `More than one component is named ${name}, so the custom preview cannot be matched safely.`,
-      nextStep: `Use the full component ID as the preview key in dslinter.preview.ts: ${component.id}`,
+      nextStep: `Use the full component ID as the preview key in dslinter.preview.tsx: ${component.id}`,
     };
   if (/Export .+ was not found|Provider export .+ was not found/.test(errors))
     return {
@@ -155,7 +155,7 @@ export function previewFailureExplanation(
       description:
         "An example dependency is unavailable, or the example does not include the selected component.",
       nextStep:
-        "Provide a custom example in dslinter.preview.ts that includes this component and imports its required icons or child components.",
+        "Provide a custom example in dslinter.preview.tsx that includes this component and imports its required icons or child components.",
     };
   if (
     /Failed to fetch dynamically imported module|Importing a module script failed|Cannot find module|Failed to resolve import|error loading dynamically imported module/i.test(

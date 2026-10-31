@@ -22,8 +22,15 @@ const target: CatalogComponent = {
   bindings: {},
 };
 const example = notificationAdapterExample(target, "/app", "/app")!;
-function merge(source: string, path = "dslinter.preview.ts") {
-  return mergePreviewSetup(source, example, target.id, target.name, path);
+const jsExample = notificationAdapterExample(target, "/app", "/app", "js")!;
+function merge(source: string, path = "dslinter.preview.tsx") {
+  return mergePreviewSetup(
+    source,
+    path.endsWith(".js") ? jsExample : example,
+    target.id,
+    target.name,
+    path,
+  );
 }
 
 function execute(source: string) {
@@ -33,6 +40,7 @@ function execute(source: string) {
   const require = (specifier: string) => {
     if (specifier === "react")
       return {
+        Fragment: "Fragment",
         createElement: (type: unknown, props: unknown, ...children: unknown[]) => ({
           type,
           props,
@@ -40,17 +48,30 @@ function execute(source: string) {
         }),
       };
     if (specifier === "sonner") return { toast };
+    if (specifier === "dslinter/preview")
+      return {
+        preview: (component: unknown, decorate?: (props: { node: unknown }) => unknown) => ({
+          __dslinterPreview: true,
+          component,
+          decorate,
+        }),
+      };
     if (specifier === "./src/ToastHost.tsx") return { ToastHost: targetComponent };
     throw new Error(`Unexpected import ${specifier}`);
   };
   const compiled = ts.transpileModule(source, {
-    compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.CommonJS },
+    compilerOptions: {
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.CommonJS,
+      jsx: ts.JsxEmit.React,
+    },
   });
-  new Function("require", "module", "exports", compiled.outputText)(
-    require,
-    module,
-    module.exports,
-  );
+  new Function(
+    "require",
+    "module",
+    "exports",
+    `var React = require("react");\n${compiled.outputText}`,
+  )(require, module, module.exports);
   return { adapter: module.exports.default, toast, targetComponent };
 }
 
@@ -66,14 +87,18 @@ describe("adding preview entries", () => {
     const { adapter, toast, targetComponent } = execute(output);
     expect(adapter.fixtures.Other.active).toBe(false);
     expect(adapter.previews.Other).toBe("existing");
-    const tree = adapter.previews[target.id].PlaygroundPreview({ values: { theme: "dark" } });
-    expect(tree.children[0]).toMatchObject({ type: targetComponent, props: { theme: "dark" } });
+    const def = adapter.previews.ToastHost;
+    expect(def.__dslinterPreview).toBe(true);
+    expect(def.component).toBe(targetComponent);
+    const node = { type: targetComponent, props: { theme: "dark" }, children: [] };
+    const tree = def.decorate({ node });
+    expect(tree.children[0]).toEqual(node);
     tree.children[1].props.onClick();
     expect(toast).toHaveBeenCalledWith("Example notification");
   });
 
   it("adds a previews map to an empty object without breaking the default export", () => {
-    expect(execute(merge("export default {};\n")).adapter.previews[target.id]).toBeDefined();
+    expect(execute(merge("export default {};\n")).adapter.previews.ToastHost).toBeDefined();
   });
 
   it("handles named const configurations and preserves trailing comments without a comma", () => {
@@ -89,6 +114,7 @@ describe("adding preview entries", () => {
     const output = merge('export default { styles: ["./app.css"] };', "dslinter.preview.js");
     expect(output).not.toContain("ComponentProps");
     expect(output).not.toContain("satisfies");
+    expect(output).toContain("createElement");
     expect(execute(output).adapter.styles).toEqual(["./app.css"]);
   });
 

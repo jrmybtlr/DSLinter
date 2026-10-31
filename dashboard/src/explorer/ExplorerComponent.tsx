@@ -11,6 +11,7 @@ import { ComponentPlaygroundPane } from "../components/ComponentPlaygroundPane";
 import { controlsForComponent, propsForPreview } from "./componentControls";
 import { PreviewFrame } from "./PreviewFrame";
 import type { PreviewResponse } from "./protocol";
+import { automaticStateMessage } from "./previewMessages";
 import { useDashboardTheme } from "../shell/DashboardTheme";
 
 type Props = {
@@ -198,6 +199,11 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
         setValues(defaultArgsFromControls(controls));
       }}
       isolatedPreview
+      previewNote={
+        status?.type === "rendered" && Object.keys(status.revealedValues || {}).length > 0
+          ? automaticStateMessage(status.revealedValues || {})
+          : undefined
+      }
       suppliedProviders={
         status?.type === "rendered"
           ? status.suppliedProviders?.map((provider) => provider.name)

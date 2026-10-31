@@ -63,8 +63,9 @@ describe("preview explanations", () => {
     );
     const setup = notificationAdapterExample(component, "/repo/app", "/repo")!;
     expect(setup).toContain('from "../src/Example.tsx"');
-    expect(setup).toContain('"src/Example.tsx#Example"');
-    expect(setup).toContain('onClick: () => toast("Example notification")');
+    expect(setup).toContain("NotificationArea:");
+    expect(setup).toContain('toast("Example notification")');
+    expect(setup).toContain("preview(PreviewTarget");
     expect(
       previewFailureExplanation(component, { ...status, adapterExample: setup }).nextStep,
     ).toContain("Preview setup below");

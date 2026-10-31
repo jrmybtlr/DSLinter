@@ -48,28 +48,40 @@ Hide Component affects this browser's catalog preferences and can be undone from
 npx dslinter init
 ```
 
-This explicitly creates `dslinter.preview.ts`; it does not create a registry or JSON config. Use `.tsx` when the adapter contains JSX. Existing adapters are kept.
+This explicitly creates `dslinter.preview.tsx`; it does not create a registry or JSON config. Existing adapters are kept.
 
 ```tsx
-import type { PreviewAdapter } from "dslinter/preview";
+import { preview, type PreviewAdapter } from "dslinter/preview";
 import { AppProviders } from "./src/providers";
-import UserCardExample from "./src/examples/UserCardExample";
+import { Toaster } from "./src/components/ui/sonner";
+import { toast } from "sonner";
+import { UserCard } from "./src/components/UserCard";
 
 export default {
   styles: ["src/app.css"],
   fixtures: {
     UserCard: { user: { name: "Jane", email: "jane@example.test" } },
   },
-  previews: { UserCard: UserCardExample },
+  previews: {
+    UserCard: preview(UserCard),
+    Toaster: preview(Toaster, ({ node }) => (
+      <>
+        {node}
+        <button type="button" onClick={() => toast("Example notification")}>
+          Show notification
+        </button>
+      </>
+    )),
+  },
   react: { wrap: (children) => <AppProviders>{children}</AppProviders> },
   // Vue applications can use vue: { setup: (app) => app.use(yourPlugin) }.
   // Inertia: pageProps: { auth: { user: sampleUser } }.
 } satisfies PreviewAdapter;
 ```
 
-Styles resolve relative to the adapter. Fixture and preview keys accept a unique component name or a canonical id such as `packages/ui/src/UserCard.tsx#UserCard`. Use the id when names are duplicated. An app-local adapter takes precedence over the workspace adapter.
+`preview()` mounts the real component with live control props. Pass a decorate callback when you need siblings or providers around that node. Styles resolve relative to the adapter. Fixture and preview keys accept a unique component name or a canonical id such as `packages/ui/src/UserCard.tsx#UserCard`. Use the id when names are duplicated. An app-local adapter takes precedence over the workspace adapter.
 
-For complete, verified examples such as a Sonner notification host, the explorer offers **Add preview setup**. Clicking it creates the app's `dslinter.preview.ts` or adds the component's entry to the existing adapter, then reloads the preview. Existing entries are preserved. Dynamic configurations and setups that still need user-supplied data retain the copyable example for manual configuration. Startup and automatic recovery do not create project files.
+For complete, verified examples such as a Sonner notification host, the explorer offers **Add preview setup**. Clicking it creates the app's `dslinter.preview.tsx` or adds the component's entry to the existing adapter, then reloads the preview. Existing entries are preserved. Dynamic configurations and setups that still need user-supplied data retain the copyable example for manual configuration. Startup and automatic recovery do not create project files.
 
 Existing `definePlayground` APIs and embedded dashboards remain available. `npx dslinter init --legacy` retains the original JSON config and registry scaffolding; `DSLINTER_USE_CONSUMER_VITE=1` selects the original embedded dev flow. See [the package guide](dashboard/README.md).
 

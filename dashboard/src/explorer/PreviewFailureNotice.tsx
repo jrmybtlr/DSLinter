@@ -122,7 +122,7 @@ export function PreviewFailureNotice({
         <details className="mt-3 rounded-md bg-muted">
           <summary className="cursor-pointer p-3 font-medium">Preview setup</summary>
           <p className="p-3 text-muted-foreground">
-            Add this example to dslinter.preview.ts, or merge its entry into your existing
+            Add this example to dslinter.preview.tsx, or merge its entry into your existing
             configuration. Supply any required component data.
           </p>
           <pre className="max-h-80 overflow-auto rounded-md bg-muted/40 p-3 pt-0 text-xs whitespace-pre">

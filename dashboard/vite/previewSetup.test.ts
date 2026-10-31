@@ -48,7 +48,7 @@ function fixture() {
   };
   const app = { id: ".", name: "fixture", root, config: "", framework: "react" as const };
   const report = { root: realpathSync(root), components: [component] } as WorkspaceReport;
-  return { root, app, report, component, path: join(root, "dslinter.preview.ts") };
+  return { root, app, report, component, path: join(root, "dslinter.preview.tsx") };
 }
 
 describe("saving a preview setup", () => {
@@ -56,12 +56,13 @@ describe("saving a preview setup", () => {
     const f = fixture();
     const source = readFileSync(join(f.root, "src/ToastHost.tsx"), "utf8");
     expect(addPreviewSetup(f.app, f.root, f.report, f.component.id)).toEqual({
-      path: "dslinter.preview.ts",
+      path: "dslinter.preview.tsx",
       created: true,
     });
     const saved = readFileSync(f.path, "utf8");
     expect(saved).toContain('from "./src/ToastHost.tsx"');
     expect(saved).toContain('toast("Example notification")');
+    expect(saved).toContain("preview(PreviewTarget");
     expect(() => addPreviewSetup(f.app, f.root, f.report, f.component.id)).toThrow(
       "already configured",
     );
@@ -77,6 +78,20 @@ describe("saving a preview setup", () => {
     expect(readFileSync(f.path, "utf8")).toContain('styles: ["./theme.css"]');
     expect(readFileSync(f.path, "utf8")).toContain("Other: {}");
     expect(readdirSync(f.root)).toEqual(files);
+  });
+
+  it("renames a .ts stub to .tsx when adding a JSX preview", () => {
+    const f = fixture();
+    const tsPath = join(f.root, "dslinter.preview.ts");
+    writeFileSync(tsPath, 'export default { styles: ["./theme.css"], previews: { Other: {} } };');
+    expect(addPreviewSetup(f.app, f.root, f.report, f.component.id)).toEqual({
+      path: "dslinter.preview.tsx",
+      created: false,
+    });
+    expect(readdirSync(f.root)).not.toContain("dslinter.preview.ts");
+    expect(readFileSync(f.path, "utf8")).toContain('styles: ["./theme.css"]');
+    expect(readFileSync(f.path, "utf8")).toContain("ToastHost:");
+    expect(readFileSync(f.path, "utf8")).toContain("Show notification");
   });
 
   it("preserves a dynamic configuration unchanged", () => {
@@ -95,6 +110,7 @@ describe("saving a preview setup", () => {
       "dslinter.preview.js",
     );
     expect(readFileSync(path, "utf8")).not.toContain("ComponentProps");
+    expect(readFileSync(path, "utf8")).toContain("createElement");
   });
 
   it.each(["missing-export", "missing-import", "unsupported-framework", "source-escape"])(
@@ -173,7 +189,7 @@ describe("preview setup request", () => {
   it("saves and then refreshes the selected host", async () => {
     const f = await send();
     expect(f.response.statusCode).toBe(200);
-    expect(f.result).toEqual({ path: "dslinter.preview.ts", created: true, reloaded: true });
+    expect(f.result).toEqual({ path: "dslinter.preview.tsx", created: true, reloaded: true });
     expect(f.onSaved).toHaveBeenCalledWith(f.app);
   });
   it.each([{ token: "wrong" }, { origin: "https://unrelated.example" }])(
@@ -181,7 +197,7 @@ describe("preview setup request", () => {
     async (overrides) => {
       const f = await send(overrides);
       expect(f.response.statusCode).toBe(403);
-      expect(readdirSync(f.root)).not.toContain("dslinter.preview.ts");
+      expect(readdirSync(f.root)).not.toContain("dslinter.preview.tsx");
     },
   );
   it.each(["null", "{", JSON.stringify({ app: ".", componentId: "other" }), " ".repeat(8193)])(
@@ -189,7 +205,7 @@ describe("preview setup request", () => {
     async (body) => {
       const f = await send({ body });
       expect(f.response.statusCode).toBe(409);
-      expect(readdirSync(f.root)).not.toContain("dslinter.preview.ts");
+      expect(readdirSync(f.root)).not.toContain("dslinter.preview.tsx");
     },
   );
   it("reports a saved file separately from a failed host restart", async () => {

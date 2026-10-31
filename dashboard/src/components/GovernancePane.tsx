@@ -14,7 +14,6 @@ type Props = {
   dslinterReportHint?: string;
   dslinterReport: DslinterReportState;
   onOpenComponent?: (name: string) => void;
-  onOpenCatalog?: () => void;
   componentLabels?: Record<string, { label: string; description?: string }>;
 };
 
@@ -24,7 +23,6 @@ export function GovernancePane({
   dslinterReportHint = "npm run dslinter:report",
   dslinterReport,
   onOpenComponent,
-  onOpenCatalog,
   componentLabels,
 }: Props) {
   const { report, error, loading } = dslinterReport;
@@ -81,7 +79,6 @@ export function GovernancePane({
       <DashboardBody
         report={report}
         onOpenComponent={onOpenComponent}
-        onOpenCatalog={onOpenCatalog}
         componentLabels={componentLabels}
       />
     </div>

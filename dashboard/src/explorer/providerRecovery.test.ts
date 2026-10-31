@@ -148,14 +148,16 @@ describe("provider recovery", () => {
   it("generates adapter imports relative to the actual adapter and forwards values", () => {
     const example = contextAdapterExample(component, [provider()], "/workspace/app", "/workspace");
     expect(example).toContain('from "../src/context.tsx"');
-    expect(example).toContain("<PreviewProvider1><PreviewTarget {...values} /></PreviewProvider1>");
+    expect(example).toContain(
+      "preview(PreviewTarget, ({ node }) => (<PreviewProvider1>{node}</PreviewProvider1>))",
+    );
     const vue = contextAdapterExample(
       { ...component, framework: "vue" },
       [provider()],
       "/workspace",
       "/workspace",
     );
-    expect(vue).toContain("h(PreviewProvider1, {}, { default: () => h(PreviewTarget, values) })");
-    expect(vue).toContain("const values = attrs");
+    expect(vue).toContain("preview(PreviewTarget, ({ node }) => h(PreviewProvider1, {}, { default: () => node }))");
+    expect(vue).toContain('import { h } from "vue"');
   });
 });

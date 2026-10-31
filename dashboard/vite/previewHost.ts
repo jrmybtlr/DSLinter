@@ -108,6 +108,8 @@ export async function createPreviewServer(
     resolveId(id, importer) {
       if (id === "./providerRecovery" && importer === "\0dslinter-framework.ts")
         return resolve(packageRoot, "src/explorer/providerRecovery.ts");
+      if (id === "./inertiaShared" && importer === "\0dslinter-inertia.ts")
+        return resolve(packageRoot, "src/explorer/inertiaShared.ts");
       if (id === "virtual:dslinter/framework") return "\0dslinter-framework.ts";
       if (id === "virtual:dslinter/axe") return "\0dslinter-axe";
       if (id === "virtual:dslinter/adapter") return "\0dslinter-adapter";
@@ -115,8 +117,6 @@ export async function createPreviewServer(
       if (id === "/__dslinter/entry.js") return "\0dslinter-frame-entry";
       if (id === "virtual:dslinter/playground-modules") return "\0dslinter-legacy-modules";
       if (id === "@inertiajs/react" || id === "@inertiajs/vue3") return "\0dslinter-inertia.ts";
-      if (id === "./inertiaShared" && importer === "\0dslinter-inertia.ts")
-        return resolve(packageRoot, "src/explorer/inertiaShared.ts");
       if (id === "ziggy-js" || id === "ziggy")
         return resolve(packageRoot, "vite/shims/ziggy-js.ts");
     },

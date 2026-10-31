@@ -4,6 +4,20 @@ import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
 import { isMissingInjectionWarning, contextRequirement } from "./providerRecovery";
 
+function isPreviewDefinition(
+  value: unknown,
+): value is {
+  component: Component;
+  decorate?: Component;
+} {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { __dslinterPreview?: unknown }).__dslinterPreview === true &&
+    "component" in value
+  );
+}
+
 export async function mount(
   container: HTMLElement,
   tree: DemoNode | string,
@@ -60,7 +74,15 @@ export async function mount(
     if (typeof type === "string") return h(type, props, node.children?.map(render));
     return h(type, props, slots);
   }
-  const app = createApp({ render: () => (override ? h(override, values.value) : render(tree)) });
+  const app = createApp({
+    render: () => {
+      if (isPreviewDefinition(override)) {
+        const node = h(override.component, values.value);
+        return override.decorate ? h(override.decorate, { node }) : node;
+      }
+      return override ? h(override, values.value) : render(tree);
+    },
+  });
   function capture(error: unknown): void {
     if (!failure || contextRequirement(error))
       failure = error instanceof Error ? error : new Error(String(error));

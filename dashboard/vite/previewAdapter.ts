@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-const adapterNames = ["dslinter.preview.ts", "dslinter.preview.tsx", "dslinter.preview.js"];
+const adapterNames = ["dslinter.preview.tsx", "dslinter.preview.ts", "dslinter.preview.js"];
 
 export type PreviewApp = {
   id: string;

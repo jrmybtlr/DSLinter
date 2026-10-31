@@ -11,7 +11,7 @@ describe("runInitMode", () => {
     runInitMode({ targetDir: root, argv: [] });
 
     expect(existsSync(join(root, ".dslinter.json"))).toBe(false);
-    expect(existsSync(join(root, "dslinter.preview.ts"))).toBe(true);
+    expect(existsSync(join(root, "dslinter.preview.tsx"))).toBe(true);
     expect(existsSync(join(root, "src", "playground", "buildRegistry.ts"))).toBe(false);
   });
 });

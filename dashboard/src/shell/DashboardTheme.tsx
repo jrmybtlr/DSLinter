@@ -8,43 +8,56 @@ import {
   type ReactNode,
 } from "react";
 
-const STORAGE_KEY = "dslinter-dashboard-theme";
+/**
+ * v2 key: older builds wrote a concrete `light`/`dark` value on every load,
+ * which was not an explicit choice. Using a new key lets existing installs
+ * start following the browser preference.
+ */
+const STORAGE_KEY = "dslinter-dashboard-theme-preference";
+const LEGACY_STORAGE_KEYS = ["dslinter-dashboard-theme", "dslinter-workbench-theme"];
 
-export type DashboardThemePreference = "light" | "dark";
-export type DashboardResolvedTheme = DashboardThemePreference;
+const DARK_QUERY = "(prefers-color-scheme: dark)";
 
-function readStored(): DashboardThemePreference | null {
-  if (typeof window === "undefined") return null;
+export type DashboardThemePreference = "light" | "dark" | "system";
+export type DashboardResolvedTheme = "light" | "dark";
+
+function isPreference(value: string | null): value is DashboardThemePreference {
+  return value === "light" || value === "dark" || value === "system";
+}
+
+function readStored(): DashboardThemePreference {
+  if (typeof window === "undefined") return "system";
   try {
-    const LEGACY_KEY = "dslinter-workbench-theme";
-    let v = localStorage.getItem(STORAGE_KEY);
-    if (v == null) {
-      v = localStorage.getItem(LEGACY_KEY);
-      if (v === "light" || v === "dark") {
-        localStorage.setItem(STORAGE_KEY, v);
-        localStorage.removeItem(LEGACY_KEY);
-      }
-    }
-    if (v === "light" || v === "dark") return v;
-    /** Migrate legacy `system` (and any unknown) — OS preference is ignored. */
-    if (v != null) {
-      localStorage.setItem(STORAGE_KEY, "light");
-      return "light";
-    }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (isPreference(stored)) return stored;
+    for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key);
   } catch {
     /* ignore */
   }
-  return null;
+  return "system";
 }
 
 function readInitialTheme(): DashboardThemePreference {
-  return readStored() ?? "light";
+  return readStored();
+}
+
+function readSystemTheme(): DashboardResolvedTheme {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return "light";
+  return window.matchMedia(DARK_QUERY).matches ? "dark" : "light";
+}
+
+/** Resolve a stored preference against the current browser colour scheme. */
+export function resolveDashboardTheme(
+  preference: DashboardThemePreference,
+  systemTheme: DashboardResolvedTheme,
+): DashboardResolvedTheme {
+  return preference === "system" ? systemTheme : preference;
 }
 
 type DashboardThemeContextValue = {
   theme: DashboardThemePreference;
   setTheme: (next: DashboardThemePreference) => void;
-  /** Same as `theme`; kept for callers that already used `resolvedTheme`. */
+  /** The effective theme after resolving `system` against the browser preference. */
   resolvedTheme: DashboardResolvedTheme;
 };
 
@@ -52,6 +65,7 @@ const DashboardThemeContext = createContext<DashboardThemeContextValue | null>(n
 
 export function DashboardThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<DashboardThemePreference>(() => readInitialTheme());
+  const [systemTheme, setSystemTheme] = useState<DashboardResolvedTheme>(() => readSystemTheme());
 
   const setTheme = useCallback((next: DashboardThemePreference) => {
     setThemeState(next);
@@ -66,9 +80,22 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia(DARK_QUERY);
+    const onChange = () => setSystemTheme(query.matches ? "dark" : "light");
+    onChange();
+    if (typeof query.addEventListener === "function") {
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    }
+    query.addListener(onChange);
+    return () => query.removeListener(onChange);
+  }, []);
+
+  useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY || e.newValue == null) return;
-      if (e.newValue === "light" || e.newValue === "dark") {
+      if (isPreference(e.newValue)) {
         setThemeState(e.newValue);
       }
     };
@@ -76,7 +103,11 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const value = useMemo(() => ({ theme, setTheme, resolvedTheme: theme }), [theme, setTheme]);
+  const resolvedTheme = resolveDashboardTheme(theme, systemTheme);
+  const value = useMemo(
+    () => ({ theme, setTheme, resolvedTheme }),
+    [theme, setTheme, resolvedTheme],
+  );
 
   return <DashboardThemeContext.Provider value={value}>{children}</DashboardThemeContext.Provider>;
 }

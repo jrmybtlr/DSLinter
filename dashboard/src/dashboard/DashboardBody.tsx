@@ -46,12 +46,10 @@ const sectionMeta: Record<
 export function DashboardBody({
   report,
   onOpenComponent,
-  onOpenCatalog,
   componentLabels,
 }: {
   report: WorkspaceReport;
   onOpenComponent?: (name: string) => void;
-  onOpenCatalog?: () => void;
   componentLabels?: Record<string, { label: string; description?: string }>;
 }) {
   const [tab, setTab] = useState<GovernanceInventoryTab>("all");
@@ -104,20 +102,6 @@ export function DashboardBody({
             </FindingsList>
           </section>
         )}
-
-        {onOpenCatalog ? (
-          <p className="text-sm text-muted-foreground">
-            <button
-              type="button"
-              onClick={onOpenCatalog}
-              className="font-medium text-foreground underline decoration-dotted underline-offset-2 transition"
-              className:hover="decoration-solid"
-            >
-              View all components
-            </button>{" "}
-            for prop usage and app reference details.
-          </p>
-        ) : null}
       </div>
     </div>
   );

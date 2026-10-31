@@ -122,7 +122,6 @@ export default function Explorer() {
         dslinterReport={reportState}
         dslinterReportHint="npx dslinter --report"
         onOpenComponent={openComponent}
-        onOpenCatalog={() => navigateView({ view: "catalog" })}
         componentLabels={labels}
       />
     );
@@ -192,10 +191,10 @@ export default function Explorer() {
 
   const picker =
     context.apps.length === 1 ? null : (
-      <div className="shrink-0 border-b border-border px-3 py-3">
+      <div className="mt-4">
         <label
           htmlFor="preview-application"
-          className="block px-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+          className="mb-1.5 block px-2.5 text-xs font-semibold tracking-wider text-sidebar-foreground/50 uppercase"
         >
           Preview application
         </label>
@@ -207,7 +206,7 @@ export default function Explorer() {
           <SelectTrigger
             id="preview-application"
             aria-label="Preview application"
-            className="mt-2 h-8 w-full px-2 text-xs font-normal shadow-none"
+            className="h-8 w-full px-2.5 text-xs font-normal shadow-none"
           >
             <SelectValue placeholder="No Vite app detected" />
           </SelectTrigger>
@@ -256,7 +255,7 @@ export default function Explorer() {
           )
         }
       />
-      <main className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">{main}</main>
+      <main className="ml-60 flex min-h-0 min-w-0 flex-1 flex-col">{main}</main>
     </div>
   );
 }

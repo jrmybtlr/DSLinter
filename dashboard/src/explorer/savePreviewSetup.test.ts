@@ -4,7 +4,7 @@ import { savePreviewSetup } from "./savePreviewSetup";
 afterEach(() => vi.unstubAllGlobals());
 
 it("sends only the selected app and component ID with a verified action token", async () => {
-  const result = { path: "dslinter.preview.ts", created: true, reloaded: true };
+  const result = { path: "dslinter.preview.tsx", created: true, reloaded: true };
   const fetch = vi.fn(async () => Response.json(result));
   vi.stubGlobal("fetch", fetch);
   const signal = new AbortController().signal;

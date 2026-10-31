@@ -102,6 +102,7 @@ function generatedEntry(
   example: string,
   existing: ts.SourceFile,
   componentId: string,
+  componentName: string,
   path: string,
 ): { imports: string; entry: string } {
   if (path.endsWith(".js"))
@@ -130,19 +131,21 @@ function generatedEntry(
   const imports: ts.ImportDeclaration[] = [];
   for (const statement of generated.statements) {
     if (!ts.isImportDeclaration(statement) || !statement.importClause) continue;
-    // The outer satisfies clause is not part of the inserted preview entry.
-    if (
-      statement.importClause.isTypeOnly &&
+    const fromPreview =
       ts.isStringLiteral(statement.moduleSpecifier) &&
-      statement.moduleSpecifier.text === "dslinter/preview"
-    )
-      continue;
+      statement.moduleSpecifier.text === "dslinter/preview";
+    // Type-only PreviewAdapter imports are already present or unnecessary when merging.
+    if (fromPreview && statement.importClause.isTypeOnly) continue;
     const clause = statement.importClause;
     let bindings = clause.namedBindings;
-    if (bindings && ts.isNamedImports(bindings))
+    if (bindings && ts.isNamedImports(bindings)) {
+      const elements = fromPreview
+        ? bindings.elements.filter((item) => !item.isTypeOnly)
+        : [...bindings.elements];
+      if (fromPreview && !elements.length) continue;
       bindings = ts.factory.updateNamedImports(
         bindings,
-        bindings.elements.map((item) =>
+        elements.map((item) =>
           ts.factory.updateImportSpecifier(
             item,
             item.isTypeOnly,
@@ -151,7 +154,7 @@ function generatedEntry(
           ),
         ),
       );
-    else if (bindings && ts.isNamespaceImport(bindings))
+    } else if (bindings && ts.isNamespaceImport(bindings))
       bindings = ts.factory.updateNamespaceImport(bindings, alias(bindings.name));
     imports.push(
       ts.factory.updateImportDeclaration(
@@ -173,8 +176,8 @@ function generatedEntry(
   );
   if (!previews || !ts.isPropertyAssignment(previews))
     throw new Error("Generated preview setup is invalid");
-  const entry = objectValue(previews.initializer, generated).properties.find(
-    (item) => propertyName(item) === componentId,
+  const entry = objectValue(previews.initializer, generated).properties.find((item) =>
+    [componentId, componentName].includes(propertyName(item) || ""),
   );
   if (!entry) throw new Error("Generated preview setup does not match the component");
   const transformed = ts.transform(entry, [
@@ -228,7 +231,7 @@ export function mergePreviewSetup(
         `A preview is already configured for ${componentName}. Update that entry manually; it has not been replaced.`,
       );
   }
-  const generated = generatedEntry(example, file, componentId, path);
+  const generated = generatedEntry(example, file, componentId, componentName, path);
   const edits = appendProperty(
     file,
     previews || adapter,

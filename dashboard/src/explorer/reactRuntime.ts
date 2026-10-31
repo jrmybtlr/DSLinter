@@ -6,6 +6,20 @@ import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
 import { contextRequirement } from "./providerRecovery";
 
+function isPreviewDefinition(
+  value: unknown,
+): value is {
+  component: React.ElementType;
+  decorate?: React.ComponentType<{ node: React.ReactNode }>;
+} {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { __dslinterPreview?: unknown }).__dslinterPreview === true &&
+    "component" in value
+  );
+}
+
 export async function mount(
   container: HTMLElement,
   tree: DemoNode | string,
@@ -98,7 +112,12 @@ export async function mount(
       );
     }
     let child: React.ReactNode;
-    if (override?.PlaygroundPreview)
+    if (isPreviewDefinition(override)) {
+      const node = React.createElement(override.component, values);
+      child = override.decorate
+        ? React.createElement(override.decorate, { node })
+        : node;
+    } else if (override?.PlaygroundPreview)
       child = React.createElement(override.PlaygroundPreview, { values });
     else child = override ? React.createElement(override, values) : render(tree, "root");
     return adapter.react?.wrap ? (adapter.react.wrap(child) as React.ReactNode) : child;

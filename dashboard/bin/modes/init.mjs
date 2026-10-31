@@ -15,8 +15,8 @@ export function runInitMode(opts = {}) {
     opts.targetDir ?? argv.find((a) => !a.startsWith("-")) ?? process.cwd(),
   );
   if (!argv.includes("--legacy")) {
-    const path = join(targetDir, "dslinter.preview.ts");
-    const existing = ["dslinter.preview.ts", "dslinter.preview.tsx", "dslinter.preview.js"].some(
+    const path = join(targetDir, "dslinter.preview.tsx");
+    const existing = ["dslinter.preview.tsx", "dslinter.preview.ts", "dslinter.preview.js"].some(
       (name) => existsSync(join(targetDir, name)),
     );
     if (!existing) {
@@ -24,14 +24,15 @@ export function runInitMode(opts = {}) {
       writeFileSync(
         path,
         [
-          'import type { PreviewAdapter } from "dslinter/preview";',
+          'import { preview, type PreviewAdapter } from "dslinter/preview";',
           "",
           "export default {",
           '  // Optional: styles: ["src/styles.css"],',
           "  // Prefer canonical component ids when names are duplicated.",
           "  fixtures: {},",
+          "  // Example: Toaster: preview(Toaster, ({ node }) => (<>{node}<button type='button'>Show</button></>))",
           "  previews: {},",
-          "  // React: react: { wrap: (children) => createElement(YourProviders, null, children) },",
+          "  // React: react: { wrap: (children) => <YourProviders>{children}</YourProviders> },",
           "  // Vue: vue: { setup: (app) => app.use(yourPlugin) },",
           "} satisfies PreviewAdapter;",
           "",

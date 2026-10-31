@@ -119,6 +119,7 @@ export function resolveEffectivePropKind(
   if (kind && kind !== "unknown") return kind;
   if (kind === undefined && isLikelyStringArrayProp(key)) return "stringArray";
   if (isLikelyFunctionProp(key)) return "function";
+  if (kind === undefined && isLikelyBooleanProp(key)) return "boolean";
   return kind;
 }
 
@@ -191,6 +192,68 @@ export function unknownControlForProp(key: string, typeLabel = "unknown"): Playg
   return objectControlForProp(key, typeLabel);
 }
 
+export type ControlForPropOptions = {
+  optional?: boolean;
+  typeLabel?: string;
+  defaultSource?: PlaygroundControl["defaultSource"];
+};
+
+/**
+ * Build one control for an already-resolved prop kind.
+ * Keeps select/children handling with the caller so both spec and compound
+ * builders share the same kind → control mapping.
+ */
+export function controlForPropKind(
+  key: string,
+  kind: DeclaredPropKind | undefined,
+  options: ControlForPropOptions = {},
+): PlaygroundControl {
+  const common = {
+    key,
+    label: key,
+    ...(options.optional !== undefined ? { optional: options.optional } : {}),
+    ...(options.defaultSource ? { defaultSource: options.defaultSource } : {}),
+  };
+
+  switch (kind) {
+    case "boolean":
+      return { ...common, type: "boolean", default: false };
+    case "number":
+      return { ...common, type: "number", default: 0 };
+    case "node":
+      return { ...nodeControlForProp(key), ...common };
+    case "stringArray":
+      return { ...stringArrayControlForProp(key), ...common };
+    case "numberArray":
+      return { ...numberArrayControlForProp(key), ...common };
+    case "icon":
+      return { ...iconControlForProp(key, options.typeLabel ?? "ComponentType"), ...common };
+    case "object":
+      return { ...objectControlForProp(key, options.typeLabel ?? "object"), ...common };
+    case "function":
+      return { ...functionControlForProp(key, options.typeLabel ?? "function"), ...common };
+    case "string":
+      return {
+        ...common,
+        type: "string",
+        default: stringDefaultForProp(key),
+        placeholder: isPassthroughStringProp(key) ? undefined : key,
+      };
+    default:
+      // Passthrough styling props stay editable even without a declared kind.
+      if (isPassthroughStringProp(key)) {
+        return {
+          ...common,
+          type: "string",
+          default: stringDefaultForProp(key),
+          placeholder: undefined,
+        };
+      }
+      // No faking: unclassified props are display-only, never string editors.
+      return { ...unknownControlForProp(key, options.typeLabel ?? "unknown"), ...common };
+  }
+}
+
 export function defaultStringForProp(key: string): string {
   if (key === "href") return "/governance";
   const k = key.toLowerCase();
@@ -220,7 +283,7 @@ export function controlsFromDeclaredProps(
       continue;
     }
     const kind = resolveEffectivePropKind(key, propKinds);
-    if (kind === "function" || (!kind && isLikelyFunctionProp(key))) {
+    if (kind === "function") {
       out.push({
         ...functionControlForProp(key, propTypeLabels?.[key] ?? "function"),
         optional: propOptional?.[key],
@@ -241,71 +304,12 @@ export function controlsFromDeclaredProps(
       });
       continue;
     }
-    if (kind === "boolean") {
-      out.push({
-        key,
-        label: key,
-        type: "boolean",
-        default: false,
+    out.push(
+      controlForPropKind(key, kind, {
         optional: propOptional?.[key],
-      });
-    } else if (kind === "number") {
-      out.push({
-        key,
-        label: key,
-        type: "number",
-        default: 0,
-        optional: propOptional?.[key],
-      });
-    } else if (kind === "node") {
-      out.push({
-        ...nodeControlForProp(key),
-        optional: propOptional?.[key],
-      });
-    } else if (kind === "stringArray") {
-      out.push({
-        ...stringArrayControlForProp(key),
-        optional: propOptional?.[key],
-      });
-    } else if (kind === "numberArray") {
-      out.push({
-        ...numberArrayControlForProp(key),
-        optional: propOptional?.[key],
-      });
-    } else if (kind === "icon") {
-      out.push({
-        ...iconControlForProp(key, propTypeLabels?.[key] ?? "ComponentType"),
-        optional: propOptional?.[key],
-      });
-    } else if (kind === "object") {
-      out.push({
-        ...objectControlForProp(key, propTypeLabels?.[key] ?? "object"),
-        optional: propOptional?.[key],
-      });
-    } else if (kind === "string" || isPassthroughStringProp(key)) {
-      out.push({
-        key,
-        label: key,
-        type: "string",
-        default: stringDefaultForProp(key),
-        placeholder: isPassthroughStringProp(key) ? undefined : key,
-        optional: propOptional?.[key],
-      });
-    } else if (isLikelyBooleanProp(key)) {
-      out.push({
-        key,
-        label: key,
-        type: "boolean",
-        default: false,
-        optional: propOptional?.[key],
-      });
-    } else {
-      // No faking: unclassified props are display-only, never string editors.
-      out.push({
-        ...unknownControlForProp(key, propTypeLabels?.[key] ?? "unknown"),
-        optional: propOptional?.[key],
-      });
-    }
+        typeLabel: propTypeLabels?.[key],
+      }),
+    );
   }
   return out;
 }

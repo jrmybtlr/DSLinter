@@ -124,7 +124,6 @@ export function DashboardLayoutInner({
         dslinterReportHint={dslinterReportHint}
         dslinterReport={dslinterReport}
         onOpenComponent={(name) => navigate({ view: "component", componentId: name })}
-        onOpenCatalog={() => navigate({ view: "catalog" })}
       />
     );
   } else if (route.view === "catalog") {
@@ -198,7 +197,7 @@ export function DashboardLayoutInner({
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         catalogNames={catalogNames}
       />
-      <div className="ml-[240px] flex min-h-0 min-w-0 flex-1 flex-col">{main}</div>
+      <div className="ml-60 flex min-h-0 min-w-0 flex-1 flex-col">{main}</div>
     </div>
   );
 }

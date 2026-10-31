@@ -1,10 +1,15 @@
 import type { PlaygroundSpec, WorkspaceReport } from "../types/report";
-import type {
-  BuildPlaygroundModules,
-  BuildPlaygroundOptions,
-} from "./buildPlaygroundEntriesFromReport";
 import { defaultEmbedGlobKeyFromRelPath } from "./embedGlobKey";
+import { trimLeadingSlashes } from "./pathUtils";
+import type { BuildPlaygroundModules } from "./playgroundModules";
 import { getModuleExport } from "./playgroundModuleExport";
+
+/** Maps report `rel_path` to a key in the eager module map. */
+export type GlobKeyFromRelPath = (relPath: string) => string;
+
+export type PlaygroundJoinOptions = {
+  globKeyFromRelPath?: GlobKeyFromRelPath;
+};
 
 export type PlaygroundJoinSkipReason = "module_not_found" | "export_not_found";
 
@@ -16,6 +21,7 @@ export type PlaygroundJoinSkip = {
 };
 
 const DEFAULT_CONSUMER_STRIP_PREFIXES = ["src/", "resources/js/"] as const;
+const consumerGlobKeyFromRelPath = createConsumerGlobKeyFromRelPath();
 
 export function viteDevMode(): boolean {
   return Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
@@ -36,7 +42,7 @@ export function createConsumerGlobKeyFromRelPath(
   const stripPrefixes = options.stripPrefixes ?? DEFAULT_CONSUMER_STRIP_PREFIXES;
   const relativePrefix = options.relativePrefix ?? "../";
   return (relPath: string) => {
-    let trimmed = relPath.replace(/^\/+/, "");
+    let trimmed = trimLeadingSlashes(relPath);
     for (const prefix of stripPrefixes) {
       if (trimmed.startsWith(prefix)) {
         trimmed = trimmed.slice(prefix.length);
@@ -56,7 +62,7 @@ export function createConsumerGlobKeyFromRelPath(
  * - `resources/js/Components/Icons/Activity.tsx` → `../Components/Icons/Activity.tsx`
  */
 export function defaultConsumerGlobKeyFromRelPath(relPath: string): string {
-  return createConsumerGlobKeyFromRelPath()(relPath);
+  return consumerGlobKeyFromRelPath(relPath);
 }
 
 export { defaultEmbedGlobKeyFromRelPath } from "./embedGlobKey";
@@ -69,7 +75,7 @@ export function findUniqueModuleKeyBySuffix(
   relPath: string,
   modules: BuildPlaygroundModules,
 ): string | undefined {
-  const trimmed = relPath.replace(/^\/+/, "");
+  const trimmed = trimLeadingSlashes(relPath);
   if (trimmed.includes("/")) return undefined;
 
   const suffix = `/${trimmed}`;
@@ -97,7 +103,7 @@ export function resolveModuleKeyForRelPath(
 export function diagnosePlaygroundJoinSkips(
   report: WorkspaceReport | null | undefined,
   modules: BuildPlaygroundModules,
-  options: Pick<BuildPlaygroundOptions, "globKeyFromRelPath"> = {},
+  options: PlaygroundJoinOptions = {},
 ): PlaygroundJoinSkip[] {
   const specs = report?.playgrounds;
   if (!specs?.length) return [];
@@ -155,12 +161,7 @@ export function logPlaygroundJoinSkips(
   }
 }
 
-export function findPlaygroundSpec(
-  report: WorkspaceReport | null | undefined,
-  componentId: string,
-): PlaygroundSpec | undefined {
-  return report?.playgrounds?.find((p) => p.export_name === componentId || p.id === componentId);
-}
+export { findPlaygroundSpec } from "./reportQueries";
 
 export function findPlaygroundJoinSkip(
   skipped: PlaygroundJoinSkip[] | undefined,
