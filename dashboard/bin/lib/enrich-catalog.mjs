@@ -309,7 +309,7 @@ function captureVueExamples(report, root) {
 function sourceImports(path, root) {
   const text = readFileSync(path, "utf8");
   const source = path.endsWith(".vue")
-    ? [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((match) => match[1]).join("\n")
+    ? [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]).join("\n")
     : text;
   const sf = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const bindings = {};
