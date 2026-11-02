@@ -146,7 +146,8 @@ pub fn build_playground_specs(
             continue;
         }
         let rel = rel_path_under_root(root, path);
-        if rel.is_empty() || !file_in_playground_scope(&rel, config) {
+        if rel.is_empty() || !file_in_playground_scope(&rel, config)
+            || !crate::scan::in_include_scope(root, path, config) {
             continue;
         }
         let stem = path
@@ -163,6 +164,7 @@ pub fn build_playground_specs(
         let group = playground_spec_group(&rel, config);
         let example_tree = example_trees.get(def.name.as_str()).map(|t| (*t).clone());
         out.push(PlaygroundSpec {
+            provider_candidates: vec![],
             id: def.name.clone(),
             export_name: def.name.clone(),
             rel_path: rel,

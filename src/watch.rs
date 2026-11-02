@@ -66,6 +66,7 @@ pub fn run_watch(
 ) -> anyhow::Result<()> {
     // Initial full scan.
     let (project_root, config) = crate::config::DslintConfig::load_nearest(root)?;
+    let config = crate::scan_pipeline::with_workspace_imports(root, &config);
     let (mut files, mut sources) =
         crate::scan_pipeline::scan_workspace_files(root, &project_root, &config, parallel)?;
     let paths: Vec<PathBuf> = files.iter().map(|f| f.path.clone()).collect();
@@ -226,6 +227,7 @@ fn enrich_report_json_if_configured(
     let Some(script) = std::env::var("DSLINTER_ENRICH_SCRIPT").ok() else {
         return fallback;
     };
+    if script.is_empty() { return fallback; }
     let node = std::env::var("DSLINTER_NODE").unwrap_or_else(|_| "node".to_string());
     let enrich_root = std::env::var("DSLINTER_PROJECT_ROOT")
         .ok()

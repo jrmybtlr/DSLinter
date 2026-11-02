@@ -77,3 +77,25 @@ export const IconMoon = React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGEle
   ),
 );
 IconMoon.displayName = "IconMoon";
+
+export const IconInfo = React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>(
+  ({ className, ...props }, ref) => (
+    <svg ref={ref} {...strokeIconProps} className={cn(className)} {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  ),
+);
+IconInfo.displayName = "IconInfo";
+
+export const IconDotsVertical = React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement>>(
+  ({ className, ...props }, ref) => (
+    <svg ref={ref} {...strokeIconProps} className={cn(className)} {...props}>
+      <circle cx="12" cy="5" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+);
+IconDotsVertical.displayName = "IconDotsVertical";

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { GovernanceInventoryTabs } from "../components/GovernanceInventoryTabs";
+import { GovernanceInventoryFilter } from "../components/GovernanceInventoryFilter";
 import { Section } from "../components/Section";
 import type { WorkspaceReport } from "../types/report";
 import {
@@ -19,7 +19,7 @@ const sectionMeta: Record<
   all: {
     id: "issues",
     title: "Issues",
-    description: "All findings from the workspace DSLinter report.",
+    description: "All findings from the latest workspace scan.",
   },
   a11y: {
     id: "accessibility-issues",
@@ -39,18 +39,18 @@ const sectionMeta: Record<
   unused: {
     id: "unused-components",
     title: "Unused components",
-    description: "Scanned definitions with no JSX references elsewhere in the workspace.",
+    description: "Scanned components with no recorded references elsewhere in the workspace.",
   },
 };
 
 export function DashboardBody({
   report,
   onOpenComponent,
-  onOpenCatalog,
+  componentLabels,
 }: {
   report: WorkspaceReport;
   onOpenComponent?: (name: string) => void;
-  onOpenCatalog?: () => void;
+  componentLabels?: Record<string, { label: string; description?: string }>;
 }) {
   const [tab, setTab] = useState<GovernanceInventoryTab>("all");
 
@@ -65,41 +65,43 @@ export function DashboardBody({
         <ScoreStrip scores={report.scores} />
       </div>
 
-      <div className="w-full min-w-0 px-6 py-8">
+      <div className="w-full min-w-0 space-y-6 px-6 py-6">
         {report.duplicate_components.length > 0 ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
             <span className="font-semibold">Duplicate component names: </span>
             {report.duplicate_components.map((d) => d.name).join(", ")}
           </div>
         ) : null}
 
-        <GovernanceInventoryTabs value={tab} onChange={setTab} counts={counts} />
-
-        <Section id={section.id}>
-          {tab === "unused" ? (
+        {tab === "unused" ? (
+          <Section
+            id={section.id}
+            title={section.title}
+            description={section.description}
+            actions={<GovernanceInventoryFilter value={tab} onChange={setTab} counts={counts} />}
+          >
             <UnusedComponentsList
               components={unusedComponents}
               root={report.root}
               onOpenComponent={onOpenComponent}
+              componentLabels={componentLabels}
             />
-          ) : (
-            <FindingsList findings={filteredFindings} root={report.root} />
-          )}
-        </Section>
-
-        {onOpenCatalog ? (
-          <p className="text-sm text-muted-foreground">
-            <button
-              type="button"
-              onClick={onOpenCatalog}
-              className="font-medium text-foreground underline decoration-dotted underline-offset-2 transition"
-              className:hover="decoration-solid"
+          </Section>
+        ) : (
+          <section id={section.id} aria-labelledby={`${section.id}-heading`}>
+            <FindingsList
+              findings={filteredFindings}
+              root={report.root}
+              heading={{
+                id: `${section.id}-heading`,
+                title: section.title,
+                description: section.description,
+              }}
             >
-              View all components
-            </button>{" "}
-            for prop usage and app reference details.
-          </p>
-        ) : null}
+              <GovernanceInventoryFilter value={tab} onChange={setTab} counts={counts} />
+            </FindingsList>
+          </section>
+        )}
       </div>
     </div>
   );

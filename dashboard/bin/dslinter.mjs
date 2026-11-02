@@ -5,9 +5,12 @@
 import { parseDslinterArgs } from "./lib/parse-args.mjs";
 import { withScannerScanPath } from "./lib/resolve-project.mjs";
 import { logScanScopeHint } from "./lib/project-root.mjs";
+import { defaultReportPath } from "./lib/project-root.mjs";
 import { runScannerInternal } from "./lib/run-scanner.mjs";
 import { runBuildMode } from "./modes/build.mjs";
 import { runDevMode } from "./modes/dev.mjs";
+import { runExplorerMode } from "./modes/explore.mjs";
+import { runWatchMode } from "./modes/watch.mjs";
 import { runInitMode } from "./modes/init.mjs";
 import { runMcpMode } from "./modes/mcp.mjs";
 import { runReportMode } from "./modes/report.mjs";
@@ -32,6 +35,9 @@ if (rawArgs.includes("--version") || rawArgs.includes("-V")) {
 }
 
 if (rawArgs.includes("--help") || rawArgs.includes("-h")) {
+  process.stdout.write(
+    "DSLinter explorer: npx dslinter [PATH] [--app APP]\nDefault: discover the workspace and start the interactive catalog.\n--app selects a Vite app by workspace path or package name.\ninit creates one optional preview adapter; init --legacy keeps the original registry scaffolding.\n\n",
+  );
   runScannerInternal(["--help"]);
 }
 
@@ -54,7 +60,8 @@ const runParsed = { ...parsed, scannerArgs };
 
 switch (mode) {
   case "dev":
-    await runDevMode(runParsed);
+    if (process.env.DSLINTER_USE_CONSUMER_VITE === "1") await runDevMode(runParsed);
+    else await runExplorerMode(runParsed);
     break;
   case "report":
     await runReportMode({
@@ -65,12 +72,15 @@ switch (mode) {
     });
     break;
   case "watch":
-    process.env.DSLINTER_PROJECT_ROOT = runParsed.projectRoot;
-    runScannerInternal(["--watch", ...scannerArgs]);
+    await runWatchMode(runParsed);
     break;
   case "scanner":
     process.env.DSLINTER_PROJECT_ROOT = runParsed.projectRoot;
-    runScannerInternal(scannerArgs);
+    runScannerInternal(
+      runParsed.outputPath
+        ? scannerArgs
+        : [...scannerArgs, "--output", defaultReportPath(runParsed.scanPath, null)],
+    );
     break;
   case "build":
     await runBuildMode(runParsed);

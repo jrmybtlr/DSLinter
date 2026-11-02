@@ -71,7 +71,7 @@ function propKeysForPreview(controls: PlaygroundControl[], declaredProps: string
   if (controls.length > 0) {
     return controls.filter((c) => !isNonEditableControl(c)).map((c) => c.key);
   }
-  return declaredProps.filter((k) => k !== "key" && k !== "ref");
+  return declaredProps.filter((key) => !SKIP_PLAYGROUND_PROPS.has(key));
 }
 
 function kindFromControlType(
@@ -163,6 +163,19 @@ export function valuesToComponentProps(
     continue;
   }
   return o;
+}
+
+/**
+ * Drop empty control values so they don't clobber props captured in an
+ * example tree (e.g. an empty `className` control vs. the real call site's).
+ */
+export function compactOverrides(props: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (value === undefined || value === null || value === "") continue;
+    out[key] = value;
+  }
+  return out;
 }
 
 export function mergeStaticDefaults(

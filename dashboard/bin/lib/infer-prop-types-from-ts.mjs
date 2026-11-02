@@ -303,6 +303,7 @@ export function classifyPropType(checker, type) {
   if (isFunctionPropType(checker, nn)) return "function";
   if (isStringElementArrayType(checker, nn)) return "stringArray";
   if (isNumberElementArrayType(checker, nn)) return "numberArray";
+  if (checker.isArrayType(nn) || checker.isTupleType(nn)) return "object";
   if (nn.isUnion()) {
     const parts = nn.types.map((u) => classifyPropType(checker, checker.getNonNullableType(u)));
     const ok = parts.filter((p) => p !== null);

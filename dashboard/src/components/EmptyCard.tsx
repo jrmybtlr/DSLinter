@@ -5,7 +5,7 @@ export function EmptyCard({ children, className }: { children: ReactNode; classN
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground",
+        "rounded-md border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground",
         className,
       )}
     >

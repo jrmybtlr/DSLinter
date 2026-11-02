@@ -4,6 +4,9 @@ import {
   catalogComponentNames,
   usageMap,
 } from "../dashboard/aggregate";
+import { resolveCatalogComponent } from "../explorer/catalog";
+import type { CatalogComponent } from "../types/report";
+import type { PlaygroundArgs } from "../types/controls";
 import { findingsForComponent } from "../report/findingsForComponent";
 import { controlsForSpec } from "../playground/controls";
 import { genericUsageSnippet } from "../playground/snippet";
@@ -22,6 +25,7 @@ import type {
 } from "../types/report";
 
 export type CatalogEntry = {
+  id?: string;
   name: string;
   reference_count: number;
   import_path: string | null;
@@ -31,6 +35,7 @@ export type CatalogEntry = {
 };
 
 export type ComponentSpec = {
+  id?: string;
   name: string;
   import_path: string | null;
   declared_props: string[];
@@ -81,8 +86,8 @@ function duplicateLocations(report: WorkspaceReport, name: string): string[] | n
   return dup ? dup.locations : null;
 }
 
-function valuesFromUsageLocation(loc: UsageLocation): Record<string, unknown> {
-  const values: Record<string, unknown> = {};
+function valuesFromUsageLocation(loc: UsageLocation): PlaygroundArgs {
+  const values: PlaygroundArgs = {};
   if (loc.prop_values) {
     for (const [k, v] of Object.entries(loc.prop_values)) {
       if (k === "children") {
@@ -126,7 +131,7 @@ function exampleJsxForComponent(report: WorkspaceReport, name: string): string |
   }
 
   if (controls.length > 0) {
-    const defaults: Record<string, unknown> = {};
+    const defaults: PlaygroundArgs = {};
     for (const c of controls) {
       defaults[c.key] = c.default;
     }
@@ -140,6 +145,24 @@ export function catalogSummary(
   report: WorkspaceReport,
   opts: { query?: string; limit?: number } = {},
 ): CatalogEntry[] {
+  if (report.components) {
+    const query = opts.query?.toLowerCase() || "";
+    return report.components
+      .filter((component) =>
+        `${component.name} ${component.preview.rel_path}`.toLowerCase().includes(query),
+      )
+      .map((component) => ({
+        id: component.id,
+        name: component.name,
+        reference_count: component.usages.length,
+        import_path: component.preview.rel_path,
+        deprecated: deprecatedSet(report).has(component.name),
+        duplicate: duplicateLocations(report, component.name) !== null,
+        definition_paths: [component.preview.rel_path],
+      }))
+      .sort((a, b) => b.reference_count - a.reference_count || a.id.localeCompare(b.id))
+      .slice(0, opts.limit ?? 100);
+  }
   const defs = aggregateDefinitions(report);
   const usages = usageMap(report);
   const deprecated = deprecatedSet(report);
@@ -172,6 +195,28 @@ export function catalogSummary(
 }
 
 export function componentSpec(report: WorkspaceReport, name: string): ComponentSpec | null {
+  if (report.components) {
+    const component = resolveCatalogComponent(report, name);
+    if (!component) return null;
+    const spec = component.preview;
+    return {
+      id: component.id,
+      name: component.name,
+      import_path: spec.rel_path,
+      declared_props: spec.declared_props,
+      declared_prop_options: spec.declared_prop_options,
+      declared_prop_defaults: spec.declared_prop_defaults,
+      declared_prop_kinds: spec.declared_prop_kinds as Record<string, string>,
+      usage: canonicalUsage(component),
+      findings: report.findings.filter((finding) =>
+        finding.path.replaceAll("\\", "/").endsWith(spec.rel_path),
+      ),
+      example_jsx: `<${component.name} />`,
+      deprecated: deprecatedSet(report).has(component.name),
+      duplicates: duplicateLocations(report, component.name),
+      definition_paths: [spec.rel_path],
+    };
+  }
   const defs = aggregateDefinitions(report);
   if (!defs.has(name) && !usageMap(report).has(name)) {
     return null;
@@ -200,7 +245,14 @@ export function findingsQuery(report: WorkspaceReport, filters: FindingsQuery): 
   let rows = [...(report.findings ?? [])];
 
   if (filters.component) {
-    const componentFindings = findingsForComponent(report, filters.component);
+    const canonical = report.components
+      ? resolveCatalogComponent(report, filters.component)
+      : undefined;
+    const componentFindings = canonical
+      ? report.findings.filter((finding) =>
+          finding.path.replaceAll("\\", "/").endsWith(canonical.preview.rel_path),
+        )
+      : findingsForComponent(report, filters.component);
     const ids = new Set(componentFindings.map((f) => `${f.rule_id}:${f.path}:${f.line ?? "x"}`));
     rows = rows.filter((f) => ids.has(`${f.rule_id}:${f.path}:${f.line ?? "x"}`));
   }
@@ -314,7 +366,8 @@ export function usageExamples(
   prop_value_frequencies: Record<string, Record<string, number>>;
   examples: UsageLocation[];
 } | null {
-  const usage = usageMap(report).get(component);
+  const canonical = report.components ? resolveCatalogComponent(report, component) : undefined;
+  const usage = canonical ? canonicalUsage(canonical) : usageMap(report).get(component);
   if (!usage) return null;
 
   return {
@@ -322,6 +375,29 @@ export function usageExamples(
     prop_frequencies: usage.prop_frequencies ?? {},
     prop_value_frequencies: usage.prop_value_frequencies ?? {},
     examples: (usage.usage_locations ?? []).slice(0, limit),
+  };
+}
+
+function canonicalUsage(component: CatalogComponent): UsageSummary {
+  const frequencies: Record<string, number> = {};
+  const values: Record<string, Record<string, number>> = {};
+  for (const usage of component.usages) {
+    for (const prop of usage.props) frequencies[prop] = (frequencies[prop] || 0) + 1;
+    for (const [prop, value] of Object.entries(usage.prop_values || {})) {
+      values[prop] ||= {};
+      values[prop][value] = (values[prop][value] || 0) + 1;
+    }
+  }
+  const files = [...new Set(component.usages.map((usage) => usage.path))];
+  return {
+    component: component.name,
+    reference_count: component.usages.length,
+    file_count: files.length,
+    files,
+    max_props_on_single_use: Math.max(0, ...component.usages.map((usage) => usage.props.length)),
+    usage_locations: component.usages,
+    prop_frequencies: frequencies,
+    prop_value_frequencies: values,
   };
 }
 

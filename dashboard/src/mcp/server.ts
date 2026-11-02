@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { buildAgentContext } from "./agent-context";
@@ -249,15 +249,14 @@ export function createDslinterMcpServer(config: McpConfig, cache: ReportCache): 
 
   server.registerResource(
     "component",
+    new ResourceTemplate("dslinter://component/{name}", { list: undefined }),
     {
-      uriTemplate: "dslinter://component/{name}",
-      name: "component",
       description: "Single component spec by name",
       mimeType: "application/json",
     },
     async (uri, { name }) => {
       const report = await cache.getReport();
-      const spec = componentSpec(report, name);
+      const spec = componentSpec(report, String(name));
       return {
         contents: [
           {

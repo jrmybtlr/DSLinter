@@ -1,0 +1,9 @@
+{
+  "name": "@dslinter/fixture-ui",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./vue": "./src/vue.ts",
+    "./react": "./src/react.ts"
+  }
+}

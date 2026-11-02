@@ -1,7 +1,8 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, copyFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { buildMcpConfig } from "./config";
 import { ReportCache } from "./report-cache";
 import { createDslinterMcpServer } from "./server";
@@ -9,7 +10,10 @@ import { ruleCatalog } from "./rule-catalog";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const demoRoot = join(__dirname, "../../../demo/react");
-const demoReportPath = join(demoRoot, "public/dslinter-report.json");
+const fixtureDir = mkdtempSync(join(tmpdir(), "dslinter-mcp-test-"));
+const demoReportPath = join(fixtureDir, "report.json");
+copyFileSync(join(demoRoot, "public/dslinter-report.json"), demoReportPath);
+afterAll(() => rmSync(fixtureDir, { recursive: true, force: true }));
 
 describe("MCP server", () => {
   it("creates server with tools registered", () => {

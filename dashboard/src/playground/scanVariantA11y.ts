@@ -36,8 +36,9 @@ async function loadAxe() {
 export async function scanElementA11y(
   element: Element,
   variantLabel: string,
+  providedAxe?: Awaited<ReturnType<typeof loadAxe>>,
 ): Promise<PlaygroundA11yFinding[]> {
-  const axe = await loadAxe();
+  const axe = providedAxe ?? (await loadAxe());
   const results = await axe.run(element, {
     runOnly: {
       type: "rule",

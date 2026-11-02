@@ -1,9 +1,9 @@
-import { usePasskeyRegister } from '@laravel/passkeys/react';
-import { useState } from 'react';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { usePasskeyRegister } from "@laravel/passkeys/react";
+import { useState } from "react";
+import InputError from "@/components/input-error";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Props = {
     onSuccess: () => void;
@@ -13,21 +13,21 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
     const [name, setName] = useState(() => {
         const ua = navigator.userAgent;
 
-        const browser = ['Chrome', 'Firefox', 'Safari', 'Edge', 'Opera'].find(
+        const browser = ["Chrome", "Firefox", "Safari", "Edge", "Opera"].find(
             (browser) => new RegExp(browser).test(ua),
         );
 
-        const os = ['iPhone', 'iPad', 'Android', 'Mac', 'Windows'].find((os) =>
+        const os = ["iPhone", "iPad", "Android", "Mac", "Windows"].find((os) =>
             new RegExp(os).test(ua),
         );
 
-        return [browser, os].filter(Boolean).join(' on ') || '';
+        return [browser, os].filter(Boolean).join(" on ") || "";
     });
 
     const [showForm, setShowForm] = useState(false);
     const { register, isLoading, error, isSupported } = usePasskeyRegister({
         onSuccess: () => {
-            setName('');
+            setName("");
             setShowForm(false);
             onSuccess();
         },
@@ -45,7 +45,7 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
 
     const handleCancel = () => {
         setShowForm(false);
-        setName('');
+        setName("");
     };
 
     if (!isSupported) {
@@ -67,7 +67,7 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
     return (
         <form
             onSubmit={handleSubmit}
-            className="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
+            className="space-y-4 rounded-md border border-border bg-muted/50 p-4"
         >
             <div className="grid gap-2">
                 <Label htmlFor="passkey-name">Passkey name</Label>
@@ -89,7 +89,7 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
 
             <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading || !name.trim()}>
-                    {isLoading ? 'Registering...' : 'Register passkey'}
+                    {isLoading ? "Registering..." : "Register passkey"}
                 </Button>
                 <Button type="button" variant="ghost" onClick={handleCancel}>
                     Cancel

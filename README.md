@@ -1,181 +1,141 @@
 # DSLinter
 
-A design-system linter that scans repos for **JSX, TSX, and Vue** components, counts **how often each is used** (Storybook-style visibility without story files), and reports **design-system health** signals for the terminal, CI, or a dashboard.
+Explore the design system already in your codebase. DSLinter discovers React and Vue components, opens live examples with controls, and connects each component to its usage across your workspace.
 
-**Powered by [Oxc](https://oxc.rs)** for fast JavaScript, TypeScript, and JSX parsing. Vue support uses Oxc on `<script>` blocks plus template heuristics (not the Vue compiler).
+The Rust scanner uses Oxc for JavaScript/TypeScript analysis. A separate preview host uses your application's framework, Vite transforms, aliases, assets, and CSS. Components load when selected, so a broken import or render stays inside its preview.
 
-Prebuilt native binaries ship with the **`dslinter`** npm package — you do not need Rust or Cargo unless you are contributing to the scanner itself.
+## Start
 
-## Alpha release
-
-This is an alpha release of the project. While it is functional and safe to use, it has known gaps — see [ROADMAP.md](ROADMAP.md) for the path to beta.
-
-## Quick start
-
-```bash
+```sh
 npm install -D dslinter
-npx dslinter                    # local dev: watch + dashboard (Vite app required)
-npx dslinter init               # scaffold baseline .dslinter.json + optional playground registry files
-npx dslinter --report /path/to/repo
-npx dslinter --report /path/to/repo --json
-npx dslinter --report -p /path/to/repo --fail-on-warnings
-npx dslinter --report --output public/dslinter-report.json
-npx dslinter --watch --output public/dslinter-report.json
-npx dslinter --build            # write report + vite build (in a Vite project)
+npx dslinter
 ```
 
-In **CI** (`CI=true`), bare `npx dslinter` runs **`--report`** (one-shot stdout). Use `--report` explicitly if your CI does not set `CI`.
-On local first run, `npx dslinter` auto-creates a starter **`.dslinter.json`** when no config exists.
+DSLinter opens the Dashboard URL in your browser. No config, stories, app routes, Vite edits, or generated project files are required. Reports and generated assets go to an external tool cache. Set `DSLINTER_OPEN_BROWSER=0` to keep browser opening disabled.
 
-The CLI binary is named **`dslinter`** (not `dslint`) to avoid collision with an unrelated [crates.io `dslint`](https://crates.io/crates/dslint) package.
+In a workspace, the catalog aggregates local packages. Choose the application that supplies preview dependencies and styling in the app selector, or select it at startup:
 
-## What gets scanned
+```sh
+npx dslinter --app apps/web
+npx dslinter --app my-app-package-name
+npx dslinter path/to/project
+```
 
-- **Respects ignores:** `.gitignore` and `.dslinterignore` at the repo root (globset semantics; **last matching rule wins**, including `!` negation; use `\!` for a literal `!`). Optional `exclude_globs` in config apply too.
-- **Inline suppressions:** On the line above a finding, use `// dslinter-ignore-next-line rule-id` (comma-separated rules; `*` or `prefix*` allowed). That line only suppresses the **next** source line.
-- **Overlap:** If **`token-hardcoded-color`** and **`token-tailwind-arbitrary`** both hit the same line, only the Tailwind rule is reported.
+Without an explicit path, DSLinter discovers the containing workspace or application. An explicit path restricts the scan boundary. `include_dirs` in existing `.dslinter.json` files restricts the catalog, while usage is still counted outside those directories within the scan boundary. Nested ignore files are respected.
 
-## Config (optional)
+## Live examples
 
-Put `.dslinter.json` at the repository root:
+DSLinter tries, in order:
 
-```json
-{
-  "include_dirs": ["src/components"],
-  "ignore_globs": ["fixtures/**"],
-  "css_entrypoints": ["src/index.css"],
-  "deprecated_components": ["LegacyButton"],
-  "known_tokens": ["--color-", "spacing.", "theme."],
-  "exclude_globs": ["fixtures/**", "*.generated.tsx"],
-  "smell": {
-    "disabled_rules": ["code-todo-marker"],
-    "report_console_error": true
+1. An explicit preview adapter or an existing adjacent `.playground.tsx` example.
+2. A representative source usage with its imports and literal values.
+3. A built-in composition recipe.
+4. A generated example with bounded sample data inferred from types.
+
+Generated data, automatically revealed content, and substituted Inertia context are labelled. Object-array samples retain their structure, and untouched optional controls leave component defaults intact. Family recipes include the selected export and its required ancestors; content previews open their owner when needed. Component and provider imports use Vite-managed module entries to share context across hot updates. If all strategies fail, the explorer shows the attempts and error alongside the API and source usage. It never removes a component merely because its preview failed.
+
+The initial recipe set covers Button, Input, Checkbox, Switch, Card, Dialog, Select, Tabs, Popover, and Tooltip. React shadcn compositions and Vue/Reka compositions use their actual exports. Customized or incomplete contracts fall back to source examples and generated demos. React and Vue previews can recover from missing-provider errors when exactly one matching export is verified in the component's local source dependencies. DSLinter mounts that real provider, labels the supplied context, and includes it in copied snippets. Canonical-id adapter fixtures can supply provider props. Recovery stops at four added providers; ambiguous requirements and bare Vue injection warnings show configuration guidance. Explicit previews and configured wrappers remain authoritative. Providers requiring application services or backend data may still need an adapter.
+
+Supported preview hosts are React and Vue 3 applications using Vite, including Laravel/Inertia. Next.js and Nuxt runtime integration are outside this release. The dashboard retains token and governance views, CI reporting, baseline drift, and MCP access.
+
+The original dashboard layout is available throughout the explorer: grouped component navigation, command search, light/dark themes, governance scores, issue filters, and the full inventory table. Component pages include the API reference, repository call sites, related components, token findings, code/accessibility scores, and a resizable preview with screen/container presets. Variant previews are paginated and load near the viewport; color-contrast checks run inside the loaded application frames.
+
+Hide Component affects this browser's catalog preferences and can be undone from the sidebar. It does not create or edit project configuration.
+
+## One optional adapter
+
+```sh
+npx dslinter init
+```
+
+This explicitly creates `dslinter.preview.tsx`; it does not create a registry or JSON config. Existing adapters are kept.
+
+```tsx
+import { preview, type PreviewAdapter } from "dslinter/preview";
+import { AppProviders } from "./src/providers";
+import { Toaster } from "./src/components/ui/sonner";
+import { toast } from "sonner";
+import { UserCard } from "./src/components/UserCard";
+
+export default {
+  styles: ["src/app.css"],
+  fixtures: {
+    UserCard: { user: { name: "Jane", email: "jane@example.test" } },
   },
-  "check_unused_props": false,
-  "check_dark_mode_contrast": false,
-  "check_unused_css_tokens": true,
-  "local_import_prefixes": ["@/", "~/"],
-  "external_import_patterns": ["@radix-ui/*", "lucide-react"]
-}
+  previews: {
+    UserCard: preview(UserCard),
+    Toaster: preview(Toaster, ({ node }) => (
+      <>
+        {node}
+        <button type="button" onClick={() => toast("Example notification")}>
+          Show notification
+        </button>
+      </>
+    )),
+  },
+  react: { wrap: (children) => <AppProviders>{children}</AppProviders> },
+  // Vue applications can use vue: { setup: (app) => app.use(yourPlugin) }.
+  // Inertia: pageProps: { auth: { user: sampleUser } }.
+} satisfies PreviewAdapter;
 ```
 
-`include_dirs` restricts component discovery to those directory prefixes.  
-`ignore_globs` uses the same ignore semantics as `.gitignore`/`.dslinterignore`.  
-`css_entrypoints` scopes token analysis to selected CSS entry files (+ their `@import` graph).
-`check_unused_props` enables `unused-prop` findings for declared props that have no call-site usage.
-`check_unused_css_tokens` defaults to **true** (emits `token-unused-css-var`); set `false` to disable.
-`local_import_prefixes` marks import path prefixes as local (in-repo) modules.
-`external_import_patterns` excludes matching third-party modules from the component catalog.
+`preview()` mounts the real component with live control props. Pass a decorate callback when you need siblings or providers around that node. Styles resolve relative to the adapter. Fixture and preview keys accept a unique component name or a canonical id such as `packages/ui/src/UserCard.tsx#UserCard`. Use the id when names are duplicated. An app-local adapter takes precedence over the workspace adapter.
 
-`smell.disabled_rules` accepts `code-*` rule ids (and legacy `smell-*` aliases). `check_dark_mode_contrast` is **heuristic**: it inspects static `class` / `className` strings and string arguments to `cn(...)`, `clsx(...)`, and `classnames(...)` extracted from the AST where possible.
-Legacy `exclude_globs` remains supported for backwards compatibility.
+For complete, verified examples such as a Sonner notification host, the explorer offers **Add preview setup**. Clicking it creates the app's `dslinter.preview.tsx` or adds the component's entry to the existing adapter, then reloads the preview. Existing entries are preserved. Dynamic configurations and setups that still need user-supplied data retain the copyable example for manual configuration. Startup and automatic recovery do not create project files.
 
-## Demos
+Existing `definePlayground` APIs and embedded dashboards remain available. `npx dslinter init --legacy` retains the original JSON config and registry scaffolding; `DSLINTER_USE_CONSUMER_VITE=1` selects the original embedded dev flow. See [the package guide](dashboard/README.md).
 
-- [`demo/react`](demo/react/) — Vite + React + TypeScript + Tailwind sandbox with the dashboard UI. See [`demo/react/README.md`](demo/react/README.md).
-- [`demo/inertia`](demo/inertia/) — Laravel 13 + Inertia + React + shadcn/ui. See [`demo/inertia/README.md`](demo/inertia/README.md).
+## Reports and CI
 
-## What the CLI covers today
-
-- **Definitions:** functions, classes, `const` arrows, `forwardRef` / `memo`, exports
-- **Usage:** PascalCase JSX and Vue template usage, with prop lists (variant hints)
-- **Accessibility:** `<img>` alt, meaningful `<a href>`, `<button>` / `<input>` / `<select>` / `<textarea>` accessible names (JSX AST + Vue `<template>` heuristics; bare `id` alone is **not** treated as an accessible name); governance scoring weights all `a11y-*` rules
-- **Code quality (`code-*`):** console/debugger noise, suppressions, TODO markers, large files, inline JSX `style`, empty `catch`, redundant fragments — lightly affects maintainability score
-- **Design system:** duplicate definitions, deprecated component usage, hardcoded hex (`token-hardcoded-color`), Tailwind arbitrary values (`token-tailwind-arbitrary`), CSS custom-property inventory with used/unused tracking (`css_tokens` in `--json`); `token-unused-css-var` on by default (`check_unused_css_tokens`)
-- **Scores:** heuristic governance scores including optional `token_adoption` when CSS tokens or `known_tokens` are measurable; `--json` for dashboards and CI
-- **CSS tokens (`css_tokens` in JSON):** scans source `.css` (plus `@import` targets like `dslinter/theme.css`), classifies `--color-*` / `--spacing-*` / etc., and reports references from `var(--*)` and Tailwind utilities
-
-Roadmap follows phased governance (tokens, deeper a11y, drift, AI compliance) — see [ROADMAP.md](ROADMAP.md).
-
-### Baseline drift (CLI / CI)
-
-Same baseline file as MCP (`.dslinter/mcp-baseline.json`):
-
-```bash
-npx dslinter --report . --update-baseline          # save scores + finding count
-npx dslinter --report . --diff-baseline            # print DriftSummary JSON
-npx dslinter --report . --fail-on-drift            # exit 1 on regressions
-npx dslinter --report . --fail-on-drift --max-finding-delta 5 --max-score-drop 2
+```sh
+npx dslinter --report
+npx dslinter --report --json
+npx dslinter --report --output public/dslinter-report.json
+npx dslinter --watch
+npx dslinter --report --fail-on-warnings
+npx dslinter --report --update-baseline
+npx dslinter --report --diff-baseline
+npx dslinter --report --fail-on-drift
 ```
 
-`--fail-on-drift` fails when finding count rises or any score pillar drops beyond `--max-score-drop` (default 0).
+In CI, the default command runs a one-shot report. Explicit `--output` and baseline-update commands write the requested artifacts. Normal reports, watch mode, and the explorer use the tool cache (`~/Library/Caches/dslinter` on macOS, the user's cache directory on Linux, and LocalAppData on Windows). Override it with `DSLINTER_CACHE_DIR`.
 
-### Version alignment
+Schema v4 adds `components`, an import-aware catalog containing:
 
-| Artifact | Version source |
-|----------|----------------|
-| npm `dslinter` | [`dashboard/package.json`](dashboard/package.json) |
-| Rust crate / CLI `--version` | [`Cargo.toml`](Cargo.toml) (kept in sync with npm) |
-| `@dslinter/binding-*` | Published by CI to match the npm release |
+- `id`: source-relative module plus resolved declaration/export identity.
+- `name`, `framework`, and `preview`: export location, props, variants, inferred data, slots/models, and examples.
+- `usages`: resolved source locations, including aliases, barrel imports, and local workspace packages.
+- `bindings` and `example_source`: example dependencies and provenance.
 
-## MCP for AI agents
+Legacy `files`, `playgrounds`, and name-based `usage_by_component` fields remain. The explorer normalizes v3 reports without guessing which duplicate definition owns a name-only reference. MCP accepts canonical ids; ambiguous names return candidate ids.
 
-DSLinter ships a **Model Context Protocol** server so Cursor, Claude Code, and other agents can query the component catalog, usage patterns, findings, and governance policy without parsing the full report JSON.
-
-### Setup (Cursor)
-
-Add to `.cursor/mcp.json` in your app root:
+## MCP
 
 ```json
 {
   "mcpServers": {
     "dslinter": {
       "command": "npx",
-      "args": ["dslinter", "mcp"],
-      "cwd": "${workspaceFolder}"
+      "args": ["dslinter", "mcp"]
     }
   }
 }
 ```
 
-For monorepos, set `cwd` to the app directory (e.g. `demo/react/` or `demo/inertia/`) or set `DSLINTER_SCAN_ROOT`.
+Tools expose scans, catalog entries, component APIs, usage examples, findings, tokens, policy, agent context, and baseline drift. `DSLINTER_SCAN_ROOT`, `DSLINTER_REPORT_PATH`, and `DSLINTER_MCP_DEV_URL` override their defaults.
 
-### Tools
+## Development
 
-| Tool                          | Purpose                                            |
-| ----------------------------- | -------------------------------------------------- |
-| `dslinter_scan`               | Refresh report; return scores and finding counts   |
-| `dslinter_get_catalog`        | Components sorted by usage                         |
-| `dslinter_get_component`      | Props, variants, findings, example JSX             |
-| `dslinter_get_findings`       | Filter findings by component, rule, severity, path |
-| `dslinter_get_usage_examples` | Call sites and prop value frequencies              |
-| `dslinter_get_tokens`         | CSS token definitions and unused tokens            |
-| `dslinter_get_agent_context`  | Compact context pack for system prompts            |
-| `dslinter_get_policy`         | Config snapshot + rule catalog                     |
-| `dslinter_check_paths`        | Findings for specific files after edits            |
-| `dslinter_diff_since`         | Drift vs saved baseline                            |
-| `dslinter_suggest_fix`        | Heuristic fix suggestions                          |
-
-### Environment
-
-| Variable               | Purpose                                          |
-| ---------------------- | ------------------------------------------------ |
-| `DSLINTER_SCAN_ROOT`   | Scan boundary override                           |
-| `DSLINTER_REPORT_PATH` | Report file override                             |
-| `DSLINTER_MCP_DEV_URL` | Dev server URL (default `http://127.0.0.1:7878`) |
-| `DSLINTER_MCP_TTL_MS`  | Report cache TTL (default 60000)                 |
-
-When `npx dslinter` dev mode is running, the MCP server prefers the live report from port 7878.
-
-### Self-test
-
-```bash
-cd demo/react && npx dslinter mcp --self-test
-```
-
-See [`.cursor/skills/dslinter/SKILL.md`](.cursor/skills/dslinter/SKILL.md) for agent workflow guidance.
-
-## Contributing (Rust scanner)
-
-From the repository root:
-
-```bash
-cargo build --release
+```sh
 cargo test
-./target/release/dslinter demo/react --json
-cargo run --release --bin dslinter -- demo/react -p --json
+pnpm --filter dslinter test
+pnpm --filter dslinter exec tsc --noEmit
+pnpm --filter dslinter run build:napi
+pnpm --filter dslinter run build:dashboard
+# Requires permission to listen on loopback ports:
+DSLINTER_E2E=1 pnpm --filter dslinter exec vitest run bin/modes/explore.integration.test.mjs
 ```
 
-NAPI bindings for npm are built and published by [`.github/workflows/release-napi-bindings.yml`](.github/workflows/release-napi-bindings.yml). Maintainers publish with `pnpm run release:patch` (see [`dashboard/README.md`](dashboard/README.md)).
+The fixtures include React, React/Inertia, Vue, Vue/Inertia components, and shared workspace exports. The lifecycle test checks startup, preview-host generation, changed-file rescanning, shutdown, and an unchanged project file tree.
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for distribution notes and development workflow.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for native distribution and release workflows. The supported CLI is `dslinter`; the similarly named crates.io `dslint` is a different project.

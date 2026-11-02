@@ -15,15 +15,7 @@ export function formatJsxPropAssignment(key: string, value: unknown): string {
     }
     return `${key}={${JSON.stringify(value)}}`;
   }
-  if (typeof value === "number") {
-    return `${key}={${value}}`;
-  }
-  if (typeof value === "boolean") {
-    return `${key}={${value}}`;
-  }
-  if (Array.isArray(value)) {
-    return `${key}={${JSON.stringify(value)}}`;
-  }
+  // Numbers, booleans, arrays and objects all use JSX expression syntax.
   return `${key}={${JSON.stringify(value)}}`;
 }
 
@@ -59,45 +51,39 @@ export function genericUsageSnippet(
   controls: PlaygroundControl[],
   coercedProps?: Record<string, unknown>,
 ): string {
-  const controlByKey = new Map(controls.map((c) => [c.key, c] as const));
+  const controlByKey = new Map(controls.map((control) => [control.key, control] as const));
   const propsForSnippet = coercedProps ?? panelValues;
 
-  const emitPropKey = (key: string): boolean => {
-    const c = controlByKey.get(key);
-    if (!c) return true;
-    return !valueMatchesPlaygroundDefault(c, panelValues[key]);
+  const shouldEmit = (key: string): boolean => {
+    const control = controlByKey.get(key);
+    return !control || !valueMatchesPlaygroundDefault(control, panelValues[key]);
   };
 
-  const hasChildrenKey = Object.prototype.hasOwnProperty.call(panelValues, "children");
-  const childVal = hasChildrenKey ? panelValues.children : undefined;
-
-  const propKeys = Object.keys(propsForSnippet)
-    .filter((k) => k !== "children")
-    .filter(emitPropKey)
-    .sort((a, b) => a.localeCompare(b));
-  const propsStr = propKeys.map((k) => formatJsxPropAssignment(k, propsForSnippet[k])).join(" ");
-
-  const openWithProps = propKeys.length === 0 ? `<${exportName}` : `<${exportName} ${propsStr}`;
-
-  if (!hasChildrenKey) {
-    return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
-  }
-
-  if (typeof childVal === "boolean") {
-    const allKeys = Object.keys(propsForSnippet)
-      .filter(emitPropKey)
+  const sortedKeys = (includeChildren: boolean): string[] =>
+    Object.keys(propsForSnippet)
+      .filter((key) => (includeChildren || key !== "children") && shouldEmit(key))
       .sort((a, b) => a.localeCompare(b));
-    const allProps = allKeys.map((k) => formatJsxPropAssignment(k, propsForSnippet[k])).join(" ");
-    return allKeys.length === 0 ? `<${exportName} />` : `<${exportName} ${allProps} />`;
-  }
 
-  const asText = typeof childVal === "number" ? String(childVal) : String(childVal ?? "");
-  if (asText.length === 0) {
-    return propKeys.length === 0 ? `<${exportName} />` : `${openWithProps} />`;
-  }
+  const renderProps = (keys: string[]): string =>
+    keys.map((key) => formatJsxPropAssignment(key, propsForSnippet[key])).join(" ");
+
+  const selfClosing = (keys: string[]): string =>
+    keys.length === 0 ? `<${exportName} />` : `<${exportName} ${renderProps(keys)} />`;
+
+  const propKeys = sortedKeys(false);
+  const hasChildrenKey = Object.prototype.hasOwnProperty.call(panelValues, "children");
+  const childValue = hasChildrenKey ? panelValues.children : undefined;
+
+  if (!hasChildrenKey) return selfClosing(propKeys);
+
+  // A boolean children value is not meaningful as a slot; keep it as a prop.
+  if (typeof childValue === "boolean") return selfClosing(sortedKeys(true));
+
+  const asText = typeof childValue === "number" ? String(childValue) : String(childValue ?? "");
+  if (asText.length === 0) return selfClosing(propKeys);
 
   const body = jsxTextOrStringifyExpression(asText);
   return propKeys.length === 0
     ? `<${exportName}>${body}</${exportName}>`
-    : `${openWithProps}>${body}</${exportName}>`;
+    : `<${exportName} ${renderProps(propKeys)}>${body}</${exportName}>`;
 }

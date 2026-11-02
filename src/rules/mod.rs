@@ -100,6 +100,7 @@ pub fn evaluate_workspace(
         css_tokens.as_ref(),
     );
     let playgrounds = build_playground_specs(&root, &files, config);
+    let components = crate::catalog::build_catalog(&root, &files, &sources, config);
 
     let report_config = ReportConfig {
         hidden_components: config.hidden_components.clone(),
@@ -121,6 +122,7 @@ pub fn evaluate_workspace(
         schema_version: WORKSPACE_REPORT_SCHEMA_VERSION,
         generated_at: utc_rfc3339_now(),
         root,
+        components,
         files,
         findings,
         duplicate_components,

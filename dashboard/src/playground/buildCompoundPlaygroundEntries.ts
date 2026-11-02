@@ -1,71 +1,42 @@
-import { createElement, type ReactNode } from "react";
-import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
+import type { ReactNode } from "react";
+import type { PlaygroundArgs, PlaygroundControl, PlaygroundSelectControl } from "../types/controls";
 import type {
   ComponentDefinition,
   DeclaredPropKind,
-  DefinitionKind,
-  ExampleNode,
-  PlaygroundSpec,
   UsageSummary,
   WorkspaceReport,
 } from "../types/report";
 import type { PlaygroundEntry, PlaygroundMeta } from "../types/playground";
 import type { PlaygroundPreviewComponent } from "../types/preview";
-import type { BuildPlaygroundModules } from "./buildPlaygroundEntriesFromReport";
-import { getModuleExport } from "./playgroundModuleExport";
-import { resolveModuleKeyForRelPath } from "./playgroundJoin";
+import type { BuildPlaygroundModules } from "./playgroundModules";
 import {
   childrenControl,
-  childrenPropForPreview,
-  functionControlForProp,
-  iconControlForProp,
-  isLikelyBooleanProp,
-  isLikelyFunctionProp,
-  isPassthroughStringProp,
+  controlForPropKind,
   mergeControlOverrides,
-  nodeControlForProp,
-  numberArrayControlForProp,
-  objectControlForProp,
   resolveEffectivePropKind,
   SKIP_PLAYGROUND_PROPS,
-  stringArrayControlForProp,
-  stringDefaultForProp,
-  unknownControlForProp,
 } from "./controls";
+import { compoundUsageSnippet, renderCompoundPreview } from "./compoundPreview";
 import {
-  mergeStaticDefaults,
-  normalizedPropKinds,
-  parseNumberArrayPanelValue,
-  parseStringArrayPanelValue,
-} from "./propCoerce";
-import { formatJsxPropAssignment } from "./snippet";
+  detectCompoundFamily,
+  familyExampleTree,
+  findCompoundFamilies,
+  primaryCompoundTarget,
+  type CompoundFamily,
+} from "./compoundFamily";
+import { getModuleExport } from "./playgroundModuleExport";
+import { resolveModuleKeyForRelPath } from "./playgroundJoin";
+import { compactOverrides, mergeStaticDefaults, valuesToComponentProps } from "./propCoerce";
+import { propKindsForExport, usageForExportName } from "./reportQueries";
 import {
   createExampleComponentResolver,
   exampleTreeContainsElement,
   exampleTreeSnippet,
   renderExampleTree,
 } from "./renderExampleTree";
-import { shouldUseExampleTreePreview } from "./shouldUseExampleTreePreview";
 
-const PLAYABLE_KINDS = new Set<DefinitionKind>([
-  "function",
-  "class",
-  "const_arrow",
-  "const_function",
-  "wrapped_component",
-]);
-
-const CONTENT_SUFFIXES = ["Menu", "Content", "Panel", "Body", "Viewport"] as const;
-
-export type CompoundFamily = {
-  relPath: string;
-  group?: string;
-  root: string;
-  trigger?: string;
-  content?: string;
-  /** Playable export name → definition (first wins on duplicates). */
-  exports: Map<string, ComponentDefinition>;
-};
+/** Props never worth a compound panel row. */
+const COMPOUND_SKIP_PROPS = new Set([...SKIP_PLAYGROUND_PROPS, "as", "asChild"]);
 
 export type BuildCompoundPlaygroundOptions = {
   globKeyFromRelPath: (relPath: string) => string;
@@ -75,258 +46,77 @@ export type BuildCompoundPlaygroundOptions = {
   existingIds: ReadonlySet<string>;
 };
 
-function isPlayableDefinition(def: ComponentDefinition): boolean {
-  return PLAYABLE_KINDS.has(def.kind);
-}
-
-function fileStemFromRelPath(relPath: string): string {
-  const base = relPath.split("/").pop() ?? relPath;
-  return base.replace(/\.(tsx|jsx)$/i, "");
-}
-
-function normalizedName(value: string): string {
-  return value
-    .replace(/\.playground$/i, "")
-    .split("")
-    .filter((c) => c !== "-" && c !== "_")
-    .join("")
-    .toLowerCase();
-}
-
-function trimLeadingSlashes(value: string): string {
-  let i = 0;
-  while (i < value.length && value.charCodeAt(i) === 47) i += 1;
-  return value.slice(i);
-}
-
-function trimTrailingSlashes(value: string): string {
-  let end = value.length;
-  while (end > 0 && value.charCodeAt(end - 1) === 47) end -= 1;
-  return value.slice(0, end);
-}
-
-function relPathFromAbsolute(filePath: string, reportRoot: string): string {
-  const normalizedRoot = trimTrailingSlashes(reportRoot);
-  if (filePath.startsWith(normalizedRoot + "/")) {
-    return filePath.slice(normalizedRoot.length + 1);
-  }
-  if (filePath.startsWith(normalizedRoot)) {
-    return trimLeadingSlashes(filePath.slice(normalizedRoot.length));
-  }
-  return trimLeadingSlashes(filePath);
-}
-
-/** Group playable definitions by scanner rel_path. */
-export function groupPlayableDefinitionsByFile(
-  report: WorkspaceReport,
-): Map<string, Map<string, ComponentDefinition>> {
-  const byFile = new Map<string, Map<string, ComponentDefinition>>();
-  for (const file of report.files ?? []) {
-    const rel = relPathFromAbsolute(file.path, report.root);
-    for (const def of file.definitions ?? []) {
-      if (!isPlayableDefinition(def)) continue;
-      let exports = byFile.get(rel);
-      if (!exports) {
-        exports = new Map();
-        byFile.set(rel, exports);
-      }
-      if (!exports.has(def.name)) exports.set(def.name, def);
-    }
-  }
-  return byFile;
-}
-
-function findTriggerExport(
-  stem: string,
-  root: string,
-  names: Iterable<string>,
-): string | undefined {
-  const preferred = `${stem}Trigger`;
-  const list = [...names];
-  if (list.includes(preferred)) return preferred;
-  return list.find((n) => n !== root && n.endsWith("Trigger"));
-}
-
-function findContentExport(
-  stem: string,
-  root: string,
-  trigger: string | undefined,
-  names: Iterable<string>,
-): string | undefined {
-  const candidates = [...names].filter((n) => n !== root && n !== trigger);
-  for (const suffix of CONTENT_SUFFIXES) {
-    const preferred = `${stem}${suffix}`;
-    if (candidates.includes(preferred)) return preferred;
-  }
-  return candidates.find((n) => CONTENT_SUFFIXES.some((suffix) => n.endsWith(suffix)));
-}
-
-/** Detect a stem-rooted compound component family in one module. */
-export function detectCompoundFamily(
-  relPath: string,
-  exports: Map<string, ComponentDefinition>,
-  group?: string,
-): CompoundFamily | null {
-  if (exports.size < 2) return null;
-  const stem = fileStemFromRelPath(relPath);
-  const root = [...exports.keys()].find((name) => normalizedName(name) === normalizedName(stem));
-  if (!root) return null;
-
-  const names = [...exports.keys()];
-  const trigger = findTriggerExport(root, root, names);
-  const content = findContentExport(root, root, trigger, names);
-
+function selectControl(
+  key: string,
+  values: string[],
+  defaultSource: PlaygroundControl["defaultSource"],
+): PlaygroundSelectControl {
+  const defaultVal = values.includes("default") ? "default" : values[0]!;
   return {
-    relPath,
-    group,
-    root,
-    trigger,
-    content,
-    exports,
+    key,
+    label: key,
+    type: "select",
+    default: defaultVal,
+    defaultSource,
+    options: values.map((value) => ({ value, label: value })),
   };
 }
 
-function playgroundGroupForFile(report: WorkspaceReport, relPath: string): string | undefined {
-  const spec = report.playgrounds?.find((p) => p.rel_path === relPath);
-  return spec?.group ?? undefined;
-}
-
-/** Usage-derived composition for preview when heuristic says tree beats live render. */
-export function familyExampleTree(
-  report: WorkspaceReport,
-  family: CompoundFamily,
-): ExampleNode | undefined {
-  const spec = report.playgrounds?.find(
-    (p) => p.rel_path === family.relPath && p.export_name === family.root,
-  );
-  const tree = spec?.example_tree;
-  if (!spec || !tree) return undefined;
-  return shouldUseExampleTreePreview(spec, tree, report) ? tree : undefined;
-}
-
-/** All compound families in a workspace report. */
-export function findCompoundFamilies(report: WorkspaceReport): CompoundFamily[] {
-  const byFile = groupPlayableDefinitionsByFile(report);
-  const families: CompoundFamily[] = [];
-  for (const [relPath, exports] of byFile) {
-    const family = detectCompoundFamily(relPath, exports, playgroundGroupForFile(report, relPath));
-    if (family) families.push(family);
-  }
-  return families;
-}
-
-function usageForExportName(report: WorkspaceReport, exportName: string): UsageSummary | undefined {
-  return report.usage_by_component?.find((u) => u.component === exportName);
-}
-
-function propKindsForExport(
-  report: WorkspaceReport,
-  exportName: string,
-): Partial<Record<string, DeclaredPropKind>> | undefined {
-  const playground = report.playgrounds?.find((p) => p.export_name === exportName);
-  return normalizedPropKinds(playground?.declared_prop_kinds);
-}
-
 function controlsFromDefinitionAndUsage(
-  def: ComponentDefinition,
+  definition: ComponentDefinition,
   usage: UsageSummary | undefined,
   controlOverrides: Record<string, PlaygroundControl[]>,
   catalogId: string,
   propKinds?: Partial<Record<string, DeclaredPropKind>>,
 ): PlaygroundControl[] {
-  const declared = def.declared_props ?? [];
-  const skip = new Set([...SKIP_PLAYGROUND_PROPS, "as", "asChild"]);
-  const propKeys = new Set<string>(declared);
+  const propKeys = new Set<string>(definition.declared_props ?? []);
 
   // Include props observed in usage when the scanner did not declare them.
-  if (usage?.prop_frequencies) {
-    for (const key of Object.keys(usage.prop_frequencies)) {
-      if (!skip.has(key)) propKeys.add(key);
-    }
+  for (const key of Object.keys(usage?.prop_frequencies ?? {})) {
+    if (!COMPOUND_SKIP_PROPS.has(key)) propKeys.add(key);
   }
 
-  const out: PlaygroundControl[] = [];
+  const controls: PlaygroundControl[] = [];
 
   for (const key of [...propKeys].sort((a, b) => a.localeCompare(b))) {
-    if (skip.has(key)) continue;
+    if (COMPOUND_SKIP_PROPS.has(key)) continue;
+
     if (key === "children") {
-      out.push({ ...childrenControl(catalogId), defaultSource: "example" });
+      controls.push({ ...childrenControl(catalogId), defaultSource: "example" });
       continue;
     }
 
-    const options = def.declared_prop_options?.[key];
-    if (options && options.length >= 2) {
-      const defaultVal =
-        def.declared_prop_defaults?.[key] ??
-        (options.includes("default") ? "default" : options[0]!);
-      out.push({
-        key,
-        label: key,
-        type: "select",
-        default: defaultVal,
-        defaultSource: def.declared_prop_defaults?.[key] == null ? "example" : "type",
-        options: options.map((value) => ({ value, label: value })),
+    const propOptions = definition.declared_prop_options?.[key];
+    if (propOptions && propOptions.length >= 2) {
+      const declaredDefault = definition.declared_prop_defaults?.[key];
+      controls.push({
+        ...selectControl(key, propOptions, declaredDefault == null ? "example" : "type"),
+        default: declaredDefault ?? (propOptions.includes("default") ? "default" : propOptions[0]!),
       });
       continue;
     }
 
-    const freqValues = usage?.prop_value_frequencies?.[key];
-    if (freqValues && Object.keys(freqValues).length >= 2) {
-      const sorted = Object.entries(freqValues).sort((a, b) => b[1] - a[1]);
-      const values = sorted.map(([v]) => v);
-      out.push({
-        key,
-        label: key,
-        type: "select",
-        default: values[0]!,
-        defaultSource: "example",
-        options: values.map((value) => ({ value, label: value })),
-      });
+    const valueFrequencies = usage?.prop_value_frequencies?.[key];
+    if (valueFrequencies && Object.keys(valueFrequencies).length >= 2) {
+      const values = Object.entries(valueFrequencies)
+        .sort((a, b) => b[1] - a[1])
+        .map(([value]) => value);
+      controls.push(selectControl(key, values, "example"));
       continue;
     }
 
     const kind = resolveEffectivePropKind(key, propKinds);
-    if (kind === "function" || (!kind && isLikelyFunctionProp(key))) {
-      out.push({ ...functionControlForProp(key), defaultSource: "example" });
-      continue;
-    }
-    if (kind === "boolean" || (!kind && isLikelyBooleanProp(key))) {
-      out.push({ key, label: key, type: "boolean", default: false, defaultSource: "example" });
-    } else if (kind === "number") {
-      out.push({ key, label: key, type: "number", default: 0, defaultSource: "example" });
-    } else if (kind === "node") {
-      out.push({ ...nodeControlForProp(key), defaultSource: "example" });
-    } else if (kind === "stringArray") {
-      out.push({ ...stringArrayControlForProp(key), defaultSource: "example" });
-    } else if (kind === "numberArray") {
-      out.push({ ...numberArrayControlForProp(key), defaultSource: "example" });
-    } else if (kind === "icon") {
-      out.push({ ...iconControlForProp(key), defaultSource: "example" });
-    } else if (kind === "object") {
-      out.push({ ...objectControlForProp(key), defaultSource: "example" });
-    } else if (kind === "string" || isPassthroughStringProp(key)) {
-      out.push({
-        key,
-        label: key,
-        type: "string",
-        default: stringDefaultForProp(key),
-        defaultSource: "example",
-        placeholder: isPassthroughStringProp(key) ? undefined : key,
-      });
-    } else {
-      // No faking: unclassified props are display-only, never string editors.
-      out.push({ ...unknownControlForProp(key), defaultSource: "example" });
-    }
+    controls.push(controlForPropKind(key, kind, { defaultSource: "example" }));
   }
 
   if (
-    !out.some((c) => c.key === "children") &&
+    !controls.some((control) => control.key === "children") &&
     (propKeys.has("children") || (usage?.prop_frequencies?.children ?? 0) > 0)
   ) {
-    out.push({ ...childrenControl(catalogId), defaultSource: "example" });
+    controls.push({ ...childrenControl(catalogId), defaultSource: "example" });
   }
 
-  return mergeControlOverrides(out, controlOverrides[catalogId]);
+  return mergeControlOverrides(controls, controlOverrides[catalogId]);
 }
 
 /** Coerce playground panel values for compound previews (exported for unit tests). */
@@ -335,183 +125,7 @@ export function valuesToProps(
   values: PlaygroundArgs,
   exportName?: string,
 ): Record<string, unknown> {
-  const o: Record<string, unknown> = {};
-  for (const control of controls) {
-    const key = control.key;
-    if (SKIP_PLAYGROUND_PROPS.has(key)) continue;
-    if (control.type === "icon" || control.type === "object" || control.type === "function") {
-      continue;
-    }
-    if (key === "children") {
-      const coerced = childrenPropForPreview(exportName, values.children);
-      if (coerced !== undefined) o[key] = coerced;
-      continue;
-    }
-    if (isPassthroughStringProp(key)) {
-      const raw = values[key];
-      if (raw === undefined || raw === null || String(raw).length === 0) continue;
-      o[key] = String(raw);
-      continue;
-    }
-    if (control.type === "boolean") {
-      o[key] = Boolean(values[key]);
-    } else if (control.type === "number") {
-      const raw = values[key];
-      const n = typeof raw === "number" ? raw : Number(raw);
-      o[key] = Number.isFinite(n) ? n : 0;
-    } else if (control.type === "stringArray") {
-      o[key] = parseStringArrayPanelValue(values[key]);
-    } else if (control.type === "numberArray") {
-      o[key] = parseNumberArrayPanelValue(values[key]);
-    } else {
-      o[key] = values[key];
-    }
-  }
-  return o;
-}
-
-function placeholderPartChildren(exportName: string): ReactNode {
-  if (exportName.endsWith("Separator")) return null;
-  if (exportName.endsWith("Header") || exportName.endsWith("Label")) {
-    return "Section";
-  }
-  if (exportName.includes("Item") || exportName.endsWith("Action")) {
-    return "Example item";
-  }
-  return "Example";
-}
-
-function demoMenuChildren(
-  family: CompoundFamily,
-  mod: Record<string, unknown>,
-  targetName: string,
-): ReactNode {
-  const ItemExport = [...family.exports.keys()].find((n) => n.endsWith("Item") && n !== targetName);
-  const SepExport = [...family.exports.keys()].find((n) => n.endsWith("Separator"));
-
-  const nodes: ReactNode[] = [];
-
-  if (targetName !== family.content) {
-    const Target = getModuleExport(mod, targetName);
-    if (Target) {
-      nodes.push(createElement(Target, null, placeholderPartChildren(targetName)));
-    }
-  }
-
-  if (ItemExport && targetName !== ItemExport) {
-    const Item = getModuleExport(mod, ItemExport);
-    if (Item) nodes.push(createElement(Item, null, "Example item"));
-  }
-  if (SepExport && targetName !== SepExport && nodes.length > 0) {
-    const Sep = getModuleExport(mod, SepExport);
-    if (Sep) nodes.push(createElement(Sep));
-  }
-  if (ItemExport && targetName !== ItemExport && nodes.length > 1) {
-    const Item = getModuleExport(mod, ItemExport);
-    if (Item) nodes.push(createElement(Item, null, "Another item"));
-  }
-
-  if (nodes.length === 0) {
-    return placeholderPartChildren(targetName);
-  }
-  return nodes;
-}
-
-function renderCompoundPreview(
-  family: CompoundFamily,
-  targetName: string,
-  mod: Record<string, unknown>,
-  props: Record<string, unknown>,
-): ReactNode {
-  const Root = getModuleExport(mod, family.root);
-  const Target = getModuleExport(mod, targetName);
-  if (!Root || !Target) return null;
-
-  const triggerProps: Record<string, unknown> = { children: "Open menu" };
-  const Trigger = family.trigger ? getModuleExport(mod, family.trigger) : undefined;
-
-  if (targetName === family.root) {
-    return createElement(Root, props);
-  }
-
-  if (targetName === family.trigger && Trigger) {
-    return createElement(
-      Root,
-      { defaultOpen: true },
-      createElement(Trigger, { ...triggerProps, ...props }),
-    );
-  }
-
-  const triggerNode =
-    Trigger && targetName !== family.trigger ? createElement(Trigger, triggerProps) : null;
-  const rootProps = { defaultOpen: true };
-
-  const targetChildren: ReactNode =
-    props.children !== undefined
-      ? (props.children as ReactNode)
-      : placeholderPartChildren(targetName);
-
-  const targetNode = createElement(Target, props, targetChildren);
-
-  if (targetName === family.content) {
-    return createElement(Root, rootProps, triggerNode, targetNode);
-  }
-
-  if (family.content) {
-    const Content = getModuleExport(mod, family.content);
-    if (Content) {
-      const menuChildren =
-        targetName === family.content ? targetNode : demoMenuChildren(family, mod, targetName);
-      return createElement(
-        Root,
-        rootProps,
-        triggerNode,
-        createElement(Content, null, menuChildren),
-      );
-    }
-  }
-
-  return createElement(Root, rootProps, triggerNode, targetNode);
-}
-
-function compoundUsageSnippet(
-  family: CompoundFamily,
-  targetName: string,
-  values: PlaygroundArgs,
-  controls: PlaygroundControl[],
-): string {
-  const propsStr = controls
-    .filter((c) => c.key !== "children")
-    .map((c) => formatJsxPropAssignment(c.key, values[c.key]))
-    .join(" ");
-
-  const targetOpen = propsStr.length > 0 ? `<${targetName} ${propsStr}` : `<${targetName}`;
-
-  const trigger = family.trigger ?? "button";
-  const content = family.content;
-
-  if (targetName === family.root) {
-    return propsStr.length > 0 ? `<${targetName} ${propsStr} />` : `<${targetName} />`;
-  }
-
-  if (targetName === family.trigger) {
-    return `<${family.root}>\n  <${targetName}>Open menu</${targetName}>\n</${family.root}>`;
-  }
-
-  if (targetName === content) {
-    return `<${family.root}>\n  <${trigger}>Open menu</${trigger}>\n  ${targetOpen}>…</${targetName}>\n</${family.root}>`;
-  }
-
-  if (content) {
-    return `<${family.root}>\n  <${trigger}>Open menu</${trigger}>\n  <${content}>\n    ${targetOpen}>…</${targetName}>\n  </${content}>\n</${family.root}>`;
-  }
-
-  return `<${family.root}>\n  <${trigger}>Open menu</${trigger}>\n  ${targetOpen}>…</${targetName}>\n</${family.root}>`;
-}
-
-/** Primary preview target for a compound family (content, then trigger). */
-export function primaryCompoundTarget(family: CompoundFamily): string | undefined {
-  return family.content ?? family.trigger;
+  return valuesToComponentProps(controls, [], values, undefined, exportName);
 }
 
 export function buildCompoundPlaygroundEntryForTarget(
@@ -523,21 +137,18 @@ export function buildCompoundPlaygroundEntryForTarget(
   modules: BuildPlaygroundModules,
   options: Pick<BuildCompoundPlaygroundOptions, "controlOverrides" | "staticDefaults">,
 ): PlaygroundEntry | null {
-  const def = family.exports.get(targetName);
-  if (!def) return null;
+  const definition = family.exports.get(targetName);
+  if (!definition) return null;
   if (!getModuleExport(mod, targetName)) return null;
 
-  const usage = usageForExportName(report, targetName);
-  const propKinds = propKindsForExport(report, targetName);
   const controls = controlsFromDefinitionAndUsage(
-    def,
-    usage,
+    definition,
+    usageForExportName(report, targetName),
     options.controlOverrides ?? {},
     targetName,
-    propKinds,
+    propKindsForExport(report, targetName),
   );
   const staticDefaults = options.staticDefaults?.[targetName] ?? {};
-
   const propsFromValues = (values: PlaygroundArgs) =>
     mergeStaticDefaults(valuesToProps(controls, values, targetName), staticDefaults);
 
@@ -587,14 +198,16 @@ export function buildCompoundPlaygroundEntryForTarget(
   };
 }
 
-/** Drop empty control values so they don't clobber captured example props. */
-function compactOverrides(props: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (value === undefined || value === null || value === "") continue;
-    out[key] = value;
-  }
-  return out;
+function resolveFamilyModule(
+  family: CompoundFamily,
+  modules: BuildPlaygroundModules,
+  globKeyFromRelPath: (relPath: string) => string,
+): { modulePath: string; mod: Record<string, unknown> } | undefined {
+  const globKey = globKeyFromRelPath(family.relPath);
+  const resolvedKey = resolveModuleKeyForRelPath(family.relPath, modules, globKeyFromRelPath);
+  const mod = resolvedKey ? modules[resolvedKey] : undefined;
+  if (!mod || !getModuleExport(mod, family.root)) return undefined;
+  return { modulePath: resolvedKey ?? globKey, mod };
 }
 
 /**
@@ -608,19 +221,11 @@ export function buildCompoundPlaygroundEntries(
 ): PlaygroundEntry[] {
   if (!report) return [];
 
-  const out: PlaygroundEntry[] = [];
-  const families = findCompoundFamilies(report);
+  const entries: PlaygroundEntry[] = [];
 
-  for (const family of families) {
-    const globKey = options.globKeyFromRelPath(family.relPath);
-    const resolvedKey = resolveModuleKeyForRelPath(
-      family.relPath,
-      modules,
-      options.globKeyFromRelPath,
-    );
-    const mod = resolvedKey ? modules[resolvedKey] : undefined;
-    if (!mod) continue;
-    if (!getModuleExport(mod, family.root)) continue;
+  for (const family of findCompoundFamilies(report)) {
+    const resolved = resolveFamilyModule(family, modules, options.globKeyFromRelPath);
+    if (!resolved) continue;
 
     for (const exportName of family.exports.keys()) {
       if (exportName === family.root) continue;
@@ -629,18 +234,18 @@ export function buildCompoundPlaygroundEntries(
       const entry = buildCompoundPlaygroundEntryForTarget(
         family,
         exportName,
-        mod,
-        resolvedKey ?? globKey,
+        resolved.mod,
+        resolved.modulePath,
         report,
         modules,
         options,
       );
-      if (entry) out.push(entry);
+      if (entry) entries.push(entry);
     }
   }
 
-  out.sort((a, b) => a.meta.title.localeCompare(b.meta.title));
-  return out;
+  entries.sort((a, b) => a.meta.title.localeCompare(b.meta.title));
+  return entries;
 }
 
 /**
@@ -656,9 +261,7 @@ export function upgradeRootEntriesWithCompoundPreview(
     "globKeyFromRelPath" | "controlOverrides" | "staticDefaults"
   >,
 ): void {
-  const families = findCompoundFamilies(report);
-
-  for (const family of families) {
+  for (const family of findCompoundFamilies(report)) {
     // Usage-derived example previews (built in the spec loop) beat the
     // Trigger/Content heuristic — leave those root entries alone.
     if (familyExampleTree(report, family)) continue;
@@ -666,35 +269,27 @@ export function upgradeRootEntriesWithCompoundPreview(
     const targetName = primaryCompoundTarget(family);
     if (!targetName || targetName === family.root) continue;
 
-    const globKey = options.globKeyFromRelPath(family.relPath);
-    const resolvedKey = resolveModuleKeyForRelPath(
-      family.relPath,
-      modules,
-      options.globKeyFromRelPath,
-    );
-    const modulePath = resolvedKey ?? globKey;
-    const mod = resolvedKey ? modules[resolvedKey] : undefined;
-    if (!mod) continue;
+    const resolved = resolveFamilyModule(family, modules, options.globKeyFromRelPath);
+    if (!resolved) continue;
 
     const index = autoEntries.findIndex(
-      (entry) => entry.id === family.root && entry.modulePath === modulePath,
+      (entry) => entry.id === family.root && entry.modulePath === resolved.modulePath,
     );
     if (index < 0) continue;
 
     const compoundEntry = buildCompoundPlaygroundEntryForTarget(
       family,
       targetName,
-      mod,
-      modulePath,
+      resolved.mod,
+      resolved.modulePath,
       report,
       modules,
       options,
     );
     if (!compoundEntry) continue;
 
-    const existing = autoEntries[index]!;
     autoEntries[index] = {
-      ...existing,
+      ...autoEntries[index]!,
       controls: compoundEntry.controls,
       renderPreview: compoundEntry.renderPreview,
       Preview: compoundEntry.Preview,
@@ -703,13 +298,6 @@ export function upgradeRootEntriesWithCompoundPreview(
   }
 }
 
-/** @internal test helper — map rel_path → playground group from report specs. */
-export function playgroundSpecByRelPath(
-  specs: PlaygroundSpec[] | undefined,
-): Map<string, PlaygroundSpec> {
-  const map = new Map<string, PlaygroundSpec>();
-  for (const spec of specs ?? []) {
-    if (!map.has(spec.rel_path)) map.set(spec.rel_path, spec);
-  }
-  return map;
-}
+export { detectCompoundFamily, familyExampleTree, findCompoundFamilies, primaryCompoundTarget };
+export type { CompoundFamily } from "./compoundFamily";
+export { compoundUsageSnippet, renderCompoundPreview } from "./compoundPreview";

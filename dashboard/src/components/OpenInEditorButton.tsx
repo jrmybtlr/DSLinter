@@ -7,11 +7,12 @@ type Props = {
   line?: number;
 };
 
-export function OpenInEditorButton({ filePath, line }: Props) {
+export function useOpenSourceFile(filePath: string | undefined, line?: number) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleClick = useCallback(async () => {
+  const open = useCallback(async () => {
+    if (!filePath) return;
     setPending(true);
     setError(null);
     try {
@@ -24,6 +25,12 @@ export function OpenInEditorButton({ filePath, line }: Props) {
     }
   }, [filePath, line]);
 
+  return { pending, error, open };
+}
+
+export function OpenInEditorButton({ filePath, line }: Props) {
+  const { pending, error, open } = useOpenSourceFile(filePath, line);
+
   return (
     <div className="flex flex-col items-start gap-1">
       <Button
@@ -31,7 +38,7 @@ export function OpenInEditorButton({ filePath, line }: Props) {
         size="sm"
         variant="outline"
         disabled={pending}
-        onClick={() => void handleClick()}
+        onClick={() => void open()}
       >
         {pending ? "Opening…" : "Open in Editor"}
       </Button>

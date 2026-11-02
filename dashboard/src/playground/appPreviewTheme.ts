@@ -1,5 +1,6 @@
 import { resolveCssVariables, variableMapForScopes } from "../css/resolveCssVariables";
 import type { CssTokenDefinition, CssTokenSummary, WorkspaceReport } from "../types/report";
+import { normalizeSlashes, trimTrailingSlashes } from "./pathUtils";
 
 const DASHBOARD_THEME_PATH_MARKERS = ["dashboard-theme.css", "dslinter/theme.css"] as const;
 
@@ -10,18 +11,18 @@ export type AppPreviewTheme = {
 };
 
 export function isDashboardThemePath(path: string): boolean {
-  const normalized = path.replace(/\\/g, "/");
+  const normalized = normalizeSlashes(path);
   return DASHBOARD_THEME_PATH_MARKERS.some((marker) => normalized.includes(marker));
 }
 
 export function isConsumerThemeDefinition(def: CssTokenDefinition, reportRoot?: string): boolean {
   if (isDashboardThemePath(def.path)) return false;
 
-  const normalizedPath = def.path.replace(/\\/g, "/");
+  const normalizedPath = normalizeSlashes(def.path);
   if (normalizedPath.includes("/dashboard/")) return false;
 
   if (reportRoot) {
-    const normalizedRoot = reportRoot.replace(/\\/g, "/").replace(/\/$/, "");
+    const normalizedRoot = trimTrailingSlashes(normalizeSlashes(reportRoot));
     if (normalizedPath.startsWith(normalizedRoot)) return true;
   }
 
@@ -57,7 +58,7 @@ export function buildAppPreviewTheme(
     ...new Set(
       definitions
         .filter((def) => isConsumerThemeDefinition(def, reportRoot))
-        .map((def) => def.path.replace(/\\/g, "/")),
+        .map((def) => normalizeSlashes(def.path)),
     ),
   ].sort();
 

@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use serde::Serialize;
 
 /// Current JSON schema version for [`WorkspaceReport`].
-pub const WORKSPACE_REPORT_SCHEMA_VERSION: u32 = 3;
+pub const WORKSPACE_REPORT_SCHEMA_VERSION: u32 = 4;
 
 /// How a UI component binding was discovered in source.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -318,8 +318,21 @@ pub struct CssTokenSummary {
     pub unused_tokens: Vec<String>,
 }
 
+/// A real component export reachable through the preview's local source dependencies.
+#[derive(Debug, Clone, Serialize)]
+pub struct ProviderCandidate {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
+    pub id: String,
+    pub name: String,
+    pub rel_path: String,
+    pub export_name: String,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct PlaygroundSpec {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub provider_candidates: Vec<ProviderCandidate>,
     /// Stable id (file stem), used in URLs / sidebar.
     pub id: String,
     /// Named export to render (`Card` when file stem is `DuplicateCardA`, etc.).
@@ -384,6 +397,8 @@ pub struct WorkspaceReport {
     pub schema_version: u32,
     pub generated_at: String,
     pub root: PathBuf,
+    /// Canonical component catalog. Legacy name-based summaries remain available.
+    pub components: Vec<CatalogComponent>,
     pub files: Vec<FileScan>,
     pub findings: Vec<LintFinding>,
     pub duplicate_components: Vec<DuplicateComponent>,
@@ -397,6 +412,26 @@ pub struct WorkspaceReport {
     pub config: ReportConfig,
     #[serde(default, skip_serializing_if = "ConfigSnapshot::is_empty")]
     pub config_snapshot: ConfigSnapshot,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ExampleSource {
+    pub path: String,
+    pub line: u32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CatalogComponent {
+    pub id: String,
+    pub name: String,
+    pub framework: String,
+    pub preview: PlaygroundSpec,
+    pub usages: Vec<UsageLocation>,
+    /// Import bindings at the selected example's source site, resolved to catalog ids.
+    pub bindings: BTreeMap<String, String>,
+    pub dependencies: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub example_source: Option<ExampleSource>,
 }
 
 impl ReportConfig {

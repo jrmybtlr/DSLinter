@@ -52,6 +52,9 @@ export function ComponentUsageDetails({
 
   const rows = sortedLocations(usage.usage_locations);
 
+  if (usage.reference_count === 0)
+    return <EmptyCard>No recorded usages in this workspace.</EmptyCard>;
+
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">

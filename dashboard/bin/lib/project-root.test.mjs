@@ -1,3 +1,4 @@
+import { workspaceCacheDir } from "./cache.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -46,23 +47,23 @@ describe("ensureDashboardBuilt (published install layout)", () => {
 });
 
 describe("defaultReportPath", () => {
-  it("writes to project public/ when scan path is a subdirectory of vite root", () => {
+  it("keeps implicit subdirectory reports outside the project", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-laravel-"));
     const components = join(root, "resources", "js", "Components");
     mkdirSync(components, { recursive: true });
     writeFileSync(join(root, "vite.config.js"), "export default {};\n");
 
     const reportPath = defaultReportPath(components, null);
-    expect(reportPath).toBe(join(root, "public", "dslinter-report.json"));
+    expect(reportPath).toBe(join(workspaceCacheDir(components), "dslinter-report.json"));
   });
 
-  it("uses scan path public/ when scan path is the vite root", () => {
+  it("uses the workspace cache at a Vite root", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-vite-root-"));
     mkdirSync(join(root, "src"), { recursive: true });
     writeFileSync(join(root, "vite.config.ts"), "export default {};\n");
 
     const reportPath = defaultReportPath(root, null);
-    expect(reportPath).toBe(join(root, "public", "dslinter-report.json"));
+    expect(reportPath).toBe(join(workspaceCacheDir(root), "dslinter-report.json"));
   });
 
   it("honors explicit --output", () => {

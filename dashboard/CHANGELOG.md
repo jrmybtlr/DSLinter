@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Restore the original dashboard design, component API/variants/score sections, theme controls, and governance inventory around isolated React/Vue previews.
+- Automatic React and Vue explorer with isolated, lazy component previews and app selection.
+- Workspace-wide usage resolution, canonical component identities, and schema v4 with v3 compatibility.
+- External report/bundler caches, background metadata, deterministic fixtures, and optional preview adapters.
+- Vite and Laravel/Inertia host support, Vue slots/models/events, and ten composition recipe families.
+
 ## v0.8.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.7.0...v0.8.0)

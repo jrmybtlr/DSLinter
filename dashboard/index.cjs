@@ -650,7 +650,7 @@ if (!nativeBinding || forceWasi) {
         if (process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           const bindingPackageVersion = require('@dslinter/binding-wasm32-wasi/package.json').version
           if (bindingPackageVersion !== __napiExpectedVersion) {
-            throw new Error(`WASI binding package version mismatch, expected 0.7.1 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
+            throw new Error(`WASI binding package version mismatch, expected 0.8.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
         }
         wasiBinding = require('@dslinter/binding-wasm32-wasi')

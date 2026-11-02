@@ -1,6 +1,6 @@
 import { createElement, type ReactNode } from "react";
 import type { PlaygroundArgs, PlaygroundControl } from "../types/controls";
-import type { PlaygroundSpec, UsageSummary, WorkspaceReport } from "../types/report";
+import type { PlaygroundSpec, WorkspaceReport } from "../types/report";
 import type { PlaygroundEntry, PlaygroundMeta } from "../types/playground";
 import type { PlaygroundPreviewComponent } from "../types/preview";
 import {
@@ -12,6 +12,7 @@ import {
 } from "./playgroundJoin";
 import { definitionPathsForName, isCatalogComponentHidden } from "../dashboard/catalogVisibility";
 import { collectDefinedPlaygrounds } from "./collectDefinedPlaygrounds";
+import { isDefinedPlayground, type DefinedPlayground } from "./definePlayground";
 import { catalogIdFromPlaygroundExport } from "./catalogIdFromPlaygroundExport";
 import {
   buildCompoundPlaygroundEntries,
@@ -19,41 +20,23 @@ import {
 } from "./buildCompoundPlaygroundEntries";
 import { mergePlaygroundEntries } from "./mergePlaygroundEntries";
 import { getModuleExport } from "./playgroundModuleExport";
+import type { BuildPlaygroundModules } from "./playgroundModules";
 import { mergeReportControlsForKit, type PlaygroundKitHints } from "./enrichKitControls";
 import { shouldUseExampleTreePreview } from "./shouldUseExampleTreePreview";
 import { componentAcceptsChildren, controlsForSpec, ensureChildrenControl } from "./controls";
 import { genericUsageSnippet } from "./snippet";
-import { mergeStaticDefaults, normalizedPropKinds, valuesToComponentProps } from "./propCoerce";
+import {
+  compactOverrides,
+  mergeStaticDefaults,
+  normalizedPropKinds,
+  valuesToComponentProps,
+} from "./propCoerce";
+import { findPlaygroundSpec, usageForExportName } from "./reportQueries";
 import {
   createExampleComponentResolver,
   exampleTreeSnippet,
   renderExampleTree,
 } from "./renderExampleTree";
-
-function isDefinedPlayground(
-  value: unknown,
-): value is import("./definePlayground").DefinedPlayground {
-  if (!value || typeof value !== "object") return false;
-  const o = value as Record<string, unknown>;
-  if (typeof o.playgroundMeta !== "object" || o.playgroundMeta === null) return false;
-  const meta = o.playgroundMeta as { id?: unknown; title?: unknown; group?: unknown };
-  return (
-    typeof meta.id === "string" &&
-    typeof meta.title === "string" &&
-    (meta.group === undefined || typeof meta.group === "string") &&
-    Array.isArray(o.playgroundControls) &&
-    typeof o.PlaygroundPreview === "function"
-  );
-}
-
-function specForCatalogEntry(
-  report: WorkspaceReport,
-  catalogId: string,
-): PlaygroundSpec | undefined {
-  return report.playgrounds?.find(
-    (spec) => spec.export_name === catalogId || spec.id === catalogId,
-  );
-}
 
 /** When JSX inference fails, still merge CVA props whose keys match kit control params. */
 function fallbackRootPropBindings(
@@ -64,7 +47,7 @@ function fallbackRootPropBindings(
   const fromKit = hints?.rootPropBindings ?? [];
   if (fromKit.length > 0) return fromKit;
 
-  const spec = specForCatalogEntry(report, entry.id);
+  const spec = findPlaygroundSpec(report, entry.id);
   if (!spec) return [];
 
   const paramKeys = new Set(entry.controls.map((control) => control.key));
@@ -80,7 +63,7 @@ function enrichManualEntriesFromReport(
 ): PlaygroundEntry[] {
   if (!report) return entries;
 
-  const definedById = new Map<string, import("./definePlayground").DefinedPlayground>();
+  const definedById = new Map<string, DefinedPlayground>();
   for (const mod of Object.values(modules)) {
     if (!mod || typeof mod !== "object") continue;
     for (const [exportName, value] of Object.entries(mod)) {
@@ -100,7 +83,7 @@ function enrichManualEntriesFromReport(
   });
 }
 
-export type BuildPlaygroundModules = Record<string, Record<string, unknown>>;
+export type { BuildPlaygroundModules } from "./playgroundModules";
 
 export type BuildPlaygroundOptions = {
   /** Maps report `rel_path` to a key in `modules` (from `import.meta.glob`). */
@@ -115,26 +98,6 @@ export type BuildPlaygroundResult = {
   entries: PlaygroundEntry[];
   skipped: PlaygroundJoinSkip[];
 };
-
-function usageForExportName(
-  report: WorkspaceReport | null | undefined,
-  exportName: string,
-): UsageSummary | undefined {
-  return report?.usage_by_component?.find((u) => u.component === exportName);
-}
-
-/**
- * Drop empty control values so they don't clobber props captured in the
- * example tree (e.g. an empty `className` control vs. the real call site's).
- */
-function compactExampleOverrides(props: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(props)) {
-    if (value === undefined || value === null || value === "") continue;
-    out[key] = value;
-  }
-  return out;
-}
 
 export type { PlaygroundJoinSkip, PlaygroundJoinSkipReason } from "./playgroundJoin";
 export {
@@ -160,12 +123,93 @@ export function resolvePlaygroundEntry(
   const byId = entries.find((e) => e.id === catalogName);
   if (byId) return byId;
   return entries.find(
-    (e) =>
-      e.meta.title === catalogName ||
-      e.modulePath.includes(`/${catalogName}.`) ||
-      e.modulePath.endsWith(`/${catalogName}.tsx`) ||
-      e.modulePath.endsWith(`/${catalogName}.jsx`),
+    (entry) => entry.meta.title === catalogName || entry.modulePath.includes(`/${catalogName}.`),
   );
+}
+
+function buildSpecEntry(
+  spec: PlaygroundSpec,
+  mod: Record<string, unknown>,
+  modulePath: string,
+  report: WorkspaceReport,
+  modules: BuildPlaygroundModules,
+  controlOverrides: Record<string, PlaygroundControl[]>,
+  staticDefaultsMap: Record<string, Record<string, unknown>>,
+): PlaygroundEntry | null {
+  const Component = getModuleExport(mod, spec.export_name);
+  if (!Component) return null;
+
+  const catalogId = playgroundCatalogId(spec);
+  const declared = spec.declared_props ?? [];
+  const propKinds = normalizedPropKinds(spec.declared_prop_kinds);
+  const repoUsage = usageForExportName(report, spec.export_name);
+  const exampleTree = spec.example_tree;
+  const useExampleTree = shouldUseExampleTreePreview(spec, exampleTree, report);
+
+  const controls = ensureChildrenControl(
+    controlsForSpec(
+      catalogId,
+      declared,
+      propKinds,
+      spec.declared_prop_options,
+      spec.declared_prop_defaults,
+      controlOverrides,
+      spec.export_name,
+      spec.declared_prop_optional,
+      spec.declared_prop_type_labels,
+    ),
+    // Example trees carry their own children — a children control would fight them.
+    !useExampleTree && componentAcceptsChildren(declared, repoUsage),
+    spec.export_name,
+  );
+
+  const staticDefaults = staticDefaultsMap[catalogId] ?? staticDefaultsMap[spec.id] ?? {};
+  const rootPropsFromValues = (values: PlaygroundArgs) =>
+    mergeStaticDefaults(
+      valuesToComponentProps(controls, declared, values, propKinds, spec.export_name),
+      staticDefaults,
+    );
+
+  let renderPreview: (values: PlaygroundArgs) => ReactNode;
+  let usageSnippet: (values: PlaygroundArgs) => string;
+
+  if (useExampleTree) {
+    // Usage-derived preview: replay the composition captured from a real
+    // call site instead of rendering the bare (often empty) root.
+    const resolve = createExampleComponentResolver(mod, modules);
+    renderPreview = (values) =>
+      renderExampleTree(exampleTree, resolve, {
+        rootProps: compactOverrides(rootPropsFromValues(values)),
+      });
+    usageSnippet = (values) =>
+      exampleTreeSnippet(exampleTree, {
+        rootProps: compactOverrides(rootPropsFromValues(values)),
+      });
+  } else {
+    renderPreview = (values) => createElement(Component, rootPropsFromValues(values));
+    usageSnippet = (values) =>
+      genericUsageSnippet(spec.export_name, values, controls, rootPropsFromValues(values));
+  }
+
+  function Preview({ values }: { values: PlaygroundArgs }) {
+    return renderPreview(values);
+  }
+
+  const meta: PlaygroundMeta = {
+    id: catalogId,
+    title: catalogId,
+    ...(spec.group ? { group: spec.group } : {}),
+  };
+
+  return {
+    id: catalogId,
+    meta,
+    modulePath,
+    controls,
+    usageSnippet,
+    renderPreview,
+    Preview: Preview as PlaygroundPreviewComponent,
+  };
 }
 
 /** Build playground entries from report specs + eager Vite modules. */
@@ -180,14 +224,11 @@ export function buildPlaygroundEntriesFromReportWithSkips(
   const staticDefaultsMap = options.staticDefaults ?? {};
 
   const skipped = specs?.length
-    ? diagnosePlaygroundJoinSkips(report, modules, {
-        globKeyFromRelPath,
-      })
+    ? diagnosePlaygroundJoinSkips(report, modules, { globKeyFromRelPath })
     : [];
   if (options.logJoinSkips) logPlaygroundJoinSkips(skipped);
 
-  const autoEntries: PlaygroundEntry[] = [];
-  if (!specs?.length) {
+  if (!specs?.length || !report) {
     const manualOnly = enrichManualEntriesFromReport(
       collectDefinedPlaygrounds(modules),
       modules,
@@ -196,93 +237,30 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     return { entries: mergePlaygroundEntries([], manualOnly), skipped };
   }
 
+  const autoEntries: PlaygroundEntry[] = [];
   for (const spec of specs) {
     const globKey = globKeyFromRelPath(spec.rel_path);
     const resolvedKey = resolveModuleKeyForRelPath(spec.rel_path, modules, globKeyFromRelPath);
     const mod = resolvedKey ? modules[resolvedKey] : undefined;
     if (!mod) continue;
-    const Cmp = getModuleExport(mod, spec.export_name);
-    if (!Cmp) continue;
 
-    const catalogId = playgroundCatalogId(spec);
-    const declared = spec.declared_props ?? [];
-    const propKinds = normalizedPropKinds(spec.declared_prop_kinds);
-    const repoUsage = usageForExportName(report, spec.export_name);
-    const exampleTree = spec.example_tree;
-    const controls = ensureChildrenControl(
-      controlsForSpec(
-        catalogId,
-        declared,
-        propKinds,
-        spec.declared_prop_options,
-        spec.declared_prop_defaults,
-        controlOverrides,
-        spec.export_name,
-        spec.declared_prop_optional,
-        spec.declared_prop_type_labels,
-      ),
-      // Example trees carry their own children — a children control would fight them.
-      !shouldUseExampleTreePreview(spec, spec.example_tree, report) &&
-        componentAcceptsChildren(declared, repoUsage),
-      spec.export_name,
-    );
-    const staticDefaults = staticDefaultsMap[catalogId] ?? staticDefaultsMap[spec.id] ?? {};
-
-    const rootPropsFromValues = (values: PlaygroundArgs) =>
-      mergeStaticDefaults(
-        valuesToComponentProps(controls, declared, values, propKinds, spec.export_name),
-        staticDefaults,
-      );
-
-    let renderPreview: (values: PlaygroundArgs) => ReactNode;
-    let usageSnippet: (values: PlaygroundArgs) => string;
-
-    if (shouldUseExampleTreePreview(spec, exampleTree, report)) {
-      // Usage-derived preview: replay the composition captured from a real
-      // call site instead of rendering the bare (often empty) root.
-      const resolve = createExampleComponentResolver(mod, modules);
-      renderPreview = (values) =>
-        renderExampleTree(exampleTree, resolve, {
-          rootProps: compactExampleOverrides(rootPropsFromValues(values)),
-        });
-      usageSnippet = (values) =>
-        exampleTreeSnippet(exampleTree, {
-          rootProps: compactExampleOverrides(rootPropsFromValues(values)),
-        });
-    } else {
-      renderPreview = (values) => createElement(Cmp, rootPropsFromValues(values));
-      usageSnippet = (values) =>
-        genericUsageSnippet(spec.export_name, values, controls, rootPropsFromValues(values));
-    }
-
-    function Preview({ values }: { values: PlaygroundArgs }) {
-      return renderPreview(values);
-    }
-
-    const meta: PlaygroundMeta = {
-      id: catalogId,
-      title: catalogId,
-      ...(spec.group ? { group: spec.group } : {}),
-    };
-
-    autoEntries.push({
-      id: catalogId,
-      meta,
-      modulePath: resolvedKey ?? globKey,
-      controls,
-      usageSnippet,
-      renderPreview,
-      Preview: Preview as PlaygroundPreviewComponent,
-    });
-  }
-
-  if (report) {
-    upgradeRootEntriesWithCompoundPreview(autoEntries, report, modules, {
-      globKeyFromRelPath,
+    const entry = buildSpecEntry(
+      spec,
+      mod,
+      resolvedKey ?? globKey,
+      report,
+      modules,
       controlOverrides,
-      staticDefaults: staticDefaultsMap,
-    });
+      staticDefaultsMap,
+    );
+    if (entry) autoEntries.push(entry);
   }
+
+  upgradeRootEntriesWithCompoundPreview(autoEntries, report, modules, {
+    globKeyFromRelPath,
+    controlOverrides,
+    staticDefaults: staticDefaultsMap,
+  });
 
   const compoundEntries = buildCompoundPlaygroundEntries(report, modules, {
     globKeyFromRelPath,
@@ -296,6 +274,7 @@ export function buildPlaygroundEntriesFromReportWithSkips(
     report,
   );
   const merged = mergePlaygroundEntries([...autoEntries, ...compoundEntries], manualEntries);
+
   return {
     entries: filterCatalogVisiblePlaygroundEntries(report, merged),
     skipped,

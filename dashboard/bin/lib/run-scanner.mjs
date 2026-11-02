@@ -81,7 +81,7 @@ export async function spawnScanner(scannerArgs, options = {}) {
 /**
  * Run scanner synchronously (report / build scan). Returns exit code.
  * @param {string[]} scannerArgs
- * @param {{ captureStdout?: boolean }} [opts]
+ * @param {{ captureStdout?: boolean; projectRoot?: string }} [opts]
  * @returns {number}
  */
 export function runScannerSync(scannerArgs, opts = {}) {

@@ -2,7 +2,7 @@ import type { LintFinding, WorkspaceReport } from "../types/report";
 import { pathsMatch, resolveModuleSourcePath } from "./modulePathMatch";
 
 function isCodeScoreRule(ruleId: string): boolean {
-  return ruleId.startsWith("smell-");
+  return ruleId.startsWith("smell-") || ruleId.startsWith("code-");
 }
 
 function lineSortKey(line: number | null): number {

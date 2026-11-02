@@ -735,10 +735,7 @@ pub fn analyze_vue_file(path: &Path, source: &str, import_filter: &ImportFilter)
         .collect::<Vec<_>>()
         .join("\n");
 
-    if caps.is_empty() {
-        scan.parse_errors
-            .push("dslinter: Vue SFC has no <script> block".into());
-    } else {
+    {
         for cap in &caps {
             let attrs = cap.get(1).map(|m| m.as_str()).unwrap_or("");
             let inner_m = cap.get(2).expect("script inner group");
@@ -794,6 +791,17 @@ pub fn analyze_vue_file(path: &Path, source: &str, import_filter: &ImportFilter)
                 declared_prop_options: vue_props.options,
                 declared_prop_defaults: vue_props.defaults,
                 cva_binding_name: None,
+            });
+        }
+    }
+
+    if !scan.definitions.iter().any(|d| d.kind == DefinitionKind::ExportDefaultAnonymous) {
+        let name = kebab::component_name_from_path(path).unwrap_or_else(|| "Component".into());
+        if !scan.definitions.iter().any(|d| d.name == name) {
+            scan.definitions.push(ComponentDefinition {
+                name, kind: DefinitionKind::ExportDefaultAnonymous, line: 1,
+                declared_props: Vec::new(), declared_prop_options: Default::default(),
+                declared_prop_defaults: Default::default(), cva_binding_name: None,
             });
         }
     }
