@@ -19,7 +19,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
           {catalog.colors.map((c) => (
             <li
               key={`${c.token}-${c.shade}`}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2"
+              className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2"
               title={c.value}
             >
               <svg
@@ -59,7 +59,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
                 {typo.families.map((f) => (
                   <li
                     key={f.key}
-                    className="rounded-lg border border-border bg-card px-3 py-3"
+                    className="rounded-md border border-border bg-card px-3 py-3"
                     title={f.value}
                   >
                     <p className={`${f.tw} text-sm text-foreground`}>
@@ -81,7 +81,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
                 <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   Type scale · {family.tw}
                 </h3>
-                <ul className="mt-3 divide-y divide-border overflow-x-auto rounded-lg border border-border bg-card">
+                <ul className="mt-3 divide-y divide-border overflow-x-auto rounded-md border border-border bg-card">
                   {typo.sizes.map((s) => (
                     <li
                       key={`${family.key}-${s.token}`}
@@ -110,7 +110,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
               <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Type scale · font-sans
               </h3>
-              <ul className="mt-3 divide-y divide-border overflow-x-auto rounded-lg border border-border bg-card">
+              <ul className="mt-3 divide-y divide-border overflow-x-auto rounded-md border border-border bg-card">
                 {typo.sizes.map((s) => (
                   <li
                     key={s.token}
@@ -139,7 +139,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
                 <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   Font weights · {family.tw}
                 </h3>
-                <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
+                <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-card">
                   {weights.map((w) => (
                     <li
                       key={`${family.key}-${w.token}`}
@@ -164,7 +164,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
               <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Font weights · font-sans
               </h3>
-              <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
+              <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-card">
                 {weights.map((w) => (
                   <li
                     key={w.token}
@@ -188,7 +188,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
       <div className="grid gap-6" className:md="grid-cols-2">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Spacing</h2>
-          <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
+          <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-card">
             {catalog.spacing.map((s) => (
               <li key={s.token} className="flex justify-between gap-4 px-3 py-2 text-xs">
                 <span className="font-mono text-foreground/90">{s.token}</span>
@@ -202,7 +202,7 @@ export function TokenWall({ catalog }: { catalog: TokenCatalog }) {
         </div>
         <div>
           <h2 className="text-sm font-semibold text-foreground">Radius</h2>
-          <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
+          <ul className="mt-3 divide-y divide-border rounded-md border border-border bg-card">
             {catalog.radius.map((r) => (
               <li key={r.token} className="flex justify-between gap-4 px-3 py-2 text-xs">
                 <span className="font-mono text-foreground/90">{r.token}</span>

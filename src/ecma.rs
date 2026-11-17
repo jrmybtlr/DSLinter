@@ -798,12 +798,7 @@ impl<'a> Visit<'a> for ExtractVisitor<'_> {
             {
                 let props = props_from_jsx_element(&el.opening_element.attributes, &el.children);
                 let prop_values = prop_values_from_attributes(&el.opening_element.attributes);
-                let example_tree =
-                    if crate::example_tree::element_has_composition_children(&el.children) {
-                        crate::example_tree::example_tree_from_jsx_element(el)
-                    } else {
-                        None
-                    };
+                let example_tree = crate::example_tree::example_tree_from_jsx_element(el);
                 self.usages.push(JsxUsage {
                     component,
                     line: self.line(el.opening_element.span.start),
@@ -1468,7 +1463,7 @@ export function Breadcrumbs({ breadcrumbs }) {
     }
 
     #[test]
-    fn example_tree_skipped_for_text_only_children() {
+    fn example_tree_captures_leaf_usage_content() {
         let src = r#"export function X() { return <Button variant="ghost">Save</Button>; }"#;
         let scan = analyze_ecma_file(&PathBuf::from("x.tsx"), src);
         let usage = scan
@@ -1476,7 +1471,7 @@ export function Breadcrumbs({ breadcrumbs }) {
             .iter()
             .find(|u| u.component == "Button")
             .expect("Button usage");
-        assert!(usage.example_tree.is_none());
+        assert!(usage.example_tree.is_some());
     }
 
     #[test]

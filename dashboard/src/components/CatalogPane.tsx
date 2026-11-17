@@ -7,16 +7,16 @@ type Props = {
   dslinterReport: DslinterReportState;
   dslinterReportHint?: string;
   onOpenComponent?: (name: string) => void;
-  onBackToGovernance?: () => void;
   landing?: ReactNode;
+  componentLabels?: Record<string, { label: string; description?: string }>;
 };
 
 export function CatalogPane({
   dslinterReport,
   dslinterReportHint = "npm run dslinter:report",
   onOpenComponent,
-  onBackToGovernance,
   landing,
+  componentLabels,
 }: Props) {
   const { report, error, loading } = dslinterReport;
   const componentCount = report ? componentCatalogNamesFromReport(report).length : 0;
@@ -57,20 +57,7 @@ export function CatalogPane({
     <div className="min-h-0 flex-1 overflow-auto bg-muted/40">
       {landing}
       <header className="border-b border-border bg-card px-8 py-6">
-        {onBackToGovernance ? (
-          <button
-            type="button"
-            onClick={onBackToGovernance}
-            className="mb-2 text-xs font-medium text-muted-foreground transition"
-            className:hover="text-foreground"
-          >
-            ← Governance
-          </button>
-        ) : null}
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Inventory
-        </p>
-        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
           All components
           <span className="font-normal text-muted-foreground"> · {componentCount} components</span>
         </h1>
@@ -79,7 +66,11 @@ export function CatalogPane({
         </p>
       </header>
       <div className="w-full min-w-0 px-6 py-8">
-        <ComponentCatalog report={report} onOpenComponent={onOpenComponent} />
+        <ComponentCatalog
+          report={report}
+          onOpenComponent={onOpenComponent}
+          componentLabels={componentLabels}
+        />
       </div>
     </div>
   );

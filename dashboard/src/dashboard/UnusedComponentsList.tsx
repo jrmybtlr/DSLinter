@@ -15,14 +15,16 @@ export function UnusedComponentsList({
   components,
   root,
   onOpenComponent,
+  componentLabels = {},
 }: {
   components: UnusedComponent[];
   root: string;
   onOpenComponent?: (name: string) => void;
+  componentLabels?: Record<string, { label: string; description?: string }>;
 }) {
   if (components.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-md border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
         No unused components — every scanned definition has at least one JSX reference in the
         workspace.
       </p>
@@ -48,10 +50,10 @@ export function UnusedComponentsList({
                   className="text-left font-medium text-foreground underline decoration-transparent underline-offset-2 transition"
                   className:hover="decoration-current"
                 >
-                  {name}
+                  {componentLabels[name]?.label ?? name}
                 </button>
               ) : (
-                name
+                (componentLabels[name]?.label ?? name)
               )}
             </TableCell>
             <TableCell className="min-w-0 font-mono text-xs text-muted-foreground">

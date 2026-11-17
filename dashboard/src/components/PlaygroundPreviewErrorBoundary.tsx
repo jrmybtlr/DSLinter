@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { renderErrorExplanation } from "../explorer/previewMessages";
 
 type Props = {
   children: ReactNode;
@@ -31,14 +32,28 @@ export class PlaygroundPreviewErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       const name = this.props.componentName ?? "Component";
+      const explanation = renderErrorExplanation(name, this.state.error.message);
       return (
-        <div className="rounded-md border border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Preview could not render {name}</p>
-          <p className="mt-2">
-            This component may need Inertia page props, a provider, or other app context. The
-            scanner snapshot and governance panels still reflect static analysis.
-          </p>
-          <p className="mt-2 font-mono text-xs">{this.state.error.message}</p>
+        <div
+          role="alert"
+          className="rounded-md border border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground"
+        >
+          <p className="font-medium text-foreground">{explanation.title}</p>
+          <p className="mt-2">{explanation.description}</p>
+          <p className="mt-3">{explanation.nextStep}</p>
+          <button
+            type="button"
+            className="mt-4 underline underline-offset-4"
+            onClick={() => this.setState({ error: null })}
+          >
+            Retry preview
+          </button>
+          <details className="mt-4">
+            <summary className="cursor-pointer font-medium">Technical details</summary>
+            <pre className="mt-2 max-h-48 overflow-auto font-mono text-xs break-words whitespace-pre-wrap">
+              {this.state.error.message}
+            </pre>
+          </details>
         </div>
       );
     }

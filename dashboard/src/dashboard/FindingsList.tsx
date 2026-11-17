@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -10,7 +10,13 @@ import {
 import type { LintFinding, Severity } from "../types/report";
 import { Badge } from "../components/ui/badge";
 import { EmptyCard } from "../components/EmptyCard";
-import { ToggleGroup, ToggleGroupItem } from "../components/ui/toggle-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { SourceLocationLink } from "./SourceLocationLink";
 
 type Filter = "all" | Severity;
@@ -25,7 +31,17 @@ function emptyFilterMessage(filter: Exclude<Filter, "all">): string {
   return "No info findings in these findings.";
 }
 
-export function FindingsList({ findings, root }: { findings: LintFinding[]; root: string }) {
+export function FindingsList({
+  findings,
+  root,
+  heading,
+  children,
+}: {
+  findings: LintFinding[];
+  root: string;
+  heading?: { id: string; title: string; description: string };
+  children?: ReactNode;
+}) {
   const [filter, setFilter] = useState<Filter>("all");
 
   const counts = useMemo(() => {
@@ -43,40 +59,44 @@ export function FindingsList({ findings, root }: { findings: LintFinding[]; root
     [findings, filter],
   );
 
-  if (findings.length === 0) {
-    return <EmptyCard>No findings</EmptyCard>;
-  }
-
   return (
-    <div className="space-y-3">
-      <ToggleGroup
-        type="single"
-        value={filter}
-        onValueChange={(value) => {
-          if (isFilter(value)) setFilter(value);
-        }}
-        variant="outline"
-        size="sm"
-        aria-label="Filter findings by severity"
-        className="contents"
-      >
-        <ToggleGroupItem value="all" className="rounded-full px-2.5 text-xs font-medium">
-          All
-          <span className="ml-1 text-muted-foreground tabular-nums">{findings.length}</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value="warning" className="rounded-full px-2.5 text-xs font-medium">
-          Warnings
-          <span className="ml-1 text-muted-foreground tabular-nums">{counts.warning}</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value="error" className="rounded-full px-2.5 text-xs font-medium">
-          Errors
-          <span className="ml-1 text-muted-foreground tabular-nums">{counts.error}</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value="info" className="rounded-full px-2.5 text-xs font-medium">
-          Info
-          <span className="ml-1 text-muted-foreground tabular-nums">{counts.info}</span>
-        </ToggleGroupItem>
-      </ToggleGroup>
+    <div className="@container">
+      <div className="flex flex-col items-start gap-4 @4xl:flex-row @4xl:items-center @4xl:justify-between">
+        {heading ? (
+          <div className="min-w-0">
+            <h2 id={heading.id} className="text-lg font-semibold text-balance text-foreground">
+              {heading.title}
+            </h2>
+            <p className="mt-1 text-base text-pretty text-muted-foreground sm:text-sm">
+              {heading.description}
+            </p>
+          </div>
+        ) : null}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {children}
+          <Select
+            value={filter}
+            onValueChange={(value) => {
+              if (isFilter(value)) setFilter(value);
+            }}
+            name="severity"
+            disabled={findings.length === 0}
+          >
+            <SelectTrigger
+              aria-label="Filter findings by severity"
+              className="w-auto min-w-44 shrink-0 gap-3 bg-card text-base shadow-none sm:text-sm"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="all">All severities · {findings.length}</SelectItem>
+              <SelectItem value="warning">Warnings · {counts.warning}</SelectItem>
+              <SelectItem value="error">Errors · {counts.error}</SelectItem>
+              <SelectItem value="info">Info · {counts.info}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {filtered.length === 0 ? (
         <EmptyCard className="mt-4">

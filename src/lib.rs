@@ -1,6 +1,8 @@
 //! DSLinter — design-system component inventory and governance signals (MVP).
 
 pub mod class_strings;
+pub mod catalog;
+mod project_aliases;
 pub mod code_quality;
 pub mod config;
 pub mod cva_extract;
@@ -67,6 +69,8 @@ pub fn scan_workspace_parallel(root: &Path) -> anyhow::Result<WorkspaceReport> {
 
 /// Scan `root`, using parallel file reads when the tree is large (see [`PARALLEL_SCAN_THRESHOLD`]).
 pub fn scan_workspace_auto(root: &Path, explicit_parallel: bool) -> anyhow::Result<WorkspaceReport> {
+    let canonical = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    let root = canonical.as_path();
     let (project_root, config) = config::DslintConfig::load_nearest(root)?;
     let (files, sources) =
         scan_pipeline::scan_workspace_files(root, &project_root, &config, explicit_parallel)?;

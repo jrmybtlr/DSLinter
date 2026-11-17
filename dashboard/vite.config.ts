@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import useClassy from "vite-plugin-useclassy";
 import dslinter from "./vite/plugin";
+import { reactGrab } from "./vite/reactGrab";
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 const defaultScanRoot = path.resolve(packageRoot, "../demo/react");
@@ -23,6 +24,7 @@ export default defineConfig(() => ({
     dslinter({ scanRoot, consumerViteRoot }),
     tailwindcss(),
     react(),
+    reactGrab(),
   ],
   build: {
     outDir: "dashboard-dist",

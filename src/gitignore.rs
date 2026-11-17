@@ -81,15 +81,20 @@ impl IgnoreEngine {
 
     /// `true` if this path should be **skipped** (ignored), same as `git check-ignore` exit 0.
     pub fn matches(&self, root: &Path, path: &Path) -> bool {
+        self.decision(root, path).unwrap_or(false)
+    }
+
+    /// Preserve absence of a match when layering nested ignore files.
+    pub fn decision(&self, root: &Path, path: &Path) -> Option<bool> {
         let Some(norm) = normalize_rel_path(root, path) else {
-            return false;
+            return None;
         };
         for rule in self.rules.iter().rev() {
             if rule.set.is_match(&norm) {
-                return !rule.negated;
+                return Some(!rule.negated);
             }
         }
-        false
+        None
     }
 }
 
@@ -134,7 +139,6 @@ fn gitignore_line_to_globs(pat: &str) -> Vec<String> {
     if !dir_only
         && !body.contains('*')
         && !body.contains('?')
-        && !body.contains('/')
         && !base.contains("/**")
     {
         return vec![base.clone(), format!("{}/**", base)];

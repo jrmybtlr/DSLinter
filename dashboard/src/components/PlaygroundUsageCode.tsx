@@ -3,7 +3,7 @@ import { useDashboardTheme } from "../shell/DashboardLayout";
 import { renderPlaygroundUsageHtml } from "./playgroundUsageHighlight";
 
 const shellClass =
-  "playground-usage-shiki mt-4 overflow-x-auto rounded-lg border border-border p-4 text-sm leading-relaxed text-foreground " +
+  "playground-usage-shiki mt-4 overflow-x-auto rounded-md border border-border p-4 text-sm leading-relaxed text-foreground " +
   "[&_.shiki]:!bg-transparent [&_pre.shiki]:!m-0 [&_pre.shiki]:!bg-transparent [&_pre.shiki]:!p-0";
 
 const plainPreClass = "m-0 whitespace-pre font-mono text-sm leading-relaxed text-foreground";
@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function PlaygroundUsageCode({ source }: Props) {
-  const { theme } = useDashboardTheme();
+  const { resolvedTheme } = useDashboardTheme();
   const [html, setHtml] = useState<string | null>(null);
   const seq = useRef(0);
 
@@ -24,7 +24,7 @@ export function PlaygroundUsageCode({ source }: Props) {
 
     void (async () => {
       try {
-        const next = await renderPlaygroundUsageHtml(source, theme, ac.signal);
+        const next = await renderPlaygroundUsageHtml(source, resolvedTheme, ac.signal);
         if (id !== seq.current) return;
         setHtml(next);
       } catch (e) {
@@ -35,7 +35,7 @@ export function PlaygroundUsageCode({ source }: Props) {
     })();
 
     return () => ac.abort();
-  }, [source, theme]);
+  }, [source, resolvedTheme]);
 
   if (html) {
     return <div className={shellClass} dangerouslySetInnerHTML={{ __html: html }} />;

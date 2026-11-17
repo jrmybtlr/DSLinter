@@ -105,9 +105,11 @@ function CatalogAppUsageHover({
 export function ComponentCatalog({
   report,
   onOpenComponent,
+  componentLabels = {},
 }: {
   report: WorkspaceReport;
   onOpenComponent?: (name: string) => void;
+  componentLabels?: Record<string, { label: string; description?: string }>;
 }) {
   const defs = aggregateDefinitions(report);
   const usages = usageMap(report);
@@ -150,10 +152,18 @@ export function ComponentCatalog({
                     className="text-left font-medium text-foreground underline decoration-transparent underline-offset-2 transition"
                     className:hover="decoration-current"
                   >
-                    {name}
+                    {componentLabels[name]?.label ?? name}
                   </button>
                 ) : (
-                  name
+                  (componentLabels[name]?.label ?? name)
+                )}
+                {componentLabels[name]?.description && (
+                  <p
+                    className="mt-1 truncate font-mono text-[10px] text-muted-foreground"
+                    title={componentLabels[name].description}
+                  >
+                    {componentLabels[name].description}
+                  </p>
                 )}
               </TableCell>
 

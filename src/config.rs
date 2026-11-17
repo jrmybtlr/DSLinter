@@ -33,7 +33,8 @@ fn default_true() -> bool {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DslintConfig {
-    /// Restrict component/file discovery to these directory prefixes (relative to repo root).
+    /// Restrict the component catalog to these directory prefixes (relative to repo root).
+    /// Usage is still scanned throughout the supplied scan boundary.
     /// When empty, all directories are eligible (subject to ignores).
     #[serde(default)]
     pub include_dirs: Vec<String>,
@@ -130,6 +131,7 @@ impl DslintConfig {
     /// or `start` (canonicalized) when no config exists.
     pub fn load_nearest(start: &Path) -> anyhow::Result<(PathBuf, Self)> {
         let mut dir = std::fs::canonicalize(start).unwrap_or_else(|_| start.to_path_buf());
+        let fallback = dir.clone();
         loop {
             for name in DEFAULT_CONFIG_NAMES {
                 let p = dir.join(name);
@@ -142,10 +144,10 @@ impl DslintConfig {
                 }
             }
             let Some(parent) = dir.parent() else {
-                return Ok((dir, Self::default()));
+                return Ok((fallback, Self::default()));
             };
             if parent == dir.as_path() {
-                return Ok((dir, Self::default()));
+                return Ok((fallback, Self::default()));
             }
             dir = parent.to_path_buf();
         }

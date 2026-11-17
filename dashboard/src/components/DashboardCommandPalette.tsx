@@ -10,6 +10,7 @@ import {
 } from "./ui/command";
 
 import type { HashRoute } from "../shell/hashRoute";
+import { useDashboardTheme } from "../shell/DashboardTheme";
 
 type Props = {
   catalogEntries: { name: string; label: string }[];
@@ -26,6 +27,7 @@ function eventTargetIsEditable(target: EventTarget | null): boolean {
 }
 
 export function DashboardCommandPalette({ catalogEntries, onNavigate, open, onOpenChange }: Props) {
+  const { resolvedTheme } = useDashboardTheme();
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export function DashboardCommandPalette({ catalogEntries, onNavigate, open, onOp
       onOpenChange={onOpenChange}
       title="Jump to"
       description="Search components and views"
+      theme={resolvedTheme}
     >
       <CommandInput placeholder="Search components…" />
       <CommandList>

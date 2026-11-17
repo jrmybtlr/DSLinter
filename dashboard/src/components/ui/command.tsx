@@ -25,12 +25,14 @@ function CommandDialog({
   children,
   className,
   showCloseButton = true,
+  theme,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string;
   description?: string;
   className?: string;
   showCloseButton?: boolean;
+  theme?: "light" | "dark";
 }) {
   return (
     <Dialog {...props}>
@@ -39,6 +41,7 @@ function CommandDialog({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <DialogContent
+        data-dashboard-theme={theme}
         className={cn("overflow-hidden p-0", className)}
         showCloseButton={showCloseButton}
       >

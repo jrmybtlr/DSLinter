@@ -50,14 +50,14 @@ describe("resolveScanPath", () => {
 });
 
 describe("resolveScanAndProjectRoots", () => {
-  it("keeps scan at cwd and project at vite root from subdirectory", () => {
+  it("defaults to the full app from a component subdirectory", () => {
     const root = mkdtempSync(join(tmpdir(), "dslinter-scan-project-"));
     const components = join(root, "resources", "js", "components");
     mkdirSync(components, { recursive: true });
     writeFileSync(join(root, "vite.config.js"), "export default {};\n");
 
     const result = resolveScanAndProjectRoots(null, components);
-    expect(result.scanPath).toBe(components);
+    expect(result.scanPath).toBe(root);
     expect(result.projectRoot).toBe(root);
   });
 

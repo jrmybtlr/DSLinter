@@ -1,3 +1,4 @@
+import { workspaceCacheDir } from "./cache.mjs";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { existsSync, readdirSync, realpathSync, statSync } from "node:fs";
@@ -130,12 +131,7 @@ export function findViteRoot(startDir) {
  */
 export function defaultReportPath(scanPath, outputFlag) {
   if (outputFlag) return resolve(outputFlag);
-  const scanAbs = resolve(scanPath);
-  const viteRoot = findViteRoot(scanAbs);
-  if (viteRoot && resolve(viteRoot) !== scanAbs) {
-    return resolve(viteRoot, "public", REPORT_FILE_NAME);
-  }
-  return resolve(scanAbs, "public", REPORT_FILE_NAME);
+  return resolve(workspaceCacheDir(scanPath), REPORT_FILE_NAME);
 }
 
 /**

@@ -3,6 +3,7 @@
  */
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { enrichCatalog } from "./enrich-catalog.mjs";
 import {
   createCheckerProgram,
   inferDeclaredPropsFromTsx,
@@ -15,14 +16,15 @@ import {
  * @returns {boolean} true when any playground row changed
  */
 export function enrichWorkspaceReport(report, projectRoot) {
+  const catalogChanged = enrichCatalog(report, projectRoot);
   const playgrounds = report.playgrounds;
-  if (!Array.isArray(playgrounds) || playgrounds.length === 0) return false;
+  if (!Array.isArray(playgrounds) || playgrounds.length === 0) return catalogChanged;
 
   const checkerBundle = createCheckerProgram(projectRoot);
-  if (!checkerBundle) return false;
+  if (!checkerBundle) return catalogChanged;
 
   const { program, checker } = checkerBundle;
-  let changed = false;
+  let changed = catalogChanged;
 
   for (const spec of playgrounds) {
     if (!spec || typeof spec !== "object") continue;
@@ -141,13 +143,6 @@ export function enrichReportFileBestEffort(reportPath, projectRoot) {
  * @returns {Promise<boolean>} true when enrichment ran and wrote the report
  */
 export async function enrichPlaygroundsFromTs({ projectRoot, reportPath, logPrefix = "dslinter" }) {
-  if (!createCheckerProgram(projectRoot)) {
-    if (process.env.DSLINTER_DEBUG?.trim() === "1") {
-      process.stderr.write(`${logPrefix}: skip playground TS enrichment (no tsconfig.json)\n`);
-    }
-    return false;
-  }
-
   try {
     return enrichReportFile(reportPath, projectRoot);
   } catch (err) {

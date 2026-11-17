@@ -153,6 +153,7 @@ export default function dslinter(options: DslinterVitePluginOptions = {}): Plugi
     },
 
     resolveId(id, importer) {
+      if (id === "virtual:dslinter/explorer") return "\0dslinter-explorer-context";
       if (id === VIRTUAL_PLAYGROUND_MODULES_ID) {
         return RESOLVED_VIRTUAL_ID;
       }
@@ -188,6 +189,8 @@ export default function dslinter(options: DslinterVitePluginOptions = {}): Plugi
     },
 
     load(id) {
+      if (id === "\0dslinter-explorer-context")
+        return `export default ${JSON.stringify({ root: scanRoot, apps: [], selectedApp: "" })};`;
       if (id === RESOLVED_VIRTUAL_ID) {
         return generatePlaygroundModulesSource(scanRoot, relPaths);
       }

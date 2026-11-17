@@ -4,25 +4,30 @@
   "workspaces": [
     "demo/inertia",
     "demo/react",
-    "dashboard"
+    "dashboard",
+    "demo/vue",
+    "demo/shared"
   ],
   "scripts": {
     "fmt": "oxfmt dashboard",
     "fmt:check": "oxfmt --check dashboard",
-    "lint": "oxlint --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia dashboard",
-    "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia dashboard",
+    "lint": "oxlint --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia demo/vue demo/shared dashboard",
+    "lint:fix": "oxlint --fix --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/dashboard-dist/**\" demo/react demo/inertia demo/vue demo/shared dashboard",
     "build:napi": "pnpm --filter dslinter run build:napi",
-    "test": "cargo test && pnpm run build:napi && pnpm run lint && pnpm --filter dslinter test && node dashboard/bin/dslinter.mjs --version && pnpm --filter dslinter-demo run build",
+    "test": "cargo test && pnpm run build:napi && pnpm run lint && pnpm --filter dslinter test && node dashboard/bin/dslinter.mjs --version && pnpm --filter dslinter-demo run build:check && pnpm --filter dslinter-vue-demo run build",
     "release:major": "node scripts/release.mjs --major",
     "release:minor": "node scripts/release.mjs --minor",
-    "release:patch": "node scripts/release.mjs --patch"
+    "release:patch": "node scripts/release.mjs --patch",
+    "dev:inertia": "pnpm --filter dslint-demo-inertia run dslinter:dev",
+    "dev:react": "pnpm --filter dslinter-demo run dev",
+    "dev:vue": "pnpm --filter demo/vue run dev"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.8.2",
     "changelogen": "^0.6.2",
-    "semver": "^7.8.5",
     "oxfmt": "^0.61.0",
     "oxlint": "^1.76.0",
+    "semver": "^7.8.5",
     "typescript": "~6.0.3"
   },
   "pnpm": {
@@ -32,6 +37,9 @@
       "@hono/node-server": "2.1.0",
       "esbuild": "0.28.1"
     },
-    "publicHoistPattern": ["*react", "*react-dom"]
+    "publicHoistPattern": [
+      "*react",
+      "*react-dom"
+    ]
   }
 }

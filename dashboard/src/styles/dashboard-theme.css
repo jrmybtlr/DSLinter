@@ -1,7 +1,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/** Class-based dark only — never `prefers-color-scheme` or host `.dark`. */
+/**
+ * Class-based dark only. `DashboardThemeProvider` resolves the `system`
+ * preference via `prefers-color-scheme` and sets `data-dashboard-theme`;
+ * never match the host's `.dark` class.
+ */
 @custom-variant dark (&:is([data-dashboard-theme="dark"] *));
 
 html:has([data-dashboard-theme="light"]) {
@@ -92,7 +96,8 @@ html:has([data-dashboard-theme="dark"]) {
 }
 
 :root,
-[data-dashboard-theme="light"] {
+[data-dashboard-theme="light"],
+[data-preview-theme="light"] {
   color-scheme: only light;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -129,7 +134,8 @@ html:has([data-dashboard-theme="dark"]) {
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-[data-dashboard-theme="dark"] {
+[data-dashboard-theme="dark"],
+[data-preview-theme="dark"] {
   color-scheme: only dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -178,11 +184,19 @@ html:has([data-dashboard-theme="dark"]) {
 /** Subtle dot grid for playground preview areas (examples, variant matrix). */
 @layer utilities {
   .ds-playground-dot-surface {
-    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-image: radial-gradient(circle, #e9edf1 1px, transparent 1px);
     background-size: 10px 10px;
   }
 
   [data-dashboard-theme="dark"] .ds-playground-dot-surface {
+    background-image: radial-gradient(circle, rgb(148 163 184 / 0.15) 1px, transparent 1px);
+  }
+
+  [data-preview-theme="light"].ds-playground-dot-surface {
+    background-image: radial-gradient(circle, #edf0f3 1px, transparent 1px);
+  }
+
+  [data-preview-theme="dark"].ds-playground-dot-surface {
     background-image: radial-gradient(circle, rgb(148 163 184 / 0.15) 1px, transparent 1px);
   }
 }

@@ -1,0 +1,6 @@
+body { font-family: system-ui, sans-serif; color: #172554; background: #f8fafc; }
+button { border: 1px solid #1d4ed8; background: #1d4ed8; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+input { border: 1px solid #64748b; padding: 8px; border-radius: 6px; }
+[data-reka-popper-content-wrapper], [role="dialog"], [role="listbox"] { background: white; border: 1px solid #cbd5e1; padding: 20px; border-radius: 8px; }
+[role="dialog"] { position: fixed; top: 15%; left: 15%; right: 15%; }
+[role="option"], [role="tab"] { padding: 8px; cursor: pointer; }

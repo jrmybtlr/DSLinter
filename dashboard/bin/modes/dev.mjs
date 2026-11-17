@@ -15,7 +15,6 @@ import { watchEnrichPlaygroundsFromTs } from "../lib/enrich-playgrounds-from-ts.
 import { findAvailablePort, warnIfPortBusy } from "../lib/port-check.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
 import { shouldUseConsumerViteDev } from "../lib/scan-host.mjs";
-import { ensureMinimalSetup } from "../lib/setup-readiness.mjs";
 import { waitForPort } from "../lib/wait-for-port.mjs";
 
 const POLL_MS = 150;
@@ -58,24 +57,11 @@ function printDevBanner(banner) {
  *   explicitScanPath?: string | null;
  * }}
  */
-export async function runDevMode({
-  scanPath,
-  projectRoot,
-  outputPath,
-  scannerArgs,
-  servePort,
-  yes = false,
-}) {
+export async function runDevMode({ scanPath, projectRoot, outputPath, scannerArgs, servePort }) {
   const port = servePort ?? defaultServePort();
   const scanAbs = resolve(scanPath);
   const projectAbs = resolve(projectRoot);
   const reportPath = defaultReportPath(scanAbs, outputPath);
-
-  await ensureMinimalSetup({
-    targetDir: projectAbs,
-    reportPath,
-    yes,
-  });
 
   const consumerViteRoot = findViteRoot(scanAbs);
   const embedRoot = getDashboardPackageRoot();

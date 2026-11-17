@@ -1,4 +1,4 @@
-import { catalogSummary, governanceSummary, tokenSummary } from "./agent-query";
+import { catalogSummary, governanceSummary, tokenSummary, usageExamples } from "./agent-query";
 import { ruleCatalog } from "./rule-catalog";
 import type { WorkspaceReport } from "../types/report";
 
@@ -55,11 +55,14 @@ export function buildAgentContext(
     scores: gov.scores,
     finding_counts: gov.finding_counts,
     top_components: catalog.map((c) => ({
+      id: c.id,
       name: c.name,
       references: c.reference_count,
       import_path: c.import_path,
       usage_hint: topUsageHint(
-        report.usage_by_component.find((u) => u.component === c.name)?.prop_value_frequencies,
+        c.id
+          ? usageExamples(report, c.id)?.prop_value_frequencies
+          : report.usage_by_component.find((u) => u.component === c.name)?.prop_value_frequencies,
       ),
     })),
     deprecated_components: deprecated,
@@ -112,7 +115,9 @@ export function buildAgentContext(
   for (const c of payload.top_components) {
     const hint = c.usage_hint ? ` — ${c.usage_hint}` : "";
     const path = c.import_path ? ` (${c.import_path})` : "";
-    lines.push(`- **${c.name}** (${c.references} refs)${path}${hint}`);
+    lines.push(
+      `- **${c.name}** (${c.references} refs)${path}${hint}${c.id ? ` · id: \`${c.id}\`` : ""}`,
+    );
   }
 
   if (deprecated.length) {
