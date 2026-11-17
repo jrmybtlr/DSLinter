@@ -1,4 +1,4 @@
-import { trimLeadingSlashes } from "./pathUtils";
+import { trimLeadingSlashes } from "./pathUtils.ts";
 
 /** Virtual module map key for a scanner `rel_path` (embed convention). */
 export function embedGlobKeyFromRelPath(relPath: string): string {

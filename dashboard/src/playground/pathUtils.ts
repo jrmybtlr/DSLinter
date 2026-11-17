@@ -9,11 +9,15 @@ export function normalizeSlashes(value: string): string {
 }
 
 export function trimLeadingSlashes(value: string): string {
-  return value.replace(/^\/+/, "");
+  let start = 0;
+  while (start < value.length && value.charCodeAt(start) === 47) start++;
+  return value.slice(start);
 }
 
 export function trimTrailingSlashes(value: string): string {
-  return value.replace(/\/+$/, "");
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) end--;
+  return value.slice(0, end);
 }
 
 /** `…/dropdown-menu.tsx` → `dropdown-menu`. */

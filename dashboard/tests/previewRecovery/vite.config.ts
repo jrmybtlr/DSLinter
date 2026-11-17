@@ -6,6 +6,19 @@ import { previewModuleLoader } from "../../vite/previewModuleLoader";
 import { defineConfig } from "vite";
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const source = resolve(root, "dashboard/src/explorer");
+
+const unsafeJsChars: Record<string, string> = {
+  "<": "\\u003C",
+  ">": "\\u003E",
+  "/": "\\u002F",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+};
+
+/** JSON-encode a value for safe embedding in generated module source. */
+function jsLiteral(value: unknown): string {
+  return JSON.stringify(value).replace(/[<>/\u2028\u2029]/g, (ch) => unsafeJsChars[ch]!);
+}
 export default defineConfig({
   root,
   cacheDir: "/tmp/dslinter-provider-browser-cache",
@@ -38,12 +51,12 @@ export default defineConfig({
         if (id === "\0virtual:dslinter/axe")
           return "export default {run: async () => ({violations: []})};";
         if (id === "\0virtual:dslinter/adapter")
-          return `import { PageConsumer } from ${JSON.stringify(resolve(root, "dashboard/tests/previewRecovery/adapterCycleFixture.tsx"))};
+          return `import { PageConsumer } from ${jsLiteral(resolve(root, "dashboard/tests/previewRecovery/adapterCycleFixture.tsx"))};
           const app = new URLSearchParams(location.search).get("app");
           const configured = app?.endsWith("-configured");
           export default app === "react-cycle" ? { pageProps: { cycleValue: "Adapter page props loaded" }, previews: { "dashboard/tests/previewRecovery/adapterCycleFixture.tsx#PageConsumer": { PlaygroundPreview: PageConsumer } } } : configured ? { react: { wrap: (children) => children }, vue: { setup: () => {} } } : {};`;
         if (id === "\0virtual:dslinter/explorer")
-          return `export default ${JSON.stringify({
+          return `export default ${jsLiteral({
             root,
             apps: [
               { id: "react", framework: "react" },
@@ -55,7 +68,7 @@ export default defineConfig({
             ],
           })};`;
         if (id === "\0virtual:dslinter/framework")
-          return `export async function mount(...args) { const runtime = args[3].framework === "vue" ? await import(${JSON.stringify(resolve(source, "vueRuntime.ts"))}) : await import(${JSON.stringify(resolve(source, "reactRuntime.ts"))}); return runtime.mount(...args); }`;
+          return `export async function mount(...args) { const runtime = args[3].framework === "vue" ? await import(${jsLiteral(resolve(source, "vueRuntime.ts"))}) : await import(${jsLiteral(resolve(source, "reactRuntime.ts"))}); return runtime.mount(...args); }`;
       },
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
@@ -82,7 +95,7 @@ export default defineConfig({
           res.end(
             await server.transformIndexHtml(
               url.pathname,
-              `<!doctype html><div id="dslinter-preview"></div><script type="module">import { boot } from "/dashboard/src/explorer/runtime.ts"; boot(${JSON.stringify({ root, moduleRoot: url.searchParams.get("app") === "react-legacy" ? undefined : root, moduleLoader: url.searchParams.get("app") !== "react-legacy", app: framework, framework, styles: [], adapterRoot: root })});</script>`,
+              `<!doctype html><div id="dslinter-preview"></div><script type="module">import { boot } from "/dashboard/src/explorer/runtime.ts"; boot(${jsLiteral({ root, moduleRoot: url.searchParams.get("app") === "react-legacy" ? undefined : root, moduleLoader: url.searchParams.get("app") !== "react-legacy", app: framework, framework, styles: [], adapterRoot: root })});</script>`,
             ),
           );
         });
