@@ -1,12 +1,27 @@
 # Changelog
 
-## Unreleased
+## v0.9.0
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.8.0...v0.9.0)
+
+### 🚀 Features
 
 - Restore the original dashboard design, component API/variants/score sections, theme controls, and governance inventory around isolated React/Vue previews.
 - Automatic React and Vue explorer with isolated, lazy component previews and app selection.
 - Workspace-wide usage resolution, canonical component identities, and schema v4 with v3 compatibility.
 - External report/bundler caches, background metadata, deterministic fixtures, and optional preview adapters.
 - Vite and Laravel/Inertia host support, Vue slots/models/events, and ten composition recipe families.
+
+### 🏡 Chore
+
+- Update .gitignore to include tasks/todo.md, add generated Classy files exclusion in demo/react, and update dslinter-report.json paths in demo/react to absolute paths ([e2a7977](https://github.com/jrmybtlr/DSLinter/commit/e2a7977))
+- Pnpm update ([21b2d47](https://github.com/jrmybtlr/DSLinter/commit/21b2d47))
+- Regenerate NAPI loader with @napi-rs/cli 3.11 ([61f72d2](https://github.com/jrmybtlr/DSLinter/commit/61f72d2))
+
+### ❤️ Contributors
+
+- Claude <noreply@anthropic.com>
+- Jeremy Butler <jeremy.butler@laravel.com>
 
 ## v0.8.0
 
