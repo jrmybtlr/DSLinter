@@ -9,6 +9,7 @@ import { cachedUseClassy } from "./cachedUseClassy";
 import { workspaceCacheDir } from "../bin/lib/cache.mjs";
 import { loadConsumerAliases } from "./loadConsumerAliases";
 import { findPreviewAdapter, type PreviewApp } from "./previewAdapter";
+import { isNuxtApp, loadNuxtPreviewConfig } from "./nuxtConfig";
 
 export type { PreviewApp } from "./previewAdapter";
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -76,18 +77,20 @@ export async function createPreviewServer(
   app: PreviewApp,
   scanRoot: string,
 ): Promise<ViteDevServer> {
-  const require = createRequire(join(app.root, "package.json"));
-  const vite = await import(pathToFileURL(require.resolve("vite")).href);
-  const loaded = await vite.loadConfigFromFile(
-    { command: "serve", mode: "development" },
-    app.config,
-    app.root,
-    "warn",
-    undefined,
-    "runner",
-  );
+  const nuxt = isNuxtApp(app.root) ? await loadNuxtPreviewConfig(app.root) : undefined;
+  const vite = await import(pathToFileURL(nuxt?.viteEntry ?? resolveVite(app.root)).href);
+  const loaded = nuxt
+    ? { config: nuxt.config }
+    : await vite.loadConfigFromFile(
+        { command: "serve", mode: "development" },
+        app.config,
+        app.root,
+        "warn",
+        undefined,
+        "runner",
+      );
   const config: UserConfig = loaded?.config || {};
-  const styles = detectPreviewStyles(app, config);
+  const styles = nuxt ? nuxt.styles : detectPreviewStyles(app, config);
   const adapter = findPreviewAdapter(app.root, scanRoot);
   const frameworkFile = resolve(packageRoot, "src/explorer", `${app.framework}Runtime.ts`);
   const runtimeFile = resolve(packageRoot, "src/explorer/runtime.ts");
@@ -113,6 +116,7 @@ export async function createPreviewServer(
       if (id === "virtual:dslinter/framework") return "\0dslinter-framework.ts";
       if (id === "virtual:dslinter/axe") return "\0dslinter-axe";
       if (id === "virtual:dslinter/adapter") return "\0dslinter-adapter";
+      if (id === "virtual:dslinter/nuxt") return "\0dslinter-nuxt";
       if (id === "virtual:dslinter/frame-entry") return "\0dslinter-frame-entry";
       if (id === "/__dslinter/entry.js") return "\0dslinter-frame-entry";
       if (id === "virtual:dslinter/playground-modules") return "\0dslinter-legacy-modules";
@@ -137,6 +141,23 @@ export async function createPreviewServer(
         });
       }
       if (id === "\0dslinter-legacy-modules") return "export const scanPlaygroundModules = {};";
+      if (id === "\0dslinter-nuxt" && nuxt)
+        // A Nuxt app instance and the app's client plugins, so components can call
+        // useNuxtApp, useState, useRuntimeConfig, NuxtLink and other Nuxt runtime APIs.
+        return [
+          'import { applyPlugins, createNuxtApp } from "#app/nuxt";',
+          'import plugins from "#build/plugins";',
+          `window.__NUXT__ ||= ${JSON.stringify({ serverRendered: false, config: nuxt.runtimeConfig })};`,
+          "export async function setup(vueApp) {",
+          "  const nuxtApp = createNuxtApp({ vueApp });",
+          "  try {",
+          "    await applyPlugins(nuxtApp, plugins);",
+          '    await nuxtApp.hooks.callHook("app:created", vueApp);',
+          "  } catch (error) {",
+          '    console.warn("[dslinter] A Nuxt plugin failed while preparing the preview:", error);',
+          "  }",
+          "}",
+        ].join("\n");
       if (id === "\0dslinter-adapter")
         return adapter
           ? `export { default } from ${JSON.stringify(adapter)};`
@@ -144,9 +165,24 @@ export async function createPreviewServer(
       if (id === "\0dslinter-frame-entry")
         return [
           ...styles.map((style) => `import ${JSON.stringify(style)};`),
+          ...(nuxt
+            ? [
+                'import { setup as setupNuxt } from "virtual:dslinter/nuxt";',
+                "globalThis.__dslinterVueSetup = setupNuxt;",
+              ]
+            : []),
           `import { boot } from ${JSON.stringify(runtimeFile)};`,
           `boot(${JSON.stringify({ root: scanRoot, moduleRoot: config.root ? resolve(app.root, config.root) : app.root, app: app.id, framework: app.framework, styles, moduleLoader: true, adapterRoot: realpathSync(adapter ? dirname(adapter) : app.root) })});`,
         ].join("\n");
+    },
+    transform(code, id) {
+      // The preview frame's document is cross-origin to its module server, so the browser
+      // rejects history API calls; Nuxt's router gets memory history instead.
+      if (nuxt && /[\\/]nuxt[\\/]dist[\\/]pages[\\/]runtime[\\/]plugins[\\/]router\.js/.test(id))
+        return code.replace(
+          "const history = routerOptions.history?.(routerBase) ??",
+          "const history = createMemoryHistory(routerBase) ??",
+        );
     },
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
@@ -160,12 +196,12 @@ export async function createPreviewServer(
       });
     },
   };
-  const server = await vite.createServer({
+  const server = await createServer(vite, nuxt, {
     ...config,
     configFile: false,
     root: config.root ? resolve(app.root, config.root) : app.root,
     base: "/",
-    publicDir: config.publicDir ?? "public",
+    publicDir: config.publicDir ?? (nuxt ? resolve(app.root, "public") : "public"),
     cacheDir: join(
       workspaceCacheDir(scanRoot),
       "node_modules/.vite/hosts",
@@ -233,6 +269,44 @@ export async function createPreviewServer(
       watch: { ignored: ["**/.git/**", "**/vendor/**"] },
     },
   });
-  await server.listen();
+  await server.listen().catch(async (error: unknown) => {
+    await server.close();
+    throw error;
+  });
   return server;
+}
+
+/** Create the Vite server; a Nuxt instance lives as long as it and closes with it. */
+async function createServer(
+  vite: typeof import("vite"),
+  nuxt: { close: () => Promise<void> } | undefined,
+  options: Parameters<typeof import("vite").createServer>[0],
+): Promise<ViteDevServer> {
+  let server: ViteDevServer;
+  try {
+    server = await vite.createServer(options);
+  } catch (error) {
+    await nuxt?.close();
+    throw error;
+  }
+  if (nuxt) {
+    const close = server.close.bind(server);
+    server.close = async () => {
+      await close();
+      await nuxt.close();
+    };
+  }
+  return server;
+}
+
+/** The app's own Vite, else the one bundled with DSLinter (apps that get Vite transitively). */
+function resolveVite(appRoot: string): string {
+  for (const root of [appRoot, packageRoot]) {
+    try {
+      return createRequire(join(root, "package.json")).resolve("vite");
+    } catch {
+      // try the next root
+    }
+  }
+  throw new Error(`Cannot resolve "vite" from ${appRoot}`);
 }

@@ -36,6 +36,27 @@ describe("workspace discovery", () => {
     expect(readdirSync(root, { recursive: true })).toEqual(before);
   });
 
+  it("uses nuxt.config for Nuxt apps, with or without a tooling vite.config", () => {
+    const root = mkdtempSync(join(tmpdir(), "dslinter-nuxt-"));
+    for (const [name, files] of [
+      ["site", ["nuxt.config.ts", "vite.config.ts"]],
+      ["docs", ["nuxt.config.ts"]],
+    ]) {
+      const app = join(root, name);
+      mkdirSync(app);
+      writeFileSync(
+        join(app, "package.json"),
+        JSON.stringify({ name, dependencies: { nuxt: "*" } }),
+      );
+      for (const file of files) writeFileSync(join(app, file), "export default {}");
+    }
+    const apps = discoverApps(root);
+    expect(apps.map((app) => [app.id, app.framework, app.config.split("/").pop()])).toEqual([
+      ["docs", "vue", "nuxt.config.ts"],
+      ["site", "vue", "nuxt.config.ts"],
+    ]);
+  });
+
   it("does not replace option values with the scan path", () => {
     expect(
       withScannerScanPath(["--output", "/tmp/report.json", "--max-warnings", "2"], "/repo"),

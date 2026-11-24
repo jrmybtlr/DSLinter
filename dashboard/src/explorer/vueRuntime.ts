@@ -89,6 +89,10 @@ export async function mount(
     if (!mounting && !updating) emit("preview:error", failure.message);
   }
   try {
+    // Framework hosts such as Nuxt install their app instance and plugins first.
+    await (
+      globalThis as { __dslinterVueSetup?: (app: unknown) => Promise<void> }
+    ).__dslinterVueSetup?.(app);
     adapter.vue?.setup?.(app);
     const previousError = app.config.errorHandler;
     const previousWarning = app.config.warnHandler;

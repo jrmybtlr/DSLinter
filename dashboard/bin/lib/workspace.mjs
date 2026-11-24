@@ -12,6 +12,14 @@ const SKIP = new Set([
   "bootstrap",
 ]);
 const VITE_CONFIG = /^vite\.config\.(ts|mts|js|mjs|cts|cjs)$/;
+// Nuxt apps keep their Vite setup in nuxt.config; any vite.config there is tooling only.
+const NUXT_CONFIG = /^nuxt\.config\.(ts|mts|js|mjs|cts|cjs)$/;
+
+function appConfig(names) {
+  return (
+    names.find((name) => NUXT_CONFIG.test(name)) || names.find((name) => VITE_CONFIG.test(name))
+  );
+}
 
 export function readPackage(root) {
   try {
@@ -35,7 +43,11 @@ function appAt(dir, config, root) {
   const deps = { ...pkg.dependencies, ...pkg.devDependencies, ...pkg.peerDependencies };
   const configSource = readFileSync(join(dir, config), "utf8");
   const framework =
-    deps.vue || deps["@inertiajs/vue3"] || configSource.includes("@vitejs/plugin-vue")
+    deps.vue ||
+    deps.nuxt ||
+    deps["@inertiajs/vue3"] ||
+    NUXT_CONFIG.test(config) ||
+    configSource.includes("@vitejs/plugin-vue")
       ? "vue"
       : "react";
   return {
@@ -57,9 +69,9 @@ export function discoverApps(root) {
     } catch {
       return;
     }
-    const config = entries.find((entry) => entry.isFile() && VITE_CONFIG.test(entry.name));
+    const config = appConfig(entries.filter((entry) => entry.isFile()).map((entry) => entry.name));
     if (config && !existsSync(join(dir, "bin", "dslinter.mjs"))) {
-      apps.push(appAt(dir, config.name, root));
+      apps.push(appAt(dir, config, root));
     }
     for (const entry of entries) {
       if (entry.isDirectory() && !entry.name.startsWith(".") && !SKIP.has(entry.name))
@@ -70,7 +82,7 @@ export function discoverApps(root) {
   if (!apps.length) {
     for (let dir = dirname(resolve(root)); dirname(dir) !== dir; dir = dirname(dir)) {
       const names = readdirSync(dir);
-      const config = names.find((name) => VITE_CONFIG.test(name));
+      const config = appConfig(names);
       if (!config) continue;
       apps.push(appAt(dir, config, root));
       break;
