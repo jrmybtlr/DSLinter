@@ -113,11 +113,11 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - run: npm install -g npm@latest
 
       - run: pnpm install --frozen-lockfile --ignore-scripts
 
@@ -181,29 +181,7 @@ jobs:
             --no-gh-release \
             --skip-optional-publish
 
-      - name: Verify npm publish credentials
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
-            echo "::error::NPM_TOKEN secret is missing. Add an npm Automation token (or Granular token with Read and Write on the full @dslinter scope: every @dslinter/binding-* package plus dslinter). See CONTRIBUTING.md."
-            exit 1
-          fi
-          npm config set @dslinter:registry https://registry.npmjs.org/
-          if ! user=$(npm whoami); then
-            echo "::error::npm whoami failed — NPM_TOKEN is expired, revoked, or invalid (publish steps would fail with 404)."
-            echo "::error::Fix: create a new token at https://www.npmjs.com/settings/tokens then run: gh secret set NPM_TOKEN --repo ${{ github.repository }}"
-            exit 1
-          fi
-          echo "npm user: ${user}"
-          pkg=$(node -p "require('./dashboard/package.json').name")
-          ver=$(node -p "require('./dashboard/package.json').version")
-          echo "Will publish ${pkg}@${ver} and @dslinter/binding-*@${ver}"
-
       - name: Publish platform bindings
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
           npm config set @dslinter:registry https://registry.npmjs.org/
@@ -216,7 +194,4 @@ jobs:
           done
 
       - name: Publish dslinter
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          pnpm --filter dslinter publish --access public --no-git-checks --ignore-scripts
+        run: cd dashboard && npm publish --access public --ignore-scripts
