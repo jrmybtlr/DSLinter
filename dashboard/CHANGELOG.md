@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.9.3
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.9.2...v0.9.3)
+
+### 🩹 Fixes
+
+- Explorer lock, dark preview flash, Vue template props ([#109](https://github.com/jrmybtlr/DSLinter/pull/109))
+
+### ❤️ Contributors
+
+- Jeremy Butler <jeremy.butler@laravel.com>
+
 ## v0.9.2
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.9.1...v0.9.2)
