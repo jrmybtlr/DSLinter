@@ -209,11 +209,7 @@ export function buildMergedTokenView(
 
     if (darkDef && lightDef) {
       row.darkValue = darkDef.value;
-      row.darkDisplayValue = displayValueForDefinition(
-        darkDef,
-        undefined,
-        resolvedDarkForDisplay,
-      );
+      row.darkDisplayValue = displayValueForDefinition(darkDef, undefined, resolvedDarkForDisplay);
       row.darkPath = darkDef.path;
       row.darkLine = darkDef.line;
     }

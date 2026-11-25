@@ -135,9 +135,7 @@ function relativeImport(from: string, root: string, path: string): string {
 }
 
 function previewKey(component: CatalogComponent): string {
-  return /^[A-Za-z_$][\w$]*$/.test(component.name)
-    ? component.name
-    : JSON.stringify(component.id);
+  return /^[A-Za-z_$][\w$]*$/.test(component.name) ? component.name : JSON.stringify(component.id);
 }
 
 export function notificationAdapterExample(
@@ -213,9 +211,7 @@ export function contextAdapterExample(
   let body = vue ? "node" : "{node}";
   providers.forEach((_, index) => {
     const name = `PreviewProvider${index + 1}`;
-    body = vue
-      ? `h(${name}, {}, { default: () => ${body} })`
-      : `<${name}>${body}</${name}>`;
+    body = vue ? `h(${name}, {}, { default: () => ${body} })` : `<${name}>${body}</${name}>`;
   });
   const decorate =
     providers.length === 0

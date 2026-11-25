@@ -75,9 +75,8 @@ export function HideFromCatalogButton({
             <DialogTitle>Hide from library?</DialogTitle>
             <DialogDescription className="space-y-2">
               <span className="block">
-                This hides{" "}
-                <span className="font-medium text-foreground">{componentName}</span> from the
-                DSLint library. Nothing is deleted — the source file stays in your project, and
+                This hides <span className="font-medium text-foreground">{componentName}</span> from
+                the DSLint library. Nothing is deleted — the source file stays in your project, and
                 DSLint still scans it. It just will not appear in the sidebar, command palette, or
                 playground.
               </span>

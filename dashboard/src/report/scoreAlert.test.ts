@@ -26,12 +26,16 @@ it("marks components from code and accessibility findings on their file", () => 
     files: [
       {
         path: "/repo/resources/js/components/ui/sidebar.tsx",
-        definitions: [{ name: "resources/js/components/ui/sidebar.tsx#Sidebar", kind: "function", line: 1 }],
+        definitions: [
+          { name: "resources/js/components/ui/sidebar.tsx#Sidebar", kind: "function", line: 1 },
+        ],
         parse_errors: [],
       },
       {
         path: "/repo/resources/js/components/ui/button.tsx",
-        definitions: [{ name: "resources/js/components/ui/button.tsx#Button", kind: "function", line: 1 }],
+        definitions: [
+          { name: "resources/js/components/ui/button.tsx#Button", kind: "function", line: 1 },
+        ],
         parse_errors: [],
       },
     ],
