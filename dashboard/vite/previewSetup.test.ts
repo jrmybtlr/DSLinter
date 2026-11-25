@@ -24,7 +24,10 @@ function fixture() {
     join(root, "node_modules/sonner/package.json"),
     '{"name":"sonner","main":"index.js"}',
   );
-  writeFileSync(join(root, "node_modules/sonner/index.js"), "module.exports = {};");
+  writeFileSync(
+    join(root, "node_modules/sonner/index.js"),
+    "module.exports = {};",
+  );
   writeFileSync(
     join(root, "src/ToastHost.tsx"),
     'import { Toaster as Sonner } from "sonner"; export function ToastHost() { return <Sonner />; }',
@@ -39,19 +42,79 @@ function fixture() {
       export_name: "ToastHost",
       declared_props: [],
       component_imports: {
-        Sonner: { specifier: "sonner", export_name: "Toaster", importer: "src/ToastHost.tsx" },
+        Sonner: {
+          specifier: "sonner",
+          export_name: "Toaster",
+          importer: "src/ToastHost.tsx",
+        },
       },
     },
     usages: [],
     dependencies: [],
     bindings: {},
   };
-  const app = { id: ".", name: "fixture", root, config: "", framework: "react" as const };
-  const report = { root: realpathSync(root), components: [component] } as WorkspaceReport;
-  return { root, app, report, component, path: join(root, "dslinter.preview.tsx") };
+  const app = {
+    id: ".",
+    name: "fixture",
+    root,
+    config: "",
+    framework: "react" as const,
+  };
+  const report = {
+    root: realpathSync(root),
+    components: [component],
+  } as WorkspaceReport;
+  return {
+    root,
+    app,
+    report,
+    component,
+    path: join(root, "dslinter.preview.tsx"),
+  };
 }
 
 describe("saving a preview setup", () => {
+  it("generates an editable fixture entry for a Vue data component", () => {
+    const f = fixture();
+    writeFileSync(
+      join(f.root, "src/ForecastHours.vue"),
+      "<template><ol /></template>",
+    );
+    const component: CatalogComponent = {
+      id: "src/ForecastHours.vue#default",
+      name: "ForecastHours",
+      framework: "vue",
+      preview: {
+        id: "ForecastHours",
+        rel_path: "src/ForecastHours.vue",
+        export_name: "default",
+        declared_props: ["hours"],
+        declared_prop_optional: { hours: false },
+        sample_props: { hours: [{ time: "2025-06-02T09:00:00" }] },
+      },
+      usages: [],
+      dependencies: [],
+      bindings: {},
+    };
+    const app = { ...f.app, framework: "vue" as const };
+    const report = { ...f.report, components: [component] } as WorkspaceReport;
+    expect(
+      addPreviewSetup(app, f.root, report, component.id, "fixture"),
+    ).toEqual({
+      path: "dslinter.preview.tsx",
+      created: true,
+    });
+    const saved = readFileSync(f.path, "utf8");
+    expect(saved).toContain("fixtures: {");
+    expect(saved).toContain('time: "2025-06-02T09:00:00"');
+    expect(() =>
+      addPreviewSetup(app, f.root, report, component.id, "fixture"),
+    ).toThrow("already configured");
+    expect(() =>
+      addPreviewSetup(f.app, f.root, report, component.id, "fixture"),
+    ).toThrow("different app");
+  });
+
   it("creates an app adapter from verified source and refuses to overwrite its entry", () => {
     const f = fixture();
     const source = readFileSync(join(f.root, "src/ToastHost.tsx"), "utf8");
@@ -63,18 +126,25 @@ describe("saving a preview setup", () => {
     expect(saved).toContain('from "./src/ToastHost.tsx"');
     expect(saved).toContain('toast("Example notification")');
     expect(saved).toContain("preview(PreviewTarget");
-    expect(() => addPreviewSetup(f.app, f.root, f.report, f.component.id)).toThrow(
-      "already configured",
-    );
+    expect(() =>
+      addPreviewSetup(f.app, f.root, f.report, f.component.id),
+    ).toThrow("already configured");
     expect(readFileSync(f.path, "utf8")).toBe(saved);
-    expect(readFileSync(join(f.root, "src/ToastHost.tsx"), "utf8")).toBe(source);
+    expect(readFileSync(join(f.root, "src/ToastHost.tsx"), "utf8")).toBe(
+      source,
+    );
   });
 
   it("merges existing configuration and leaves no temporary files", () => {
     const f = fixture();
-    writeFileSync(f.path, 'export default { styles: ["./theme.css"], previews: { Other: {} } };');
+    writeFileSync(
+      f.path,
+      'export default { styles: ["./theme.css"], previews: { Other: {} } };',
+    );
     const files = readdirSync(f.root);
-    expect(addPreviewSetup(f.app, f.root, f.report, f.component.id).created).toBe(false);
+    expect(
+      addPreviewSetup(f.app, f.root, f.report, f.component.id).created,
+    ).toBe(false);
     expect(readFileSync(f.path, "utf8")).toContain('styles: ["./theme.css"]');
     expect(readFileSync(f.path, "utf8")).toContain("Other: {}");
     expect(readdirSync(f.root)).toEqual(files);
@@ -83,7 +153,10 @@ describe("saving a preview setup", () => {
   it("renames a .ts stub to .tsx when adding a JSX preview", () => {
     const f = fixture();
     const tsPath = join(f.root, "dslinter.preview.ts");
-    writeFileSync(tsPath, 'export default { styles: ["./theme.css"], previews: { Other: {} } };');
+    writeFileSync(
+      tsPath,
+      'export default { styles: ["./theme.css"], previews: { Other: {} } };',
+    );
     expect(addPreviewSetup(f.app, f.root, f.report, f.component.id)).toEqual({
       path: "dslinter.preview.tsx",
       created: false,
@@ -98,7 +171,9 @@ describe("saving a preview setup", () => {
     const f = fixture();
     const source = "export default makeConfig();\n";
     writeFileSync(f.path, source);
-    expect(() => addPreviewSetup(f.app, f.root, f.report, f.component.id)).toThrow("dynamically");
+    expect(() =>
+      addPreviewSetup(f.app, f.root, f.report, f.component.id),
+    ).toThrow("dynamically");
     expect(readFileSync(f.path, "utf8")).toBe(source);
   });
 
@@ -113,32 +188,44 @@ describe("saving a preview setup", () => {
     expect(readFileSync(path, "utf8")).toContain("createElement");
   });
 
-  it.each(["missing-export", "missing-import", "unsupported-framework", "source-escape"])(
-    "rejects an outdated or unsupported target: %s",
-    (kind) => {
-      const f = fixture();
-      if (kind === "missing-export")
-        writeFileSync(
-          join(f.root, "src/ToastHost.tsx"),
-          'import { Toaster } from "sonner"; export const Changed = Toaster;',
-        );
-      if (kind === "missing-import")
-        writeFileSync(join(f.root, "src/ToastHost.tsx"), "export const ToastHost = () => null;");
-      if (kind === "unsupported-framework") f.component.framework = "vue";
-      if (kind === "source-escape")
-        f.component.preview.rel_path = join(dirname(f.root), "outside.tsx");
-      const files = readdirSync(f.root);
-      expect(() => addPreviewSetup(f.app, f.root, f.report, f.component.id)).toThrow();
-      expect(readdirSync(f.root)).toEqual(files);
-    },
-  );
+  it.each([
+    "missing-export",
+    "missing-import",
+    "unsupported-framework",
+    "source-escape",
+  ])("rejects an outdated or unsupported target: %s", (kind) => {
+    const f = fixture();
+    if (kind === "missing-export")
+      writeFileSync(
+        join(f.root, "src/ToastHost.tsx"),
+        'import { Toaster } from "sonner"; export const Changed = Toaster;',
+      );
+    if (kind === "missing-import")
+      writeFileSync(
+        join(f.root, "src/ToastHost.tsx"),
+        "export const ToastHost = () => null;",
+      );
+    if (kind === "unsupported-framework") f.component.framework = "vue";
+    if (kind === "source-escape")
+      f.component.preview.rel_path = join(dirname(f.root), "outside.tsx");
+    const files = readdirSync(f.root);
+    expect(() =>
+      addPreviewSetup(f.app, f.root, f.report, f.component.id),
+    ).toThrow();
+    expect(readdirSync(f.root)).toEqual(files);
+  });
 
   it("refuses linked configuration files without changing the target", () => {
     const f = fixture();
-    const target = join(mkdtempSync(join(tmpdir(), "dslinter-linked-")), "config.ts");
+    const target = join(
+      mkdtempSync(join(tmpdir(), "dslinter-linked-")),
+      "config.ts",
+    );
     writeFileSync(target, "export default {};\n");
     symlinkSync(target, f.path);
-    expect(() => addPreviewSetup(f.app, f.root, f.report, f.component.id)).toThrow("linked");
+    expect(() =>
+      addPreviewSetup(f.app, f.root, f.report, f.component.id),
+    ).toThrow("linked");
     expect(readFileSync(target, "utf8")).toBe("export default {};\n");
   });
 });
@@ -162,7 +249,10 @@ describe("preview setup request", () => {
       onSaved,
     });
     const request = Object.assign(
-      Readable.from([overrides.body ?? JSON.stringify({ app: ".", componentId: f.component.id })]),
+      Readable.from([
+        overrides.body ??
+          JSON.stringify({ app: ".", componentId: f.component.id }),
+      ]),
       {
         url: "/dslinter/preview-setup",
         method: "POST",
@@ -189,7 +279,11 @@ describe("preview setup request", () => {
   it("saves and then refreshes the selected host", async () => {
     const f = await send();
     expect(f.response.statusCode).toBe(200);
-    expect(f.result).toEqual({ path: "dslinter.preview.tsx", created: true, reloaded: true });
+    expect(f.result).toEqual({
+      path: "dslinter.preview.tsx",
+      created: true,
+      reloaded: true,
+    });
     expect(f.onSaved).toHaveBeenCalledWith(f.app);
   });
   it.each([{ token: "wrong" }, { origin: "https://unrelated.example" }])(
@@ -200,14 +294,16 @@ describe("preview setup request", () => {
       expect(readdirSync(f.root)).not.toContain("dslinter.preview.tsx");
     },
   );
-  it.each(["null", "{", JSON.stringify({ app: ".", componentId: "other" }), " ".repeat(8193)])(
-    "leaves files unchanged for invalid requests",
-    async (body) => {
-      const f = await send({ body });
-      expect(f.response.statusCode).toBe(409);
-      expect(readdirSync(f.root)).not.toContain("dslinter.preview.tsx");
-    },
-  );
+  it.each([
+    "null",
+    "{",
+    JSON.stringify({ app: ".", componentId: "other" }),
+    " ".repeat(8193),
+  ])("leaves files unchanged for invalid requests", async (body) => {
+    const f = await send({ body });
+    expect(f.response.statusCode).toBe(409);
+    expect(readdirSync(f.root)).not.toContain("dslinter.preview.tsx");
+  });
   it("reports a saved file separately from a failed host restart", async () => {
     const f = await send({
       onSaved: async () => {

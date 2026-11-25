@@ -19,7 +19,11 @@ import { useDashboardTheme } from "../shell/DashboardTheme";
 import { useHashRoute } from "../shell/useHashRoute";
 import type { HashRoute } from "../shell/hashRoute";
 import { catalogFromReport } from "./catalog";
-import { catalogLabels, catalogNavigation, dashboardReport } from "./dashboardReport";
+import {
+  catalogLabels,
+  catalogNavigation,
+  dashboardReport,
+} from "./dashboardReport";
 import { ExplorerComponent } from "./ExplorerComponent";
 
 const hiddenKey = `dslinter-hidden:${context.root}`;
@@ -54,7 +58,9 @@ export default function Explorer() {
   const catalog = useMemo(
     () =>
       state.report
-        ? catalogFromReport(state.report).filter((component) => !hidden.includes(component.id))
+        ? catalogFromReport(state.report).filter(
+            (component) => !hidden.includes(component.id),
+          )
         : [],
     [state.report, hidden],
   );
@@ -64,7 +70,10 @@ export default function Explorer() {
   );
   const labels = useMemo(() => catalogLabels(catalog), [catalog]);
   const tree = useMemo(() => catalogNavigation(catalog), [catalog]);
-  const names = useMemo(() => catalog.map((component) => component.id), [catalog]);
+  const names = useMemo(
+    () => catalog.map((component) => component.id),
+    [catalog],
+  );
   const entries = useMemo(
     () =>
       catalog.map((component) => ({
@@ -112,7 +121,8 @@ export default function Explorer() {
     // Keep the chosen application while navigating between the established dashboard routes.
     const query = location.search;
     navigate(next);
-    if (query) history.replaceState(null, "", location.pathname + query + location.hash);
+    if (query)
+      history.replaceState(null, "", location.pathname + query + location.hash);
   }
 
   let main: ReactNode;
@@ -134,7 +144,8 @@ export default function Explorer() {
         componentLabels={labels}
       />
     );
-  else if (route.view === "tokens") main = <TokensPane dslinterReport={report} />;
+  else if (route.view === "tokens")
+    main = <TokensPane dslinterReport={report} />;
   else if (!report)
     main = (
       <p role="status" className="p-8 text-sm text-muted-foreground">
@@ -160,7 +171,9 @@ export default function Explorer() {
     } else if (matches.length > 1)
       main = (
         <div className="p-8">
-          <h1 className="text-xl font-semibold">Choose which {reference} to preview</h1>
+          <h1 className="text-xl font-semibold">
+            Choose which {reference} to preview
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Several components share this name. Select a source file below.
           </p>
@@ -182,8 +195,8 @@ export default function Explorer() {
         <div className="p-8">
           <h1 className="text-xl font-semibold">Component unavailable</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            This component is not in the current scan. Choose another component from the sidebar, or
-            refresh the scan if its source has changed.
+            This component is not in the current scan. Choose another component
+            from the sidebar, or refresh the scan if its source has changed.
           </p>
         </div>
       );
@@ -212,9 +225,16 @@ export default function Explorer() {
           </SelectTrigger>
           <SelectContent>
             {context.apps.map((candidate) => (
-              <SelectItem key={candidate.id} value={candidate.id} className="text-xs">
+              <SelectItem
+                key={candidate.id}
+                value={candidate.id}
+                className="text-xs"
+              >
                 {candidate.name}
-                <span className="text-muted-foreground"> · {candidate.framework}</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {candidate.framework}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -250,7 +270,8 @@ export default function Explorer() {
               className="mb-3 w-full text-xs text-muted-foreground underline"
               onClick={() => setHidden([])}
             >
-              Restore {hidden.length} hidden {hidden.length === 1 ? "component" : "components"}
+              Restore {hidden.length} hidden{" "}
+              {hidden.length === 1 ? "component" : "components"}
             </button>
           )
         }

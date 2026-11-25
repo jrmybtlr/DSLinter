@@ -11,9 +11,13 @@ export type ContextDiagnostic = {
   attemptedProviders: ProviderCandidate[];
 };
 
-export function contextRequirement(error: unknown): ContextRequirement | undefined {
+export function contextRequirement(
+  error: unknown,
+): ContextRequirement | undefined {
   const message = error instanceof Error ? error.message : String(error);
-  const ancestor = message.match(/must be (?:used|rendered) (?:within|inside)\s+(.+?)(?:\n|$)/i);
+  const ancestor = message.match(
+    /must be (?:used|rendered) (?:within|inside)\s+(.+?)(?:\n|$)/i,
+  );
   if (ancestor) {
     const names = ancestor[1]
       .replace(/^one of the following components:\s*/i, "")
@@ -21,7 +25,8 @@ export function contextRequirement(error: unknown): ContextRequirement | undefin
       .match(/[A-Z]\w*(?:\.[A-Z]\w*)*/g);
     if (names?.length) return { names: [...new Set(names)], message };
   }
-  if (/injection\s+.+?\s+not found/i.test(message)) return { names: [], message };
+  if (/injection\s+.+?\s+not found/i.test(message))
+    return { names: [], message };
 }
 
 export function isMissingInjectionWarning(message: string): boolean {
@@ -109,7 +114,8 @@ export async function recoverProviders<T>(options: {
       )
         reason =
           "The provider is already present; adding it again would repeat a requirement or form a cycle.";
-      else if (providers.length >= 4) reason = "Recovery stopped after four added providers.";
+      else if (providers.length >= 4)
+        reason = "Recovery stopped after four added providers.";
       if (reason)
         throw new PreviewContextError({
           message: requirement.message,
@@ -125,7 +131,10 @@ export async function recoverProviders<T>(options: {
 
 function relativeImport(from: string, root: string, path: string): string {
   const start = from.replaceAll("\\", "/").split("/").filter(Boolean);
-  const end = `${root}/${path}`.replaceAll("\\", "/").split("/").filter(Boolean);
+  const end = `${root}/${path}`
+    .replaceAll("\\", "/")
+    .split("/")
+    .filter(Boolean);
   while (start.length && end.length && start[0] === end[0]) {
     start.shift();
     end.shift();
@@ -151,7 +160,9 @@ export function notificationAdapterExample(
     component.preview.export_name === "default"
       ? "PreviewTarget"
       : `{ ${component.preview.export_name} as PreviewTarget }`;
-  const from = JSON.stringify(relativeImport(adapterRoot, scanRoot, component.preview.rel_path));
+  const from = JSON.stringify(
+    relativeImport(adapterRoot, scanRoot, component.preview.rel_path),
+  );
   const key = previewKey(component);
   if (format === "js") {
     return [
@@ -206,7 +217,10 @@ export function contextAdapterExample(
     ...(vue ? ['import { h } from "vue";'] : []),
     ...[component.preview, ...providers].map((item, index) => {
       const name = index ? `PreviewProvider${index}` : "PreviewTarget";
-      const binding = item.export_name === "default" ? name : `{ ${item.export_name} as ${name} }`;
+      const binding =
+        item.export_name === "default"
+          ? name
+          : `{ ${item.export_name} as ${name} }`;
       return `import ${binding} from ${JSON.stringify(relativeImport(adapterRoot, scanRoot, item.rel_path))};`;
     }),
   ];

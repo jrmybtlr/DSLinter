@@ -26,12 +26,19 @@ export function controlsForComponent(
     : recipeFor(component, catalog);
   function findTarget(node: DemoNode | string): DemoNode | undefined {
     if (typeof node === "string") return;
-    if (node.name === component.name || component.bindings[node.name] === component.id) return node;
+    if (
+      node.name === component.name ||
+      component.bindings[node.name] === component.id
+    )
+      return node;
     return node.children?.map(findTarget).find(Boolean);
   }
-  const target = recipe && typeof recipe !== "string" ? findTarget(recipe) : undefined;
+  const target =
+    recipe && typeof recipe !== "string" ? findTarget(recipe) : undefined;
   const composed = target?.children?.some((child) => typeof child !== "string");
-  const label = target?.children?.filter((child) => typeof child === "string").join("");
+  const label = target?.children
+    ?.filter((child) => typeof child === "string")
+    .join("");
   for (const control of controls) {
     const value = target?.props?.[control.key];
     if (value !== undefined && typeof value === typeof control.default)
@@ -47,7 +54,9 @@ export function controlsForComponent(
       default: slot === "default" && label ? label : `Example ${slot}`,
     });
   }
-  return composed ? controls.filter((control) => control.key !== "children") : controls;
+  return composed
+    ? controls.filter((control) => control.key !== "children")
+    : controls;
 }
 
 export function propsForPreview(

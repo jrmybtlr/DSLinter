@@ -12,7 +12,8 @@ function parse(source: string, path: string): ts.SourceFile {
     path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
   if (
-    (file as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics.length
+    (file as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] })
+      .parseDiagnostics.length
   )
     throw new PreviewSetupConflict(
       "The preview configuration has a syntax error. Fix it before adding this example.",
@@ -30,12 +31,16 @@ function unwrap(expression: ts.Expression): ts.Expression {
   return expression;
 }
 
-function objectValue(expression: ts.Expression, file: ts.SourceFile): ts.ObjectLiteralExpression {
+function objectValue(
+  expression: ts.Expression,
+  file: ts.SourceFile,
+): ts.ObjectLiteralExpression {
   let value = unwrap(expression);
   if (ts.isIdentifier(value)) {
     const name = value.text;
     const declarations = file.statements.flatMap((statement) =>
-      ts.isVariableStatement(statement) && statement.declarationList.flags & ts.NodeFlags.Const
+      ts.isVariableStatement(statement) &&
+      statement.declarationList.flags & ts.NodeFlags.Const
         ? [...statement.declarationList.declarations].filter(
             (item) => ts.isIdentifier(item.name) && item.name.text === name,
           )
@@ -73,8 +78,11 @@ function exportedObject(file: ts.SourceFile): ts.ObjectLiteralExpression {
   return objectValue(assignments[0].expression, file);
 }
 
-function propertyName(property: ts.ObjectLiteralElementLike): string | undefined {
-  return property.name && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
+function propertyName(
+  property: ts.ObjectLiteralElementLike,
+): string | undefined {
+  return property.name &&
+    (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
     ? property.name.text
     : undefined;
 }
@@ -88,7 +96,8 @@ function appendProperty(
 ): Edit[] {
   const edits: Edit[] = [];
   const last = object.properties.at(-1);
-  if (last && !object.properties.hasTrailingComma) edits.push({ at: last.end, text: "," });
+  if (last && !object.properties.hasTrailingComma)
+    edits.push({ at: last.end, text: "," });
   const close = object.end - 1;
   const lineStart = file.text.lastIndexOf("\n", close) + 1;
   const closeIndent = file.text.slice(lineStart, close);
@@ -107,7 +116,10 @@ function generatedEntry(
 ): { imports: string; entry: string } {
   if (path.endsWith(".js"))
     example = ts.transpileModule(example, {
-      compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext },
+      compilerOptions: {
+        target: ts.ScriptTarget.ESNext,
+        module: ts.ModuleKind.ESNext,
+      },
     }).outputText;
   const generated = parse(example, path);
   const occupied = new Set<string>();
@@ -155,7 +167,10 @@ function generatedEntry(
         ),
       );
     } else if (bindings && ts.isNamespaceImport(bindings))
-      bindings = ts.factory.updateNamespaceImport(bindings, alias(bindings.name));
+      bindings = ts.factory.updateNamespaceImport(
+        bindings,
+        alias(bindings.name),
+      );
     imports.push(
       ts.factory.updateImportDeclaration(
         statement,
@@ -176,10 +191,11 @@ function generatedEntry(
   );
   if (!previews || !ts.isPropertyAssignment(previews))
     throw new Error("Generated preview setup is invalid");
-  const entry = objectValue(previews.initializer, generated).properties.find((item) =>
-    [componentId, componentName].includes(propertyName(item) || ""),
+  const entry = objectValue(previews.initializer, generated).properties.find(
+    (item) => [componentId, componentName].includes(propertyName(item) || ""),
   );
-  if (!entry) throw new Error("Generated preview setup does not match the component");
+  if (!entry)
+    throw new Error("Generated preview setup does not match the component");
   const transformed = ts.transform(entry, [
     (context) => {
       function visit(node: ts.Node): ts.VisitResult<ts.Node> {
@@ -193,9 +209,15 @@ function generatedEntry(
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const result = {
     imports: imports
-      .map((item) => printer.printNode(ts.EmitHint.Unspecified, item, generated))
+      .map((item) =>
+        printer.printNode(ts.EmitHint.Unspecified, item, generated),
+      )
       .join("\n"),
-    entry: printer.printNode(ts.EmitHint.Unspecified, transformed.transformed[0], generated),
+    entry: printer.printNode(
+      ts.EmitHint.Unspecified,
+      transformed.transformed[0],
+      generated,
+    ),
   };
   transformed.dispose();
   return result;
@@ -210,7 +232,9 @@ export function mergePreviewSetup(
 ): string {
   const file = parse(source, path);
   const adapter = exportedObject(file);
-  const matching = adapter.properties.filter((item) => propertyName(item) === "previews");
+  const matching = adapter.properties.filter(
+    (item) => propertyName(item) === "previews",
+  );
   if (matching.length > 1)
     throw new PreviewSetupConflict(
       "The configuration has more than one previews entry. Merge the example manually.",
@@ -231,7 +255,13 @@ export function mergePreviewSetup(
         `A preview is already configured for ${componentName}. Update that entry manually; it has not been replaced.`,
       );
   }
-  const generated = generatedEntry(example, file, componentId, componentName, path);
+  const generated = generatedEntry(
+    example,
+    file,
+    componentId,
+    componentName,
+    path,
+  );
   const edits = appendProperty(
     file,
     previews || adapter,
@@ -241,7 +271,11 @@ export function mergePreviewSetup(
   let importAt = imports.at(-1)?.end ?? file.statements[0]?.getStart(file) ?? 0;
   if (!imports.length) {
     for (const statement of file.statements) {
-      if (!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)) break;
+      if (
+        !ts.isExpressionStatement(statement) ||
+        !ts.isStringLiteral(statement.expression)
+      )
+        break;
       importAt = statement.end;
     }
   }
@@ -249,6 +283,72 @@ export function mergePreviewSetup(
   let output = source;
   for (const edit of edits.sort((a, b) => b.at - a.at))
     output = output.slice(0, edit.at) + edit.text + output.slice(edit.at);
+  parse(output, path);
+  return output;
+}
+
+/**
+ * Adds `entry` (an object-literal property generated from catalog data) to the adapter's
+ * `fixtures`, creating that map when absent. Existing entries are never replaced.
+ */
+export function mergeFixtureEntry(
+  source: string,
+  entry: string,
+  comment: string,
+  componentId: string,
+  componentName: string,
+  path: string,
+): string {
+  const file = parse(source, path);
+  const adapter = exportedObject(file);
+  const matching = adapter.properties.filter(
+    (item) => propertyName(item) === "fixtures",
+  );
+  if (matching.length > 1)
+    throw new PreviewSetupConflict(
+      "The configuration has more than one fixtures entry. Merge the example manually.",
+    );
+  let fixtures: ts.ObjectLiteralExpression | undefined;
+  if (matching[0]) {
+    if (!ts.isPropertyAssignment(matching[0]))
+      throw new PreviewSetupConflict(
+        "The fixtures entry is not a plain object. Merge the example manually.",
+      );
+    fixtures = objectValue(matching[0].initializer, file);
+    if (
+      fixtures.properties.some((item) =>
+        [componentId, componentName].includes(propertyName(item) || ""),
+      )
+    )
+      throw new PreviewSetupConflict(
+        `Fixtures are already configured for ${componentName}. Edit that entry; it has not been replaced.`,
+      );
+  }
+  const target = fixtures || adapter;
+  const close = target.end - 1;
+  const lineStart = file.text.lastIndexOf("\n", close) + 1;
+  const closeIndent = file.text.slice(lineStart, close);
+  const base = `${/^\s*$/.test(closeIndent) ? closeIndent : ""}  `;
+  const block = fixtures
+    ? `${comment}\n${entry}`
+    : `fixtures: {\n  ${comment}\n${entry
+        .split("\n")
+        .map((line) => (line ? `  ${line}` : line))
+        .join("\n")},\n}`;
+  const text = block
+    .split("\n")
+    .map((line, index) => (index && line ? base + line : line))
+    .join("\n");
+  const last = target.properties.at(-1);
+  // Insert after the last entry so the existing closing line stays as written. The separator
+  // comma joins the same insertion, since two edits at one offset could land in either order.
+  let at = close;
+  while (at > target.getStart(file) + 1 && /\s/.test(file.text[at - 1])) at--;
+  const comma = last && !target.properties.hasTrailingComma ? "," : "";
+  const output =
+    source.slice(0, at) +
+    `${comma}\n${base}${text},${last ? "" : `\n${base.slice(2)}`}` +
+    source.slice(at);
   parse(output, path);
   return output;
 }

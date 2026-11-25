@@ -234,3 +234,72 @@ export function automaticStateMessage(
   });
   return `Example values applied so the component is visible (${changes.join("; ")}). You can change them in the controls.`;
 }
+
+function clip(text: string, length = 80): string {
+  return text.length > length ? `${text.slice(0, length - 1)}…` : text;
+}
+
+/** A short, clone-safe description of a prop value for failure diagnostics. */
+export function summarizePropValue(value: unknown): string {
+  if (value === undefined) return "undefined";
+  if (value === null) return "null";
+  if (typeof value === "function") return "function";
+  if (typeof value === "string") return clip(JSON.stringify(value));
+  if (typeof value !== "object") return String(value);
+  let json: string;
+  try {
+    json = JSON.stringify(value) ?? String(value);
+  } catch {
+    json = Array.isArray(value) ? "[…]" : "{…}";
+  }
+  if (Array.isArray(value))
+    return value.length
+      ? `${value.length} item${value.length === 1 ? "" : "s"}: ${clip(json, 72)}`
+      : "[] (empty)";
+  return clip(json);
+}
+
+export function summarizeProps(
+  values: Record<string, unknown>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(values)
+      .filter(([name]) => !name.startsWith("slot:"))
+      .map(([name, value]) => [name, summarizePropValue(value)]),
+  );
+}
+
+export type PropDiagnostic = {
+  name: string;
+  value: string;
+  required: boolean;
+  problem: boolean;
+};
+
+/**
+ * Every declared prop, with what the last preview attempt passed. A required prop that was
+ * missing or empty is the most likely reason nothing rendered, so those sort first.
+ */
+export function propDiagnostics(
+  component: CatalogComponent,
+  passed: Record<string, string> | undefined,
+): PropDiagnostic[] {
+  if (!passed) return [];
+  const spec = component.preview;
+  const names = [
+    ...new Set([...spec.declared_props, ...Object.keys(passed)]),
+  ].filter((name) => !/^on[A-Z]/.test(name) && !name.startsWith("slot:"));
+  return names
+    .map((name) => {
+      const value = passed[name] ?? "undefined";
+      const required = spec.declared_prop_optional?.[name] === false;
+      const problem =
+        required &&
+        (value === "undefined" ||
+          value === "null" ||
+          value === "[] (empty)" ||
+          value === "{}");
+      return { name, value, required, problem };
+    })
+    .sort((a, b) => Number(b.problem) - Number(a.problem));
+}

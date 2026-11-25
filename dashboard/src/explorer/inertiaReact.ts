@@ -1,6 +1,11 @@
 import { createElement, Fragment, useState } from "react";
 import { page, formData } from "./inertiaShared";
-export { router, createInertiaApp, setLayoutProps, useHttp } from "./inertiaShared";
+export {
+  router,
+  createInertiaApp,
+  setLayoutProps,
+  useHttp,
+} from "./inertiaShared";
 export function usePage() {
   return page;
 }
@@ -27,6 +32,8 @@ export function useForm(initial: Record<string, unknown> = {}) {
     ...formData(data),
     data,
     setData: (key: string | Record<string, unknown>, value?: unknown) =>
-      setData((previous) => (typeof key === "string" ? { ...previous, [key]: value } : key)),
+      setData((previous) =>
+        typeof key === "string" ? { ...previous, [key]: value } : key,
+      ),
   };
 }

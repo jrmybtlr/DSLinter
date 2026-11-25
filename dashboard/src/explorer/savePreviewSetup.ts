@@ -3,13 +3,21 @@ export async function savePreviewSetup(
   componentId: string,
   token: string,
   signal: AbortSignal,
+  action: "notification" | "fixture" = "notification",
 ): Promise<{ path: string; created: boolean; reloaded: boolean }> {
   let response: Response;
   try {
     response = await fetch("/dslinter/preview-setup", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Dslinter-Token": token },
-      body: JSON.stringify({ app, componentId }),
+      headers: {
+        "Content-Type": "application/json",
+        "X-Dslinter-Token": token,
+      },
+      body: JSON.stringify(
+        action === "fixture"
+          ? { app, componentId, action }
+          : { app, componentId },
+      ),
       signal,
     });
   } catch (error) {

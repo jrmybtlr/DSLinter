@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CatalogComponent, LintFinding, WorkspaceReport } from "../types/report";
+import type {
+  CatalogComponent,
+  LintFinding,
+  WorkspaceReport,
+} from "../types/report";
 import type { PlaygroundEntry } from "../types/playground";
 import {
   defaultArgsFromControls,
@@ -22,23 +26,36 @@ type Props = {
   onHide: (id: string) => void;
 };
 
-export function ExplorerComponent({ component, catalog, report, app, onHide }: Props) {
+export function ExplorerComponent({
+  component,
+  catalog,
+  report,
+  app,
+  onHide,
+}: Props) {
   const [manualControls, setManualControls] = useState<PlaygroundControl[]>([]);
   const manualReady = useRef(false);
   const controls = useMemo(() => {
     const base = controlsForComponent(component, catalog);
     return [
-      ...base.filter((control) => !manualControls.some((manual) => manual.key === control.key)),
+      ...base.filter(
+        (control) =>
+          !manualControls.some((manual) => manual.key === control.key),
+      ),
       ...manualControls,
     ];
   }, [component, catalog, manualControls]);
-  const [values, setValues] = useState<PlaygroundArgs>(() => defaultArgsFromControls(controls));
+  const [values, setValues] = useState<PlaygroundArgs>(() =>
+    defaultArgsFromControls(controls),
+  );
   const editedKeys = useRef(new Set<string>());
   const [status, setStatus] = useState<PreviewResponse | null>(null);
   const [fixtureValues, setFixtureValues] = useState<Record<string, unknown>>(
     component.preview.sample_props || {},
   );
-  const [runtimeResults, setRuntimeResults] = useState<Record<string, LintFinding[]>>({});
+  const [runtimeResults, setRuntimeResults] = useState<
+    Record<string, LintFinding[]>
+  >({});
   const [scanPending, setScanPending] = useState(false);
   const [scanError, setScanError] = useState<string>();
   const { resolvedTheme } = useDashboardTheme();
@@ -51,7 +68,10 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
     setFixtureValues(component.preview.sample_props || {});
   }, [component.preview.sample_props]);
   useEffect(() => {
-    setValues((previous) => ({ ...defaultArgsFromControls(controls), ...previous }));
+    setValues((previous) => ({
+      ...defaultArgsFromControls(controls),
+      ...previous,
+    }));
   }, [controls]);
 
   const handleA11y = useCallback((message: PreviewResponse) => {
@@ -72,7 +92,10 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
       handleA11y(message);
       if (message.type === "rendered") {
         if (message.revealedValues)
-          setFixtureValues((previous) => ({ ...previous, ...message.revealedValues }));
+          setFixtureValues((previous) => ({
+            ...previous,
+            ...message.revealedValues,
+          }));
         let defaults: PlaygroundArgs = {};
         if (message.controls) {
           if (!manualReady.current) {
@@ -88,7 +111,9 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
         const updates = { ...message.values, ...defaults };
         if (Object.keys(updates).length)
           setValues((previous) =>
-            Object.entries(updates).some(([key, value]) => previous[key] !== value)
+            Object.entries(updates).some(
+              ([key, value]) => previous[key] !== value,
+            )
               ? { ...previous, ...updates }
               : previous,
           );
@@ -103,7 +128,10 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
         const prop = message.event?.startsWith("update:")
           ? message.event.slice(7)
           : bindings[message.event || ""];
-        if (prop && ["string", "boolean", "number"].includes(typeof message.value)) {
+        if (
+          prop &&
+          ["string", "boolean", "number"].includes(typeof message.value)
+        ) {
           editedKeys.current.add(prop);
           setValues((previous) => ({
             ...previous,
@@ -116,7 +144,13 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
   );
   const previewProps = useCallback(
     (args: PlaygroundArgs) =>
-      propsForPreview(component, controls, args, fixtureValues, editedKeys.current),
+      propsForPreview(
+        component,
+        controls,
+        args,
+        fixtureValues,
+        editedKeys.current,
+      ),
     [fixtureValues, controls, component],
   );
   const renderPreview = useCallback(
@@ -137,7 +171,9 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
   const axes = useMemo(
     () =>
       controls
-        .filter((control) => control.type === "boolean" || control.type === "select")
+        .filter(
+          (control) => control.type === "boolean" || control.type === "select",
+        )
         .map((control) => control.key),
     [controls],
   );
@@ -159,7 +195,11 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
   );
   const entry: PlaygroundEntry = {
     id: component.id,
-    meta: { id: component.id, title: component.name, group: component.framework },
+    meta: {
+      id: component.id,
+      title: component.name,
+      group: component.framework,
+    },
     modulePath: component.preview.rel_path,
     controls,
     renderPreview,
@@ -200,7 +240,8 @@ export function ExplorerComponent({ component, catalog, report, app, onHide }: P
       }}
       isolatedPreview
       previewNote={
-        status?.type === "rendered" && Object.keys(status.revealedValues || {}).length > 0
+        status?.type === "rendered" &&
+        Object.keys(status.revealedValues || {}).length > 0
           ? automaticStateMessage(status.revealedValues || {})
           : undefined
       }

@@ -17,7 +17,9 @@ export function preview(
   return { __dslinterPreview: true, component, decorate };
 }
 
-export function isPreviewDefinition(value: unknown): value is PreviewDefinition {
+export function isPreviewDefinition(
+  value: unknown,
+): value is PreviewDefinition {
   return (
     typeof value === "object" &&
     value !== null &&

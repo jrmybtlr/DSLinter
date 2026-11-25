@@ -13,7 +13,12 @@ const component: CatalogComponent = {
   id: "src/Brand.tsx#Brand",
   name: "Brand",
   framework: "react",
-  preview: { id: "Brand", rel_path: "src/Brand.tsx", export_name: "Brand", declared_props: [] },
+  preview: {
+    id: "Brand",
+    rel_path: "src/Brand.tsx",
+    export_name: "Brand",
+    declared_props: [],
+  },
   bindings: {},
   dependencies: [],
   usages: [],
@@ -26,7 +31,9 @@ function provider(name = "SidebarProvider", prefix = "src"): ProviderCandidate {
     export_name: name,
   };
 }
-function options(attempt: (providers: ProviderCandidate[]) => Promise<unknown>) {
+function options(
+  attempt: (providers: ProviderCandidate[]) => Promise<unknown>,
+) {
   return {
     component,
     candidates: [provider()],
@@ -37,7 +44,8 @@ function options(attempt: (providers: ProviderCandidate[]) => Promise<unknown>) 
     attempt,
   };
 }
-const missing = () => new Error("useSidebar must be used within a SidebarProvider.");
+const missing = () =>
+  new Error("useSidebar must be used within a SidebarProvider.");
 
 describe("provider recovery", () => {
   it("recognizes React, Vue/Reka ancestor alternatives, and bare injection warnings", () => {
@@ -49,8 +57,12 @@ describe("provider recovery", () => {
         ),
       )?.names,
     ).toEqual(["MenuRoot", "MenuSub"]);
-    expect(contextRequirement('injection "service" not found.')?.names).toEqual([]);
-    expect(contextRequirement(new Error("Cannot read properties of undefined"))).toBeUndefined();
+    expect(contextRequirement('injection "service" not found.')?.names).toEqual(
+      [],
+    );
+    expect(
+      contextRequirement(new Error("Cannot read properties of undefined")),
+    ).toBeUndefined();
   });
   it("retries the same preview with the verified provider and reuses a cached chain", async () => {
     const attempt = vi.fn(async (providers: ProviderCandidate[]) => {
@@ -68,12 +80,17 @@ describe("provider recovery", () => {
     "stops with useful diagnostics for %s",
     async (kind) => {
       const config = options(async () => {
-        throw kind === "injection" ? new Error('injection "service" not found.') : missing();
+        throw kind === "injection"
+          ? new Error('injection "service" not found.')
+          : missing();
       });
-      if (kind === "ambiguous") config.candidates.push(provider("SidebarProvider", "other"));
+      if (kind === "ambiguous")
+        config.candidates.push(provider("SidebarProvider", "other"));
       if (kind === "absent") config.candidates = [];
       if (kind === "configured") config.authoritative = true;
-      await expect(recoverProviders(config)).rejects.toBeInstanceOf(PreviewContextError);
+      await expect(recoverProviders(config)).rejects.toBeInstanceOf(
+        PreviewContextError,
+      );
       expect(config.onFailure).toHaveBeenCalledTimes(kind === "repeat" ? 2 : 1);
     },
   );
@@ -82,7 +99,8 @@ describe("provider recovery", () => {
       outer = provider("OuterProvider");
     const result = await recoverProviders({
       ...options(async (providers) => {
-        if (!providers.length) throw new Error("Child must be used within InnerProvider");
+        if (!providers.length)
+          throw new Error("Child must be used within InnerProvider");
         if (providers.length === 1)
           throw new Error("InnerProvider must be used within OuterProvider");
         return true;
@@ -97,15 +115,21 @@ describe("provider recovery", () => {
     );
   });
   it("bounds recovery, stops unrelated provider failures, and cancels stale work", async () => {
-    const candidates = Array.from({ length: 5 }, (_, index) => provider(`Provider${index}`));
+    const candidates = Array.from({ length: 5 }, (_, index) =>
+      provider(`Provider${index}`),
+    );
     await expect(
       recoverProviders({
         ...options(async (providers) => {
-          throw new Error(`Child must be used within Provider${providers.length}`);
+          throw new Error(
+            `Child must be used within Provider${providers.length}`,
+          );
         }),
         candidates,
       }),
-    ).rejects.toMatchObject({ diagnostic: { reason: expect.stringContaining("four") } });
+    ).rejects.toMatchObject({
+      diagnostic: { reason: expect.stringContaining("four") },
+    });
     const failure = new Error("Provider needs account data");
     await expect(
       recoverProviders(
@@ -114,13 +138,17 @@ describe("provider recovery", () => {
           throw missing();
         }),
       ),
-    ).rejects.toMatchObject({ diagnostic: { reason: expect.stringContaining(failure.message) } });
+    ).rejects.toMatchObject({
+      diagnostic: { reason: expect.stringContaining(failure.message) },
+    });
     let current = true;
     const attempt = vi.fn(async () => {
       current = false;
       throw missing();
     });
-    expect(await recoverProviders({ ...options(attempt), current: () => current })).toBeUndefined();
+    expect(
+      await recoverProviders({ ...options(attempt), current: () => current }),
+    ).toBeUndefined();
     expect(attempt).toHaveBeenCalledTimes(1);
   });
   it("does not add providers already present in the source example", async () => {
@@ -138,7 +166,8 @@ describe("provider recovery", () => {
   it("matches source-backed primitive aliases", async () => {
     const result = await recoverProviders({
       ...options(async (providers) => {
-        if (!providers.length) throw new Error("Component must be used within `SelectRoot`");
+        if (!providers.length)
+          throw new Error("Component must be used within `SelectRoot`");
         return true;
       }),
       candidates: [{ ...provider("Select"), aliases: ["SelectRoot"] }],
@@ -146,7 +175,12 @@ describe("provider recovery", () => {
     expect(result?.providers[0].name).toBe("Select");
   });
   it("generates adapter imports relative to the actual adapter and forwards values", () => {
-    const example = contextAdapterExample(component, [provider()], "/workspace/app", "/workspace");
+    const example = contextAdapterExample(
+      component,
+      [provider()],
+      "/workspace/app",
+      "/workspace",
+    );
     expect(example).toContain('from "../src/context.tsx"');
     expect(example).toContain(
       "preview(PreviewTarget, ({ node }) => (<PreviewProvider1>{node}</PreviewProvider1>))",
@@ -157,7 +191,9 @@ describe("provider recovery", () => {
       "/workspace",
       "/workspace",
     );
-    expect(vue).toContain("preview(PreviewTarget, ({ node }) => h(PreviewProvider1, {}, { default: () => node }))");
+    expect(vue).toContain(
+      "preview(PreviewTarget, ({ node }) => h(PreviewProvider1, {}, { default: () => node }))",
+    );
     expect(vue).toContain('import { h } from "vue"');
   });
 });

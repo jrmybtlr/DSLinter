@@ -10,7 +10,10 @@ import dslinter from "./plugin";
 
 const packageRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const demoInertiaRoot = resolve(packageRoot, "../demo/inertia");
-const navFooter = join(demoInertiaRoot, "resources/js/components/nav-footer.tsx");
+const navFooter = join(
+  demoInertiaRoot,
+  "resources/js/components/nav-footer.tsx",
+);
 
 describe("dslinter vite plugin resolveId", () => {
   it("has scan paths and consumer aliases for demo/inertia", () => {
@@ -28,7 +31,11 @@ describe("dslinter vite plugin resolveId", () => {
       scanRoot: demoInertiaRoot,
       consumerViteRoot: demoInertiaRoot,
     });
-    const resolved = await plugin.resolveId?.("@/components/ui/sidebar", navFooter, { ssr: false });
+    const resolved = await plugin.resolveId?.(
+      "@/components/ui/sidebar",
+      navFooter,
+      { ssr: false },
+    );
     expect(resolved?.replace(/\\/g, "/")).toContain(
       "demo/inertia/resources/js/components/ui/sidebar.tsx",
     );
@@ -47,7 +54,10 @@ describe("dslinter vite plugin resolveId", () => {
     });
 
     try {
-      const resolved = await server.pluginContainer.resolveId("@/components/ui/sidebar", navFooter);
+      const resolved = await server.pluginContainer.resolveId(
+        "@/components/ui/sidebar",
+        navFooter,
+      );
       expect(resolved?.id.replace(/\\/g, "/")).toContain(
         "demo/inertia/resources/js/components/ui/sidebar",
       );
@@ -73,7 +83,12 @@ describe("dslinter vite plugin resolveId", () => {
 
     try {
       const loaded = await server.pluginContainer.load(embedCss);
-      const code = typeof loaded === "string" ? loaded : loaded && "code" in loaded ? loaded.code : null;
+      const code =
+        typeof loaded === "string"
+          ? loaded
+          : loaded && "code" in loaded
+            ? loaded.code
+            : null;
       expect(code).toContain('@source "../src"');
       expect(code).toMatch(/demo\/inertia\/resources\/js\/components/);
     } finally {

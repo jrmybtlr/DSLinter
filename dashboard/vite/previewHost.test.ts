@@ -13,7 +13,13 @@ it("detects shadcn CSS without creating configuration", () => {
     join(root, "components.json"),
     JSON.stringify({ tailwind: { css: "src/app.css" } }),
   );
-  const app = { id: ".", name: "test", root, config: "", framework: "vue" as const };
+  const app = {
+    id: ".",
+    name: "test",
+    root,
+    config: "",
+    framework: "vue" as const,
+  };
   const before = readdirSync(root, { recursive: true });
   expect(detectPreviewStyles(app)).toEqual([join(root, "src/app.css")]);
   expect(readdirSync(root, { recursive: true })).toEqual(before);
@@ -23,7 +29,11 @@ it("keeps transforms while removing backend and manifest-writing host integratio
   expect(
     previewSafePlugins([
       { name: "laravel" },
-      [{ name: "inertia" }, { name: "@inertiajs/vite" }, { name: "laravel-vite-plugin-wayfinder" }],
+      [
+        { name: "inertia" },
+        { name: "@inertiajs/vite" },
+        { name: "laravel-vite-plugin-wayfinder" },
+      ],
       { name: "useClassy" },
       { name: "vite:vue" },
       { name: "vite:css" },

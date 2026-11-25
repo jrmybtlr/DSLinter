@@ -13,6 +13,8 @@ describe("resolveReportFilePath", () => {
 
   it("uses DSLINTER_REPORT_PATH when set", () => {
     const custom = join("/tmp", "custom-report.json");
-    expect(resolveReportFilePath("/app", { DSLINTER_REPORT_PATH: custom })).toBe(resolve(custom));
+    expect(
+      resolveReportFilePath("/app", { DSLINTER_REPORT_PATH: custom }),
+    ).toBe(resolve(custom));
   });
 });

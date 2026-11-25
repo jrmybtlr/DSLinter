@@ -17,15 +17,23 @@ it("keeps structured samples and omits untouched optional controls", () => {
       rel_path: "Nav.tsx",
       export_name: "Nav",
       declared_props: ["items", "showLabel", "label"],
-      declared_prop_kinds: { items: "object", showLabel: "boolean", label: "string" },
+      declared_prop_kinds: {
+        items: "object",
+        showLabel: "boolean",
+        label: "string",
+      },
       declared_prop_optional: { showLabel: true, label: true },
       sample_props: { items },
     },
   };
   const controls = controlsForComponent(component, [component]);
   const values = defaultArgsFromControls(controls);
-  expect(controls.find((control) => control.key === "items")?.type).toBe("object");
-  expect(propsForPreview(component, controls, values, { items }, new Set())).toEqual({ items });
+  expect(controls.find((control) => control.key === "items")?.type).toBe(
+    "object",
+  );
+  expect(
+    propsForPreview(component, controls, values, { items }, new Set()),
+  ).toEqual({ items });
   expect(
     propsForPreview(
       component,

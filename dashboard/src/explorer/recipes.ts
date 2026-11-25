@@ -23,7 +23,13 @@ const FAMILIES = [
 const REQUIRED: Record<string, string[]> = {
   Card: ["Card", "CardHeader", "CardTitle", "CardContent"],
   Dialog: ["Dialog", "DialogTrigger", "DialogContent", "DialogTitle"],
-  Select: ["Select", "SelectTrigger", "SelectContent", "SelectItem", "SelectValue"],
+  Select: [
+    "Select",
+    "SelectTrigger",
+    "SelectContent",
+    "SelectItem",
+    "SelectValue",
+  ],
   Tabs: ["Tabs", "TabsList", "TabsTrigger", "TabsContent"],
   Popover: ["Popover", "PopoverTrigger", "PopoverContent"],
   Tooltip: ["Tooltip", "TooltipTrigger", "TooltipContent", "TooltipProvider"],
@@ -33,12 +39,16 @@ export function familyComponents(
   component: CatalogComponent,
   catalog: CatalogComponent[],
 ): CatalogComponent[] {
-  const directory = component.preview.rel_path.split("/").slice(0, -1).join("/");
+  const directory = component.preview.rel_path
+    .split("/")
+    .slice(0, -1)
+    .join("/");
   return catalog.filter(
     (candidate) =>
       candidate.framework === component.framework &&
       (candidate.preview.rel_path === component.preview.rel_path ||
-        candidate.preview.rel_path.split("/").slice(0, -1).join("/") === directory),
+        candidate.preview.rel_path.split("/").slice(0, -1).join("/") ===
+          directory),
   );
 }
 
@@ -49,7 +59,8 @@ function baseRecipeFor(
   const family = FAMILIES.find(
     (name) =>
       component.name === name ||
-      (component.name.startsWith(name) && /^[A-Z]/.test(component.name.slice(name.length))),
+      (component.name.startsWith(name) &&
+        /^[A-Z]/.test(component.name.slice(name.length))),
   );
   if (!family) return;
   const candidates = familyComponents(component, catalog);
@@ -57,7 +68,8 @@ function baseRecipeFor(
   const contracts = candidates.filter(
     (candidate) =>
       candidate.name === family ||
-      (candidate.name.startsWith(family) && /^[A-Z]/.test(candidate.name.slice(family.length))),
+      (candidate.name.startsWith(family) &&
+        /^[A-Z]/.test(candidate.name.slice(family.length))),
   );
   const knownPrimitive = contracts.some(
     (candidate) =>
@@ -68,7 +80,8 @@ function baseRecipeFor(
       ) ||
       (["Input", "Button"].includes(family) &&
         candidate.name === family &&
-        candidate.preview.native_element === (family === "Input" ? "input" : "button")),
+        candidate.preview.native_element ===
+          (family === "Input" ? "input" : "button")),
   );
   if (!(REQUIRED[family] || [family]).every((name) => names.has(name))) return;
   if (family !== "Card" && !knownPrimitive) return;
@@ -81,7 +94,10 @@ function baseRecipeFor(
     case "Button":
       return node("Button", ["Example button"]);
     case "Input":
-      return node("Input", [], { placeholder: "Type something…", "aria-label": "Example input" });
+      return node("Input", [], {
+        placeholder: "Type something…",
+        "aria-label": "Example input",
+      });
     case "Checkbox":
       return node("Checkbox", [], { "aria-label": "Example checkbox" });
     case "Switch":
@@ -97,16 +113,24 @@ function baseRecipeFor(
         node("DialogContent", [
           node("DialogTitle", ["Example dialog"]),
           ...(names.has("DialogDescription")
-            ? [node("DialogDescription", ["A generated example using your components."])]
+            ? [
+                node("DialogDescription", [
+                  "A generated example using your components.",
+                ]),
+              ]
             : []),
           ...(names.has("DialogClose") ? [node("DialogClose", ["Close"])] : []),
         ]),
       ]);
     case "Select":
       return node("Select", [
-        node("SelectTrigger", [node("SelectValue", [], { placeholder: "Choose an option" })], {
-          "aria-label": "Example select",
-        }),
+        node(
+          "SelectTrigger",
+          [node("SelectValue", [], { placeholder: "Choose an option" })],
+          {
+            "aria-label": "Example select",
+          },
+        ),
         node("SelectContent", [
           node("SelectItem", ["First option"], { value: "first" }),
           node("SelectItem", ["Second option"], { value: "second" }),
@@ -154,7 +178,9 @@ export function recipeFor(
 ): DemoNode | undefined {
   const tree =
     familyRecipe(component, catalog) ||
-    (component.name.startsWith("InputOTP") ? undefined : baseRecipeFor(component, catalog));
+    (component.name.startsWith("InputOTP")
+      ? undefined
+      : baseRecipeFor(component, catalog));
   if (!tree || !includesTarget(tree, new Set([component.name]))) return;
   let selected = false;
   function mark(node: DemoNode | string): void {
@@ -176,7 +202,10 @@ export function demoFromExample(tree: ExampleNode): DemoNode | string {
     name: tree.name,
     slot: tree.slot,
     props: Object.fromEntries(
-      Object.entries(tree.props || {}).map(([key, value]) => [key, value.value]),
+      Object.entries(tree.props || {}).map(([key, value]) => [
+        key,
+        value.value,
+      ]),
     ),
     children: tree.children?.map(demoFromExample),
   };
@@ -210,8 +239,10 @@ export function demoSnippet(
     for (const [key, value] of Object.entries(tree.props || {})) {
       if (!key.startsWith("slot:")) continue;
       const name = key.slice(5);
-      if (name === "default") children.splice(0, children.length, String(value));
-      else children.push({ name: `template #${name}`, children: [String(value)] });
+      if (name === "default")
+        children.splice(0, children.length, String(value));
+      else
+        children.push({ name: `template #${name}`, children: [String(value)] });
     }
   const name = tree.slot ? `template #${tree.slot}` : tree.name;
   if (!children.length) return `${indent}<${name}${props} />`;
@@ -229,7 +260,9 @@ export function demoWithValues(
   const children =
     target && typeof props.children === "string"
       ? [props.children]
-      : tree.children?.map((child) => demoWithValues(child, targetNames, values));
+      : tree.children?.map((child) =>
+          demoWithValues(child, targetNames, values),
+        );
   delete props.children;
   return { ...tree, props, children };
 }
