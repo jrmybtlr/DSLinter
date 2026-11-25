@@ -362,6 +362,7 @@ describe("governanceTabCounts", () => {
       a11y: 1,
       code: 1,
       token: 1,
+      candidates: 0,
       unused: 2,
     });
   });

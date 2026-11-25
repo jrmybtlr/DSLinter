@@ -45,6 +45,8 @@ pub fn print_human(report: &WorkspaceReport) {
         }
     }
 
+    print_token_candidates(report);
+
     println!("\nFindings");
     if report.findings.is_empty() {
         println!("  (none)");
@@ -68,5 +70,40 @@ pub fn print_human(report: &WorkspaceReport) {
             line,
             f.message
         );
+    }
+}
+
+/// Repeated hardcoded values (≥ 2 uses) worth promoting to tokens.
+fn print_token_candidates(report: &WorkspaceReport) {
+    let c = &report.token_candidates;
+    let sections = [
+        ("Hardcoded colors", &c.colors),
+        ("Arbitrary Tailwind classes", &c.arbitrary_classes),
+        ("Inline styles", &c.inline_styles),
+    ];
+    if sections
+        .iter()
+        .all(|(_, list)| !list.iter().any(|t| t.recommended))
+    {
+        return;
+    }
+    println!("\nToken candidates (used 2+ times)");
+    for (title, list) in sections {
+        let rows: Vec<_> = list.iter().filter(|t| t.recommended).take(15).collect();
+        if rows.is_empty() {
+            continue;
+        }
+        println!("  {title}");
+        for t in rows {
+            let hint = match (&t.use_instead, &t.suggested_token) {
+                (Some(existing), _) => format!("use `{existing}`"),
+                (None, Some(name)) => format!("→ {name}"),
+                (None, None) => String::new(),
+            };
+            println!(
+                "    {:28} ×{:4}  {:2} files  {}",
+                t.value, t.reference_count, t.file_count, hint
+            );
+        }
     }
 }

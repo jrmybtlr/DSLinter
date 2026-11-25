@@ -334,7 +334,7 @@ pub fn is_style_color_property(name: &str) -> bool {
     )
 }
 
-/// Parse `color: #fff; background: red` style strings.
+/// Parse `color: #fff; width: 4px` style strings into every declared property.
 pub fn parse_style_string(raw: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     for decl in raw.split(';') {
@@ -347,7 +347,7 @@ pub fn parse_style_string(raw: &str) -> Vec<(String, String)> {
         };
         let prop = prop.trim().to_string();
         let val = val.trim().to_string();
-        if is_style_color_property(&prop) {
+        if !prop.is_empty() && !val.is_empty() {
             out.push((prop, val));
         }
     }
@@ -464,9 +464,10 @@ mod tests {
     }
 
     #[test]
-    fn parse_style_string_extracts_colors() {
+    fn parse_style_string_extracts_all_declarations() {
         let props = parse_style_string("color: #fff; width: 100px; background-color: #ff0066");
-        assert_eq!(props.len(), 2);
+        assert_eq!(props.len(), 3);
+        assert!(props.iter().any(|(p, v)| p == "width" && v == "100px"));
         assert!(props.iter().any(|(p, v)| p == "color" && v == "#fff"));
         assert!(props
             .iter()

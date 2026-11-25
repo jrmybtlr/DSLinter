@@ -5,6 +5,7 @@ mod config_filter;
 mod dark_mode;
 mod extracts;
 mod scoring;
+mod token_candidates;
 mod tokens;
 mod usage;
 
@@ -66,6 +67,13 @@ pub fn evaluate_workspace(
         color_allowlist.as_ref(),
         &size_scale,
     ));
+    let token_candidates = token_candidates::collect_token_candidates(
+        &files,
+        &sources,
+        css_tokens.as_ref(),
+        color_allowlist.as_ref(),
+        &size_scale,
+    );
     let cva_skip = cva_skip_fragments_for_files(&files, &sources);
     findings.extend(cva_composed_dark_mode_findings(&files, &sources, config));
     findings.extend(dark_mode_contrast_findings(
@@ -130,6 +138,7 @@ pub fn evaluate_workspace(
         scores,
         playgrounds,
         css_tokens,
+        token_candidates,
         config: report_config,
         config_snapshot,
     }
