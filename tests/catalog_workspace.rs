@@ -295,3 +295,22 @@ fn real_sidebar_brand_discovers_its_nested_provider_dependency() {
         .iter()
         .any(|c| c.id == "resources/js/components/ui/sidebar.tsx#SidebarProvider"));
 }
+
+#[test]
+fn plain_typescript_classes_and_functions_are_not_components() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    put(
+        root,
+        "app/utils/weather/layerScheduler.ts",
+        "export class LayerScheduler { run() {} }\nexport function ParseLayer(input: string) { return input }",
+    );
+    put(
+        root,
+        "src/Button.tsx",
+        "export function Button() { return <button>Hi</button> }",
+    );
+    let report = dslinter::scan_workspace(root).unwrap();
+    let ids: Vec<_> = report.components.iter().map(|c| c.id.as_str()).collect();
+    assert_eq!(ids, vec!["src/Button.tsx#Button"]);
+}

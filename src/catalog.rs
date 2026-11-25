@@ -436,6 +436,13 @@ pub fn build_catalog(
         }
         let module = &graph.modules[&file.path];
         let vue = file.path.extension().is_some_and(|e| e == "vue");
+        // Plain TypeScript modules cannot contain JSX, so their PascalCase
+        // classes and functions are utilities, not components. Re-exported
+        // primitives (e.g. Radix parts) are still catalogued.
+        let plain_ts = file
+            .path
+            .extension()
+            .is_some_and(|e| e == "ts" || e == "mts" || e == "cts");
         for (export, (source, local)) in &module.exports {
             let primitive = source
                 .as_deref()
@@ -457,7 +464,7 @@ pub fn build_catalog(
                         None
                     }
                 });
-            if definition.is_none() && primitive.is_none() {
+            if (definition.is_none() || plain_ts) && primitive.is_none() {
                 continue;
             }
             let identity = if primitive.is_some() { export } else { local };
