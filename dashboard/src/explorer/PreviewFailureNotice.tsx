@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { CatalogComponent } from "../types/report";
 import type { PreviewResponse } from "./protocol";
-import { previewAttemptDetails, previewFailureExplanation } from "./previewMessages";
+import {
+  previewAttemptDetails,
+  previewFailureExplanation,
+  propDiagnostics,
+} from "./previewMessages";
 import { savePreviewSetup } from "./savePreviewSetup";
 import { Button } from "../components/ui/button";
 
@@ -22,6 +26,8 @@ export function PreviewFailureNotice({
 }) {
   const explanation = previewFailureExplanation(component, status);
   const attempts = previewAttemptDetails(status.attempts || []);
+  const props = propDiagnostics(component, status.attemptedProps);
+  const fixture = status.setupAction === "fixture";
   const [copyState, setCopyState] = useState<"ready" | "copied" | "failed">("ready");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>();
@@ -37,7 +43,13 @@ export function PreviewFailureNotice({
     setSaving(true);
     setSaveError(undefined);
     try {
-      const result = await savePreviewSetup(app, component.id, setupToken, controller.signal);
+      const result = await savePreviewSetup(
+        app,
+        component.id,
+        setupToken,
+        controller.signal,
+        status.setupAction,
+      );
       if (controller.signal.aborted) return;
       setSavedPath(result.path);
       if (result.reloaded) onRetry();
@@ -73,9 +85,30 @@ export function PreviewFailureNotice({
       <p className="mt-2 text-muted-foreground">{explanation.description}</p>
       <p className="mt-3 text-foreground">
         {canSave
-          ? "Add a preview setup with a sample notification button. DSLinter will save it and reload this preview."
+          ? fixture
+            ? "Generate a preview entry with sample data for these props. DSLinter will save it to dslinter.preview.tsx, where you can edit it, and reload this preview."
+            : "Add a preview setup with a sample notification button. DSLinter will save it and reload this preview."
           : explanation.nextStep}
       </p>
+      {props.length > 0 && (
+        <div className="mt-4">
+          <p className="font-medium text-foreground">Props passed</p>
+          <ul role="list" className="mt-2 space-y-1 font-mono text-xs">
+            {props.map((prop) => (
+              <li
+                key={prop.name}
+                className={
+                  prop.problem ? "break-all text-destructive" : "break-all text-muted-foreground"
+                }
+              >
+                <span className={prop.problem ? undefined : "text-foreground"}>{prop.name}</span>:{" "}
+                {prop.value}
+                {prop.problem && <span className="font-sans"> (required)</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {Boolean(status.contextDiagnostic?.attemptedProviders.length) && (
         <p className="mt-2 text-muted-foreground">
           DSLinter tried adding:{" "}
@@ -93,10 +126,16 @@ export function PreviewFailureNotice({
             onClick={addSetup}
           >
             {saving
-              ? "Adding preview setup…"
+              ? fixture
+                ? "Generating preview…"
+                : "Adding preview setup…"
               : savedPath
-                ? "Preview setup saved"
-                : "Add preview setup"}
+                ? fixture
+                  ? "Preview generated"
+                  : "Preview setup saved"
+                : fixture
+                  ? "Generate preview"
+                  : "Add preview setup"}
           </Button>
         )}
         <button
@@ -110,7 +149,14 @@ export function PreviewFailureNotice({
       </div>
       {canSave && !savedPath && (
         <p className="mt-2 text-xs text-muted-foreground">
-          Saves this example to your preview configuration and reloads the preview.
+          {fixture
+            ? "Writes the sample props as fixtures in your preview configuration. Required props marked TODO need real values."
+            : "Saves this example to your preview configuration and reloads the preview."}
+        </p>
+      )}
+      {fixture && savedPath && (
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
+          Saved to {savedPath}. Edit its fixture to change the preview data.
         </p>
       )}
       {saveError && (

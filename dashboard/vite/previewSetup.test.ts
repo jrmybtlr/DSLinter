@@ -39,19 +39,74 @@ function fixture() {
       export_name: "ToastHost",
       declared_props: [],
       component_imports: {
-        Sonner: { specifier: "sonner", export_name: "Toaster", importer: "src/ToastHost.tsx" },
+        Sonner: {
+          specifier: "sonner",
+          export_name: "Toaster",
+          importer: "src/ToastHost.tsx",
+        },
       },
     },
     usages: [],
     dependencies: [],
     bindings: {},
   };
-  const app = { id: ".", name: "fixture", root, config: "", framework: "react" as const };
-  const report = { root: realpathSync(root), components: [component] } as WorkspaceReport;
-  return { root, app, report, component, path: join(root, "dslinter.preview.tsx") };
+  const app = {
+    id: ".",
+    name: "fixture",
+    root,
+    config: "",
+    framework: "react" as const,
+  };
+  const report = {
+    root: realpathSync(root),
+    components: [component],
+  } as WorkspaceReport;
+  return {
+    root,
+    app,
+    report,
+    component,
+    path: join(root, "dslinter.preview.tsx"),
+  };
 }
 
 describe("saving a preview setup", () => {
+  it("generates an editable fixture entry for a Vue data component", () => {
+    const f = fixture();
+    writeFileSync(join(f.root, "src/ForecastHours.vue"), "<template><ol /></template>");
+    const component: CatalogComponent = {
+      id: "src/ForecastHours.vue#default",
+      name: "ForecastHours",
+      framework: "vue",
+      preview: {
+        id: "ForecastHours",
+        rel_path: "src/ForecastHours.vue",
+        export_name: "default",
+        declared_props: ["hours"],
+        declared_prop_optional: { hours: false },
+        sample_props: { hours: [{ time: "2025-06-02T09:00:00" }] },
+      },
+      usages: [],
+      dependencies: [],
+      bindings: {},
+    };
+    const app = { ...f.app, framework: "vue" as const };
+    const report = { ...f.report, components: [component] } as WorkspaceReport;
+    expect(addPreviewSetup(app, f.root, report, component.id, "fixture")).toEqual({
+      path: "dslinter.preview.tsx",
+      created: true,
+    });
+    const saved = readFileSync(f.path, "utf8");
+    expect(saved).toContain("fixtures: {");
+    expect(saved).toContain('time: "2025-06-02T09:00:00"');
+    expect(() => addPreviewSetup(app, f.root, report, component.id, "fixture")).toThrow(
+      "already configured",
+    );
+    expect(() => addPreviewSetup(f.app, f.root, report, component.id, "fixture")).toThrow(
+      "different app",
+    );
+  });
+
   it("creates an app adapter from verified source and refuses to overwrite its entry", () => {
     const f = fixture();
     const source = readFileSync(join(f.root, "src/ToastHost.tsx"), "utf8");
@@ -189,7 +244,11 @@ describe("preview setup request", () => {
   it("saves and then refreshes the selected host", async () => {
     const f = await send();
     expect(f.response.statusCode).toBe(200);
-    expect(f.result).toEqual({ path: "dslinter.preview.tsx", created: true, reloaded: true });
+    expect(f.result).toEqual({
+      path: "dslinter.preview.tsx",
+      created: true,
+      reloaded: true,
+    });
     expect(f.onSaved).toHaveBeenCalledWith(f.app);
   });
   it.each([{ token: "wrong" }, { origin: "https://unrelated.example" }])(

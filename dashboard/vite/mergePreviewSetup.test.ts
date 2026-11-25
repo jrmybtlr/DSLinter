@@ -2,7 +2,7 @@ import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
 import { notificationAdapterExample } from "../src/explorer/providerRecovery";
 import type { CatalogComponent } from "../src/types/report";
-import { mergePreviewSetup } from "./mergePreviewSetup";
+import { mergeFixtureEntry, mergePreviewSetup, PreviewSetupConflict } from "./mergePreviewSetup";
 
 const target: CatalogComponent = {
   id: "src/ToastHost.tsx#ToastHost",
@@ -14,7 +14,11 @@ const target: CatalogComponent = {
     export_name: "ToastHost",
     declared_props: [],
     component_imports: {
-      Sonner: { specifier: "sonner", export_name: "Toaster", importer: "src/ToastHost.tsx" },
+      Sonner: {
+        specifier: "sonner",
+        export_name: "Toaster",
+        importer: "src/ToastHost.tsx",
+      },
     },
   },
   usages: [],
@@ -90,7 +94,11 @@ describe("adding preview entries", () => {
     const def = adapter.previews.ToastHost;
     expect(def.__dslinterPreview).toBe(true);
     expect(def.component).toBe(targetComponent);
-    const node = { type: targetComponent, props: { theme: "dark" }, children: [] };
+    const node = {
+      type: targetComponent,
+      props: { theme: "dark" },
+      children: [],
+    };
     const tree = def.decorate({ node });
     expect(tree.children[0]).toEqual(node);
     tree.children[1].props.onClick();
@@ -136,5 +144,35 @@ describe("adding preview entries", () => {
     "export default { broken: ; };",
   ])("refuses an unsafe merge: %s", (source) => {
     expect(() => merge(source)).toThrow();
+  });
+});
+
+describe("merging fixture entries", () => {
+  const entry = "ForecastHours: {\n  hours: [],\n}";
+  const comment = "// Sample data";
+  it("adds a fixtures map to an existing adapter", () => {
+    const output = mergeFixtureEntry(
+      'export default {\n  styles: ["app.css"]\n};\n',
+      entry,
+      comment,
+      "a#default",
+      "ForecastHours",
+      "dslinter.preview.ts",
+    );
+    expect(output).toBe(
+      'export default {\n  styles: ["app.css"],\n  fixtures: {\n    // Sample data\n    ForecastHours: {\n      hours: [],\n    },\n  },\n};\n',
+    );
+  });
+
+  it("appends to existing fixtures and refuses to replace an entry", () => {
+    const source = "export default {\n  fixtures: {\n    Card: { title: 'x' },\n  },\n};\n";
+    expect(
+      mergeFixtureEntry(source, entry, comment, "a#default", "ForecastHours", "p.ts"),
+    ).toContain(
+      "    Card: { title: 'x' },\n    // Sample data\n    ForecastHours: {\n      hours: [],\n    },\n  },",
+    );
+    expect(() => mergeFixtureEntry(source, entry, comment, "a#default", "Card", "p.ts")).toThrow(
+      PreviewSetupConflict,
+    );
   });
 });

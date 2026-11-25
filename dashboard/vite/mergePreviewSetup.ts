@@ -107,7 +107,10 @@ function generatedEntry(
 ): { imports: string; entry: string } {
   if (path.endsWith(".js"))
     example = ts.transpileModule(example, {
-      compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext },
+      compilerOptions: {
+        target: ts.ScriptTarget.ESNext,
+        module: ts.ModuleKind.ESNext,
+      },
     }).outputText;
   const generated = parse(example, path);
   const occupied = new Set<string>();
@@ -249,6 +252,70 @@ export function mergePreviewSetup(
   let output = source;
   for (const edit of edits.sort((a, b) => b.at - a.at))
     output = output.slice(0, edit.at) + edit.text + output.slice(edit.at);
+  parse(output, path);
+  return output;
+}
+
+/**
+ * Adds `entry` (an object-literal property generated from catalog data) to the adapter's
+ * `fixtures`, creating that map when absent. Existing entries are never replaced.
+ */
+export function mergeFixtureEntry(
+  source: string,
+  entry: string,
+  comment: string,
+  componentId: string,
+  componentName: string,
+  path: string,
+): string {
+  const file = parse(source, path);
+  const adapter = exportedObject(file);
+  const matching = adapter.properties.filter((item) => propertyName(item) === "fixtures");
+  if (matching.length > 1)
+    throw new PreviewSetupConflict(
+      "The configuration has more than one fixtures entry. Merge the example manually.",
+    );
+  let fixtures: ts.ObjectLiteralExpression | undefined;
+  if (matching[0]) {
+    if (!ts.isPropertyAssignment(matching[0]))
+      throw new PreviewSetupConflict(
+        "The fixtures entry is not a plain object. Merge the example manually.",
+      );
+    fixtures = objectValue(matching[0].initializer, file);
+    if (
+      fixtures.properties.some((item) =>
+        [componentId, componentName].includes(propertyName(item) || ""),
+      )
+    )
+      throw new PreviewSetupConflict(
+        `Fixtures are already configured for ${componentName}. Edit that entry; it has not been replaced.`,
+      );
+  }
+  const target = fixtures || adapter;
+  const close = target.end - 1;
+  const lineStart = file.text.lastIndexOf("\n", close) + 1;
+  const closeIndent = file.text.slice(lineStart, close);
+  const base = `${/^\s*$/.test(closeIndent) ? closeIndent : ""}  `;
+  const block = fixtures
+    ? `${comment}\n${entry}`
+    : `fixtures: {\n  ${comment}\n${entry
+        .split("\n")
+        .map((line) => (line ? `  ${line}` : line))
+        .join("\n")},\n}`;
+  const text = block
+    .split("\n")
+    .map((line, index) => (index && line ? base + line : line))
+    .join("\n");
+  const last = target.properties.at(-1);
+  // Insert after the last entry so the existing closing line stays as written. The separator
+  // comma joins the same insertion, since two edits at one offset could land in either order.
+  let at = close;
+  while (at > target.getStart(file) + 1 && /\s/.test(file.text[at - 1])) at--;
+  const comma = last && !target.properties.hasTrailingComma ? "," : "";
+  const output =
+    source.slice(0, at) +
+    `${comma}\n${base}${text},${last ? "" : `\n${base.slice(2)}`}` +
+    source.slice(at);
   parse(output, path);
   return output;
 }

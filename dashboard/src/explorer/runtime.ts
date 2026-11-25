@@ -30,7 +30,8 @@ import { includesTarget } from "./familyRecipes";
 import { hasVisiblePreview } from "./previewVisibility";
 import { applyPreviewInset } from "./previewInset";
 import { observePreviewSize } from "./previewSizing";
-import { EMPTY_PREVIEW_MESSAGE } from "./previewMessages";
+import { EMPTY_PREVIEW_MESSAGE, summarizeProps } from "./previewMessages";
+import { fixtureAdapterExample } from "./fixtureExample";
 import type { ProviderCandidate } from "../types/report";
 
 type Context = {
@@ -196,6 +197,8 @@ export function boot(context: Context): void {
     const component = next.component;
     const catalog = next.catalog || [];
     const attempts: string[] = [];
+    // Props from the most recent attempt, so a failure can show what the component received.
+    let attemptedProps: Record<string, unknown> | undefined;
     let contextDiagnostic: ContextDiagnostic | undefined;
     let adapterExample: string | undefined;
     try {
@@ -217,13 +220,21 @@ export function boot(context: Context): void {
         override?: unknown;
       }[] = [];
       if (explicit)
-        strategies.push({ source: "override", tree: { name: component.name }, override: explicit });
+        strategies.push({
+          source: "override",
+          tree: { name: component.name },
+          override: explicit,
+        });
       if (!explicit && component.preview.manual_preview && component.framework === "react") {
         try {
           const manual = component.preview.manual_preview;
           const override = (await load(manual.rel_path))[manual.export_name];
           if (override)
-            strategies.push({ source: "override", tree: { name: component.name }, override });
+            strategies.push({
+              source: "override",
+              tree: { name: component.name },
+              override,
+            });
         } catch (error) {
           attempts.push(`manual override: ${String(error)}`);
         }
@@ -235,7 +246,10 @@ export function boot(context: Context): void {
         );
       if (recipe && subcomponent) strategies.push({ source: "recipe", tree: recipe });
       if (component.preview.example_tree)
-        strategies.push({ source: "usage", tree: demoFromExample(component.preview.example_tree) });
+        strategies.push({
+          source: "usage",
+          tree: demoFromExample(component.preview.example_tree),
+        });
       if (recipe && !subcomponent) strategies.push({ source: "recipe", tree: recipe });
       strategies.push({
         source: "generated",
@@ -317,15 +331,20 @@ export function boot(context: Context): void {
           }
           let values = {
             ...defaultArgsFromControls(
-              (strategy.override as { playgroundControls?: PreviewResponse["controls"] })
-                ?.playgroundControls,
+              (
+                strategy.override as {
+                  playgroundControls?: PreviewResponse["controls"];
+                }
+              )?.playgroundControls,
             ),
             ...component.preview.sample_props,
             ...selectedProps(strategy.tree),
             ...next.values,
             ...configured(adapter.fixtures),
           };
-          const revealedValues: Record<string, string | boolean> = {};
+          attemptedProps = values;
+          const revealedValues: Record<string, string | number | boolean | string[] | number[]> =
+            {};
           const cacheKey = `${component.id}:${strategy.source}:${JSON.stringify([strategy.tree, component.preview.provider_candidates])}`;
           const authoritative = Boolean(
             strategies.some((item) => item.override) ||
@@ -466,8 +485,11 @@ export function boot(context: Context): void {
                   ["string", "number", "boolean"].includes(typeof value),
                 ),
               ) as Record<string, string | number | boolean>,
-              controls: (strategy.override as { playgroundControls?: PreviewResponse["controls"] })
-                ?.playgroundControls,
+              controls: (
+                strategy.override as {
+                  playgroundControls?: PreviewResponse["controls"];
+                }
+              )?.playgroundControls,
             });
           publishSnippet(values);
           requestAnimationFrame(() => {
@@ -511,18 +533,31 @@ export function boot(context: Context): void {
           attempts.every((attempt) => attempt.endsWith(EMPTY_PREVIEW_MESSAGE))
             ? notificationAdapterExample(component, context.adapterRoot, context.root)
             : undefined;
+        const overridden = attempts.some((attempt) =>
+          /^(?:override|manual override):/.test(attempt),
+        );
+        const fixtured =
+          adapter.fixtures?.[component.id] !== undefined ||
+          adapter.fixtures?.[component.name] !== undefined;
+        // Data-only components get an editable fixture entry pre-filled with the sample props.
+        const fixtureExample =
+          !contextDiagnostic && !notificationExample && !overridden && !fixtured
+            ? fixtureAdapterExample(component, catalog)
+            : undefined;
         send({
           type: "error",
           failurePhase: "render",
           message: error instanceof Error ? error.message : String(error),
           attempts,
+          attemptedProps: attemptedProps ? summarizeProps(attemptedProps) : undefined,
           contextDiagnostic,
-          adapterExample: adapterExample || notificationExample,
+          adapterExample: adapterExample || notificationExample || fixtureExample,
           setupAction:
-            notificationExample &&
-            !attempts.some((attempt) => /^(?:override|manual override):/.test(attempt))
+            notificationExample && !overridden
               ? "notification"
-              : undefined,
+              : fixtureExample && !adapterExample
+                ? "fixture"
+                : undefined,
         });
       }
     }
@@ -563,7 +598,11 @@ export function boot(context: Context): void {
             send({ type: "a11y", findings, requestId: next.requestId });
         } catch (error) {
           if (token === scanGeneration && renderToken === generation)
-            send({ type: "a11y", message: String(error), requestId: next.requestId });
+            send({
+              type: "a11y",
+              message: String(error),
+              requestId: next.requestId,
+            });
         }
       })();
       return;
@@ -596,7 +635,11 @@ export function boot(context: Context): void {
     } else void render(next);
   });
   window.addEventListener("error", (event) =>
-    send({ type: "error", failurePhase: active ? "update" : "render", message: event.message }),
+    send({
+      type: "error",
+      failurePhase: active ? "update" : "render",
+      message: event.message,
+    }),
   );
   window.addEventListener("unhandledrejection", (event) =>
     send({
@@ -613,7 +656,11 @@ export function boot(context: Context): void {
     const link = (event.target as Element).closest?.("a[href]");
     if (link) {
       event.preventDefault();
-      send({ type: "event", event: "navigate", value: link.getAttribute("href") });
+      send({
+        type: "event",
+        event: "navigate",
+        value: link.getAttribute("href"),
+      });
     }
   });
   document.addEventListener("submit", (event) => {

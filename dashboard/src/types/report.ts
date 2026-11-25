@@ -160,7 +160,7 @@ export interface PlaygroundSpec {
   source_imports?: Record<string, PreviewImport>;
   component_imports?: Record<string, PreviewImport>;
   visibility_props?: string[];
-  visibility_values?: Record<string, string | boolean>;
+  visibility_values?: Record<string, string | number | boolean | string[] | number[]>;
   sample_props?: Record<string, unknown>;
   slots?: string[];
   models?: string[];

@@ -22,9 +22,51 @@ function compilerFor(path, root) {
   }
 }
 
-export function sampleForType(checker, type, key = "value", depth = 0, seen = new Set()) {
+/** Arrays get a few rows so lists, separators and "first item" logic all have something to show. */
+const SAMPLE_ROWS = 3;
+/** Fixed so snapshots and previews stay stable between runs. */
+const SAMPLE_EPOCH = Date.UTC(2025, 5, 2, 9);
+
+function sampleString(key, index) {
+  const suffix = index ? ` ${index + 1}` : "";
+  if (/email/i.test(key)) return `example${suffix.trim()}@example.test`;
+  if (/url|href|src|link/i.test(key)) return "#";
+  if (/^id$|Id$|uuid|slug/i.test(key)) return `example-${index + 1}`;
+  if (/date|time|At$|timestamp|day$/i.test(key)) {
+    // Local ISO without a zone so `slice(11, 13)` style parsing and `new Date()` both work.
+    const iso = new Date(SAMPLE_EPOCH + index * 3_600_000).toISOString().slice(0, 19);
+    return /date|day$/i.test(key) && !/time/i.test(key) ? iso.slice(0, 10) : iso;
+  }
+  if (/colou?r/i.test(key)) return ["#2563eb", "#16a34a", "#d97706"][index % 3];
+  return `Example ${key.replace(/([A-Z])/g, " $1").toLowerCase()}${suffix}`;
+}
+
+function sampleNumber(key, index) {
+  if (/temp/i.test(key)) return 18 + index;
+  if (/chance|percent|pct|progress|probability|ratio/i.test(key))
+    return Math.min(100, 30 + index * 20);
+  if (/^lat/i.test(key)) return 51.5;
+  if (/^(lon|lng)/i.test(key)) return -0.12;
+  if (/year/i.test(key)) return 2025;
+  if (/hour/i.test(key)) return 9 + index;
+  if (/price|amount|cost|total|balance/i.test(key)) return 12.5 * (index + 1);
+  if (/^code$|Code$/.test(key)) return 0;
+  return index + 1;
+}
+
+export function sampleForType(
+  checker,
+  type,
+  key = "value",
+  depth = 0,
+  seen = new Set(),
+  index = 0,
+) {
   type = checker.getNonNullableType(type);
   if (depth > 3 || seen.has(type.id)) return undefined;
+  // `boolean` is the union `true | false`; decide by name before the union branch picks `false`.
+  if (type.flags & ts.TypeFlags.Boolean)
+    return /^(is|has)?(day|visible|active|enabled|available|online|open|shown)$/i.test(key);
   if (type.isUnion())
     return sampleForType(
       checker,
@@ -33,23 +75,22 @@ export function sampleForType(checker, type, key = "value", depth = 0, seen = ne
       key,
       depth,
       seen,
+      index,
     );
   if (type.isStringLiteral() || type.isNumberLiteral()) return type.value;
   if (type.flags & ts.TypeFlags.BooleanLiteral) return type.intrinsicName === "true";
-  if (type.flags & ts.TypeFlags.Boolean) return false;
-  if (type.flags & ts.TypeFlags.NumberLike) return 1;
-  if (type.flags & ts.TypeFlags.StringLike) {
-    if (/email/i.test(key)) return "example@example.test";
-    if (/url|href|src/i.test(key)) return "#";
-    return `Example ${key.replace(/([A-Z])/g, " $1").toLowerCase()}`;
-  }
+  if (type.flags & ts.TypeFlags.NumberLike) return sampleNumber(key, index);
+  if (type.flags & ts.TypeFlags.StringLike) return sampleString(key, index);
   if (type.getCallSignatures().length) return undefined;
+  // JSON fixtures cannot carry class instances; an empty object would only crash `.getTime()`.
+  if (["Date", "Map", "Set", "Promise", "RegExp"].includes(type.getSymbol()?.getName()))
+    return undefined;
   const next = new Set(seen).add(type.id);
   const element = checker.getElementTypeOfArrayType(type);
   if (element)
-    return [sampleForType(checker, element, "item", depth + 1, next)].filter(
-      (value) => value !== undefined,
-    );
+    return Array.from({ length: SAMPLE_ROWS }, (_, row) =>
+      sampleForType(checker, element, "item", depth + 1, next, row),
+    ).filter((value) => value !== undefined);
   const properties = type.getProperties();
   if (!properties.length || properties.length > 40) return undefined;
   return Object.fromEntries(
@@ -57,7 +98,14 @@ export function sampleForType(checker, type, key = "value", depth = 0, seen = ne
       .slice(0, 20)
       .map((property) => [
         property.name,
-        sampleForType(checker, checker.getTypeOfSymbol(property), property.name, depth + 1, next),
+        sampleForType(
+          checker,
+          checker.getTypeOfSymbol(property),
+          property.name,
+          depth + 1,
+          next,
+          index,
+        ),
       ])
       .filter(([, value]) => value !== undefined),
   );
@@ -86,13 +134,99 @@ function applyType(spec, checker, type, location) {
     spec.declared_prop_type_labels[property.name] = checker.typeToString(type);
     const options = extractFiniteStringUnion(checker, type);
     if (options?.length > 1) spec.declared_prop_options[property.name] ||= options;
+    // Optional collections are usually the data the component lists; without them a
+    // `v-for`/`.map` renders nothing. Optional flags and scalars keep their defaults.
+    const optionalData =
+      ["object", "stringArray", "numberArray"].includes(spec.declared_prop_kinds[property.name]) &&
+      !/^(errors?|warnings?|style|attrs|ui|pt)$/i.test(property.name) &&
+      !checker.getNonNullableType(type).getCallSignatures().length;
     if (
-      !(property.flags & ts.SymbolFlags.Optional) &&
+      (!(property.flags & ts.SymbolFlags.Optional) || optionalData) &&
       !/^on[A-Z]/.test(property.name) &&
-      !["children", "className", "style"].includes(property.name)
+      !["children", "className", "style", "class", "as", "asChild"].includes(property.name)
     ) {
       const sample = sampleForType(checker, type, property.name);
       if (sample !== undefined) spec.sample_props[property.name] = sample;
+    }
+  }
+}
+
+const RUNTIME_PROP_TYPES = {
+  String: ["string", (key) => sampleString(key, 0)],
+  Number: ["number", (key) => sampleNumber(key, 0)],
+  Boolean: ["boolean", () => false],
+  Array: ["object", () => undefined],
+  Object: ["object", () => undefined],
+  Function: ["function", () => undefined],
+  Date: ["object", () => undefined],
+};
+
+/** Options API style: `defineProps({ items: { type: Array as PropType<Item[]>, required: true } })`. */
+function applyRuntimeProps(spec, checker, argument, sf) {
+  spec.sample_props ||= {};
+  spec.declared_prop_kinds ||= {};
+  spec.declared_prop_optional ||= {};
+  spec.declared_prop_type_labels ||= {};
+  spec.declared_prop_defaults ||= {};
+  const unwrap = (node) =>
+    ts.isAsExpression(node) || ts.isParenthesizedExpression(node) || ts.isSatisfiesExpression(node)
+      ? unwrap(node.expression)
+      : node;
+  if (ts.isArrayLiteralExpression(argument)) {
+    for (const element of argument.elements)
+      if (ts.isStringLiteral(element) && !spec.declared_props.includes(element.text))
+        spec.declared_props.push(element.text);
+    return;
+  }
+  if (!ts.isObjectLiteralExpression(argument)) return;
+  for (const property of argument.properties) {
+    if (!ts.isPropertyAssignment(property)) continue;
+    const name = property.name.getText(sf).replace(/^["']|["']$/g, "");
+    if (!spec.declared_props.includes(name)) spec.declared_props.push(name);
+    let typeNode = property.initializer;
+    let required = false;
+    let defaulted = false;
+    if (ts.isObjectLiteralExpression(property.initializer)) {
+      typeNode = undefined;
+      for (const option of property.initializer.properties) {
+        if (!ts.isPropertyAssignment(option)) continue;
+        const key = option.name.getText(sf);
+        if (key === "type") typeNode = option.initializer;
+        if (key === "required") required = option.initializer.kind === ts.SyntaxKind.TrueKeyword;
+        if (key === "default") {
+          defaulted = true;
+          if (ts.isStringLiteral(option.initializer) || ts.isNumericLiteral(option.initializer))
+            spec.declared_prop_defaults[name] = option.initializer.text;
+        }
+      }
+    }
+    if (!typeNode) continue;
+    // `Array as PropType<Item[]>` carries the real element type; prefer it over the constructor.
+    const asType =
+      ts.isAsExpression(typeNode) &&
+      ts.isTypeReferenceNode(typeNode.type) &&
+      typeNode.type.typeArguments?.[0];
+    const ctor = unwrap(typeNode);
+    const constructor = ts.isIdentifier(ctor) ? RUNTIME_PROP_TYPES[ctor.text] : undefined;
+    spec.declared_prop_optional[name] = !required;
+    if (asType) {
+      const type = checker.getTypeFromTypeNode(asType);
+      spec.declared_prop_kinds[name] = classifyPropType(checker, type) || "unknown";
+      spec.declared_prop_type_labels[name] = checker.typeToString(type);
+      const options = extractFiniteStringUnion(checker, type);
+      if (options?.length > 1) (spec.declared_prop_options ||= {})[name] ||= options;
+      const data = ["object", "stringArray", "numberArray"].includes(
+        spec.declared_prop_kinds[name],
+      );
+      if ((required || (data && !defaulted)) && !/^on[A-Z]/.test(name)) {
+        const sample = sampleForType(checker, type, name);
+        if (sample !== undefined) spec.sample_props[name] = sample;
+      }
+    } else if (constructor) {
+      spec.declared_prop_kinds[name] = constructor[0];
+      spec.declared_prop_type_labels[name] = ctor.text.toLowerCase();
+      const sample = required ? constructor[1](name) : undefined;
+      if (sample !== undefined) spec.sample_props[name] = sample;
     }
   }
 }
@@ -105,9 +239,55 @@ function nearestTsconfig(path, root) {
   return root;
 }
 
+const VUE_EXTENSIONS = [
+  {
+    extension: ".vue",
+    isMixedContent: true,
+    scriptKind: ts.ScriptKind.Deferred,
+  },
+];
+
+/**
+ * Nuxt 4 and Vite templates keep compiler options (including the `~`/`@` aliases) in
+ * referenced projects; a references-only root config resolves no aliased types.
+ */
+function vueCompilerConfig(paths, projectRoot) {
+  const configPath = join(projectRoot, "tsconfig.json");
+  const config = ts.readConfigFile(configPath, ts.sys.readFile);
+  const parsed = ts.parseJsonConfigFileContent(
+    config.config || {},
+    ts.sys,
+    projectRoot,
+    undefined,
+    configPath,
+    undefined,
+    VUE_EXTENSIONS,
+  );
+  if (!parsed.projectReferences?.length || parsed.options.paths) return parsed;
+  const wanted = new Set(paths.map((path) => resolve(path)));
+  let fallback;
+  for (const reference of parsed.projectReferences) {
+    const referencePath = ts.resolveProjectReferencePath(reference);
+    if (!existsSync(referencePath)) continue;
+    const referenced = ts.readConfigFile(referencePath, ts.sys.readFile);
+    if (referenced.error) continue;
+    const child = ts.parseJsonConfigFileContent(
+      referenced.config,
+      ts.sys,
+      dirname(referencePath),
+      undefined,
+      referencePath,
+      undefined,
+      VUE_EXTENSIONS,
+    );
+    if (child.fileNames.some((file) => wanted.has(resolve(file)))) return child;
+    fallback ||= child.options.paths ? child : undefined;
+  }
+  return fallback || parsed;
+}
+
 function createVueProgram(paths, projectRoot, root) {
-  const config = ts.readConfigFile(join(projectRoot, "tsconfig.json"), ts.sys.readFile);
-  const parsed = ts.parseJsonConfigFileContent(config.config || {}, ts.sys, projectRoot);
+  const parsed = vueCompilerConfig(paths, projectRoot);
   const options = {
     ...parsed.options,
     target: ts.ScriptTarget.Latest,
@@ -118,7 +298,9 @@ function createVueProgram(paths, projectRoot, root) {
   const scripts = new Map(
     paths.map((path) => {
       const compiler = compilerFor(path, root);
-      const { descriptor } = compiler.parse(readFileSync(path, "utf8"), { filename: path });
+      const { descriptor } = compiler.parse(readFileSync(path, "utf8"), {
+        filename: path,
+      });
       return [
         path + ".ts",
         [descriptor.script?.content, descriptor.scriptSetup?.content].filter(Boolean).join("\n"),
@@ -151,6 +333,8 @@ function vueMetadata(spec, path, compiler, bundle) {
       const name = node.expression.text;
       if (name === "defineProps" && node.typeArguments?.[0])
         applyType(spec, checker, checker.getTypeFromTypeNode(node.typeArguments[0]), sf);
+      else if (name === "defineProps" && node.arguments[0])
+        applyRuntimeProps(spec, checker, node.arguments[0], sf);
       if (name === "defineModel") {
         const key =
           node.arguments[0] && ts.isStringLiteral(node.arguments[0])
@@ -245,7 +429,10 @@ function captureVueExamples(report, root) {
     if (depth > 12 || budget.remaining-- <= 0) return;
     if (node.type === 2) return { type: "text", value: node.content };
     if (node.type === 5)
-      return { type: "placeholder", hint: node.content.content.split(".").pop() || "Example" };
+      return {
+        type: "placeholder",
+        hint: node.content.content.split(".").pop() || "Example",
+      };
     if (node.type !== 1) return;
     const props = {};
     let slot;
@@ -276,14 +463,19 @@ function captureVueExamples(report, root) {
       if (!templates.has(source.path)) {
         const path = resolve(root, source.path);
         const compiler = compilerFor(path, root);
-        const { descriptor } = compiler.parse(readFileSync(path, "utf8"), { filename: path });
+        const { descriptor } = compiler.parse(readFileSync(path, "utf8"), {
+          filename: path,
+        });
         if (!descriptor.template) continue;
         const { ast } = compiler.compileTemplate({
           source: descriptor.template.content,
           filename: path,
           id: path,
         });
-        templates.set(source.path, { ast, offset: descriptor.template.loc.start.line - 1 });
+        templates.set(source.path, {
+          ast,
+          offset: descriptor.template.loc.start.line - 1,
+        });
       }
       const { ast, offset } = templates.get(source.path);
       let candidate;
@@ -309,7 +501,9 @@ function captureVueExamples(report, root) {
 function sourceImports(path, root) {
   const text = readFileSync(path, "utf8");
   const source = path.endsWith(".vue")
-    ? [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\b[^>]*>/gi)].map((match) => match[1]).join("\n")
+    ? [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\b[^>]*>/gi)]
+        .map((match) => match[1])
+        .join("\n")
     : text;
   const sf = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const bindings = {};
@@ -323,9 +517,18 @@ function sourceImports(path, root) {
     const specifier = statement.moduleSpecifier.text;
     const importer = relative(root, path).replaceAll("\\", "/");
     const clause = statement.importClause;
-    if (clause.name) bindings[clause.name.text] = { specifier, importer, export_name: "default" };
+    if (clause.name)
+      bindings[clause.name.text] = {
+        specifier,
+        importer,
+        export_name: "default",
+      };
     if (clause.namedBindings && ts.isNamespaceImport(clause.namedBindings))
-      bindings[clause.namedBindings.name.text] = { specifier, importer, export_name: "*" };
+      bindings[clause.namedBindings.name.text] = {
+        specifier,
+        importer,
+        export_name: "*",
+      };
     else
       for (const binding of clause.namedBindings?.elements || [])
         if (!binding.isTypeOnly)
@@ -338,6 +541,14 @@ function sourceImports(path, root) {
   return bindings;
 }
 
+const REVEAL_NAME =
+  /^(?:open$|isOpen$|visible$|isVisible$|show[A-Z]|can[A-Z]|message$|title$|description$|label$|children$)/;
+/** Guards that switch to a degraded state rather than revealing the component's content. */
+const DEGRADED_NAME =
+  /^(?:is)?(?:loading|pending|error|errors|disabled|hidden|empty|readonly|skeleton|busy|failed|offline|collapsed)$/i;
+const REVEAL_KINDS = ["boolean", "string", "node"];
+const TEMPLATE_KINDS = ["boolean", "string", "number", "object", "stringArray", "numberArray"];
+
 function visibilityProps(path, spec) {
   const sf = ts.createSourceFile(
     path,
@@ -346,17 +557,23 @@ function visibilityProps(path, spec) {
     true,
     ts.ScriptKind.TSX,
   );
-  const candidates = new Set();
-  function collect(node) {
-    if (
-      ts.isIdentifier(node) &&
-      /^(?:open$|isOpen$|visible$|isVisible$|show[A-Z]|can[A-Z]|message$|title$|description$|label$|children$)/.test(
-        node.text,
-      ) &&
-      ["boolean", "string", "node"].includes(spec.declared_prop_kinds?.[node.text])
-    )
-      candidates.add(node.text);
-    ts.forEachChild(node, collect);
+  const named = new Set();
+  const guarded = new Set();
+  function collect(node, template = false) {
+    if (ts.isIdentifier(node)) {
+      const kind = spec.declared_prop_kinds?.[node.text];
+      if (REVEAL_NAME.test(node.text) && REVEAL_KINDS.includes(kind)) named.add(node.text);
+      // A template guard on any data prop (`v-if="hours.length"`, `v-if="forecast"`) is a
+      // reveal candidate as long as it is not a loading/error/disabled switch.
+      else if (
+        template &&
+        TEMPLATE_KINDS.includes(kind) &&
+        !DEGRADED_NAME.test(node.text) &&
+        spec.sample_props?.[node.text] === undefined
+      )
+        guarded.add(node.text);
+    }
+    ts.forEachChild(node, (child) => collect(child, template));
   }
   function visit(node) {
     if (ts.isIfStatement(node) || ts.isConditionalExpression(node))
@@ -372,11 +589,34 @@ function visibilityProps(path, spec) {
   visit(sf);
   if (path.endsWith(".vue")) {
     const text = readFileSync(path, "utf8");
-    for (const match of text.matchAll(/(?:v-if|:(?:open|visible))=["']([^"']+)["']/g)) {
-      collect(ts.createSourceFile("condition.ts", `(${match[1]})`, ts.ScriptTarget.Latest, true));
+    for (const match of text.matchAll(
+      /(?:v-if|v-else-if|v-show|:(?:open|visible))=["']([^"']+)["']/g,
+    )) {
+      const condition = ts.createSourceFile(
+        "condition.ts",
+        `(${match[1]})`,
+        ts.ScriptTarget.Latest,
+        true,
+      );
+      // Skip member names (`item.chance`) so only bare prop references count.
+      (function walk(node) {
+        if (ts.isPropertyAccessExpression(node)) return walk(node.expression);
+        if (ts.isIdentifier(node)) return collect(node, true);
+        ts.forEachChild(node, walk);
+      })(condition);
     }
   }
-  return [...candidates].slice(0, 4);
+  return [...named, ...guarded].slice(0, 4);
+}
+
+function visibilityValue(spec, key) {
+  const kind = spec.declared_prop_kinds?.[key];
+  if (kind === "boolean") return true;
+  if (kind === "number") return sampleNumber(key, 0);
+  if (kind === "stringArray") return [0, 1, 2].map((index) => sampleString("item", index));
+  if (kind === "numberArray") return [1, 2, 3];
+  if (kind === "object") return undefined;
+  return `Example ${key}`;
 }
 
 export function enrichCatalog(report, root) {
@@ -508,12 +748,11 @@ export function enrichCatalog(report, root) {
           }
         }
       }
-      spec.visibility_props = visibilityProps(path, spec);
+      spec.visibility_props = visibilityProps(path, spec).filter(
+        (key) => visibilityValue(spec, key) !== undefined,
+      );
       spec.visibility_values = Object.fromEntries(
-        spec.visibility_props.map((key) => [
-          key,
-          spec.declared_prop_kinds[key] === "boolean" ? true : `Example ${key}`,
-        ]),
+        spec.visibility_props.map((key) => [key, visibilityValue(spec, key)]),
       );
       delete component.metadata_error;
     } catch (error) {

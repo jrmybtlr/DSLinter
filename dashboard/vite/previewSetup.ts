@@ -16,7 +16,14 @@ import { catalogFromReport } from "../src/explorer/catalog";
 import { notificationAdapterExample } from "../src/explorer/providerRecovery";
 import type { WorkspaceReport } from "../src/types/report";
 import { findPreviewAdapter, type PreviewApp } from "./previewAdapter";
-import { mergePreviewSetup, PreviewSetupConflict } from "./mergePreviewSetup";
+import { mergeFixtureEntry, mergePreviewSetup, PreviewSetupConflict } from "./mergePreviewSetup";
+import {
+  adapterKey,
+  FIXTURE_COMMENT,
+  fixtureAdapterExample,
+  fixtureEntry,
+} from "../src/explorer/fixtureExample";
+import type { CatalogComponent } from "../src/types/report";
 
 function within(root: string, file: string): boolean {
   const tail = relative(realpathSync(root), realpathSync(file));
@@ -68,14 +75,101 @@ function verifiedNotificationSource(source: string, path: string, exportName: st
   );
 }
 
+function writeAdapter(
+  path: string,
+  writePath: string,
+  existing: boolean,
+  original: string,
+  output: string,
+) {
+  if (!existing) {
+    writeFileSync(writePath, output, { flag: "wx" });
+    return;
+  }
+  const temporary = `${writePath}.${randomBytes(8).toString("hex")}.tmp`;
+  try {
+    writeFileSync(temporary, output, {
+      flag: "wx",
+      mode: lstatSync(path).mode & 0o777,
+    });
+    if (lstatSync(path).isSymbolicLink() || readFileSync(path, "utf8") !== original)
+      throw new PreviewSetupConflict(
+        "The configuration changed while saving. Its changes were preserved. Try again.",
+      );
+    renameSync(temporary, writePath);
+    if (writePath !== path) unlinkSync(path);
+  } finally {
+    if (existsSync(temporary)) unlinkSync(temporary);
+  }
+}
+
+function adapterTarget(app: PreviewApp, scanRoot: string, renameTs: boolean) {
+  const found = findPreviewAdapter(app.root, scanRoot);
+  const path = found || join(app.root, "dslinter.preview.tsx");
+  // JSX examples need .tsx; rename an init stub .ts when adding the first generated entry.
+  const writePath =
+    renameTs && path.endsWith(".ts") && !path.endsWith(".tsx")
+      ? path.replace(/\.ts$/, ".tsx")
+      : path;
+  if (!within(app.root, dirname(writePath)) && !within(scanRoot, dirname(writePath)))
+    throw new PreviewSetupConflict(
+      "The preview configuration is outside this workspace. Use the copyable example instead.",
+    );
+  const existing = existsSync(path);
+  if (existing && (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink()))
+    throw new PreviewSetupConflict(
+      "The preview configuration is linked or is not a regular file. Update it manually using the copyable example.",
+    );
+  return { path, writePath, existing };
+}
+
+/** Fixture entries are plain data built from the scanned sample props, never from the request. */
+function addFixtureSetup(
+  app: PreviewApp,
+  scanRoot: string,
+  report: WorkspaceReport,
+  catalog: CatalogComponent[],
+  component: CatalogComponent,
+): { path: string; created: boolean } {
+  if (component.framework !== app.framework)
+    throw new PreviewSetupConflict(
+      "This component belongs to a different app. Select its app and try again.",
+    );
+  if (!within(scanRoot, resolve(report.root, component.preview.rel_path)))
+    throw new PreviewSetupConflict(
+      "The component source could not be verified. Refresh the scan and try again.",
+    );
+  const { path, writePath, existing } = adapterTarget(app, scanRoot, false);
+  const format = writePath.endsWith(".js") || writePath.endsWith(".mjs") ? "js" : "tsx";
+  const entry = fixtureEntry(component, adapterKey(component, catalog));
+  const example = fixtureAdapterExample(component, catalog, format);
+  if (!entry || !example)
+    throw new PreviewSetupConflict(
+      "DSLinter has no sample data for this component's props. Add a fixture manually.",
+    );
+  const original = existing ? readFileSync(path, "utf8") : "";
+  const output = existing
+    ? mergeFixtureEntry(original, entry, FIXTURE_COMMENT, component.id, component.name, writePath)
+    : `${example}\n`;
+  writeAdapter(path, writePath, existing, original, output);
+  return {
+    path: relative(scanRoot, writePath).replaceAll("\\", "/"),
+    created: !existing,
+  };
+}
+
 /** Generate on the server from the current catalog; never accept executable code from the request. */
 export function addPreviewSetup(
   app: PreviewApp,
   scanRoot: string,
   report: WorkspaceReport,
   componentId: string,
+  action: "notification" | "fixture" = "notification",
 ): { path: string; created: boolean } {
-  const component = catalogFromReport(report).find((item) => item.id === componentId);
+  const catalog = catalogFromReport(report);
+  const component = catalog.find((item) => item.id === componentId);
+  if (component && action === "fixture")
+    return addFixtureSetup(app, scanRoot, report, catalog, component);
   if (!component || component.framework !== "react" || app.framework !== "react")
     throw new PreviewSetupConflict(
       "This component does not have an automatic preview setup available. Use the copyable example instead.",
@@ -98,20 +192,7 @@ export function addPreviewSetup(
     throw new PreviewSetupConflict(
       "The component source has changed. Refresh the scan before adding its preview setup.",
     );
-  const found = findPreviewAdapter(app.root, scanRoot);
-  const path = found || join(app.root, "dslinter.preview.tsx");
-  // JSX examples need .tsx; rename an init stub .ts when adding the first generated entry.
-  const writePath =
-    path.endsWith(".ts") && !path.endsWith(".tsx") ? path.replace(/\.ts$/, ".tsx") : path;
-  if (!within(app.root, dirname(writePath)) && !within(scanRoot, dirname(writePath)))
-    throw new PreviewSetupConflict(
-      "The preview configuration is outside this workspace. Use the copyable example instead.",
-    );
-  const existing = existsSync(path);
-  if (existing && (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink()))
-    throw new PreviewSetupConflict(
-      "The preview configuration is linked or is not a regular file. Update it manually using the copyable example.",
-    );
+  const { path, writePath, existing } = adapterTarget(app, scanRoot, true);
   try {
     const adapterPackage = createRequire(join(dirname(path), "package.json")).resolve("sonner");
     const componentPackage = createRequire(sourcePath).resolve("sonner");
@@ -137,23 +218,11 @@ export function addPreviewSetup(
   const output = existing
     ? mergePreviewSetup(original, example, component.id, component.name, writePath)
     : `${example}\n`;
-  if (!existing) {
-    writeFileSync(writePath, output, { flag: "wx" });
-  } else {
-    const temporary = `${writePath}.${randomBytes(8).toString("hex")}.tmp`;
-    try {
-      writeFileSync(temporary, output, { flag: "wx", mode: lstatSync(path).mode & 0o777 });
-      if (lstatSync(path).isSymbolicLink() || readFileSync(path, "utf8") !== original)
-        throw new PreviewSetupConflict(
-          "The configuration changed while saving. Its changes were preserved. Try again.",
-        );
-      renameSync(temporary, writePath);
-      if (writePath !== path) unlinkSync(path);
-    } finally {
-      if (existsSync(temporary)) unlinkSync(temporary);
-    }
-  }
-  return { path: relative(scanRoot, writePath).replaceAll("\\", "/"), created: !existing };
+  writeAdapter(path, writePath, existing, original, output);
+  return {
+    path: relative(scanRoot, writePath).replaceAll("\\", "/"),
+    created: !existing,
+  };
 }
 
 export function previewSetupMiddleware(options: {
@@ -171,7 +240,9 @@ export function previewSetupMiddleware(options: {
       res.statusCode = 405;
       res.setHeader("Allow", "POST");
       res.end(
-        JSON.stringify({ message: "Use the Add preview setup button to save this configuration." }),
+        JSON.stringify({
+          message: "Use the Add preview setup button to save this configuration.",
+        }),
       );
       return;
     }
@@ -222,7 +293,21 @@ export function previewSetupMiddleware(options: {
         throw new PreviewSetupConflict(
           "The selected preview app is no longer available. Refresh DSLinter and select it again.",
         );
-      const saved = addPreviewSetup(app, options.scanRoot, options.report(), input.componentId);
+      if (
+        input.action !== undefined &&
+        input.action !== "notification" &&
+        input.action !== "fixture"
+      )
+        throw new PreviewSetupConflict(
+          "The save request was not valid. Refresh DSLinter and try again.",
+        );
+      const saved = addPreviewSetup(
+        app,
+        options.scanRoot,
+        options.report(),
+        input.componentId,
+        input.action,
+      );
       // A fresh host discovers newly created adapters and discards old module caches.
       let reloaded = true;
       try {
