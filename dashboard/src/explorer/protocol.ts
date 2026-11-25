@@ -20,7 +20,7 @@ export type PreviewResponse = {
   message?: string;
   failurePhase?: "connect" | "render" | "update";
   attempts?: string[];
-  revealedValues?: Record<string, string | boolean>;
+  revealedValues?: Record<string, string | number | boolean | string[] | number[]>;
   suppliedProviders?: import("../types/report").ProviderCandidate[];
   contextDiagnostic?: import("./providerRecovery").ContextDiagnostic;
   adapterExample?: string;

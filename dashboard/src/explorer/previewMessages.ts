@@ -1,7 +1,11 @@
 import type { CatalogComponent } from "../types/report";
 import type { PreviewResponse } from "./protocol";
 
-export type PreviewExplanation = { title: string; description: string; nextStep: string };
+export type PreviewExplanation = {
+  title: string;
+  description: string;
+  nextStep: string;
+};
 
 export const EMPTY_PREVIEW_MESSAGE =
   "Component produced no visible content; a composition, visibility prop, or explicit fixture may be required";
@@ -10,7 +14,8 @@ export function isNotificationHost(component: CatalogComponent): boolean {
   return (
     component.framework === "react" &&
     Object.values(component.preview.component_imports || {}).some(
-      (binding) => binding.specifier === "sonner" && binding.export_name === "Toaster",
+      (binding) =>
+        binding.specifier === "sonner" && binding.export_name === "Toaster",
     )
   );
 }
@@ -20,7 +25,9 @@ export function renderErrorExplanation(
   error: string,
   updating = false,
 ): PreviewExplanation {
-  const title = updating ? `${name} stopped rendering` : `${name} could not render`;
+  const title = updating
+    ? `${name} stopped rendering`
+    : `${name} could not render`;
   if (
     /invalid hook call|hooks can only be called|reading ['"](?:useContext|useState|useEffect)['"]/i.test(
       error,
@@ -62,7 +69,10 @@ export function previewFailureExplanation(
   const name = component.name;
   const errors = [status.message || "", ...(status.attempts || [])].join("\n");
   const diagnostic = status.contextDiagnostic;
-  if (status.failurePhase === "connect" || /preview host did not become ready/i.test(errors))
+  if (
+    status.failurePhase === "connect" ||
+    /preview host did not become ready/i.test(errors)
+  )
     return {
       title: "The preview could not connect",
       description: `DSLinter did not receive a response from the preview for ${name}.`,
@@ -103,10 +113,14 @@ export function previewFailureExplanation(
         " A matching parent could not be verified in the component's local imports.";
     return explanation;
   }
-  const failures = previewAttemptDetails(status.attempts || []).map((attempt) => attempt.message);
-  if (!failures.length && status.message === EMPTY_PREVIEW_MESSAGE) failures.push(status.message);
+  const failures = previewAttemptDetails(status.attempts || []).map(
+    (attempt) => attempt.message,
+  );
+  if (!failures.length && status.message === EMPTY_PREVIEW_MESSAGE)
+    failures.push(status.message);
   const empty =
-    failures.length > 0 && failures.every((message) => message === EMPTY_PREVIEW_MESSAGE);
+    failures.length > 0 &&
+    failures.every((message) => message === EMPTY_PREVIEW_MESSAGE);
   if (empty) {
     if (isNotificationHost(component))
       return {
@@ -116,7 +130,9 @@ export function previewFailureExplanation(
           ? "Use a custom preview with a button that shows a sample notification. Open Preview setup below for a copyable example."
           : "Add a custom preview in dslinter.preview.tsx with a button that shows a sample notification.",
       };
-    const iconProps = Object.entries(component.preview.declared_prop_kinds || {})
+    const iconProps = Object.entries(
+      component.preview.declared_prop_kinds || {},
+    )
       .filter(([, kind]) => kind === "icon")
       .map(([key]) => key);
     if (iconProps.length)
@@ -142,8 +158,10 @@ export function previewFailureExplanation(
   if (/Export .+ was not found|Provider export .+ was not found/.test(errors))
     return {
       title: `${name} could not be loaded`,
-      description: "A component or required parent is no longer available at its recorded export.",
-      nextStep: "Check the export and file listed in Technical details, then refresh the scan.",
+      description:
+        "A component or required parent is no longer available at its recorded export.",
+      nextStep:
+        "Check the export and file listed in Technical details, then refresh the scan.",
     };
   if (
     /Example (?:dependency|import).+ (?:could not be resolved|needs)|Example does not contain/.test(
@@ -180,7 +198,9 @@ const attemptLabels: Record<string, string> = {
 };
 
 /** Keep each original error once, with readable labels for the attempts that produced it. */
-export function previewAttemptDetails(attempts: string[]): { label: string; message: string }[] {
+export function previewAttemptDetails(
+  attempts: string[],
+): { label: string; message: string }[] {
   const grouped = new Map<string, Set<string>>();
   for (const attempt of attempts) {
     const match = attempt.match(
@@ -192,10 +212,15 @@ export function previewAttemptDetails(attempts: string[]): { label: string; mess
     labels.add(label);
     grouped.set(message, labels);
   }
-  return [...grouped].map(([message, labels]) => ({ label: [...labels].join(", "), message }));
+  return [...grouped].map(([message, labels]) => ({
+    label: [...labels].join(", "),
+    message,
+  }));
 }
 
-export function automaticStateMessage(values: Record<string, string | boolean>): string {
+export function automaticStateMessage(
+  values: Record<string, string | number | boolean | string[] | number[]>,
+): string {
   const changes = Object.entries(values).map(([key, value]) => {
     const label = key
       .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -203,6 +228,8 @@ export function automaticStateMessage(values: Record<string, string | boolean>):
       .toLowerCase();
     let displayValue = `“${value}”`;
     if (typeof value === "boolean") displayValue = value ? "on" : "off";
+    else if (Array.isArray(value))
+      displayValue = `${value.length} sample items`;
     return `${label}: ${displayValue}`;
   });
   return `Example values applied so the component is visible (${changes.join("; ")}). You can change them in the controls.`;

@@ -325,7 +325,7 @@ export function boot(context: Context): void {
             ...next.values,
             ...configured(adapter.fixtures),
           };
-          const revealedValues: Record<string, string | boolean> = {};
+          const revealedValues: Record<string, string | number | boolean | string[] | number[]> = {};
           const cacheKey = `${component.id}:${strategy.source}:${JSON.stringify([strategy.tree, component.preview.provider_candidates])}`;
           const authoritative = Boolean(
             strategies.some((item) => item.override) ||
