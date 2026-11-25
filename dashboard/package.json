@@ -1,6 +1,6 @@
 {
   "name": "dslinter",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Automatic React and Vue design-system explorer with live previews, controls, usage analytics, tokens, and governance.",
   "keywords": [
     "dashboard",

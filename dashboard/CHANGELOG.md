@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.9.2
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.9.1...v0.9.2)
+
+### 🚀 Enhancements
+
+- **preview:** Better automatic previews for Vue data components ([60f29d6](https://github.com/jrmybtlr/DSLinter/commit/60f29d6))
+
+### ❤️ Contributors
+
+- Claude <noreply@anthropic.com>
+
 ## v0.9.1
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.9.0...v0.9.1)
