@@ -1,14 +1,10 @@
 import type { CatalogComponent } from "../types/report";
 import type { DemoNode } from "./recipes";
 
-export function includesTarget(
-  tree: DemoNode | string,
-  names: Set<string>,
-): boolean {
+export function includesTarget(tree: DemoNode | string, names: Set<string>): boolean {
   return (
     typeof tree !== "string" &&
-    (names.has(tree.name) ||
-      Boolean(tree.children?.some((child) => includesTarget(child, names))))
+    (names.has(tree.name) || Boolean(tree.children?.some((child) => includesTarget(child, names))))
   );
 }
 
@@ -37,8 +33,7 @@ export function familyRecipe(
   let family = families.find(
     (name) =>
       component.name === name ||
-      (component.name.startsWith(name) &&
-        /^[A-Z]/.test(component.name.slice(name.length))),
+      (component.name.startsWith(name) && /^[A-Z]/.test(component.name.slice(name.length))),
   );
   // Application fragments which return menu children also need a real menu/content owner.
   const menuFragment =
@@ -48,18 +43,12 @@ export function familyRecipe(
     );
   if (menuFragment) family = "DropdownMenu";
   if (!family) return;
-  const candidate = component.preview.provider_candidates?.find(
-    (item) => item.name === family,
-  );
-  const sidebarMenuFragment =
-    component.name === "SidebarNavMenu" && Boolean(candidate);
+  const candidate = component.preview.provider_candidates?.find((item) => item.name === family);
+  const sidebarMenuFragment = component.name === "SidebarNavMenu" && Boolean(candidate);
   const file =
-    menuFragment || sidebarMenuFragment
-      ? candidate?.rel_path
-      : component.preview.rel_path;
+    menuFragment || sidebarMenuFragment ? candidate?.rel_path : component.preview.rel_path;
   const members = catalog.filter(
-    (item) =>
-      item.framework === component.framework && item.preview.rel_path === file,
+    (item) => item.framework === component.framework && item.preview.rel_path === file,
   );
   const names = new Set(members.map((item) => item.name));
   const source = members.flatMap((item) => item.dependencies);
@@ -78,12 +67,10 @@ export function familyRecipe(
     props: Record<string, unknown> = {},
   ): DemoNode => ({ name, children, props });
   const target = component.name;
-  const leaf = (name: string, text: string, props = {}): DemoNode =>
-    node(name, [text], props);
+  const leaf = (name: string, text: string, props = {}): DemoNode => node(name, [text], props);
   const selected = (fallback: string, text = "Example"): DemoNode =>
     leaf(names.has(target) ? target : fallback, text);
-  const requireNames = (...items: string[]) =>
-    items.every((item) => names.has(item));
+  const requireNames = (...items: string[]) => items.every((item) => names.has(item));
   const open = target !== family && target !== family + "Trigger";
   let tree: DemoNode | undefined;
   switch (family) {
@@ -100,30 +87,18 @@ export function familyRecipe(
       let content: DemoNode = leaf("DropdownMenuItem", "Example action");
       if (menuFragment) content = node(target);
       else if (target.startsWith("DropdownMenuSub")) {
-        if (
-          !requireNames(
-            "DropdownMenuSub",
-            "DropdownMenuSubTrigger",
-            "DropdownMenuSubContent",
-          )
-        )
+        if (!requireNames("DropdownMenuSub", "DropdownMenuSubTrigger", "DropdownMenuSubContent"))
           return;
         content = node(
           "DropdownMenuSub",
           [
             leaf("DropdownMenuSubTrigger", "More actions"),
-            node("DropdownMenuSubContent", [
-              leaf("DropdownMenuItem", "Nested action"),
-            ]),
+            node("DropdownMenuSubContent", [leaf("DropdownMenuItem", "Nested action")]),
           ],
           { open: true },
         );
-      } else if (
-        target === "DropdownMenuRadioGroup" ||
-        target === "DropdownMenuRadioItem"
-      ) {
-        if (!requireNames("DropdownMenuRadioGroup", "DropdownMenuRadioItem"))
-          return;
+      } else if (target === "DropdownMenuRadioGroup" || target === "DropdownMenuRadioItem") {
+        if (!requireNames("DropdownMenuRadioGroup", "DropdownMenuRadioItem")) return;
         content = node(
           "DropdownMenuRadioGroup",
           [leaf("DropdownMenuRadioItem", "First option", { value: "first" })],
@@ -131,8 +106,7 @@ export function familyRecipe(
         );
       } else if (target === "DropdownMenuShortcut")
         content = node("DropdownMenuItem", ["Save", leaf(target, "⌘S")]);
-      else if (target === "DropdownMenuGroup")
-        content = node(target, [content]);
+      else if (target === "DropdownMenuGroup") content = node(target, [content]);
       else if (
         ![
           "DropdownMenu",
@@ -143,15 +117,10 @@ export function familyRecipe(
       )
         content = selected("DropdownMenuItem", "Example action");
       let panel = node("DropdownMenuContent", [content], { sideOffset: 8 });
-      if (target === "DropdownMenuPortal" && names.has(target))
-        panel = node(target, [panel]);
-      tree = node(
-        "DropdownMenu",
-        [leaf("DropdownMenuTrigger", "Open menu"), panel],
-        {
-          defaultOpen: open,
-        },
-      );
+      if (target === "DropdownMenuPortal" && names.has(target)) panel = node(target, [panel]);
+      tree = node("DropdownMenu", [leaf("DropdownMenuTrigger", "Open menu"), panel], {
+        defaultOpen: open,
+      });
       break;
     }
     case "Dialog":
@@ -160,20 +129,12 @@ export function familyRecipe(
       if (!requireNames(family, family + "Trigger", family + "Content")) return;
       const children: (DemoNode | string)[] = [];
       if (names.has(family + "Title"))
-        children.push(
-          leaf(family + "Title", "Example " + family.toLowerCase()),
-        );
+        children.push(leaf(family + "Title", "Example " + family.toLowerCase()));
       if (names.has(family + "Description"))
-        children.push(
-          leaf(
-            family + "Description",
-            "Your component in its required context.",
-          ),
-        );
+        children.push(leaf(family + "Description", "Your component in its required context."));
       if (target.endsWith("Header") && names.has(target))
         children.splice(0, children.length, node(target, [...children]));
-      if (target.endsWith("Footer"))
-        children.push(node(target, ["Footer content"]));
+      if (target.endsWith("Footer")) children.push(node(target, ["Footer content"]));
       if (target.endsWith("Close")) children.push(leaf(target, "Close"));
       if (!children.length) children.push("Example content");
       let panel = node(family + "Content", children);
@@ -181,25 +142,13 @@ export function familyRecipe(
         if (!names.has(target)) return;
         panel = node(target, [panel]);
       }
-      tree = node(
-        family,
-        [leaf(family + "Trigger", "Open " + family.toLowerCase()), panel],
-        {
-          defaultOpen: open,
-        },
-      );
+      tree = node(family, [leaf(family + "Trigger", "Open " + family.toLowerCase()), panel], {
+        defaultOpen: open,
+      });
       break;
     }
     case "Select": {
-      if (
-        !requireNames(
-          "Select",
-          "SelectTrigger",
-          "SelectValue",
-          "SelectContent",
-          "SelectItem",
-        )
-      )
+      if (!requireNames("Select", "SelectTrigger", "SelectValue", "SelectContent", "SelectItem"))
         return;
       let content = [
         leaf("SelectItem", "First option", { value: "first" }),
@@ -208,28 +157,20 @@ export function familyRecipe(
       if (/Scroll(?:Up|Down)Button$/.test(target))
         content.push(
           ...Array.from({ length: 24 }, (_, index) =>
-            leaf("SelectItem", `Option ${index + 3}`, {
-              value: `option-${index + 3}`,
-            }),
+            leaf("SelectItem", `Option ${index + 3}`, { value: `option-${index + 3}` }),
           ),
         );
       if (target === "SelectGroup") content = [node(target, content)];
       else if (target === "SelectLabel")
         content = [node("SelectGroup", [leaf(target, "Options"), ...content])];
-      else if (
-        /Select(?:Separator|ScrollUpButton|ScrollDownButton)/.test(target)
-      )
+      else if (/Select(?:Separator|ScrollUpButton|ScrollDownButton)/.test(target))
         content.push(node(target));
       tree = node(
         "Select",
         [
-          node(
-            "SelectTrigger",
-            [node("SelectValue", [], { placeholder: "Choose an option" })],
-            {
-              "aria-label": "Example selection",
-            },
-          ),
+          node("SelectTrigger", [node("SelectValue", [], { placeholder: "Choose an option" })], {
+            "aria-label": "Example selection",
+          }),
           node(
             "SelectContent",
             content,
@@ -238,19 +179,12 @@ export function familyRecipe(
               : {},
           ),
         ],
-        {
-          defaultOpen: !["Select", "SelectTrigger", "SelectValue"].includes(
-            target,
-          ),
-        },
+        { defaultOpen: !["Select", "SelectTrigger", "SelectValue"].includes(target) },
       );
       break;
     }
     case "Collapsible": {
-      if (
-        !requireNames("Collapsible", "CollapsibleTrigger", "CollapsibleContent")
-      )
-        return;
+      if (!requireNames("Collapsible", "CollapsibleTrigger", "CollapsibleContent")) return;
       tree = node(
         "Collapsible",
         [
@@ -262,15 +196,7 @@ export function familyRecipe(
       break;
     }
     case "Breadcrumb": {
-      if (
-        !requireNames(
-          "Breadcrumb",
-          "BreadcrumbList",
-          "BreadcrumbItem",
-          "BreadcrumbLink",
-        )
-      )
-        return;
+      if (!requireNames("Breadcrumb", "BreadcrumbList", "BreadcrumbItem", "BreadcrumbLink")) return;
       const content =
         target === "BreadcrumbPage"
           ? leaf(target, "Current page")
@@ -286,14 +212,8 @@ export function familyRecipe(
       tree = node(
         "ToggleGroup",
         [
-          leaf("ToggleGroupItem", "Left", {
-            value: "left",
-            "aria-label": "Align left",
-          }),
-          leaf("ToggleGroupItem", "Right", {
-            value: "right",
-            "aria-label": "Align right",
-          }),
+          leaf("ToggleGroupItem", "Left", { value: "left", "aria-label": "Align left" }),
+          leaf("ToggleGroupItem", "Right", { value: "right", "aria-label": "Align right" }),
         ],
         { type: "single", defaultValue: "left" },
       );
@@ -353,9 +273,7 @@ export function familyRecipe(
       const children = [node("NavigationMenuList", [item])];
       if (names.has(target) && /(?:Indicator|Viewport)$/.test(target))
         children.push(node(target, [], { forceMount: true }));
-      tree = node("NavigationMenu", children, {
-        defaultValue: open ? "example" : undefined,
-      });
+      tree = node("NavigationMenu", children, { defaultValue: open ? "example" : undefined });
       break;
     }
     case "Sidebar": {
@@ -370,29 +288,19 @@ export function familyRecipe(
         )
       )
         return;
-      let menu: DemoNode = node("SidebarMenuItem", [
-        leaf("SidebarMenuButton", "Example page"),
-      ]);
+      let menu: DemoNode = node("SidebarMenuItem", [leaf("SidebarMenuButton", "Example page")]);
       if (
         /^SidebarMenu(?:Sub|SubItem|SubButton)$/.test(target) &&
-        requireNames(
-          "SidebarMenuSub",
-          "SidebarMenuSubItem",
-          "SidebarMenuSubButton",
-        )
+        requireNames("SidebarMenuSub", "SidebarMenuSubItem", "SidebarMenuSubButton")
       )
         menu = node("SidebarMenuItem", [
           leaf("SidebarMenuButton", "Section"),
           node("SidebarMenuSub", [
-            node("SidebarMenuSubItem", [
-              leaf("SidebarMenuSubButton", "Child page", { href: "#" }),
-            ]),
+            node("SidebarMenuSubItem", [leaf("SidebarMenuSubButton", "Child page", { href: "#" })]),
           ]),
         ]);
       else if (/SidebarMenu(?:Action|Badge|Skeleton)$/.test(target))
-        menu.children!.push(
-          leaf(target, target.endsWith("Badge") ? "3" : "More"),
-        );
+        menu.children!.push(leaf(target, target.endsWith("Badge") ? "3" : "More"));
       let panel: DemoNode = node("SidebarContent", [
         node(sidebarMenuFragment ? target : "SidebarMenu", [menu]),
       ]);
@@ -406,33 +314,22 @@ export function familyRecipe(
             ...(target === "SidebarGroupAction" ? [leaf(target, "+")] : []),
           ]),
         ]);
-      if (
-        /Sidebar(?:Header|Footer|Input|Separator|Rail|Trigger|Inset)$/.test(
-          target,
-        )
-      )
+      if (/Sidebar(?:Header|Footer|Input|Separator|Rail|Trigger|Inset)$/.test(target))
         panel = node("SidebarContent", [
           panel,
           leaf(target, /Input/.test(target) ? "" : "Example"),
         ]);
-      tree = node(
-        "SidebarProvider",
-        [node("Sidebar", [panel], { collapsible: "none" })],
-        {
-          style: { minHeight: "180px", width: "18rem" },
-        },
-      );
+      tree = node("SidebarProvider", [node("Sidebar", [panel], { collapsible: "none" })], {
+        style: { minHeight: "180px", width: "18rem" },
+      });
       break;
     }
     case "Card": {
-      if (!requireNames("Card", "CardHeader", "CardTitle", "CardContent"))
-        return;
+      if (!requireNames("Card", "CardHeader", "CardTitle", "CardContent")) return;
       tree = node("Card", [
         node("CardHeader", [
           leaf("CardTitle", "Example card"),
-          ...(names.has("CardDescription")
-            ? [leaf("CardDescription", "A complete example")]
-            : []),
+          ...(names.has("CardDescription") ? [leaf("CardDescription", "A complete example")] : []),
         ]),
         leaf("CardContent", "Card content"),
         ...(names.has("CardFooter") ? [leaf("CardFooter", "Card footer")] : []),
@@ -445,8 +342,7 @@ export function familyRecipe(
   if (!tree || !includesTarget(tree, new Set([target]))) return;
   const requiredNodes = (item: DemoNode | string): boolean =>
     typeof item === "string" ||
-    ((names.has(item.name) ||
-      ((menuFragment || sidebarMenuFragment) && item.name === target)) &&
+    ((names.has(item.name) || ((menuFragment || sidebarMenuFragment) && item.name === target)) &&
       (item.children || []).every(requiredNodes));
   return requiredNodes(tree) ? tree : undefined;
 }

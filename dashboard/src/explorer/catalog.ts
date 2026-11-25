@@ -1,24 +1,16 @@
-import type {
-  CatalogComponent,
-  PlaygroundSpec,
-  WorkspaceReport,
-} from "../types/report";
+import type { CatalogComponent, PlaygroundSpec, WorkspaceReport } from "../types/report";
 
 /** Normalize v3 without pretending that name-only references can disambiguate duplicates. */
 export function catalogFromReport(report: WorkspaceReport): CatalogComponent[] {
   if (report.components)
     return report.components.map((component) => ({
       ...component,
-      preview: {
-        ...component.preview,
-        declared_props: component.preview.declared_props || [],
-      },
+      preview: { ...component.preview, declared_props: component.preview.declared_props || [] },
     }));
   const components: CatalogComponent[] = [];
   const counts = new Map<string, number>();
   for (const file of report.files)
-    for (const def of file.definitions)
-      counts.set(def.name, (counts.get(def.name) || 0) + 1);
+    for (const def of file.definitions) counts.set(def.name, (counts.get(def.name) || 0) + 1);
   for (const file of report.files) {
     const path = file.path
       .replaceAll("\\", "/")
@@ -49,9 +41,8 @@ export function catalogFromReport(report: WorkspaceReport): CatalogComponent[] {
         preview,
         usages:
           counts.get(def.name) === 1
-            ? report.usage_by_component.find(
-                (row) => row.component === def.name,
-              )?.usage_locations || []
+            ? report.usage_by_component.find((row) => row.component === def.name)
+                ?.usage_locations || []
             : [],
         bindings: {},
         dependencies: [],
@@ -69,9 +60,7 @@ export function resolveCatalogComponent(
   const components = catalogFromReport(report);
   const exact = components.find((component) => component.id === reference);
   if (exact) return exact;
-  const matches = components.filter(
-    (component) => component.name === reference,
-  );
+  const matches = components.filter((component) => component.name === reference);
   if (matches.length > 1)
     throw new Error(
       `Ambiguous component ${reference}. Choose one of: ${matches.map((component) => component.id).join(", ")}`,

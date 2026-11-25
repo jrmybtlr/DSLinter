@@ -123,8 +123,7 @@ describe("catalog metadata", () => {
 });
 
 it("preserves structured arrays and source-backed visibility/import metadata", () => {
-  const { root, report, component } =
-    project(`import { Circle as Glyph } from 'lucide-react';
+  const { root, report, component } = project(`import { Circle as Glyph } from 'lucide-react';
     export default function Example({items, canShow = false, open = false}: {items: {title:string; href:string}[]; canShow?:boolean; open?:boolean}) {
       if (!canShow) return null;
       return <div><Glyph />{items.map(item=><span>{item.title}</span>)}</div>
@@ -206,11 +205,7 @@ it("samples optional collections but leaves optional flags and error state alone
   );
   enrichCatalog(report, root);
   expect(component.preview.sample_props).toEqual({
-    items: [
-      { label: "Example label" },
-      { label: "Example label 2" },
-      { label: "Example label 3" },
-    ],
+    items: [{ label: "Example label" }, { label: "Example label 2" }, { label: "Example label 3" }],
     tags: ["Example item", "Example item 2", "Example item 3"],
   });
 });
@@ -230,12 +225,7 @@ it("reads runtime defineProps declarations, including PropType casts", () => {
   );
   enrichCatalog(report, root);
   expect(component.metadata_error).toBeUndefined();
-  expect(component.preview.declared_props).toEqual([
-    "rows",
-    "heading",
-    "size",
-    "count",
-  ]);
+  expect(component.preview.declared_props).toEqual(["rows", "heading", "size", "count"]);
   expect(component.preview.declared_prop_kinds).toMatchObject({
     rows: "object",
     heading: "string",

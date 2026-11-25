@@ -1,19 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogComponent } from "../types/report";
-import {
-  adapterKey,
-  fixtureAdapterExample,
-  fixtureEntry,
-} from "./fixtureExample";
-import {
-  propDiagnostics,
-  summarizeProps,
-  summarizePropValue,
-} from "./previewMessages";
+import { adapterKey, fixtureAdapterExample, fixtureEntry } from "./fixtureExample";
+import { propDiagnostics, summarizeProps, summarizePropValue } from "./previewMessages";
 
-function component(
-  preview: Partial<CatalogComponent["preview"]> = {},
-): CatalogComponent {
+function component(preview: Partial<CatalogComponent["preview"]> = {}): CatalogComponent {
   return {
     id: "app/components/forecast/ForecastHours.vue#default",
     name: "ForecastHours",
@@ -51,8 +41,7 @@ describe("fixture examples", () => {
         },
       }),
     );
-    expect(example)
-      .toBe(`import type { PreviewAdapter } from "dslinter/preview";
+    expect(example).toBe(`import type { PreviewAdapter } from "dslinter/preview";
 
 export default {
   fixtures: {
@@ -100,9 +89,7 @@ describe("prop diagnostics", () => {
   it("summarizes values without cloning functions", () => {
     expect(summarizePropValue(undefined)).toBe("undefined");
     expect(summarizePropValue([])).toBe("[] (empty)");
-    expect(summarizePropValue([{ a: 1 }, { a: 2 }])).toBe(
-      '2 items: [{"a":1},{"a":2}]',
-    );
+    expect(summarizePropValue([{ a: 1 }, { a: 2 }])).toBe('2 items: [{"a":1},{"a":2}]');
     expect(summarizePropValue(() => 1)).toBe("function");
     expect(summarizePropValue("x".repeat(200))).toHaveLength(80);
     expect(summarizeProps({ hours: [], "slot:default": "x" })).toEqual({

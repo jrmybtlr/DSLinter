@@ -78,8 +78,7 @@ export function boot(context: Context): void {
           JSON.stringify(message.value, (_, value) => {
             if (typeof value === "bigint") return String(value);
             if (typeof value === "function") return undefined;
-            if (typeof Event !== "undefined" && value instanceof Event)
-              return { type: value.type };
+            if (typeof Event !== "undefined" && value instanceof Event) return { type: value.type };
             if (value && typeof value === "object") {
               if (seen.has(value)) return "[circular]";
               seen.add(value);
@@ -91,14 +90,9 @@ export function boot(context: Context): void {
         message.value = String(message.value);
       }
     }
-    parent.postMessage(
-      { protocol: PREVIEW_PROTOCOL, ...message },
-      parentOrigin!,
-    );
+    parent.postMessage({ protocol: PREVIEW_PROTOCOL, ...message }, parentOrigin!);
   }
-  const sizing = observePreviewSize(root, (height) =>
-    send({ type: "resize", height }),
-  );
+  const sizing = observePreviewSize(root, (height) => send({ type: "resize", height }));
   window.addEventListener("pagehide", (event) => {
     if (!event.persisted) sizing.disconnect();
   });
@@ -108,14 +102,13 @@ export function boot(context: Context): void {
     let diagnostic: ContextDiagnostic | undefined;
     let example: string | undefined;
     if (component && requirement) {
-      const candidates = (component.preview.provider_candidates || []).filter(
-        (provider) =>
-          requirement.names.some(
-            (name) =>
-              provider.name === name ||
-              provider.export_name === name ||
-              provider.aliases?.includes(name),
-          ),
+      const candidates = (component.preview.provider_candidates || []).filter((provider) =>
+        requirement.names.some(
+          (name) =>
+            provider.name === name ||
+            provider.export_name === name ||
+            provider.aliases?.includes(name),
+        ),
       );
       diagnostic = {
         message: requirement.message,
@@ -127,12 +120,7 @@ export function boot(context: Context): void {
           : "The injection does not identify a provider component. Configure the service with vue.setup (app.provide or app.use).",
       };
       if (candidates.length <= 1)
-        example = contextAdapterExample(
-          component,
-          candidates,
-          context.adapterRoot,
-          context.root,
-        );
+        example = contextAdapterExample(component, candidates, context.adapterRoot, context.root);
     }
     active?.unmount();
     active = undefined;
@@ -146,10 +134,7 @@ export function boot(context: Context): void {
       adapterExample: example,
     });
   }
-  async function load(
-    path: string,
-    specifier?: string,
-  ): Promise<Record<string, any>> {
+  async function load(path: string, specifier?: string): Promise<Record<string, any>> {
     const absolute =
       path.startsWith("/") || /^[A-Za-z]:/.test(path)
         ? path
@@ -199,10 +184,7 @@ export function boot(context: Context): void {
       });
     return renderQueue;
   }
-  async function renderAttempt(
-    next: PreviewCommand,
-    token: number,
-  ): Promise<void> {
+  async function renderAttempt(next: PreviewCommand, token: number): Promise<void> {
     active?.unmount();
     active = undefined;
     activeProviders = [];
@@ -221,20 +203,14 @@ export function boot(context: Context): void {
     let adapterExample: string | undefined;
     try {
       for (const style of adapter.styles || [])
-        await load(
-          style.startsWith("/") ? style : `${context.adapterRoot}/${style}`,
-        );
-      function configured<T>(
-        items: Record<string, T> | undefined,
-      ): T | undefined {
+        await load(style.startsWith("/") ? style : `${context.adapterRoot}/${style}`);
+      function configured<T>(items: Record<string, T> | undefined): T | undefined {
         if (items?.[component.id] !== undefined) return items[component.id];
         if (
           items?.[component.name] !== undefined &&
           catalog.filter((item) => item.name === component.name).length > 1
         )
-          throw new Error(
-            `Ambiguous adapter key ${component.name}; use ${component.id}`,
-          );
+          throw new Error(`Ambiguous adapter key ${component.name}; use ${component.id}`);
         return items?.[component.name];
       }
       const explicit = configured(adapter.previews);
@@ -249,11 +225,7 @@ export function boot(context: Context): void {
           tree: { name: component.name },
           override: explicit,
         });
-      if (
-        !explicit &&
-        component.preview.manual_preview &&
-        component.framework === "react"
-      ) {
+      if (!explicit && component.preview.manual_preview && component.framework === "react") {
         try {
           const manual = component.preview.manual_preview;
           const override = (await load(manual.rel_path))[manual.export_name];
@@ -272,15 +244,13 @@ export function boot(context: Context): void {
         /^(?:DropdownMenu|NavigationMenu|Collapsible|Breadcrumb|ToggleGroup|InputOTP|Avatar|Dialog|Select|Sheet|Card|Tooltip|Sidebar)(?=[A-Z])/.test(
           component.name,
         );
-      if (recipe && subcomponent)
-        strategies.push({ source: "recipe", tree: recipe });
+      if (recipe && subcomponent) strategies.push({ source: "recipe", tree: recipe });
       if (component.preview.example_tree)
         strategies.push({
           source: "usage",
           tree: demoFromExample(component.preview.example_tree),
         });
-      if (recipe && !subcomponent)
-        strategies.push({ source: "recipe", tree: recipe });
+      if (recipe && !subcomponent) strategies.push({ source: "recipe", tree: recipe });
       strategies.push({
         source: "generated",
         tree: {
@@ -297,16 +267,12 @@ export function boot(context: Context): void {
         try {
           const exported = strategy.override
             ? undefined
-            : (await load(component.preview.rel_path))[
-                component.preview.export_name
-              ];
+            : (await load(component.preview.rel_path))[component.preview.export_name];
           if (!strategy.override && !exported)
             throw new Error(
               `Export ${component.preview.export_name} was not found in ${component.preview.rel_path}`,
             );
-          const resolved: Record<string, unknown> = exported
-            ? { [component.name]: exported }
-            : {};
+          const resolved: Record<string, unknown> = exported ? { [component.name]: exported } : {};
           const family = familyComponents(component, catalog);
           async function resolveTree(tree: DemoNode | string): Promise<void> {
             if (typeof tree === "string") return;
@@ -333,19 +299,10 @@ export function boot(context: Context): void {
                   throw new Error(
                     `Example dependency ${tree.name} needs an import binding or fixture`,
                   );
-                const imported = await load(
-                  binding.importer,
-                  binding.specifier,
-                );
-                let value =
-                  binding.export_name === "*"
-                    ? imported
-                    : imported[binding.export_name];
+                const imported = await load(binding.importer, binding.specifier);
+                let value = binding.export_name === "*" ? imported : imported[binding.export_name];
                 for (const member of members) value = value?.[member];
-                if (!value)
-                  throw new Error(
-                    `Example import ${tree.name} could not be resolved`,
-                  );
+                if (!value) throw new Error(`Example import ${tree.name} could not be resolved`);
                 resolved[tree.name] = value;
               }
             }
@@ -359,20 +316,15 @@ export function boot(context: Context): void {
               ),
             ]);
             if (!includesTarget(strategy.tree, targets))
-              throw new Error(
-                "Example does not contain the selected component",
-              );
+              throw new Error("Example does not contain the selected component");
             await resolveTree(strategy.tree);
           }
           if (generation !== token) return;
-          function selectedProps(
-            tree: DemoNode | string,
-          ): Record<string, unknown> | undefined {
+          function selectedProps(tree: DemoNode | string): Record<string, unknown> | undefined {
             if (typeof tree === "string") return;
             if (
               tree.target !== false &&
-              (tree.name === component.name ||
-                component.bindings[tree.name] === component.id)
+              (tree.name === component.name || component.bindings[tree.name] === component.id)
             )
               return tree.props;
             return tree.children?.map(selectedProps).find(Boolean);
@@ -391,16 +343,12 @@ export function boot(context: Context): void {
             ...configured(adapter.fixtures),
           };
           attemptedProps = values;
-          const revealedValues: Record<
-            string,
-            string | number | boolean | string[] | number[]
-          > = {};
+          const revealedValues: Record<string, string | number | boolean | string[] | number[]> =
+            {};
           const cacheKey = `${component.id}:${strategy.source}:${JSON.stringify([strategy.tree, component.preview.provider_candidates])}`;
           const authoritative = Boolean(
             strategies.some((item) => item.override) ||
-            (context.framework === "react"
-              ? adapter.react?.wrap
-              : adapter.vue?.setup),
+            (context.framework === "react" ? adapter.react?.wrap : adapter.vue?.setup),
           );
           const recovered = await recoverProviders({
             component,
@@ -412,27 +360,18 @@ export function boot(context: Context): void {
                 Object.entries(resolved).some(
                   ([name]) =>
                     component.bindings[name] === item.id ||
-                    (item.preview.rel_path === component.preview.rel_path &&
-                      item.name === name),
+                    (item.preview.rel_path === component.preview.rel_path && item.name === name),
                 ),
               )
               .map((item) => item.id),
             current: () => generation === token,
-            onFailure: (message) =>
-              attempts.push(`${strategy.source}: ${message}`),
+            onFailure: (message) => attempts.push(`${strategy.source}: ${message}`),
             async attempt(providers) {
               for (const provider of providers) {
-                const exportedProvider = (await load(provider.rel_path))[
-                  provider.export_name
-                ];
+                const exportedProvider = (await load(provider.rel_path))[provider.export_name];
                 if (!exportedProvider)
-                  throw new Error(
-                    `Provider export ${provider.id} was not found`,
-                  );
-                if (
-                  resolved[provider.name] &&
-                  resolved[provider.name] !== exportedProvider
-                )
+                  throw new Error(`Provider export ${provider.id} was not found`);
+                if (resolved[provider.name] && resolved[provider.name] !== exportedProvider)
                   throw new Error(
                     `Provider name ${provider.name} conflicts with an example binding`,
                   );
@@ -451,8 +390,7 @@ export function boot(context: Context): void {
                     if (generation !== token) return;
                     if (event === "preview:error")
                       queueMicrotask(() => {
-                        if (generation === token && active)
-                          reportActiveFailure(value);
+                        if (generation === token && active) reportActiveFailure(value);
                       });
                     else send({ type: "event", event, value });
                   },
@@ -462,9 +400,7 @@ export function boot(context: Context): void {
               let session = await performMount();
               // Allow image loads and portal/layout effects to settle before assessing visibility.
               await new Promise<void>((resolve) =>
-                requestAnimationFrame(() =>
-                  requestAnimationFrame(() => resolve()),
-                ),
+                requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
               );
               if (generation !== token) {
                 session.unmount();
@@ -482,13 +418,10 @@ export function boot(context: Context): void {
                 for (const key of candidates) {
                   session.unmount();
                   const original = values;
-                  const reveal =
-                    component.preview.visibility_values?.[key] ?? true;
+                  const reveal = component.preview.visibility_values?.[key] ?? true;
                   values = { ...values, [key]: reveal };
                   session = await performMount();
-                  await new Promise<void>((resolve) =>
-                    requestAnimationFrame(() => resolve()),
-                  );
+                  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
                   if (generation !== token) {
                     session.unmount();
                     throw new Error("Preview superseded");
@@ -538,8 +471,7 @@ export function boot(context: Context): void {
                 ),
                 context.framework,
               ),
-              substitutedContext:
-                document.documentElement.dataset.dslinterContext === "inertia",
+              substitutedContext: document.documentElement.dataset.dslinterContext === "inertia",
               styles: context.styles,
               synthetic:
                 Object.keys(revealedValues).length > 0 ||
@@ -574,10 +506,9 @@ export function boot(context: Context): void {
                 component,
                 [
                   ...new Map(
-                    [
-                      ...contextDiagnostic.attemptedProviders,
-                      ...contextDiagnostic.candidates,
-                    ].map((provider) => [provider.id, provider]),
+                    [...contextDiagnostic.attemptedProviders, ...contextDiagnostic.candidates].map(
+                      (provider) => [provider.id, provider],
+                    ),
                   ).values(),
                 ],
                 context.adapterRoot,
@@ -600,11 +531,7 @@ export function boot(context: Context): void {
           !contextDiagnostic &&
           attempts.length > 0 &&
           attempts.every((attempt) => attempt.endsWith(EMPTY_PREVIEW_MESSAGE))
-            ? notificationAdapterExample(
-                component,
-                context.adapterRoot,
-                context.root,
-              )
+            ? notificationAdapterExample(component, context.adapterRoot, context.root)
             : undefined;
         const overridden = attempts.some((attempt) =>
           /^(?:override|manual override):/.test(attempt),
@@ -622,12 +549,9 @@ export function boot(context: Context): void {
           failurePhase: "render",
           message: error instanceof Error ? error.message : String(error),
           attempts,
-          attemptedProps: attemptedProps
-            ? summarizeProps(attemptedProps)
-            : undefined,
+          attemptedProps: attemptedProps ? summarizeProps(attemptedProps) : undefined,
           contextDiagnostic,
-          adapterExample:
-            adapterExample || notificationExample || fixtureExample,
+          adapterExample: adapterExample || notificationExample || fixtureExample,
           setupAction:
             notificationExample && !overridden
               ? "notification"
@@ -688,8 +612,7 @@ export function boot(context: Context): void {
       scanGeneration++;
       const session = active;
       const token = generation;
-      if (command)
-        command = { ...command, values: { ...command.values, ...next.values } };
+      if (command) command = { ...command, values: { ...command.values, ...next.values } };
       const values = command?.values || {};
       void (async () => {
         try {

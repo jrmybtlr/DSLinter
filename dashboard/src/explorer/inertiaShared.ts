@@ -2,20 +2,11 @@ import adapter from "virtual:dslinter/adapter";
 document.documentElement.dataset.dslinterContext = "inertia";
 
 const defaultPageProps = {
-  auth: {
-    user: {
-      id: 1,
-      name: "Example User",
-      email: "example@example.test",
-      avatar: "",
-    },
-  },
+  auth: { user: { id: 1, name: "Example User", email: "example@example.test", avatar: "" } },
   errors: {},
 };
 let configuredPageProps: typeof adapter.pageProps;
-let previewPageProps:
-  | (typeof defaultPageProps & Record<string, unknown>)
-  | undefined;
+let previewPageProps: (typeof defaultPageProps & Record<string, unknown>) | undefined;
 
 export const page = {
   component: "DSLinterPreview",
@@ -33,9 +24,7 @@ export const page = {
 };
 function record(event: string, detail: unknown) {
   window.dispatchEvent(
-    new CustomEvent("dslinter:interaction", {
-      detail: { event, value: detail },
-    }),
+    new CustomEvent("dslinter:interaction", { detail: { event, value: detail } }),
   );
 }
 export const router = {
@@ -44,16 +33,14 @@ export const router = {
     return () => window.removeEventListener(`inertia:${name}`, callback);
   },
   ...Object.fromEntries(
-    ["visit", "get", "post", "put", "patch", "delete", "reload", "replace"].map(
-      (name) => [
-        name,
-        (...args: unknown[]) =>
-          record(
-            `router.${name}`,
-            args.filter((arg) => typeof arg === "string"),
-          ),
-      ],
-    ),
+    ["visit", "get", "post", "put", "patch", "delete", "reload", "replace"].map((name) => [
+      name,
+      (...args: unknown[]) =>
+        record(
+          `router.${name}`,
+          args.filter((arg) => typeof arg === "string"),
+        ),
+    ]),
   ),
 };
 export function createInertiaApp() {}

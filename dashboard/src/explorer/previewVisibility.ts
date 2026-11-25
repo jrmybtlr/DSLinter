@@ -8,8 +8,7 @@ export function hasVisiblePreview(root: HTMLElement): boolean {
     ),
   ];
   return elements.some((element) => {
-    if (["SCRIPT", "STYLE", "LINK", "OPTION"].includes(element.tagName))
-      return false;
+    if (["SCRIPT", "STYLE", "LINK", "OPTION"].includes(element.tagName)) return false;
     const box = element.getBoundingClientRect();
     const style = document.defaultView!.getComputedStyle(element);
     if (
@@ -22,17 +21,10 @@ export function hasVisiblePreview(root: HTMLElement): boolean {
       return false;
     if (
       element.checkVisibility &&
-      !element.checkVisibility({
-        opacityProperty: true,
-        visibilityProperty: true,
-      })
+      !element.checkVisibility({ opacityProperty: true, visibilityProperty: true })
     )
       return false;
-    if (
-      element.matches(
-        'input,button,select,textarea,img,svg,canvas,video,[role="separator"]',
-      )
-    )
+    if (element.matches('input,button,select,textarea,img,svg,canvas,video,[role="separator"]'))
       return true;
     if (
       [...element.childNodes].some(
@@ -41,11 +33,7 @@ export function hasVisiblePreview(root: HTMLElement): boolean {
     )
       return true;
     const colored =
-      style.backgroundColor !== "rgba(0, 0, 0, 0)" &&
-      style.backgroundColor !== "transparent";
-    return (
-      !element.children.length &&
-      (colored || parseFloat(style.borderTopWidth) > 0)
-    );
+      style.backgroundColor !== "rgba(0, 0, 0, 0)" && style.backgroundColor !== "transparent";
+    return !element.children.length && (colored || parseFloat(style.borderTopWidth) > 0);
   });
 }

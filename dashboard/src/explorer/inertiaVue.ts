@@ -1,11 +1,6 @@
 import { defineComponent, h, reactive } from "vue";
 import { page, formData } from "./inertiaShared";
-export {
-  router,
-  createInertiaApp,
-  setLayoutProps,
-  useHttp,
-} from "./inertiaShared";
+export { router, createInertiaApp, setLayoutProps, useHttp } from "./inertiaShared";
 export function usePage() {
   return page;
 }
@@ -23,11 +18,7 @@ export const Link = defineComponent({
     return () =>
       h(
         "a",
-        {
-          ...attrs,
-          href: props.href || "#",
-          onClick: (event: Event) => event.preventDefault(),
-        },
+        { ...attrs, href: props.href || "#", onClick: (event: Event) => event.preventDefault() },
         slots.default?.(),
       );
   },

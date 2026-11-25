@@ -46,20 +46,17 @@ export function previewHeightForLayout(
   let height = rootHeight;
   for (const surface of surfaces) {
     if (surface.layout === "viewport") height = Math.max(height, limit);
-    else if (surface.layout === "centered")
-      height = Math.max(height, surface.height + padding * 2);
+    else if (surface.layout === "centered") height = Math.max(height, surface.height + padding * 2);
     else {
       height = Math.max(height, surface.bottom + padding);
       // A collision-positioned popup may initially have flipped above its anchor.
-      if (surface.top < 0)
-        height = Math.max(height, surface.height + padding * 2);
+      if (surface.top < 0) height = Math.max(height, surface.height + padding * 2);
     }
   }
   return Math.ceil(height);
 }
 
-const DIALOG =
-  '[role="dialog"], [role="alertdialog"], [aria-modal="true"], dialog[open]';
+const DIALOG = '[role="dialog"], [role="alertdialog"], [aria-modal="true"], dialog[open]';
 const ANCHORED =
   '[data-radix-popper-content-wrapper], [data-popper-placement], [role="menu"], [role="listbox"], [role="tooltip"]';
 const SURFACE = `${DIALOG}, ${ANCHORED}`;
@@ -76,10 +73,7 @@ function visible(element: HTMLElement, view: Window): boolean {
     style.visibility !== "hidden" &&
     style.opacity !== "0" &&
     (!element.checkVisibility ||
-      element.checkVisibility({
-        opacityProperty: true,
-        visibilityProperty: true,
-      }))
+      element.checkVisibility({ opacityProperty: true, visibilityProperty: true }))
   );
 }
 
@@ -102,17 +96,11 @@ function clippedBounds(
     const bounds = ancestor.getBoundingClientRect();
     if (CLIPPING.test(style.overflowY)) {
       top = Math.max(top, bounds.top + ancestor.clientTop);
-      bottom = Math.min(
-        bottom,
-        bounds.top + ancestor.clientTop + ancestor.clientHeight,
-      );
+      bottom = Math.min(bottom, bounds.top + ancestor.clientTop + ancestor.clientHeight);
     }
     if (CLIPPING.test(style.overflowX)) {
       left = Math.max(left, bounds.left + ancestor.clientLeft);
-      right = Math.min(
-        right,
-        bounds.left + ancestor.clientLeft + ancestor.clientWidth,
-      );
+      right = Math.min(right, bounds.left + ancestor.clientLeft + ancestor.clientWidth);
     }
   }
   if (bottom <= top || right <= left) return;
@@ -133,32 +121,23 @@ function viewportPositioned(element: HTMLElement, view: Window): boolean {
     if (style.position === "fixed") return !current.offsetParent;
     if (
       style.position === "absolute" &&
-      (!current.offsetParent ||
-        current.offsetParent === element.ownerDocument.body)
+      (!current.offsetParent || current.offsetParent === element.ownerDocument.body)
     )
       return true;
   }
   return false;
 }
 
-function surfaceLayout(
-  element: HTMLElement,
-  view: Window,
-): SurfaceBounds["layout"] {
-  if (
-    element.matches(ANCHORED) ||
-    element.closest("[data-radix-popper-content-wrapper]")
-  )
+function surfaceLayout(element: HTMLElement, view: Window): SurfaceBounds["layout"] {
+  if (element.matches(ANCHORED) || element.closest("[data-radix-popper-content-wrapper]"))
     return "anchored";
   if (!viewportPositioned(element, view)) return "anchored";
   const style = view.getComputedStyle(element);
   const box = element.getBoundingClientRect();
-  const fillsHeight =
-    Math.abs(box.top) <= 2 && Math.abs(box.bottom - view.innerHeight) <= 2;
+  const fillsHeight = Math.abs(box.top) <= 2 && Math.abs(box.bottom - view.innerHeight) <= 2;
   if (
     fillsHeight &&
-    ((style.top === "0px" && style.bottom === "0px") ||
-      box.width >= view.innerWidth - 2)
+    ((style.top === "0px" && style.bottom === "0px") || box.width >= view.innerWidth - 2)
   )
     return "viewport";
   if (
@@ -170,16 +149,10 @@ function surfaceLayout(
 }
 
 function previewSurfaces(root: HTMLElement, view: Window): HTMLElement[] {
-  const elements = [
-    ...root.ownerDocument.body.querySelectorAll<HTMLElement>("*"),
-  ];
+  const elements = [...root.ownerDocument.body.querySelectorAll<HTMLElement>("*")];
   const candidates = new Set(
     elements.filter((element) => {
-      if (
-        element === root ||
-        ["SCRIPT", "STYLE", "LINK"].includes(element.tagName)
-      )
-        return false;
+      if (element === root || ["SCRIPT", "STYLE", "LINK"].includes(element.tagName)) return false;
       const style = view.getComputedStyle(element);
       const outside = !root.contains(element);
       if (
@@ -187,8 +160,7 @@ function previewSurfaces(root: HTMLElement, view: Window): HTMLElement[] {
         style.position !== "fixed" &&
         !(
           outside &&
-          (element.parentElement === root.ownerDocument.body ||
-            element.matches(SURFACE))
+          (element.parentElement === root.ownerDocument.body || element.matches(SURFACE))
         )
       )
         return false;
@@ -200,19 +172,14 @@ function previewSurfaces(root: HTMLElement, view: Window): HTMLElement[] {
         Math.abs(box.bottom - view.innerHeight) <= 2;
       if (fillsViewport && !element.matches(SURFACE)) {
         // Backdrops and full-screen portal wrappers are not the content surface.
-        if (!element.textContent?.trim() || element.querySelector(SURFACE))
-          return false;
+        if (!element.textContent?.trim() || element.querySelector(SURFACE)) return false;
       }
       return true;
     }),
   );
   return [...candidates].filter((element) => {
     const box = element.getBoundingClientRect();
-    for (
-      let ancestor = element.parentElement;
-      ancestor;
-      ancestor = ancestor.parentElement
-    ) {
+    for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
       if (!candidates.has(ancestor)) continue;
       const outer = ancestor.getBoundingClientRect();
       if (
@@ -254,9 +221,7 @@ export function observePreviewSize(
   let observed = new Set<Element>();
   const heightTracker = createPreviewHeightTracker();
   const contained = new Set<HTMLElement>();
-  const viewportResize = observePreviewResize(view, (widthChanged) =>
-    schedule(widthChanged),
-  );
+  const viewportResize = observePreviewResize(view, (widthChanged) => schedule(widthChanged));
 
   function schedule(restart = true): void {
     if (stopped) return;
@@ -288,15 +253,11 @@ export function observePreviewSize(
       if (layout === "viewport" || !viewportPositioned(element, view)) continue;
       if (!element.matches(DIALOG) && !element.querySelector(DIALOG)) continue;
       const available =
-        limit -
-        padding -
-        Math.max(padding, layout === "centered" ? padding : box.top);
+        limit - padding - Math.max(padding, layout === "centered" ? padding : box.top);
       if (box.height > available) {
         const maxHeight = Math.max(1, Math.floor(available));
         element.setAttribute(CONTAINED, String(maxHeight));
-        rules.add(
-          `[${CONTAINED}="${maxHeight}"] { max-height: ${maxHeight}px !important; }`,
-        );
+        rules.add(`[${CONTAINED}="${maxHeight}"] { max-height: ${maxHeight}px !important; }`);
         contained.add(element);
       }
     }
@@ -307,10 +268,8 @@ export function observePreviewSize(
       return box ? [{ ...box, layout }] : [];
     });
     const nextObserved = new Set<Element>([root, ...surfaces]);
-    for (const element of observed)
-      if (!nextObserved.has(element)) resize.unobserve(element);
-    for (const element of nextObserved)
-      if (!observed.has(element)) resize.observe(element);
+    for (const element of observed) if (!nextObserved.has(element)) resize.unobserve(element);
+    for (const element of nextObserved) if (!observed.has(element)) resize.observe(element);
     observed = nextObserved;
     const measuredHeight = previewHeightForLayout(
       root.getBoundingClientRect().height,
@@ -341,15 +300,10 @@ export function observePreviewSize(
   }
 
   const mutations = new MutationObserver((records) => {
-    const changes = records.filter(
-      (record) => record.attributeName !== CONTAINED,
-    );
+    const changes = records.filter((record) => record.attributeName !== CONTAINED);
     if (!changes.length) return;
     schedule(
-      changes.some(
-        (record) =>
-          record.type !== "attributes" || record.attributeName !== "style",
-      ),
+      changes.some((record) => record.type !== "attributes" || record.attributeName !== "style"),
     );
   });
   mutations.observe(document.body, {
@@ -364,16 +318,8 @@ export function observePreviewSize(
   function onContentChange(): void {
     schedule();
   }
-  const events = [
-    "load",
-    "transitionend",
-    "animationend",
-    "input",
-    "change",
-    "toggle",
-  ];
-  for (const event of events)
-    document.addEventListener(event, onContentChange, true);
+  const events = ["load", "transitionend", "animationend", "input", "change", "toggle"];
+  for (const event of events) document.addEventListener(event, onContentChange, true);
   document.addEventListener("scroll", onScroll, true);
   document.fonts?.addEventListener("loadingdone", onContentChange);
   schedule();
@@ -391,8 +337,7 @@ export function observePreviewSize(
       view.cancelAnimationFrame(frame);
       resize.disconnect();
       mutations.disconnect();
-      for (const event of events)
-        document.removeEventListener(event, onContentChange, true);
+      for (const event of events) document.removeEventListener(event, onContentChange, true);
       viewportResize.disconnect();
       document.removeEventListener("scroll", onScroll, true);
       document.fonts?.removeEventListener("loadingdone", onContentChange);

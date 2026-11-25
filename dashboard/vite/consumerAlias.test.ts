@@ -19,18 +19,13 @@ describe("flattenViteAlias", () => {
 
 describe("importerUnderScanRoot", () => {
   it("matches files under scan root", () => {
-    expect(
-      importerUnderScanRoot("/repo/resources/js/Components/Foo.tsx", "/repo"),
-    ).toBe(true);
+    expect(importerUnderScanRoot("/repo/resources/js/Components/Foo.tsx", "/repo")).toBe(true);
     expect(importerUnderScanRoot("/other/pkg/Button.tsx", "/repo")).toBe(false);
   });
 
   it("matches paths with Vite query suffixes", () => {
     expect(
-      importerUnderScanRoot(
-        "/repo/resources/js/hooks/use-current-url.ts?v=abc",
-        "/repo",
-      ),
+      importerUnderScanRoot("/repo/resources/js/hooks/use-current-url.ts?v=abc", "/repo"),
     ).toBe(true);
   });
 });

@@ -18,23 +18,11 @@ function component(name: string, path: string, used = false): CatalogComponent {
     id: `${path}#${name}`,
     name,
     framework: path.endsWith(".vue") ? "vue" : "react",
-    preview: {
-      id: name,
-      rel_path: path,
-      export_name: name,
-      declared_props: ["label", "disabled"],
-    },
+    preview: { id: name, rel_path: path, export_name: name, declared_props: ["label", "disabled"] },
     dependencies: [],
     bindings: {},
     usages: used
-      ? [
-          {
-            path: "/workspace/Page.tsx",
-            line: 7,
-            props: ["label"],
-            prop_values: { label: "Save" },
-          },
-        ]
+      ? [{ path: "/workspace/Page.tsx", line: 7, props: ["label"], prop_values: { label: "Save" } }]
       : [],
   };
 }
@@ -48,11 +36,7 @@ function report(catalog: CatalogComponent[]): WorkspaceReport {
       parse_errors: [],
       definitions: catalog
         .filter((item) => item.preview.rel_path === path)
-        .map((item) => ({
-          name: item.name,
-          kind: "export_default_anonymous" as const,
-          line: 2,
-        })),
+        .map((item) => ({ name: item.name, kind: "export_default_anonymous" as const, line: 2 })),
     })),
     findings: [],
     usage_by_component: [],
@@ -73,13 +57,9 @@ it("restores analytics widgets without merging identically named components", ()
   const view = dashboardReport(input, [a, b]);
   expect(usageMap(view).get(a.id)?.reference_count).toBe(1);
   expect(usageMap(view).get(b.id)?.reference_count).toBe(0);
-  expect(unusedComponentsFromReport(view).map((item) => item.name)).toEqual([
-    b.id,
-  ]);
+  expect(unusedComponentsFromReport(view).map((item) => item.name)).toEqual([b.id]);
   expect(aggregateDeclaredProps(view).get(b.id)).toEqual(["label", "disabled"]);
-  expect(componentUsage(a).prop_value_frequencies).toEqual({
-    label: { Save: 1 },
-  });
+  expect(componentUsage(a).prop_value_frequencies).toEqual({ label: { Save: 1 } });
   expect(input.files[0].definitions[0].name).toBe("Button");
   expect(input.usage_by_component).toEqual([]);
 });
@@ -94,15 +74,11 @@ it("keeps Vue compound families together while separating app contexts", () => {
   ];
   const tree = catalogNavigation(catalog);
   expect(tree).toHaveLength(2);
-  const family = tree.find(
-    (item) => item.type === "family" && item.parent === catalog[0].id,
-  );
+  const family = tree.find((item) => item.type === "family" && item.parent === catalog[0].id);
   expect(family?.type === "family" && family.children).toEqual(
     expect.arrayContaining(catalog.slice(0, 3).map((item) => item.id)),
   );
-  expect(catalogLabels(catalog)[catalog[0].id].description).toBe(
-    "a/Dialog.vue",
-  );
+  expect(catalogLabels(catalog)[catalog[0].id].description).toBe("a/Dialog.vue");
 });
 
 it("does not group duplicate declarations in the same directory into a single component", () => {
@@ -118,12 +94,7 @@ it("retains same-file subcomponents even when their names do not share a prefix"
   const button = component("Button", "ui/button.tsx");
   const icon = component("IconButton", "ui/button.tsx");
   expect(catalogNavigation([button, icon])).toEqual([
-    {
-      type: "family",
-      parent: button.id,
-      path: "ui/Button",
-      children: [button.id, icon.id],
-    },
+    { type: "family", parent: button.id, path: "ui/Button", children: [button.id, icon.id] },
   ]);
 });
 
@@ -152,8 +123,5 @@ it("component code gauges include the scanner's current code rule names", () => 
       message: "console",
     },
   ];
-  expect(codeScoreSummaryForModule(data, "Bad.tsx")).toMatchObject({
-    score: 90,
-    issueCount: 1,
-  });
+  expect(codeScoreSummaryForModule(data, "Bad.tsx")).toMatchObject({ score: 90, issueCount: 1 });
 });

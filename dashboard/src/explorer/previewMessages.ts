@@ -14,8 +14,7 @@ export function isNotificationHost(component: CatalogComponent): boolean {
   return (
     component.framework === "react" &&
     Object.values(component.preview.component_imports || {}).some(
-      (binding) =>
-        binding.specifier === "sonner" && binding.export_name === "Toaster",
+      (binding) => binding.specifier === "sonner" && binding.export_name === "Toaster",
     )
   );
 }
@@ -25,9 +24,7 @@ export function renderErrorExplanation(
   error: string,
   updating = false,
 ): PreviewExplanation {
-  const title = updating
-    ? `${name} stopped rendering`
-    : `${name} could not render`;
+  const title = updating ? `${name} stopped rendering` : `${name} could not render`;
   if (
     /invalid hook call|hooks can only be called|reading ['"](?:useContext|useState|useEffect)['"]/i.test(
       error,
@@ -69,10 +66,7 @@ export function previewFailureExplanation(
   const name = component.name;
   const errors = [status.message || "", ...(status.attempts || [])].join("\n");
   const diagnostic = status.contextDiagnostic;
-  if (
-    status.failurePhase === "connect" ||
-    /preview host did not become ready/i.test(errors)
-  )
+  if (status.failurePhase === "connect" || /preview host did not become ready/i.test(errors))
     return {
       title: "The preview could not connect",
       description: `DSLinter did not receive a response from the preview for ${name}.`,
@@ -113,14 +107,10 @@ export function previewFailureExplanation(
         " A matching parent could not be verified in the component's local imports.";
     return explanation;
   }
-  const failures = previewAttemptDetails(status.attempts || []).map(
-    (attempt) => attempt.message,
-  );
-  if (!failures.length && status.message === EMPTY_PREVIEW_MESSAGE)
-    failures.push(status.message);
+  const failures = previewAttemptDetails(status.attempts || []).map((attempt) => attempt.message);
+  if (!failures.length && status.message === EMPTY_PREVIEW_MESSAGE) failures.push(status.message);
   const empty =
-    failures.length > 0 &&
-    failures.every((message) => message === EMPTY_PREVIEW_MESSAGE);
+    failures.length > 0 && failures.every((message) => message === EMPTY_PREVIEW_MESSAGE);
   if (empty) {
     if (isNotificationHost(component))
       return {
@@ -130,9 +120,7 @@ export function previewFailureExplanation(
           ? "Use a custom preview with a button that shows a sample notification. Open Preview setup below for a copyable example."
           : "Add a custom preview in dslinter.preview.tsx with a button that shows a sample notification.",
       };
-    const iconProps = Object.entries(
-      component.preview.declared_prop_kinds || {},
-    )
+    const iconProps = Object.entries(component.preview.declared_prop_kinds || {})
       .filter(([, kind]) => kind === "icon")
       .map(([key]) => key);
     if (iconProps.length)
@@ -158,10 +146,8 @@ export function previewFailureExplanation(
   if (/Export .+ was not found|Provider export .+ was not found/.test(errors))
     return {
       title: `${name} could not be loaded`,
-      description:
-        "A component or required parent is no longer available at its recorded export.",
-      nextStep:
-        "Check the export and file listed in Technical details, then refresh the scan.",
+      description: "A component or required parent is no longer available at its recorded export.",
+      nextStep: "Check the export and file listed in Technical details, then refresh the scan.",
     };
   if (
     /Example (?:dependency|import).+ (?:could not be resolved|needs)|Example does not contain/.test(
@@ -198,9 +184,7 @@ const attemptLabels: Record<string, string> = {
 };
 
 /** Keep each original error once, with readable labels for the attempts that produced it. */
-export function previewAttemptDetails(
-  attempts: string[],
-): { label: string; message: string }[] {
+export function previewAttemptDetails(attempts: string[]): { label: string; message: string }[] {
   const grouped = new Map<string, Set<string>>();
   for (const attempt of attempts) {
     const match = attempt.match(
@@ -228,8 +212,7 @@ export function automaticStateMessage(
       .toLowerCase();
     let displayValue = `“${value}”`;
     if (typeof value === "boolean") displayValue = value ? "on" : "off";
-    else if (Array.isArray(value))
-      displayValue = `${value.length} sample items`;
+    else if (Array.isArray(value)) displayValue = `${value.length} sample items`;
     return `${label}: ${displayValue}`;
   });
   return `Example values applied so the component is visible (${changes.join("; ")}). You can change them in the controls.`;
@@ -259,9 +242,7 @@ export function summarizePropValue(value: unknown): string {
   return clip(json);
 }
 
-export function summarizeProps(
-  values: Record<string, unknown>,
-): Record<string, string> {
+export function summarizeProps(values: Record<string, unknown>): Record<string, string> {
   return Object.fromEntries(
     Object.entries(values)
       .filter(([name]) => !name.startsWith("slot:"))
@@ -286,19 +267,16 @@ export function propDiagnostics(
 ): PropDiagnostic[] {
   if (!passed) return [];
   const spec = component.preview;
-  const names = [
-    ...new Set([...spec.declared_props, ...Object.keys(passed)]),
-  ].filter((name) => !/^on[A-Z]/.test(name) && !name.startsWith("slot:"));
+  const names = [...new Set([...spec.declared_props, ...Object.keys(passed)])].filter(
+    (name) => !/^on[A-Z]/.test(name) && !name.startsWith("slot:"),
+  );
   return names
     .map((name) => {
       const value = passed[name] ?? "undefined";
       const required = spec.declared_prop_optional?.[name] === false;
       const problem =
         required &&
-        (value === "undefined" ||
-          value === "null" ||
-          value === "[] (empty)" ||
-          value === "{}");
+        (value === "undefined" || value === "null" || value === "[] (empty)" || value === "{}");
       return { name, value, required, problem };
     })
     .sort((a, b) => Number(b.problem) - Number(a.problem));

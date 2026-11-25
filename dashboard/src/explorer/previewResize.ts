@@ -1,8 +1,5 @@
 /** Keep frame auto-sizing from dismissing consumer popups that close on window resize. */
-export function observePreviewResize(
-  view: Window,
-  schedule: (widthChanged: boolean) => void,
-) {
+export function observePreviewResize(view: Window, schedule: (widthChanged: boolean) => void) {
   let width = view.innerWidth;
   let height = view.innerHeight;
   let expectedHeight: number | undefined;
@@ -10,9 +7,7 @@ export function observePreviewResize(
   function onResize(event: Event): void {
     const widthChanged = view.innerWidth !== width;
     const automatic =
-      !widthChanged &&
-      view.innerHeight !== height &&
-      view.innerHeight === expectedHeight;
+      !widthChanged && view.innerHeight !== height && view.innerHeight === expectedHeight;
     width = view.innerWidth;
     height = view.innerHeight;
     expectedHeight = undefined;

@@ -2,11 +2,7 @@ import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
 import { notificationAdapterExample } from "../src/explorer/providerRecovery";
 import type { CatalogComponent } from "../src/types/report";
-import {
-  mergeFixtureEntry,
-  mergePreviewSetup,
-  PreviewSetupConflict,
-} from "./mergePreviewSetup";
+import { mergeFixtureEntry, mergePreviewSetup, PreviewSetupConflict } from "./mergePreviewSetup";
 
 const target: CatalogComponent = {
   id: "src/ToastHost.tsx#ToastHost",
@@ -49,11 +45,7 @@ function execute(source: string) {
     if (specifier === "react")
       return {
         Fragment: "Fragment",
-        createElement: (
-          type: unknown,
-          props: unknown,
-          ...children: unknown[]
-        ) => ({
+        createElement: (type: unknown, props: unknown, ...children: unknown[]) => ({
           type,
           props,
           children,
@@ -62,17 +54,13 @@ function execute(source: string) {
     if (specifier === "sonner") return { toast };
     if (specifier === "dslinter/preview")
       return {
-        preview: (
-          component: unknown,
-          decorate?: (props: { node: unknown }) => unknown,
-        ) => ({
+        preview: (component: unknown, decorate?: (props: { node: unknown }) => unknown) => ({
           __dslinterPreview: true,
           component,
           decorate,
         }),
       };
-    if (specifier === "./src/ToastHost.tsx")
-      return { ToastHost: targetComponent };
+    if (specifier === "./src/ToastHost.tsx") return { ToastHost: targetComponent };
     throw new Error(`Unexpected import ${specifier}`);
   };
   const compiled = ts.transpileModule(source, {
@@ -96,9 +84,7 @@ describe("adding preview entries", () => {
     const source =
       '// User configuration\nimport { createElement } from "react";\nconst toast = "keep me";\nconst PreviewTarget = "keep this too";\nexport default {\n  styles: ["./custom.css"], // User styles\n  fixtures: { Other: { active: false } },\n  previews: { Other: "existing" },\n};\n';
     const output = merge(source);
-    expect(output).toContain(
-      '// User configuration\nimport { createElement } from "react";',
-    );
+    expect(output).toContain('// User configuration\nimport { createElement } from "react";');
     expect(output).toContain('const toast = "keep me";');
     expect(output).toContain('const PreviewTarget = "keep this too";');
     expect(output).toContain('styles: ["./custom.css"], // User styles');
@@ -120,9 +106,7 @@ describe("adding preview entries", () => {
   });
 
   it("adds a previews map to an empty object without breaking the default export", () => {
-    expect(
-      execute(merge("export default {};\n")).adapter.previews.ToastHost,
-    ).toBeDefined();
+    expect(execute(merge("export default {};\n")).adapter.previews.ToastHost).toBeDefined();
   });
 
   it("handles named const configurations and preserves trailing comments without a comma", () => {
@@ -135,10 +119,7 @@ describe("adding preview entries", () => {
   });
 
   it("supports JavaScript configs without inserting TypeScript syntax", () => {
-    const output = merge(
-      'export default { styles: ["./app.css"] };',
-      "dslinter.preview.js",
-    );
+    const output = merge('export default { styles: ["./app.css"] };', "dslinter.preview.js");
     expect(output).not.toContain("ComponentProps");
     expect(output).not.toContain("satisfies");
     expect(output).toContain("createElement");
@@ -184,22 +165,14 @@ describe("merging fixture entries", () => {
   });
 
   it("appends to existing fixtures and refuses to replace an entry", () => {
-    const source =
-      "export default {\n  fixtures: {\n    Card: { title: 'x' },\n  },\n};\n";
+    const source = "export default {\n  fixtures: {\n    Card: { title: 'x' },\n  },\n};\n";
     expect(
-      mergeFixtureEntry(
-        source,
-        entry,
-        comment,
-        "a#default",
-        "ForecastHours",
-        "p.ts",
-      ),
+      mergeFixtureEntry(source, entry, comment, "a#default", "ForecastHours", "p.ts"),
     ).toContain(
       "    Card: { title: 'x' },\n    // Sample data\n    ForecastHours: {\n      hours: [],\n    },\n  },",
     );
-    expect(() =>
-      mergeFixtureEntry(source, entry, comment, "a#default", "Card", "p.ts"),
-    ).toThrow(PreviewSetupConflict);
+    expect(() => mergeFixtureEntry(source, entry, comment, "a#default", "Card", "p.ts")).toThrow(
+      PreviewSetupConflict,
+    );
   });
 });

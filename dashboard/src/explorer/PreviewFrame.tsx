@@ -2,11 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import context from "virtual:dslinter/explorer";
 import type { CatalogComponent } from "../types/report";
 import { usePreviewSectionTheme } from "../shell/previewSectionTheme";
-import {
-  PREVIEW_PROTOCOL,
-  type PreviewCommand,
-  type PreviewResponse,
-} from "./protocol";
+import { PREVIEW_PROTOCOL, type PreviewCommand, type PreviewResponse } from "./protocol";
 import { PreviewFailureNotice } from "./PreviewFailureNotice";
 import { previewHeightLimit } from "./previewSizing";
 
@@ -66,8 +62,7 @@ export function PreviewFrame({
   const [heightLimited, setHeightLimited] = useState(false);
   const [status, setStatus] = useState<PreviewResponse | null>(null);
   const compatible =
-    context.apps.find((candidate) => candidate.id === app)?.framework ===
-    component.framework;
+    context.apps.find((candidate) => candidate.id === app)?.framework === component.framework;
   const previousValues = useRef(values);
   const valuesKey = JSON.stringify([values, explicitKeys]);
   const failed = compatible && visible && status?.type === "error";
@@ -148,8 +143,7 @@ export function PreviewFrame({
         }
         return;
       }
-      if (message.type === "rendered" || message.type === "error")
-        setStatus(message);
+      if (message.type === "rendered" || message.type === "error") setStatus(message);
       latest.current.onResponse?.(message);
       if (message.type === "a11y" || message.type === "error")
         latest.current.onScanPending?.(false);
@@ -157,8 +151,7 @@ export function PreviewFrame({
         clearTimeout(scanTimer);
         latest.current.onScanPending?.(true);
         scanTimer = setTimeout(
-          () =>
-            send({ type: "scan-a11y", requestId: latest.current.scanLabel }),
+          () => send({ type: "scan-a11y", requestId: latest.current.scanLabel }),
           350,
         );
       }
@@ -174,9 +167,7 @@ export function PreviewFrame({
   }, [app, compact, visible, compatible, revision]);
 
   useEffect(() => {
-    const removed = Object.keys(previousValues.current).some(
-      (key) => !(key in values),
-    );
+    const removed = Object.keys(previousValues.current).some((key) => !(key in values));
     previousValues.current = values;
     if (origin.current)
       frame.current?.contentWindow?.postMessage(
@@ -209,18 +200,11 @@ export function PreviewFrame({
   }, [component, catalog]);
 
   return (
-    <div
-      ref={host}
-      className="relative min-w-0"
-      data-preview-status={status?.type || "pending"}
-    >
+    <div ref={host} className="relative min-w-0" data-preview-status={status?.type || "pending"}>
       {!compatible ? (
         <p className="p-6 text-sm text-muted-foreground">
-          {component.name} is a{" "}
-          {component.framework === "vue" ? "Vue" : "React"} component.
-          {context.apps.some(
-            (candidate) => candidate.framework === component.framework,
-          )
+          {component.name} is a {component.framework === "vue" ? "Vue" : "React"} component.
+          {context.apps.some((candidate) => candidate.framework === component.framework)
             ? " Select a matching app under Preview application in the sidebar to see it render."
             : ` No matching preview app was found. Run DSLinter from a workspace that includes a ${component.framework === "vue" ? "Vue" : "React"} app.`}
         </p>
@@ -228,11 +212,7 @@ export function PreviewFrame({
         <iframe
           key={revision}
           ref={frame}
-          title={
-            compact
-              ? `${component.name} variant ${scanLabel}`
-              : `${component.name} preview`
-          }
+          title={compact ? `${component.name} variant ${scanLabel}` : `${component.name} preview`}
           src={`/__dslinter/frame?app=${encodeURIComponent(app)}`}
           aria-hidden={failed || undefined}
           tabIndex={failed ? -1 : undefined}

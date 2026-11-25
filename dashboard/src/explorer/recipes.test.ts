@@ -51,10 +51,7 @@ describe("composition recipes", () => {
     expect(recipeFor(components[0], components)).toBeUndefined();
   });
   it("does not borrow an unrelated component's primitive contract", () => {
-    const components = [
-      ...catalog(["Button"], "./custom"),
-      ...catalog(["Dialog"], "reka-ui"),
-    ];
+    const components = [...catalog(["Button"], "./custom"), ...catalog(["Dialog"], "reka-ui")];
     expect(recipeFor(components[0], components)).toBeUndefined();
   });
   it.each([
@@ -85,19 +82,13 @@ describe("composition recipes", () => {
     }
   });
   it("generates updated React props and Vue slots for copying", () => {
-    const tree = demoWithValues(
-      { name: "Button", children: ["Old"] },
-      new Set(["Button"]),
-      {
-        children: "New",
-        disabled: true,
-      },
-    );
+    const tree = demoWithValues({ name: "Button", children: ["Old"] }, new Set(["Button"]), {
+      children: "New",
+      disabled: true,
+    });
     expect(demoSnippet(tree, "react")).toContain("disabled={true}");
     expect(demoSnippet(tree, "react")).toContain("New");
-    const vue = demoWithValues({ name: "Card" }, new Set(["Card"]), {
-      "slot:footer": "Footer",
-    });
+    const vue = demoWithValues({ name: "Card" }, new Set(["Card"]), { "slot:footer": "Footer" });
     expect(demoSnippet(vue, "vue")).toContain("<template #footer>");
     expect(demoSnippet(vue, "vue")).not.toContain("</template #footer>");
   });
@@ -141,12 +132,7 @@ describe("selected family members", () => {
       "SheetDescription",
       "SheetClose",
     ],
-    InputOTP: [
-      "InputOTP",
-      "InputOTPGroup",
-      "InputOTPSlot",
-      "InputOTPSeparator",
-    ],
+    InputOTP: ["InputOTP", "InputOTPGroup", "InputOTPSlot", "InputOTPSeparator"],
     Collapsible: ["Collapsible", "CollapsibleTrigger", "CollapsibleContent"],
     ToggleGroup: ["ToggleGroup", "ToggleGroupItem"],
     Avatar: ["Avatar", "AvatarImage", "AvatarFallback"],
@@ -167,22 +153,16 @@ describe("selected family members", () => {
         members,
         family === "InputOTP" ? "input-otp" : "@radix-ui/react-slot",
       );
-      for (const component of components)
-        component.preview.rel_path = `ui/${family}.tsx`;
+      for (const component of components) component.preview.rel_path = `ui/${family}.tsx`;
       for (const component of components) {
         const tree = recipeFor(component, components);
         expect(tree, component.name).toBeDefined();
-        expect(demoSnippet(tree!, "react"), component.name).toContain(
-          `<${component.name}`,
-        );
+        expect(demoSnippet(tree!, "react"), component.name).toContain(`<${component.name}`);
       }
     });
   }
   it("never substitutes an ordinary input for an OTP slot", () => {
-    const components = catalog(
-      ["Input", "InputOTPSlot"],
-      "@radix-ui/react-slot",
-    );
+    const components = catalog(["Input", "InputOTPSlot"], "@radix-ui/react-slot");
     components[0].preview.native_element = "input";
     expect(recipeFor(components[1], components)).toBeUndefined();
   });

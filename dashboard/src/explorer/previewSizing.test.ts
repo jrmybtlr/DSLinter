@@ -47,18 +47,8 @@ describe("automatic preview height", () => {
   });
 
   it("includes nested surfaces and shrinks when they close", () => {
-    const menu = {
-      top: 96,
-      bottom: 234,
-      height: 138,
-      layout: "anchored" as const,
-    };
-    const submenu = {
-      top: 200,
-      bottom: 400,
-      height: 200,
-      layout: "anchored" as const,
-    };
+    const menu = { top: 96, bottom: 234, height: 138, layout: "anchored" as const };
+    const submenu = { top: 200, bottom: 400, height: 200, layout: "anchored" as const };
     expect(previewHeightForLayout(152, [menu, submenu], 64, 720)).toBe(464);
     expect(previewHeightForLayout(152, [menu], 64, 720)).toBe(298);
     expect(previewHeightForLayout(152, [], 64, 720)).toBe(152);
@@ -72,14 +62,7 @@ describe("automatic preview height", () => {
         expect(
           previewHeightForLayout(
             padding * 2,
-            [
-              {
-                top: 0,
-                bottom: viewport,
-                height: viewport,
-                layout: "viewport",
-              },
-            ],
+            [{ top: 0, bottom: viewport, height: viewport, layout: "viewport" }],
             padding,
             limit,
           ),
@@ -102,33 +85,19 @@ describe("stable preview area", () => {
 
   it("keeps the area stable as menus and nested surfaces open and close", () => {
     const tracker = createPreviewHeightTracker();
-    const menu = {
-      top: 96,
-      bottom: 234,
-      height: 138,
-      layout: "anchored" as const,
-    };
-    const submenu = {
-      top: 200,
-      bottom: 400,
-      height: 200,
-      layout: "anchored" as const,
-    };
-    const heights = [[], [menu], [menu, submenu], [menu], []].map(
-      (surfaces) => {
-        const measured = previewHeightForLayout(164, surfaces, 64, 720);
-        tracker.measure(measured, 640);
-        return tracker.measure(measured, 640);
-      },
-    );
+    const menu = { top: 96, bottom: 234, height: 138, layout: "anchored" as const };
+    const submenu = { top: 200, bottom: 400, height: 200, layout: "anchored" as const };
+    const heights = [[], [menu], [menu, submenu], [menu], []].map((surfaces) => {
+      const measured = previewHeightForLayout(164, surfaces, 64, 720);
+      tracker.measure(measured, 640);
+      return tracker.measure(measured, 640);
+    });
     expect(heights).toEqual([164, 298, 464, 464, 464]);
   });
 
   it("does not retain temporary positioning or animation bounds", () => {
     const tracker = createPreviewHeightTracker();
-    const heights = [164, 164, 326, 278, 278, 164].map((height) =>
-      tracker.measure(height, 640),
-    );
+    const heights = [164, 164, 326, 278, 278, 164].map((height) => tracker.measure(height, 640));
     expect(heights).toEqual([164, 164, 326, 278, 278, 278]);
   });
 

@@ -4,23 +4,14 @@ import { savePreviewSetup } from "./savePreviewSetup";
 afterEach(() => vi.unstubAllGlobals());
 
 it("sends only the selected app and component ID with a verified action token", async () => {
-  const result = {
-    path: "dslinter.preview.tsx",
-    created: true,
-    reloaded: true,
-  };
+  const result = { path: "dslinter.preview.tsx", created: true, reloaded: true };
   const fetch = vi.fn(async () => Response.json(result));
   vi.stubGlobal("fetch", fetch);
   const signal = new AbortController().signal;
-  expect(
-    await savePreviewSetup("app", "src/Toast.tsx#Toast", "token", signal),
-  ).toEqual(result);
+  expect(await savePreviewSetup("app", "src/Toast.tsx#Toast", "token", signal)).toEqual(result);
   expect(fetch).toHaveBeenCalledWith("/dslinter/preview-setup", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Dslinter-Token": "token",
-    },
+    headers: { "Content-Type": "application/json", "X-Dslinter-Token": "token" },
     body: JSON.stringify({ app: "app", componentId: "src/Toast.tsx#Toast" }),
     signal,
   });
@@ -31,9 +22,7 @@ it("preserves a server explanation when a merge cannot be applied", async () => 
     "fetch",
     vi.fn(async () =>
       Response.json(
-        {
-          message: "A preview is already configured. It has not been replaced.",
-        },
+        { message: "A preview is already configured. It has not been replaced." },
         { status: 409 },
       ),
     ),

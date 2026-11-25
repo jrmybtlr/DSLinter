@@ -12,8 +12,7 @@ function parse(source: string, path: string): ts.SourceFile {
     path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
   if (
-    (file as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] })
-      .parseDiagnostics.length
+    (file as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics.length
   )
     throw new PreviewSetupConflict(
       "The preview configuration has a syntax error. Fix it before adding this example.",
@@ -31,16 +30,12 @@ function unwrap(expression: ts.Expression): ts.Expression {
   return expression;
 }
 
-function objectValue(
-  expression: ts.Expression,
-  file: ts.SourceFile,
-): ts.ObjectLiteralExpression {
+function objectValue(expression: ts.Expression, file: ts.SourceFile): ts.ObjectLiteralExpression {
   let value = unwrap(expression);
   if (ts.isIdentifier(value)) {
     const name = value.text;
     const declarations = file.statements.flatMap((statement) =>
-      ts.isVariableStatement(statement) &&
-      statement.declarationList.flags & ts.NodeFlags.Const
+      ts.isVariableStatement(statement) && statement.declarationList.flags & ts.NodeFlags.Const
         ? [...statement.declarationList.declarations].filter(
             (item) => ts.isIdentifier(item.name) && item.name.text === name,
           )
@@ -78,11 +73,8 @@ function exportedObject(file: ts.SourceFile): ts.ObjectLiteralExpression {
   return objectValue(assignments[0].expression, file);
 }
 
-function propertyName(
-  property: ts.ObjectLiteralElementLike,
-): string | undefined {
-  return property.name &&
-    (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
+function propertyName(property: ts.ObjectLiteralElementLike): string | undefined {
+  return property.name && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
     ? property.name.text
     : undefined;
 }
@@ -96,8 +88,7 @@ function appendProperty(
 ): Edit[] {
   const edits: Edit[] = [];
   const last = object.properties.at(-1);
-  if (last && !object.properties.hasTrailingComma)
-    edits.push({ at: last.end, text: "," });
+  if (last && !object.properties.hasTrailingComma) edits.push({ at: last.end, text: "," });
   const close = object.end - 1;
   const lineStart = file.text.lastIndexOf("\n", close) + 1;
   const closeIndent = file.text.slice(lineStart, close);
@@ -167,10 +158,7 @@ function generatedEntry(
         ),
       );
     } else if (bindings && ts.isNamespaceImport(bindings))
-      bindings = ts.factory.updateNamespaceImport(
-        bindings,
-        alias(bindings.name),
-      );
+      bindings = ts.factory.updateNamespaceImport(bindings, alias(bindings.name));
     imports.push(
       ts.factory.updateImportDeclaration(
         statement,
@@ -191,11 +179,10 @@ function generatedEntry(
   );
   if (!previews || !ts.isPropertyAssignment(previews))
     throw new Error("Generated preview setup is invalid");
-  const entry = objectValue(previews.initializer, generated).properties.find(
-    (item) => [componentId, componentName].includes(propertyName(item) || ""),
+  const entry = objectValue(previews.initializer, generated).properties.find((item) =>
+    [componentId, componentName].includes(propertyName(item) || ""),
   );
-  if (!entry)
-    throw new Error("Generated preview setup does not match the component");
+  if (!entry) throw new Error("Generated preview setup does not match the component");
   const transformed = ts.transform(entry, [
     (context) => {
       function visit(node: ts.Node): ts.VisitResult<ts.Node> {
@@ -209,15 +196,9 @@ function generatedEntry(
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const result = {
     imports: imports
-      .map((item) =>
-        printer.printNode(ts.EmitHint.Unspecified, item, generated),
-      )
+      .map((item) => printer.printNode(ts.EmitHint.Unspecified, item, generated))
       .join("\n"),
-    entry: printer.printNode(
-      ts.EmitHint.Unspecified,
-      transformed.transformed[0],
-      generated,
-    ),
+    entry: printer.printNode(ts.EmitHint.Unspecified, transformed.transformed[0], generated),
   };
   transformed.dispose();
   return result;
@@ -232,9 +213,7 @@ export function mergePreviewSetup(
 ): string {
   const file = parse(source, path);
   const adapter = exportedObject(file);
-  const matching = adapter.properties.filter(
-    (item) => propertyName(item) === "previews",
-  );
+  const matching = adapter.properties.filter((item) => propertyName(item) === "previews");
   if (matching.length > 1)
     throw new PreviewSetupConflict(
       "The configuration has more than one previews entry. Merge the example manually.",
@@ -255,13 +234,7 @@ export function mergePreviewSetup(
         `A preview is already configured for ${componentName}. Update that entry manually; it has not been replaced.`,
       );
   }
-  const generated = generatedEntry(
-    example,
-    file,
-    componentId,
-    componentName,
-    path,
-  );
+  const generated = generatedEntry(example, file, componentId, componentName, path);
   const edits = appendProperty(
     file,
     previews || adapter,
@@ -271,11 +244,7 @@ export function mergePreviewSetup(
   let importAt = imports.at(-1)?.end ?? file.statements[0]?.getStart(file) ?? 0;
   if (!imports.length) {
     for (const statement of file.statements) {
-      if (
-        !ts.isExpressionStatement(statement) ||
-        !ts.isStringLiteral(statement.expression)
-      )
-        break;
+      if (!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)) break;
       importAt = statement.end;
     }
   }
@@ -301,9 +270,7 @@ export function mergeFixtureEntry(
 ): string {
   const file = parse(source, path);
   const adapter = exportedObject(file);
-  const matching = adapter.properties.filter(
-    (item) => propertyName(item) === "fixtures",
-  );
+  const matching = adapter.properties.filter((item) => propertyName(item) === "fixtures");
   if (matching.length > 1)
     throw new PreviewSetupConflict(
       "The configuration has more than one fixtures entry. Merge the example manually.",

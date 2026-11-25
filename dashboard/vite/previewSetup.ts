@@ -16,11 +16,7 @@ import { catalogFromReport } from "../src/explorer/catalog";
 import { notificationAdapterExample } from "../src/explorer/providerRecovery";
 import type { WorkspaceReport } from "../src/types/report";
 import { findPreviewAdapter, type PreviewApp } from "./previewAdapter";
-import {
-  mergeFixtureEntry,
-  mergePreviewSetup,
-  PreviewSetupConflict,
-} from "./mergePreviewSetup";
+import { mergeFixtureEntry, mergePreviewSetup, PreviewSetupConflict } from "./mergePreviewSetup";
 import {
   adapterKey,
   FIXTURE_COMMENT,
@@ -34,18 +30,8 @@ function within(root: string, file: string): boolean {
   return tail === "" || (!tail.startsWith("..") && !isAbsolute(tail));
 }
 
-function verifiedNotificationSource(
-  source: string,
-  path: string,
-  exportName: string,
-): boolean {
-  const file = ts.createSourceFile(
-    path,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TSX,
-  );
+function verifiedNotificationSource(source: string, path: string, exportName: string): boolean {
+  const file = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const exported = file.statements.some((statement) => {
     if (ts.isExportAssignment(statement))
       return exportName === "default" && !statement.isExportEquals;
@@ -54,21 +40,13 @@ function verifiedNotificationSource(
       statement.exportClause &&
       ts.isNamedExports(statement.exportClause)
     )
-      return statement.exportClause.elements.some(
-        (item) => item.name.text === exportName,
-      );
-    const modifiers = ts.canHaveModifiers(statement)
-      ? ts.getModifiers(statement)
-      : undefined;
-    if (!modifiers?.some((item) => item.kind === ts.SyntaxKind.ExportKeyword))
-      return false;
+      return statement.exportClause.elements.some((item) => item.name.text === exportName);
+    const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+    if (!modifiers?.some((item) => item.kind === ts.SyntaxKind.ExportKeyword)) return false;
     if (exportName === "default")
-      return modifiers.some(
-        (item) => item.kind === ts.SyntaxKind.DefaultKeyword,
-      );
+      return modifiers.some((item) => item.kind === ts.SyntaxKind.DefaultKeyword);
     if (
-      (ts.isFunctionDeclaration(statement) ||
-        ts.isClassDeclaration(statement)) &&
+      (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
       statement.name?.text === exportName
     )
       return true;
@@ -91,9 +69,7 @@ function verifiedNotificationSource(
         statement.importClause.namedBindings &&
         ts.isNamedImports(statement.importClause.namedBindings) &&
         statement.importClause.namedBindings.elements.some(
-          (item) =>
-            !item.isTypeOnly &&
-            (item.propertyName || item.name).text === "Toaster",
+          (item) => !item.isTypeOnly && (item.propertyName || item.name).text === "Toaster",
         ),
     )
   );
@@ -116,10 +92,7 @@ function writeAdapter(
       flag: "wx",
       mode: lstatSync(path).mode & 0o777,
     });
-    if (
-      lstatSync(path).isSymbolicLink() ||
-      readFileSync(path, "utf8") !== original
-    )
+    if (lstatSync(path).isSymbolicLink() || readFileSync(path, "utf8") !== original)
       throw new PreviewSetupConflict(
         "The configuration changed while saving. Its changes were preserved. Try again.",
       );
@@ -138,18 +111,12 @@ function adapterTarget(app: PreviewApp, scanRoot: string, renameTs: boolean) {
     renameTs && path.endsWith(".ts") && !path.endsWith(".tsx")
       ? path.replace(/\.ts$/, ".tsx")
       : path;
-  if (
-    !within(app.root, dirname(writePath)) &&
-    !within(scanRoot, dirname(writePath))
-  )
+  if (!within(app.root, dirname(writePath)) && !within(scanRoot, dirname(writePath)))
     throw new PreviewSetupConflict(
       "The preview configuration is outside this workspace. Use the copyable example instead.",
     );
   const existing = existsSync(path);
-  if (
-    existing &&
-    (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink())
-  )
+  if (existing && (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink()))
     throw new PreviewSetupConflict(
       "The preview configuration is linked or is not a regular file. Update it manually using the copyable example.",
     );
@@ -173,8 +140,7 @@ function addFixtureSetup(
       "The component source could not be verified. Refresh the scan and try again.",
     );
   const { path, writePath, existing } = adapterTarget(app, scanRoot, false);
-  const format =
-    writePath.endsWith(".js") || writePath.endsWith(".mjs") ? "js" : "tsx";
+  const format = writePath.endsWith(".js") || writePath.endsWith(".mjs") ? "js" : "tsx";
   const entry = fixtureEntry(component, adapterKey(component, catalog));
   const example = fixtureAdapterExample(component, catalog, format);
   if (!entry || !example)
@@ -183,14 +149,7 @@ function addFixtureSetup(
     );
   const original = existing ? readFileSync(path, "utf8") : "";
   const output = existing
-    ? mergeFixtureEntry(
-        original,
-        entry,
-        FIXTURE_COMMENT,
-        component.id,
-        component.name,
-        writePath,
-      )
+    ? mergeFixtureEntry(original, entry, FIXTURE_COMMENT, component.id, component.name, writePath)
     : `${example}\n`;
   writeAdapter(path, writePath, existing, original, output);
   return {
@@ -211,11 +170,7 @@ export function addPreviewSetup(
   const component = catalog.find((item) => item.id === componentId);
   if (component && action === "fixture")
     return addFixtureSetup(app, scanRoot, report, catalog, component);
-  if (
-    !component ||
-    component.framework !== "react" ||
-    app.framework !== "react"
-  )
+  if (!component || component.framework !== "react" || app.framework !== "react")
     throw new PreviewSetupConflict(
       "This component does not have an automatic preview setup available. Use the copyable example instead.",
     );
@@ -239,9 +194,7 @@ export function addPreviewSetup(
     );
   const { path, writePath, existing } = adapterTarget(app, scanRoot, true);
   try {
-    const adapterPackage = createRequire(
-      join(dirname(path), "package.json"),
-    ).resolve("sonner");
+    const adapterPackage = createRequire(join(dirname(path), "package.json")).resolve("sonner");
     const componentPackage = createRequire(sourcePath).resolve("sonner");
     if (realpathSync(adapterPackage) !== realpathSync(componentPackage))
       throw new Error("Different packages");
@@ -263,13 +216,7 @@ export function addPreviewSetup(
     );
   const original = existing ? readFileSync(path, "utf8") : "";
   const output = existing
-    ? mergePreviewSetup(
-        original,
-        example,
-        component.id,
-        component.name,
-        writePath,
-      )
+    ? mergePreviewSetup(original, example, component.id, component.name, writePath)
     : `${example}\n`;
   writeAdapter(path, writePath, existing, original, output);
   return {
@@ -285,11 +232,7 @@ export function previewSetupMiddleware(options: {
   report: () => WorkspaceReport;
   onSaved: (app: PreviewApp) => Promise<void>;
 }) {
-  return async (
-    req: IncomingMessage,
-    res: ServerResponse,
-    next: () => void,
-  ): Promise<void> => {
+  return async (req: IncomingMessage, res: ServerResponse, next: () => void): Promise<void> => {
     if (req.url?.split("?")[0] !== "/dslinter/preview-setup") return next();
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Cache-Control", "no-store");
@@ -298,8 +241,7 @@ export function previewSetupMiddleware(options: {
       res.setHeader("Allow", "POST");
       res.end(
         JSON.stringify({
-          message:
-            "Use the Add preview setup button to save this configuration.",
+          message: "Use the Add preview setup button to save this configuration.",
         }),
       );
       return;
@@ -342,10 +284,7 @@ export function previewSetupMiddleware(options: {
         throw new PreviewSetupConflict(
           "The save request was not valid. Refresh DSLinter and try again.",
         );
-      if (
-        typeof input.app !== "string" ||
-        typeof input.componentId !== "string"
-      )
+      if (typeof input.app !== "string" || typeof input.componentId !== "string")
         throw new PreviewSetupConflict(
           "The selected app or component is missing. Refresh DSLinter and try again.",
         );

@@ -2,12 +2,11 @@ import { createApp, h, shallowRef, nextTick, type Component } from "vue";
 import type { CatalogComponent } from "../types/report";
 import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
-import {
-  isMissingInjectionWarning,
-  contextRequirement,
-} from "./providerRecovery";
+import { isMissingInjectionWarning, contextRequirement } from "./providerRecovery";
 
-function isPreviewDefinition(value: unknown): value is {
+function isPreviewDefinition(
+  value: unknown,
+): value is {
   component: Component;
   decorate?: Component;
 } {
@@ -37,17 +36,12 @@ export async function mount(
     if (typeof node === "string") return node;
     const type = components[node.name] || node.name;
     const target = type === components[component.name] && node.target !== false;
-    const props: Record<string, any> = {
-      ...node.props,
-      ...(target ? values.value : {}),
-    };
+    const props: Record<string, any> = { ...node.props, ...(target ? values.value : {}) };
     const slots: Record<string, () => any> = {};
     if (target) {
       for (const model of new Set([
         ...(component.preview.models || []),
-        ...["modelValue", "value", "checked", "open"].filter(
-          (name) => name in props,
-        ),
+        ...["modelValue", "value", "checked", "open"].filter((name) => name in props),
       ])) {
         props[`onUpdate:${model}`] = (value: unknown) => {
           values.value = { ...values.value, [model]: value };
@@ -59,16 +53,11 @@ export async function mount(
         props[name] ||= (value: unknown) => emit(event, value);
       }
       for (const name of component.preview.slots || []) {
-        if (
-          name === "default" &&
-          node.children?.some((child) => typeof child !== "string")
-        )
+        if (name === "default" && node.children?.some((child) => typeof child !== "string"))
           continue;
-        slots[name] = () =>
-          String(values.value[`slot:${name}`] ?? `Example ${name}`);
+        slots[name] = () => String(values.value[`slot:${name}`] ?? `Example ${name}`);
       }
-      for (const name of Object.keys(props))
-        if (name.startsWith("slot:")) delete props[name];
+      for (const name of Object.keys(props)) if (name.startsWith("slot:")) delete props[name];
     }
     const defaultChildren = node.children?.filter(
       (child) => typeof child === "string" || !child.slot,
@@ -82,8 +71,7 @@ export async function mount(
     }
     if (defaultChildren?.length && !slots.default)
       slots.default = () => defaultChildren.map(render);
-    if (typeof type === "string")
-      return h(type, props, node.children?.map(render));
+    if (typeof type === "string") return h(type, props, node.children?.map(render));
     return h(type, props, slots);
   }
   const app = createApp({
@@ -115,8 +103,7 @@ export async function mount(
     app.config.warnHandler = (message, instance, trace) => {
       if (isMissingInjectionWarning(message)) capture(new Error(message));
       if (previousWarning) previousWarning(message, instance, trace);
-      else if (!isMissingInjectionWarning(message))
-        console.warn(`[Vue warn]: ${message}${trace}`);
+      else if (!isMissingInjectionWarning(message)) console.warn(`[Vue warn]: ${message}${trace}`);
     };
     app.mount(container);
     await nextTick();

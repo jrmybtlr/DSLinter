@@ -1,22 +1,14 @@
-import type {
-  CatalogComponent,
-  UsageSummary,
-  WorkspaceReport,
-} from "../types/report";
+import type { CatalogComponent, UsageSummary, WorkspaceReport } from "../types/report";
 import type { CatalogTreeItem } from "../dashboard/aggregate";
 import { fileStemToCatalogGroupLabel } from "../dashboard/aggregate";
 
-export type CatalogLabels = Record<
-  string,
-  { label: string; description?: string }
->;
+export type CatalogLabels = Record<string, { label: string; description?: string }>;
 
 export function componentUsage(component: CatalogComponent): UsageSummary {
   const frequencies: Record<string, number> = {};
   const values: Record<string, Record<string, number>> = {};
   for (const usage of component.usages) {
-    for (const prop of usage.props)
-      frequencies[prop] = (frequencies[prop] || 0) + 1;
+    for (const prop of usage.props) frequencies[prop] = (frequencies[prop] || 0) + 1;
     for (const [prop, value] of Object.entries(usage.prop_values || {})) {
       values[prop] ||= {};
       values[prop][value] = (values[prop][value] || 0) + 1;
@@ -28,10 +20,7 @@ export function componentUsage(component: CatalogComponent): UsageSummary {
     reference_count: component.usages.length,
     file_count: files.length,
     files,
-    max_props_on_single_use: Math.max(
-      0,
-      ...component.usages.map((usage) => usage.props.length),
-    ),
+    max_props_on_single_use: Math.max(0, ...component.usages.map((usage) => usage.props.length)),
     prop_frequencies: frequencies,
     prop_value_frequencies: values,
     usage_locations: component.usages,
@@ -57,15 +46,12 @@ export function dashboardReport(
       return {
         ...file,
         definitions: (byPath.get(relative) || []).map((component) => {
-          const source = file.definitions.find(
-            (definition) => definition.name === component.name,
-          );
+          const source = file.definitions.find((definition) => definition.name === component.name);
           return {
             ...source,
             name: component.id,
             kind:
-              source?.kind === "export_default" ||
-              source?.kind === "export_default_anonymous"
+              source?.kind === "export_default" || source?.kind === "export_default_anonymous"
                 ? "function"
                 : source?.kind || "function",
             line: source?.line || 1,
@@ -92,19 +78,14 @@ export function catalogLabels(catalog: CatalogComponent[]): CatalogLabels {
       component.id,
       {
         label: component.name,
-        description:
-          (counts.get(component.name) || 0) > 1
-            ? component.preview.rel_path
-            : undefined,
+        description: (counts.get(component.name) || 0) > 1 ? component.preview.rel_path : undefined,
       },
     ]),
   );
 }
 
 /** Preserve file families and Vue's multi-file compound components without merging apps. */
-export function catalogNavigation(
-  catalog: CatalogComponent[],
-): CatalogTreeItem[] {
+export function catalogNavigation(catalog: CatalogComponent[]): CatalogTreeItem[] {
   const groups = new Map<string, CatalogComponent[]>();
   const files = new Map<string, CatalogComponent[]>();
   for (const component of catalog)
@@ -124,9 +105,7 @@ export function catalogNavigation(
     const fileMembers = files.get(path)!;
     const fileRoot =
       fileMembers.length > 1
-        ? fileMembers.find(
-            (member) => member.name.toLowerCase() === stem.toLowerCase(),
-          )
+        ? fileMembers.find((member) => member.name.toLowerCase() === stem.toLowerCase())
         : undefined;
     const family =
       fileRoot?.name ||
@@ -138,8 +117,7 @@ export function catalogNavigation(
   }
   const items: { label: string; item: CatalogTreeItem }[] = [];
   for (const [path, members] of groups) {
-    const duplicateNames =
-      new Set(members.map((member) => member.name)).size !== members.length;
+    const duplicateNames = new Set(members.map((member) => member.name)).size !== members.length;
     const byModule = new Map<string, CatalogComponent[]>();
     for (const member of members) {
       const key = duplicateNames ? member.preview.rel_path : path;
@@ -148,10 +126,7 @@ export function catalogNavigation(
     for (const [module, bucket] of byModule) {
       const sorted = [...bucket].sort((a, b) => a.name.localeCompare(b.name));
       if (sorted.length === 1) {
-        items.push({
-          label: sorted[0].name,
-          item: { type: "component", name: sorted[0].id },
-        });
+        items.push({ label: sorted[0].name, item: { type: "component", name: sorted[0].id } });
         continue;
       }
       const stem = fileStemToCatalogGroupLabel(
@@ -160,8 +135,7 @@ export function catalogNavigation(
           .pop()!
           .replace(/\.[^.]+$/, ""),
       );
-      const parent =
-        sorted.find((component) => component.name === stem) || sorted[0];
+      const parent = sorted.find((component) => component.name === stem) || sorted[0];
       items.push({
         label: parent.name,
         item: {
@@ -173,7 +147,5 @@ export function catalogNavigation(
       });
     }
   }
-  return items
-    .sort((a, b) => a.label.localeCompare(b.label))
-    .map(({ item }) => item);
+  return items.sort((a, b) => a.label.localeCompare(b.label)).map(({ item }) => item);
 }

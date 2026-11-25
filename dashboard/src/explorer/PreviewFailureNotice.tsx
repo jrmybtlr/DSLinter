@@ -28,17 +28,13 @@ export function PreviewFailureNotice({
   const attempts = previewAttemptDetails(status.attempts || []);
   const props = propDiagnostics(component, status.attemptedProps);
   const fixture = status.setupAction === "fixture";
-  const [copyState, setCopyState] = useState<"ready" | "copied" | "failed">(
-    "ready",
-  );
+  const [copyState, setCopyState] = useState<"ready" | "copied" | "failed">("ready");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>();
   const [savedPath, setSavedPath] = useState<string>();
   const request = useRef<AbortController | null>(null);
   useEffect(() => () => request.current?.abort(), []);
-  const canSave = Boolean(
-    setupToken && status.setupAction && status.adapterExample,
-  );
+  const canSave = Boolean(setupToken && status.setupAction && status.adapterExample);
   useEffect(() => setCopyState("ready"), [status.adapterExample]);
   async function addSetup() {
     if (!setupToken || request.current || savedPath) return;
@@ -102,15 +98,11 @@ export function PreviewFailureNotice({
               <li
                 key={prop.name}
                 className={
-                  prop.problem
-                    ? "break-all text-destructive"
-                    : "break-all text-muted-foreground"
+                  prop.problem ? "break-all text-destructive" : "break-all text-muted-foreground"
                 }
               >
-                <span className={prop.problem ? undefined : "text-foreground"}>
-                  {prop.name}
-                </span>
-                : {prop.value}
+                <span className={prop.problem ? undefined : "text-foreground"}>{prop.name}</span>:{" "}
+                {prop.value}
                 {prop.problem && <span className="font-sans"> (required)</span>}
               </li>
             ))}
@@ -120,11 +112,7 @@ export function PreviewFailureNotice({
       {Boolean(status.contextDiagnostic?.attemptedProviders.length) && (
         <p className="mt-2 text-muted-foreground">
           DSLinter tried adding:{" "}
-          {status
-            .contextDiagnostic!.attemptedProviders.map(
-              (provider) => provider.name,
-            )
-            .join(", ")}
+          {status.contextDiagnostic!.attemptedProviders.map((provider) => provider.name).join(", ")}
           .
         </p>
       )}
@@ -178,24 +166,16 @@ export function PreviewFailureNotice({
       )}
       {status.adapterExample && (
         <details className="mt-3 rounded-md bg-muted">
-          <summary className="cursor-pointer p-3 font-medium">
-            Preview setup
-          </summary>
+          <summary className="cursor-pointer p-3 font-medium">Preview setup</summary>
           <p className="p-3 text-muted-foreground">
-            Add this example to dslinter.preview.tsx, or merge its entry into
-            your existing configuration. Supply any required component data.
+            Add this example to dslinter.preview.tsx, or merge its entry into your existing
+            configuration. Supply any required component data.
           </p>
           <pre className="max-h-80 overflow-auto rounded-md bg-muted/40 p-3 pt-0 text-xs whitespace-pre">
             {status.adapterExample}
           </pre>
-          <button
-            type="button"
-            className="mt-3 underline underline-offset-4"
-            onClick={copyExample}
-          >
-            {copyState === "copied"
-              ? "Copied preview setup"
-              : "Copy preview setup"}
+          <button type="button" className="mt-3 underline underline-offset-4" onClick={copyExample}>
+            {copyState === "copied" ? "Copied preview setup" : "Copy preview setup"}
           </button>
           {copyState === "failed" && (
             <p className="mt-2 text-muted-foreground">
@@ -205,17 +185,14 @@ export function PreviewFailureNotice({
         </details>
       )}
       <details className="mt-3 rounded-md bg-muted">
-        <summary className="cursor-pointer p-3 font-medium">
-          Technical details
-        </summary>
+        <summary className="cursor-pointer p-3 font-medium">Technical details</summary>
         <div className="space-y-3 p-3 pt-0">
           <p className="font-mono text-xs break-all">{component.id}</p>
-          {status.message &&
-            !attempts.some((attempt) => attempt.message === status.message) && (
-              <pre className="max-h-48 overflow-auto text-xs break-words whitespace-pre-wrap">
-                {status.message}
-              </pre>
-            )}
+          {status.message && !attempts.some((attempt) => attempt.message === status.message) && (
+            <pre className="max-h-48 overflow-auto text-xs break-words whitespace-pre-wrap">
+              {status.message}
+            </pre>
+          )}
           {attempts.map((attempt) => (
             <div key={attempt.message}>
               <p className="font-medium">{attempt.label}</p>
@@ -227,17 +204,13 @@ export function PreviewFailureNotice({
           {status.contextDiagnostic && (
             <div className="space-y-2">
               {!attempts.some(
-                (attempt) =>
-                  attempt.message === status.contextDiagnostic!.message,
+                (attempt) => attempt.message === status.contextDiagnostic!.message,
               ) && <p>{status.contextDiagnostic.message}</p>}
               <p>{status.contextDiagnostic.reason}</p>
               {status.contextDiagnostic.candidates.length > 1 && (
                 <ul role="list" className="space-y-1">
                   {status.contextDiagnostic.candidates.map((provider) => (
-                    <li
-                      className="font-mono text-xs break-all"
-                      key={provider.id}
-                    >
+                    <li className="font-mono text-xs break-all" key={provider.id}>
                       {provider.id}
                     </li>
                   ))}

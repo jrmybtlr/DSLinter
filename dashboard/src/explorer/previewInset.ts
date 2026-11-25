@@ -57,10 +57,7 @@ export function previewPadding(compact: boolean, bleeds: boolean): string {
 }
 
 export function applyPreviewInset(root: HTMLElement, compact: boolean): void {
-  root.style.padding = previewPadding(
-    compact,
-    previewBleeds(asInsetNode(root)),
-  );
+  root.style.padding = previewPadding(compact, previewBleeds(asInsetNode(root)));
 }
 
 function asInsetNode(element: Element): PreviewInsetNode {

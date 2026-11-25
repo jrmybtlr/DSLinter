@@ -2,10 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { observePreviewResize } from "./previewResize";
 
 function setup() {
-  const view = Object.assign(new EventTarget(), {
-    innerWidth: 640,
-    innerHeight: 160,
-  });
+  const view = Object.assign(new EventTarget(), { innerWidth: 640, innerHeight: 160 });
   const schedule = vi.fn();
   const observer = observePreviewResize(view as unknown as Window, schedule);
   const dismiss = vi.fn();

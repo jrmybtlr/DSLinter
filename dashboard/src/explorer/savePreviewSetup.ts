@@ -14,9 +14,7 @@ export async function savePreviewSetup(
         "X-Dslinter-Token": token,
       },
       body: JSON.stringify(
-        action === "fixture"
-          ? { app, componentId, action }
-          : { app, componentId },
+        action === "fixture" ? { app, componentId, action } : { app, componentId },
       ),
       signal,
     });

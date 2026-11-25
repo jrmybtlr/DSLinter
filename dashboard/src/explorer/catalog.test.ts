@@ -44,16 +44,11 @@ describe("catalog compatibility", () => {
       "b/Button.tsx#Button",
     ]);
     expect(
-      components.every(
-        (component) =>
-          component.legacy_ambiguous && component.usages.length === 0,
-      ),
+      components.every((component) => component.legacy_ambiguous && component.usages.length === 0),
     ).toBe(true);
-    expect(() => resolveCatalogComponent(report, "Button")).toThrow(
-      "Ambiguous component Button",
+    expect(() => resolveCatalogComponent(report, "Button")).toThrow("Ambiguous component Button");
+    expect(resolveCatalogComponent(report, "b/Button.tsx#Button")?.preview.rel_path).toBe(
+      "b/Button.tsx",
     );
-    expect(
-      resolveCatalogComponent(report, "b/Button.tsx#Button")?.preview.rel_path,
-    ).toBe("b/Button.tsx");
   });
 });

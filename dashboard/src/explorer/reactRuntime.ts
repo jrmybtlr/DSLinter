@@ -6,7 +6,9 @@ import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
 import { contextRequirement } from "./providerRecovery";
 
-function isPreviewDefinition(value: unknown): value is {
+function isPreviewDefinition(
+  value: unknown,
+): value is {
   component: React.ElementType;
   decorate?: React.ComponentType<{ node: React.ReactNode }>;
 } {
@@ -37,10 +39,7 @@ export async function mount(
   });
   let update: (values: Record<string, unknown>) => void = () => {};
   let failure: Error | undefined;
-  class Boundary extends React.Component<
-    { children: React.ReactNode },
-    { error: boolean }
-  > {
+  class Boundary extends React.Component<{ children: React.ReactNode }, { error: boolean }> {
     state = { error: false };
     static getDerivedStateFromError() {
       return { error: true };
@@ -56,29 +55,18 @@ export async function mount(
   function Demo() {
     const [values, setValues] = React.useState(initialValues);
     update = (next) => setValues((current) => ({ ...current, ...next }));
-    function render(
-      node: DemoNode | string,
-      key: number | string,
-    ): React.ReactNode {
+    function render(node: DemoNode | string, key: number | string): React.ReactNode {
       if (typeof node === "string") return node;
       const type = components[node.name] || node.name;
-      const target =
-        type === components[component.name] && node.target !== false;
-      const props: Record<string, any> = {
-        ...node.props,
-        ...(target ? values : {}),
-        key,
-      };
+      const target = type === components[component.name] && node.target !== false;
+      const props: Record<string, any> = { ...node.props, ...(target ? values : {}), key };
       if (target) {
         for (const [event, prop] of [
           ["onValueChange", "value"],
           ["onCheckedChange", "checked"],
           ["onOpenChange", "open"],
         ]) {
-          if (
-            props[prop] === undefined &&
-            !component.preview.declared_props.includes(event)
-          )
+          if (props[prop] === undefined && !component.preview.declared_props.includes(event))
             continue;
           const callback = props[event];
           props[event] = (value: unknown) => {
@@ -90,9 +78,7 @@ export async function mount(
         const change = props.onChange;
         props.onChange = (event: any) => {
           const value =
-            event?.target?.type === "checkbox"
-              ? event.target.checked
-              : event?.target?.value;
+            event?.target?.type === "checkbox" ? event.target.checked : event?.target?.value;
           setValues((current) => ({
             ...current,
             [event?.target?.type === "checkbox" ? "checked" : "value"]: value,
@@ -102,25 +88,19 @@ export async function mount(
         };
         for (const name of new Set([
           "onClick",
-          ...component.preview.declared_props.filter((name) =>
-            /^on[A-Z]/.test(name),
-          ),
+          ...component.preview.declared_props.filter((name) => /^on[A-Z]/.test(name)),
         ])) {
           if (props[name]) continue;
           props[name] = (...args: unknown[]) =>
             emit(
               name,
               args.filter(
-                (arg) =>
-                  arg == null ||
-                  ["string", "boolean", "number"].includes(typeof arg),
+                (arg) => arg == null || ["string", "boolean", "number"].includes(typeof arg),
               ),
             );
         }
       }
-      const composed = node.children?.some(
-        (child) => typeof child !== "string",
-      );
+      const composed = node.children?.some((child) => typeof child !== "string");
       const children =
         target && !composed && typeof values.children === "string"
           ? [values.children]
@@ -128,9 +108,7 @@ export async function mount(
       return React.createElement(
         type,
         props,
-        ...(children || []).map((child, index) =>
-          render(child, `${key}.${index}`),
-        ),
+        ...(children || []).map((child, index) => render(child, `${key}.${index}`)),
       );
     }
     let child: React.ReactNode;
@@ -141,20 +119,11 @@ export async function mount(
         : node;
     } else if (override?.PlaygroundPreview)
       child = React.createElement(override.PlaygroundPreview, { values });
-    else
-      child = override
-        ? React.createElement(override, values)
-        : render(tree, "root");
-    return adapter.react?.wrap
-      ? (adapter.react.wrap(child) as React.ReactNode)
-      : child;
+    else child = override ? React.createElement(override, values) : render(tree, "root");
+    return adapter.react?.wrap ? (adapter.react.wrap(child) as React.ReactNode) : child;
   }
   try {
-    flushSync(() =>
-      root.render(
-        React.createElement(Boundary, null, React.createElement(Demo)),
-      ),
-    );
+    flushSync(() => root.render(React.createElement(Boundary, null, React.createElement(Demo))));
     if (failure) throw failure;
     mounting = false;
     return {
