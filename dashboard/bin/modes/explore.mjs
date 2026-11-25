@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defaultReportPath } from "../lib/project-root.mjs";
 import { spawnScanner } from "../lib/run-scanner.mjs";
@@ -6,6 +7,19 @@ import { findAvailablePort } from "../lib/port-check.mjs";
 import { discoverApps, selectApp } from "../lib/workspace.mjs";
 import { workspaceCacheDir } from "../lib/cache.mjs";
 import { resolveServePort } from "../lib/constants.mjs";
+import { acquireExploreLock, explorerConflictMessage } from "../lib/explore-lock.mjs";
+
+const version = JSON.parse(
+  readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+).version;
+
+function openBrowser(url) {
+  if (process.env.DSLINTER_OPEN_BROWSER === "0") return;
+  const command =
+    process.platform === "darwin" ? "open" : process.platform === "win32" ? "rundll32" : "xdg-open";
+  const args = process.platform === "win32" ? ["url.dll,FileProtocolHandler", url] : [url];
+  spawn(command, args, { stdio: "ignore" }).on("error", () => {});
+}
 
 export async function runExplorerMode(options) {
   const { scanPath, outputPath, scannerArgs, app: requestedApp } = options;
@@ -14,6 +28,17 @@ export async function runExplorerMode(options) {
   const apiPort = await findAvailablePort(options.servePort || resolveServePort());
   const uiPort = await findAvailablePort(Number(process.env.DSLINTER_DEV_UI_PORT) || 5175);
   const reportPath = defaultReportPath(scanPath, outputPath);
+  const dashboardUrl = `http://127.0.0.1:${uiPort}/`;
+  // Explorers sharing a report file rewrite each other's catalog metadata in a loop.
+  const lock = acquireExploreLock(reportPath, { url: dashboardUrl, version });
+  if (!lock.acquired) {
+    const { holder } = lock;
+    process.stderr.write(explorerConflictMessage(holder, version, scanPath));
+    if (holder.version && holder.version !== version) process.exitCode = 1;
+    else if (holder.url) openBrowser(holder.url);
+    return;
+  }
+  process.once("exit", lock.release);
   const args = [...scannerArgs, "--serve", String(apiPort)];
   if (!outputPath) args.push("--output", reportPath);
   const scanner = await spawnScanner(args, {
@@ -53,6 +78,7 @@ export async function runExplorerMode(options) {
   function cleanup() {
     if (stopping) return;
     stopping = true;
+    lock.release();
     scanner.kill("SIGTERM");
     metadata.kill("SIGTERM");
     server.kill("SIGTERM");
@@ -77,15 +103,6 @@ export async function runExplorerMode(options) {
       `Preview app: ${selected?.name} (switch apps in the explorer or use --app)\n`,
     );
   server.once("message", (message) => {
-    if (message?.type !== "ready" || process.env.DSLINTER_OPEN_BROWSER === "0") return;
-    const url = `http://127.0.0.1:${uiPort}/`;
-    const command =
-      process.platform === "darwin"
-        ? "open"
-        : process.platform === "win32"
-          ? "rundll32"
-          : "xdg-open";
-    const args = process.platform === "win32" ? ["url.dll,FileProtocolHandler", url] : [url];
-    spawn(command, args, { stdio: "ignore" }).on("error", () => {});
+    if (message?.type === "ready") openBrowser(dashboardUrl);
   });
 }

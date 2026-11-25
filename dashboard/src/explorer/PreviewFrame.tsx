@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import context from "virtual:dslinter/explorer";
 import type { CatalogComponent } from "../types/report";
 import { usePreviewSectionTheme } from "../shell/previewSectionTheme";
@@ -66,6 +66,9 @@ export function PreviewFrame({
   const previousValues = useRef(values);
   const valuesKey = JSON.stringify([values, explicitKeys]);
   const failed = compatible && visible && status?.type === "error";
+  // Theme for each new frame document; later theme changes go through messages, not a reload.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const frameTheme = useMemo(() => resolvedTheme, [app, revision]);
 
   useEffect(() => {
     setStatus(null);
@@ -213,14 +216,15 @@ export function PreviewFrame({
           key={revision}
           ref={frame}
           title={compact ? `${component.name} variant ${scanLabel}` : `${component.name} preview`}
-          src={`/__dslinter/frame?app=${encodeURIComponent(app)}`}
+          src={`/__dslinter/frame?app=${encodeURIComponent(app)}&theme=${frameTheme}`}
           aria-hidden={failed || undefined}
           tabIndex={failed ? -1 : undefined}
           className="block h-fit w-full border-0"
           style={{
             height: failed ? 0 : height,
             // Keep the frame connected so source updates can recover the preview.
-            visibility: failed ? "hidden" : undefined,
+            // Also hidden until the first render, so a half-loaded app never shows.
+            visibility: failed || !status ? "hidden" : undefined,
             position: failed ? "absolute" : undefined,
             colorScheme: resolvedTheme,
           }}

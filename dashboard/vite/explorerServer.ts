@@ -91,9 +91,13 @@ const plugin: Plugin = {
         const preview = await pending;
         const origin = preview.resolvedUrls?.local[0];
         if (!origin) throw new Error("Preview server has no listening address");
+        // Paint in the dashboard's theme before the runtime applies it, so a dark
+        // dashboard does not flash a white frame while the preview loads.
+        const theme = url.searchParams.get("theme") === "dark" ? "dark" : "light";
+        const themeAttributes = `${theme === "dark" ? ' class="dark"' : ""} data-theme="${theme}" data-dashboard-theme="${theme}" style="color-scheme:${theme}"`;
         const html = await preview.transformIndexHtml(
           "/__dslinter/frame.html",
-          `<!doctype html><html><head><base href="${origin}"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="dslinter-preview"></div><script type="module">import ${JSON.stringify(`${origin}__dslinter/entry.js`)};</script></body></html>`,
+          `<!doctype html><html${themeAttributes}><head><base href="${origin}"><meta name="color-scheme" content="${theme}"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="dslinter-preview"></div><script type="module">import ${JSON.stringify(`${origin}__dslinter/entry.js`)};</script></body></html>`,
         );
         res.setHeader("Content-Type", "text/html");
         res.end(html.replace(/(["'])\/(?!\/)/g, `$1${origin}`));
