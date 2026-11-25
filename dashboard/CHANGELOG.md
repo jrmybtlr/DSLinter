@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.9.1
+
+[compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.9.0...v0.9.1)
+
+### 🚀 Enhancements
+
+- Preview components in Nuxt apps ([b2ec172](https://github.com/jrmybtlr/DSLinter/commit/b2ec172))
+
+### 🤖 CI
+
+- Publish to npm with trusted publishing (OIDC) instead of NPM_TOKEN ([cc0628c](https://github.com/jrmybtlr/DSLinter/commit/cc0628c))
+
+### ❤️ Contributors
+
+- Claude <noreply@anthropic.com>
+
 ## v0.9.0
 
 [compare changes](https://github.com/jrmybtlr/DSLinter/compare/v0.8.0...v0.9.0)
