@@ -853,13 +853,14 @@ fn merge_template_usages(
         if crate::import_filter::usage_root_is_external(&component, external_bindings) {
             continue;
         }
-        let rel_start = cap.get(0).unwrap().start();
-        let line = line_of_offset(&newlines, template_inner_start + rel_start);
+        let whole = cap.get(0).unwrap();
+        let line = line_of_offset(&newlines, template_inner_start + whole.start());
+        let (props, prop_values) = template_tag_props(&template[whole.end()..]);
         usages.push(JsxUsage {
             component,
             line,
-            props: Vec::new(),
-            prop_values: std::collections::BTreeMap::new(),
+            props,
+            prop_values,
             example_tree: None,
         });
     }
@@ -867,16 +868,176 @@ fn merge_template_usages(
     for cap in template_kebab_re().captures_iter(template) {
         let raw = cap.get(1).unwrap().as_str();
         let component = kebab::kebab_to_pascal(raw);
-        let rel_start = cap.get(0).unwrap().start();
-        let line = line_of_offset(&newlines, template_inner_start + rel_start);
+        let whole = cap.get(0).unwrap();
+        let line = line_of_offset(&newlines, template_inner_start + whole.start());
+        let (props, prop_values) = template_tag_props(&template[whole.end()..]);
         usages.push(JsxUsage {
             component,
             line,
-            props: Vec::new(),
-            prop_values: std::collections::BTreeMap::new(),
+            props,
+            prop_values,
             example_tree: None,
         });
     }
+}
+
+/// Attributes that are never component props (Vue built-ins / fallthrough styling).
+const VUE_NON_PROP_ATTRS: &[&str] = &["key", "ref", "class", "style", "is"];
+
+/// Parse the attributes of an opening tag. `rest` starts right after the tag name and
+/// runs to the end of the template; parsing stops at the first unquoted `>`.
+///
+/// Returns sorted, de-duplicated camelCase prop names plus statically-known values.
+fn template_tag_props(
+    rest: &str,
+) -> (Vec<String>, std::collections::BTreeMap<String, String>) {
+    let mut props = Vec::new();
+    let mut values = std::collections::BTreeMap::new();
+    let bytes = rest.as_bytes();
+    let mut i = 0;
+    // The tag name must end here; otherwise this was a partial match.
+    if bytes.first().is_some_and(|b| !b.is_ascii_whitespace() && *b != b'>' && *b != b'/') {
+        return (props, values);
+    }
+
+    while i < bytes.len() {
+        let b = bytes[i];
+        if b.is_ascii_whitespace() || b == b'/' {
+            i += 1;
+            continue;
+        }
+        if b == b'>' {
+            break;
+        }
+        // Attribute name.
+        let name_start = i;
+        while i < bytes.len() {
+            let c = bytes[i];
+            if c.is_ascii_whitespace() || c == b'=' || c == b'>' || c == b'/' {
+                break;
+            }
+            i += 1;
+        }
+        let name = &rest[name_start..i];
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        // Optional value.
+        let mut value: Option<&str> = None;
+        if i < bytes.len() && bytes[i] == b'=' {
+            i += 1;
+            while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+                i += 1;
+            }
+            if i < bytes.len() && (bytes[i] == b'"' || bytes[i] == b'\'') {
+                let quote = bytes[i];
+                let start = i + 1;
+                i = start;
+                while i < bytes.len() && bytes[i] != quote {
+                    i += 1;
+                }
+                value = Some(&rest[start..i.min(bytes.len())]);
+                i += 1;
+            } else {
+                let start = i;
+                while i < bytes.len() && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' {
+                    i += 1;
+                }
+                value = Some(&rest[start..i]);
+            }
+        }
+
+        let Some((prop, bound)) = vue_attr_to_prop(name) else {
+            continue;
+        };
+        let literal = match (bound, value) {
+            (false, None) => Some("true".to_string()),
+            (false, Some(v)) => Some(v.to_string()),
+            (true, Some(v)) => vue_bound_literal(v),
+            (true, None) => None,
+        };
+        if let Some(v) = literal {
+            values.insert(prop.clone(), v);
+        }
+        props.push(prop);
+    }
+
+    props.sort();
+    props.dedup();
+    (props, values)
+}
+
+/// Map a template attribute name to `(camelCase prop, is_bound_expression)`.
+/// Returns `None` for events, slots, non-prop directives and built-in attrs.
+fn vue_attr_to_prop(name: &str) -> Option<(String, bool)> {
+    if name.is_empty() || name.starts_with('@') || name.starts_with('#') {
+        return None;
+    }
+    let (raw, bound) = if let Some(n) = name.strip_prefix("v-bind:") {
+        (n, true)
+    } else if let Some(n) = name.strip_prefix(':') {
+        (n, true)
+    } else if let Some(n) = name.strip_prefix('.') {
+        (n, true)
+    } else if name == "v-model" || name.starts_with("v-model.") {
+        return Some(("modelValue".to_string(), true));
+    } else if let Some(n) = name.strip_prefix("v-model:") {
+        (n, true)
+    } else if name.starts_with("v-") {
+        return None;
+    } else {
+        (name, false)
+    };
+    // Drop modifiers (`:foo.prop`, `v-model:foo.trim`) and skip dynamic args (`:[key]`).
+    let raw = raw.split('.').next().unwrap_or("");
+    if raw.is_empty() || raw.starts_with('[') {
+        return None;
+    }
+    if VUE_NON_PROP_ATTRS.contains(&raw) {
+        return None;
+    }
+    Some((kebab_to_camel(raw), bound))
+}
+
+fn kebab_to_camel(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    let mut upper = false;
+    for c in raw.chars() {
+        if c == '-' {
+            upper = !out.is_empty();
+            continue;
+        }
+        if upper {
+            out.extend(c.to_uppercase());
+            upper = false;
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+/// Static value of a bound expression when it is a plain literal (`3`, `true`, `'sm'`).
+fn vue_bound_literal(expr: &str) -> Option<String> {
+    let e = expr.trim();
+    if e.is_empty() {
+        return None;
+    }
+    if matches!(e, "true" | "false" | "null" | "undefined") {
+        return Some(e.to_string());
+    }
+    if e.parse::<f64>().is_ok() {
+        return Some(e.to_string());
+    }
+    for q in ['\'', '"', '`'] {
+        if e.len() >= 2 && e.starts_with(q) && e.ends_with(q) {
+            let inner = &e[1..e.len() - 1];
+            if !inner.contains(q) && !(q == '`' && inner.contains("${")) {
+                return Some(inner.to_string());
+            }
+        }
+    }
+    None
 }
 
 #[cfg(test)]
@@ -901,6 +1062,49 @@ const x = 1
             "{:?}",
             scan.usages
         );
+    }
+
+    #[test]
+    fn vue_template_records_props() {
+        let src = r#"<template>
+  <RangeField
+      v-for="item in sliders"
+      :key="item.key"
+      label="Wind"
+      :max="item.key === 'windDirection' ? 360 : 1"
+      :step="0.01"
+      v-bind:size="'sm'"
+      :aria-label="`${item.label} intensity`"
+      v-model:open="isOpen"
+      disabled
+      ref="field"
+      class="w-full"
+      @input="emit('change', item.key, $event)"
+      #default="{ x }"
+  />
+  <range-field max-value="3" v-model="v" />
+</template>
+<script setup lang="ts">
+import RangeField from './RangeField.vue'
+</script>
+"#;
+        let scan = analyze_vue_file(&PathBuf::from("Page.vue"), src, &ImportFilter::default());
+        let first = scan.usages.iter().find(|u| u.props.contains(&"max".to_string()))
+            .expect("pascal usage with props");
+        assert_eq!(
+            first.props,
+            vec!["ariaLabel", "disabled", "label", "max", "open", "size", "step"]
+        );
+        assert_eq!(first.prop_values.get("label").map(String::as_str), Some("Wind"));
+        assert_eq!(first.prop_values.get("step").map(String::as_str), Some("0.01"));
+        assert_eq!(first.prop_values.get("size").map(String::as_str), Some("sm"));
+        assert_eq!(first.prop_values.get("disabled").map(String::as_str), Some("true"));
+        assert!(!first.prop_values.contains_key("max"));
+        assert!(!first.prop_values.contains_key("ariaLabel"));
+
+        let kebab = scan.usages.iter().find(|u| u.props.contains(&"maxValue".to_string()))
+            .expect("kebab usage with props");
+        assert_eq!(kebab.props, vec!["maxValue", "modelValue"]);
     }
 
     #[test]
