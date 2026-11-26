@@ -172,7 +172,15 @@ export function unusedComponentsFromReport(
   return out;
 }
 
-export type GovernanceInventoryTab = "all" | "a11y" | "code" | "token" | "unused";
+export type GovernanceInventoryTab = "all" | "a11y" | "code" | "token" | "candidates" | "unused";
+
+/** Recommended (2+ uses) hardcoded values across colors, arbitrary classes, and inline styles. */
+export function recommendedTokenCandidateCount(report: WorkspaceReport | null | undefined): number {
+  const c = report?.token_candidates;
+  if (!c) return 0;
+  return [...c.colors, ...c.arbitrary_classes, ...c.inline_styles].filter((t) => t.recommended)
+    .length;
+}
 
 export function governanceTabCounts(
   report: WorkspaceReport | null | undefined,
@@ -182,6 +190,7 @@ export function governanceTabCounts(
     a11y: 0,
     code: 0,
     token: 0,
+    candidates: 0,
     unused: 0,
   };
   if (!report) return counts;
@@ -194,6 +203,7 @@ export function governanceTabCounts(
     else if (pillar === "token") counts.token += 1;
   }
 
+  counts.candidates = recommendedTokenCandidateCount(report);
   counts.unused = unusedComponentsFromReport(report).length;
   return counts;
 }
@@ -202,7 +212,7 @@ export function findingsForGovernanceTab(
   report: WorkspaceReport | null | undefined,
   tab: GovernanceInventoryTab,
 ): LintFinding[] {
-  if (!report || tab === "unused") return [];
+  if (!report || tab === "unused" || tab === "candidates") return [];
   const findings = report.findings ?? [];
   if (tab === "all") return findings;
   return findings.filter((f) => pillarForRule(f.rule_id) === tab);

@@ -7,13 +7,7 @@ export type PreviewInsetNode = {
 
 const CONTROLS = new Set(["BUTTON", "INPUT", "TEXTAREA", "SELECT"]);
 const LANDMARKS = new Set(["NAV", "HEADER", "FOOTER", "ASIDE"]);
-const CHROME_ROLES = new Set([
-  "navigation",
-  "banner",
-  "contentinfo",
-  "complementary",
-  "menubar",
-]);
+const CHROME_ROLES = new Set(["navigation", "banner", "contentinfo", "complementary", "menubar"]);
 const CHROME_SLOTS = new Set(["navigation-menu", "sidebar"]);
 
 function isBreadcrumb(node: PreviewInsetNode): boolean {

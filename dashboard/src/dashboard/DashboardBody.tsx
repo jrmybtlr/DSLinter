@@ -10,6 +10,7 @@ import {
 } from "./aggregate";
 import { FindingsList } from "./FindingsList";
 import { ScoreStrip } from "./ScoreStrip";
+import { TokenCandidatesList } from "./TokenCandidatesList";
 import { UnusedComponentsList } from "./UnusedComponentsList";
 
 const sectionMeta: Record<
@@ -35,6 +36,12 @@ const sectionMeta: Record<
     id: "token-issues",
     title: "Token issues",
     description: "Findings from design token rules in the latest snapshot.",
+  },
+  candidates: {
+    id: "token-candidates",
+    title: "Token candidates",
+    description:
+      "Hardcoded colors, arbitrary Tailwind classes, and inline styles ranked by use. Values used 2+ times are worth a token.",
   },
   unused: {
     id: "unused-components",
@@ -73,7 +80,16 @@ export function DashboardBody({
           </div>
         ) : null}
 
-        {tab === "unused" ? (
+        {tab === "candidates" ? (
+          <Section
+            id={section.id}
+            title={section.title}
+            description={section.description}
+            actions={<GovernanceInventoryFilter value={tab} onChange={setTab} counts={counts} />}
+          >
+            <TokenCandidatesList candidates={report.token_candidates} root={report.root} />
+          </Section>
+        ) : tab === "unused" ? (
           <Section
             id={section.id}
             title={section.title}

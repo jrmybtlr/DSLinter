@@ -6,6 +6,7 @@ const tabs: { id: GovernanceInventoryTab; label: string }[] = [
   { id: "a11y", label: "Accessibility" },
   { id: "code", label: "Code quality" },
   { id: "token", label: "Tokens" },
+  { id: "candidates", label: "Token candidates" },
   { id: "unused", label: "Unused" },
 ];
 

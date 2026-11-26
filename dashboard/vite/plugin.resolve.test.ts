@@ -73,7 +73,8 @@ describe("dslinter vite plugin resolveId", () => {
 
     try {
       const loaded = await server.pluginContainer.load(embedCss);
-      const code = typeof loaded === "string" ? loaded : loaded && "code" in loaded ? loaded.code : null;
+      const code =
+        typeof loaded === "string" ? loaded : loaded && "code" in loaded ? loaded.code : null;
       expect(code).toContain('@source "../src"');
       expect(code).toMatch(/demo\/inertia\/resources\/js\/components/);
     } finally {

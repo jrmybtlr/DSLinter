@@ -11,7 +11,7 @@ use crate::lines::line_of_offset;
 use crate::model::{
     AstExtracts, ClassStringFragment, ClassStringKind, StringLiteralFragment, StyleValueFragment,
 };
-use crate::token_values::{is_style_color_property, parse_style_string};
+use crate::token_values::parse_style_string;
 use crate::util::regex::class_attr_re;
 
 /// Collect class-string and literal fragments from a parsed ECMA program.
@@ -116,9 +116,6 @@ impl<'nl> ExtractVisitor<'nl> {
                 PropertyKey::Identifier(id) => id.name.as_str(),
                 _ => continue,
             };
-            if !is_style_color_property(key) {
-                continue;
-            }
             if let Some(val) = expression_to_string(&p.value) {
                 self.push_style_value(line, key.to_string(), val);
             }
@@ -160,6 +157,7 @@ fn expression_to_string(expr: &Expression<'_>) -> Option<String> {
         Expression::TemplateLiteral(tpl) if tpl.expressions.is_empty() => {
             tpl.quasis.first().map(|q| q.value.raw.to_string())
         }
+        Expression::NumericLiteral(lit) => Some(lit.value.to_string()),
         _ => None,
     }
 }
@@ -310,7 +308,7 @@ export function Cn() {
     }
 
     #[test]
-    fn style_object_color_values_extracted() {
+    fn style_object_values_extracted() {
         let src = r##"
 export function Box() {
   return (
@@ -332,8 +330,11 @@ export function Box() {
             ex.style_values
         );
         assert!(
-            !ex.style_values.iter().any(|s| s.property == "width"),
-            "non-color style props skipped"
+            ex.style_values
+                .iter()
+                .any(|s| s.property == "width" && s.value == "100"),
+            "numeric style props kept: {:?}",
+            ex.style_values
         );
     }
 

@@ -7,6 +7,7 @@ use regex::Regex;
 
 use crate::lines::{line_of_offset, newline_offsets};
 use crate::model::FileScan;
+use crate::token_values::is_style_color_property;
 use crate::util::regex::{class_attr_re, class_helper_attr_re, quoted_literal_re};
 
 pub fn for_each_ast_text(
@@ -26,13 +27,16 @@ pub fn for_each_ast_text(
     }
 }
 
+/// Inline style values on color properties (`color`, `backgroundColor`, …).
 pub fn for_each_style_color_value(
     files: &[FileScan],
     mut f: impl FnMut(&Path, u32, &str),
 ) {
     for file in files {
         for style in &file.ast_extracts.style_values {
-            f(&file.path, style.line, &style.value);
+            if is_style_color_property(&style.property) {
+                f(&file.path, style.line, &style.value);
+            }
         }
     }
 }

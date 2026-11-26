@@ -272,7 +272,7 @@ pub struct UsageSummary {
 }
 
 /// Dashboard playground row from scan (all TSX/JSX under the repo when `playground_groups` is unset).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CssTokenCategory {
     Color,
@@ -316,6 +316,58 @@ pub struct CssTokenSummary {
     pub usage_by_token: Vec<CssTokenUsage>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub unused_tokens: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TokenCandidateKind {
+    /// Hex / `rgb()` literal anywhere in component source.
+    Color,
+    /// Tailwind arbitrary value (`w-[13px]`, `[mask-type:alpha]`).
+    ArbitraryClass,
+    /// Inline `style` declaration (`padding: 13px`).
+    InlineStyle,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+pub struct SourceLocation {
+    pub path: PathBuf,
+    pub line: u32,
+}
+
+/// A repeated hardcoded value that could become (or already matches) a design token.
+#[derive(Debug, Clone, Serialize)]
+pub struct TokenCandidate {
+    pub kind: TokenCandidateKind,
+    /// Normalized value: `#ff0066`, `w-[13px]`, `padding: 13px`.
+    pub value: String,
+    pub category: CssTokenCategory,
+    pub reference_count: u32,
+    pub file_count: u32,
+    pub files: Vec<PathBuf>,
+    /// First few call sites (capped).
+    pub locations: Vec<SourceLocation>,
+    /// Existing token / scale utility with the same value — use it instead.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub use_instead: Option<String>,
+    /// Proposed new CSS variable name when no existing token matches.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggested_token: Option<String>,
+    /// True when the value repeats enough to be worth tokenizing.
+    pub recommended: bool,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct TokenCandidateSummary {
+    pub colors: Vec<TokenCandidate>,
+    pub arbitrary_classes: Vec<TokenCandidate>,
+    pub inline_styles: Vec<TokenCandidate>,
+}
+
+impl TokenCandidateSummary {
+    pub fn is_empty(&self) -> bool {
+        self.colors.is_empty() && self.arbitrary_classes.is_empty() && self.inline_styles.is_empty()
+    }
 }
 
 /// A real component export reachable through the preview's local source dependencies.
@@ -408,6 +460,9 @@ pub struct WorkspaceReport {
     pub playgrounds: Vec<PlaygroundSpec>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub css_tokens: Option<CssTokenSummary>,
+    /// Hardcoded colors, arbitrary Tailwind values, and inline styles ranked by use count.
+    #[serde(default, skip_serializing_if = "TokenCandidateSummary::is_empty")]
+    pub token_candidates: TokenCandidateSummary,
     #[serde(default, skip_serializing_if = "ReportConfig::is_empty")]
     pub config: ReportConfig,
     #[serde(default, skip_serializing_if = "ConfigSnapshot::is_empty")]
