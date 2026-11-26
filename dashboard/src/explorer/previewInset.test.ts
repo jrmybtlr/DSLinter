@@ -37,28 +37,22 @@ describe("previewBleeds", () => {
   });
 
   it("unwraps a single-child provider shell to reach chrome", () => {
+    expect(previewBleeds(node("DIV", {}, [node("DIV", {}, [node("NAV")])]))).toBe(true);
     expect(
-      previewBleeds(node("DIV", {}, [node("DIV", {}, [node("NAV")])])),
-    ).toBe(true);
-    expect(
-      previewBleeds(
-        node("DIV", {}, [node("DIV", {}, [node("DIV", { "data-slot": "sidebar" })])]),
-      ),
+      previewBleeds(node("DIV", {}, [node("DIV", {}, [node("DIV", { "data-slot": "sidebar" })])])),
     ).toBe(true);
   });
 
   it("keeps breadcrumbs on the stage", () => {
     expect(previewBleeds(node("NAV", { "aria-label": "breadcrumb" }))).toBe(false);
     expect(previewBleeds(node("NAV", { "data-slot": "breadcrumb" }))).toBe(false);
-    expect(
-      previewBleeds(node("DIV", {}, [node("NAV", { "aria-label": "breadcrumb" })])),
-    ).toBe(false);
+    expect(previewBleeds(node("DIV", {}, [node("NAV", { "aria-label": "breadcrumb" })]))).toBe(
+      false,
+    );
   });
 
   it("keeps a mixed branch that includes a nav on the stage", () => {
-    expect(
-      previewBleeds(node("DIV", {}, [node("NAV"), node("BUTTON")])),
-    ).toBe(false);
+    expect(previewBleeds(node("DIV", {}, [node("NAV"), node("BUTTON")]))).toBe(false);
   });
 
   it("keeps empty or ordinary surfaces on the stage", () => {

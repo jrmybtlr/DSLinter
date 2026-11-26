@@ -4,9 +4,7 @@ import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
 import { isMissingInjectionWarning, contextRequirement } from "./providerRecovery";
 
-function isPreviewDefinition(
-  value: unknown,
-): value is {
+function isPreviewDefinition(value: unknown): value is {
   component: Component;
   decorate?: Component;
 } {

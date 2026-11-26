@@ -157,7 +157,9 @@ describe("provider recovery", () => {
       "/workspace",
       "/workspace",
     );
-    expect(vue).toContain("preview(PreviewTarget, ({ node }) => h(PreviewProvider1, {}, { default: () => node }))");
+    expect(vue).toContain(
+      "preview(PreviewTarget, ({ node }) => h(PreviewProvider1, {}, { default: () => node }))",
+    );
     expect(vue).toContain('import { h } from "vue"');
   });
 });

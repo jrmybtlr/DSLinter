@@ -6,9 +6,7 @@ import type { DemoNode } from "./recipes";
 import type { FrameworkMount, PreviewAdapter } from "./protocol";
 import { contextRequirement } from "./providerRecovery";
 
-function isPreviewDefinition(
-  value: unknown,
-): value is {
+function isPreviewDefinition(value: unknown): value is {
   component: React.ElementType;
   decorate?: React.ComponentType<{ node: React.ReactNode }>;
 } {
@@ -114,9 +112,7 @@ export async function mount(
     let child: React.ReactNode;
     if (isPreviewDefinition(override)) {
       const node = React.createElement(override.component, values);
-      child = override.decorate
-        ? React.createElement(override.decorate, { node })
-        : node;
+      child = override.decorate ? React.createElement(override.decorate, { node }) : node;
     } else if (override?.PlaygroundPreview)
       child = React.createElement(override.PlaygroundPreview, { values });
     else child = override ? React.createElement(override, values) : render(tree, "root");

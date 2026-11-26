@@ -222,6 +222,32 @@ export interface CssTokenSummary {
   unused_tokens?: string[];
 }
 
+export type TokenCandidateKind = "color" | "arbitrary_class" | "inline_style";
+
+/** Repeated hardcoded value that could become (or already matches) a design token. */
+export interface TokenCandidate {
+  kind: TokenCandidateKind;
+  /** Normalized value: `#ff0066`, `w-[13px]`, `padding: 13px`. */
+  value: string;
+  category: CssTokenCategory;
+  reference_count: number;
+  file_count: number;
+  files: string[];
+  locations: { path: string; line: number }[];
+  /** Existing token or scale utility with the same value. */
+  use_instead?: string;
+  /** Proposed CSS variable name when nothing matches yet. */
+  suggested_token?: string;
+  /** Used often enough (2+) to be worth tokenizing. */
+  recommended: boolean;
+}
+
+export interface TokenCandidateSummary {
+  colors: TokenCandidate[];
+  arbitrary_classes: TokenCandidate[];
+  inline_styles: TokenCandidate[];
+}
+
 /** Dashboard-relevant slice of `.dslinter.json` embedded in each scan report. */
 export interface ReportConfig {
   hidden_components?: string[];
@@ -249,6 +275,7 @@ export interface WorkspaceReport {
   scores: GovernanceScores;
   playgrounds?: PlaygroundSpec[];
   css_tokens?: CssTokenSummary;
+  token_candidates?: TokenCandidateSummary;
   config?: ReportConfig;
   config_snapshot?: ConfigSnapshot;
 }

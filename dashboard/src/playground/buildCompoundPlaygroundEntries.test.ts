@@ -353,10 +353,9 @@ describe("valuesToProps", () => {
   });
 
   it("coerces numberArray panel text into number[]", () => {
-    const props = valuesToProps(
-      [{ key: "ids", label: "ids", type: "numberArray", default: "" }],
-      { ids: "1\n2\n2\nx\n" },
-    );
+    const props = valuesToProps([{ key: "ids", label: "ids", type: "numberArray", default: "" }], {
+      ids: "1\n2\n2\nx\n",
+    });
     expect(props.ids).toEqual([1, 2]);
   });
 

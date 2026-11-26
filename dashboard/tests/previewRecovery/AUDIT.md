@@ -4,11 +4,11 @@ Verified against the 149-component Inertia demo on 31 October 2026. The explorer
 used the production dashboard build and consumer preview host. Existing consumer
 adapters and playground files retained precedence.
 
-| Pass | Pages checked | Visible previews | Terminal guidance | Silent blanks |
-| --- | ---: | ---: | ---: | ---: |
-| Cold startup, isolated dependency cache | 149 | 147 | 2 | 0 |
-| Warm navigation | 149 | 147 | 2 | 0 |
-| After runtime hot update | 149 | 147 | 2 | 0 |
+| Pass                                    | Pages checked | Visible previews | Terminal guidance | Silent blanks |
+| --------------------------------------- | ------------: | ---------------: | ----------------: | ------------: |
+| Cold startup, isolated dependency cache |           149 |              147 |                 2 |             0 |
+| Warm navigation                         |           149 |              147 |                 2 |             0 |
+| After runtime hot update                |           149 |              147 |                 2 |             0 |
 
 The original audit found 31 stable failures and 15 further blank previews.
 Neither dependency-import errors nor invalid React hook errors recurred in these
